@@ -1,0 +1,5 @@
+# Passwords for pyftpsync (http://pyftpsync.googlecode.com)
+# Rename this file to 'pyftpsync.pw' and put it into your user's home directory.
+# Syntax: 'HOSTNAME = USER:PASSWORD'
+
+ftp.example.com = joe:secret
