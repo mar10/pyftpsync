@@ -9,6 +9,7 @@ from unittest import TestCase
 
 from ftpsync.targets import *
 from ftplib import FTP
+from pprint import pprint
 
 #===============================================================================
 # BaseTest
@@ -36,9 +37,9 @@ class FtpTest(TestCase):
         ftp.cwd(self.PATH)
         self.assertEqual(ftp.pwd(), self.PATH)
         res = ftp.nlst()
-        print res
+        print(res)
         res = ftp.dir()
-        print res
+        print(res)
 #        target = FtpTarget("http://www.wwwendt.de", user, password)
 
     def test_mlsd(self):
@@ -48,13 +49,13 @@ class FtpTest(TestCase):
         self.assertEqual(ftp.pwd(), self.PATH)
         
         def adder(line):
-            print line
+            print(line)
         ftp.retrlines("MLSD", adder)
 #        target = FtpTarget("http://www.wwwendt.de", user, password)
         dir = FTPDirectory(self.PATH)
         dir.getdata(ftp)
         for f in dir.walk():
-            print f
+            print(f)
 
     def test_remote(self):
         user, passwd = get_stored_credentials("pyftpsync.pw", self.HOST)
@@ -62,11 +63,27 @@ class FtpTest(TestCase):
         remote.cwd(self.PATH)
         self.assertEqual(remote.pwd(), self.PATH)
         self.assertRaises(RuntimeError, remote.cwd, "..")
+        
+    def test_sync(self):
+        user, passwd = get_stored_credentials("pyftpsync.pw", self.HOST)
+        local = FsTarget("/Users/martin/temp")
+        local.readonly = True
+#        remote = FtpTarget(self.PATH, self.HOST, user, passwd)
+        remote = FsTarget("/Users/martin/temp2")
+        remote.readonly = False
+        s = Synchronizer(local, remote)
+        s.upload()
+        stats = s.get_stats()
+        pprint(stats)
+        self.assertEqual(stats["source_files"], 1)
 
 
 #===============================================================================
-
 # Main
 #===============================================================================
 if __name__ == "__main__":
-    unittest.main()   
+#    unittest.main()
+
+    suite = unittest.TestSuite()
+    suite.addTest(FtpTest("test_sync"))
+    unittest.TextTestRunner(verbosity=2).run(suite)
