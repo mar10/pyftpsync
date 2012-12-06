@@ -7,14 +7,13 @@ Created on 14.09.2012
 import os
 from posixpath import join as join_url
 import time
-#import collections
 from ftplib import FTP
 from datetime import datetime
 import calendar
 from io import StringIO
 import sys
 import json
-#import StringIO
+import io
 
 def get_stored_credentials(filename, url):
     """Parse a file in the user's home directory, formatted like:
@@ -77,7 +76,7 @@ def get_stored_credentials(filename, url):
 # LogginFileWrapper
 # Wrapper around a file for writing to write a hash sign every block.
 #===============================================================================
-class LogginFileWrapper(object):
+class LoggingFileWrapper(object):
     def __init__(self, fp, callback=None):
         self.fp = fp
         self.callback = callback or self.default_callback
@@ -87,7 +86,7 @@ class LogginFileWrapper(object):
         return self
 
     def __exit__(self, type, value, tb):
-        self.fp.close()
+        self.close()
 
     @staticmethod
     def default_callback(wrapper, data):
@@ -101,6 +100,46 @@ class LogginFileWrapper(object):
     
     def close(self):
         self.fp.close()
+
+
+#===============================================================================
+# FtpFileWriter
+#===============================================================================
+#class FtpFileWriter(object):
+#    def __init__(self, ftp, callback=None):
+#        self.ftp = ftp
+#        self.callback = callback or self.default_callback
+#        self.bytes = 0
+#    
+#    def __enter__(self):
+#        return self
+#
+#    def __exit__(self, type, value, tb):
+#        self.close()
+#
+#    @staticmethod
+#    def default_callback(wrapper, data):
+#        print("#", end="")
+#        sys.stdout.flush()
+#
+#    def write(self, data):
+#        self.bytes += len(data)
+#        self.fp.write(data)
+#        self.callback(self, data)
+#        self.ftp.storbinary("STOR" % self.name, data, blocksize=8192, callback=default_callback)
+##    def storefile(self, name, src, blocksize=8192):
+##        with open(os.path.join(self.cur_dir, name), "wb") as fp:
+##            while True:
+##                buf = src.read(blocksize)
+##                if not buf: 
+##                    break
+##                fp.write(buf)
+###                if callback: callback(buf)
+###        self.ftp.storbinary('STOR %s' % name, fh)
+###        fh.close()
+#    
+#    def close(self):
+#        pass
 
 
 #===============================================================================
@@ -259,7 +298,7 @@ class _Target(object):
     def check_write(self, name):
         """Raise exception, if writing cur_dir/name is not allowed."""
         if self.readonly:
-            raise RuntimeError("target is read-only: %s" % self)
+            raise RuntimeError("target is read-only: %s / " % (self, name))
 
     def cwd(self, dir_name):
         raise NotImplementedError
@@ -278,7 +317,7 @@ class _Target(object):
         """Return a list of _Resource entries."""
         raise NotImplementedError
 
-    def write_file(self, name, fp):
+    def write_file(self, name, fp_src, blocksize=8192, callback=None):
         """Write data cur_dir/name."""
         raise NotImplementedError
 
@@ -326,6 +365,7 @@ class FsTarget(_Target):
         return self.cur_dir
 
     def mkdir(self, dir_name):
+        self.check_write(dir_name)
         path = join_url(self.cur_dir, dir_name)
         os.mkdir(path)
 
@@ -361,41 +401,61 @@ class FsTarget(_Target):
 #        with open(os.path.join(self.cur_dir, name), "wb") as dst:
 #            src.write(dst)
 
-    def open_file(self, name):
-        """Open cur_dir/name for reading."""
-        raise NotImplementedError
+#    def open_file(self, name):
+#        """Open cur_dir/name for reading."""
+#        raise NotImplementedError
 
     def remove_file(self, name):
         """Remove cur_dir/name."""
+        self.check_write(name)
         raise NotImplementedError
 
-    def open_writable(self, name):
-        fp = open(os.path.join(self.cur_dir, name), "wb")
-        return LogginFileWrapper(fp)
+    def open_readable(self, name):
+        fp = open(os.path.join(self.cur_dir, name), "rb")
+        return fp
         
-    def retrbinary(self, name, callback, blocksize=8192):
-        """Open cur_dir/name for reading."""
-        # TODO: this mimic the FTP interface, but yield seems better
-        with open(os.path.join(self.cur_dir, name), "rb") as fp:
-            while True:
-                data = fp.read(blocksize)
-                if not data:
-                    break
-                callback(data)
-        return
+#    def open_writable(self, name):
+#        self.check_write(name)
+#        fp = open(os.path.join(self.cur_dir, name), "wb")
+#        return fp
+##        return LoggingFileWrapper(fp)
 
-    def storefile(self, name, src, blocksize=8192):
-        with open(os.path.join(self.cur_dir, name), "wb") as fp:
+    def write_file(self, name, fp_src, blocksize=8192, callback=None):
+        self.check_write(name)
+        with open(os.path.join(self.cur_dir, name), "wb") as fp_dst:
             while True:
-                buf = src.read(blocksize)
-                if not buf: 
+                data = fp_src.read(blocksize)
+                if data is None or not len(data):
                     break
-                fp.write(buf)
-#                if callback: callback(buf)
-#        self.ftp.storbinary('STOR %s' % name, fh)
-#        fh.close()
+                fp_dst.write(data)
+                if callback:
+                    callback(data)
+        return
+        
+#    def retrbinary(self, name, callback, blocksize=8192):
+#        """Open cur_dir/name for reading."""
+#        # TODO: this mimic the FTP interface, but yield seems better
+#        with open(os.path.join(self.cur_dir, name), "rb") as fp:
+#            while True:
+#                data = fp.read(blocksize)
+#                if not data:
+#                    break
+#                callback(data)
+#        return
+#
+#    def storefile(self, name, src, blocksize=8192):
+#        with open(os.path.join(self.cur_dir, name), "wb") as fp:
+#            while True:
+#                buf = src.read(blocksize)
+#                if not buf: 
+#                    break
+#                fp.write(buf)
+##                if callback: callback(buf)
+##        self.ftp.storbinary('STOR %s' % name, fh)
+##        fh.close()
 
     def set_mtime(self, name, mtime):
+        self.check_write(name)
         os.utime(os.path.join(self.cur_dir, name), (-1, mtime))
 
 
@@ -518,37 +578,67 @@ class FtpTarget(_Target):
 #        with open(os.path.join(self.cur_dir, name), "wb") as dst:
 #            src.write(dst)
 
-    def open_file(self, name):
+#    def open_file(self, name):
+#        """Open cur_dir/name for reading."""
+#        out = StringIO()
+#        self.ftp.retrbinary('RETR %s' % name, out.write)
+##        fh.close()
+#        return out
+
+    def open_readable(self, name):
         """Open cur_dir/name for reading."""
-        out = StringIO()
-        self.ftp.retrbinary('RETR %s' % name, out.write)
-#        fh.close()
+#        out = StringIO()
+        out = io.BytesIO()
+        self.ftp.retrbinary("RETR %s" % name, out.write)
+        out.flush()
+        out.seek(0)
         return out
 
-    def retrbinary(self, name, callback, blocksize=8192):
-        """Open cur_dir/name for reading."""
-        self.ftp.retrbinary('RETR %s' % name, callback)
+#    def open_writable(self, name):
+#        self.check_write(name)
+#        res = FtpFileWriter(self.ftp, name)
+#        return res
+        
+    def write_file(self, name, fp_src, blocksize=8192, callback=None):
+        self.check_write(name)
+        self.ftp.storbinary("STOR %s" % name, fp_src, blocksize, callback)
+        
+#    def retrbinary(self, name, callback, blocksize=8192):
+#        """Open cur_dir/name for reading."""
+#        self.ftp.retrbinary('RETR %s' % name, callback)
 
     def remove_file(self, name):
         """Remove cur_dir/name."""
+        self.check_write(name)
         if self.cwd_meta.pop(name, None):
             self.cwd_meta_modified = True
         raise NotImplementedError
 
     def set_mtime(self, name, mtime):
+        self.check_write(name)
         # We cannot set the mtime on FTP servers, so we store this as additional
         # meta data in the directory
         self.cwd_meta[name] = {"touch": time.gmtime(), "mtime": mtime}
         self.cwd_meta_modified = True
 
 
+#def make_target(url):
+#    if isinstance(url, _Target):
+#        return url
+#    if url.lower().startswith("ftp:"):
+#        return FtpTarget(path, host, username, password, connect, debug)
+#    return FsTarget(url)
+    
+    
 #===============================================================================
-# Synchronizer
+# BaseSynchronizer
 #===============================================================================
-class Synchronizer(object):
-    def __init__(self, local, remote):
+class BaseSynchronizer(object):
+    def __init__(self, local, remote, options):
         self.local = local
         self.remote = remote
+        self.options = options or {}
+        self.debug_level = self.options.get("debug_level", 2) 
         self._stats = {"source_files": 0,
                        "target_files": 0,
                        "created_files": 0,
@@ -559,6 +649,12 @@ class Synchronizer(object):
     def get_stats(self):
         return self._stats
     
+    def _inc_stat(self, name, ofs=1):
+        self._stats[name] = self._stats.get(name, 0) + ofs
+    
+    def run(self):
+        return self._sync_dir()
+    
     def _copy_file(self, src, dest, file_entry):
         # 1.remove temp file
         # 2. copy to target.temp
@@ -568,10 +664,22 @@ class Synchronizer(object):
         assert isinstance(file_entry, FileEntry)
         if dest.readonly:
             raise RuntimeError("target is read-only: %s" % dest)
-        with dest.open_writable(file_entry.name) as dst:
-            src.retrbinary(file_entry.name, dst.write)
+#        with dest.open_writable(file_entry.name) as dst:
+#            src.retrbinary(file_entry.name, dst.write)
+#        with dest.open_writable(file_entry.name) as d:
+#            with src.open_readable(file_entry.name) as s:
+#                for data in s:
+#                    d.write(data)
+#                    print(">")
+#                    self._stats["bytes_written"] += file_entry.size
+        def __block_written(data):
+#            print(">(%s), " % len(data))
+            self._stats["bytes_written"] += file_entry.size
+        with src.open_readable(file_entry.name) as fp_src:
+            dest.write_file(file_entry.name, fp_src, callback=__block_written)
+
         self._stats["files_written"] += 1
-        self._stats["bytes_written"] += src.size
+#        self._stats["bytes_written"] += file_entry.size
         dest.set_mtime(file_entry.name, file_entry.mtime)
     
     def _copy_recursive(self, src, dest, dir_entry):
@@ -590,46 +698,22 @@ class Synchronizer(object):
         src.cwd("..")
         dest.cwd("..")
 
+    def _remove_file(self, file_entry):
+        # TODO: honor backup
+        print("_remove_file(%s)" % (file_entry, ))
+        assert isinstance(file_entry, FileEntry)
+        if file_entry.target.readonly:
+            raise RuntimeError("target is read-only: %s" % file_entry.target)
+        self._inc_stat("removed_files")
+#        file_entry.target.remove_file(file_entry.name)
+
+    def _log_call(self, msg):
+        if self.debug_level >= 2: 
+            print(msg)
+        
     def _log_action(self, status, action, entry):
         print("%-8s %-2s %s" % (status, action, entry.get_rel_path()))
         
-    def _sync_equal_file(self, local_file, remote_file):
-        print("_sync_equal_file(%s, %s)" % (local_file, remote_file))
-        self._log_action("EQUAL", "=", local_file)
-    
-    def _sync_equal_dir(self, local_dir, remote_dir):
-        print("_sync_equal_dir(%s, %s)" % (local_dir, remote_dir))
-        self._log_action("EQUAL", "=", local_dir)
-    
-    def _sync_newer_local(self, local_file, remote_file):
-        print("_sync_newer_local(%s, %s)" % (local_file, remote_file))
-        self._log_action("MODIFIED", ">", local_file)
-    
-    def _sync_missing_local_file(self, remote_file):
-        print("_sync_missing_local_file(%s)" % remote_file)
-        self._log_action("MISSING", "<", remote_file)
-        self._copy_file(self.remote, self.local, remote_file)
-    
-    def _sync_missing_local_dir(self, remote_dir):
-        print("_sync_missing_local_dir(%s)" % remote_dir)
-        self._log_action("MISSING", "<", remote_dir)
-        self._copy_recursive(self.remote, self.local, remote_dir)
-    
-    def _sync_missing_remote_file(self, local_file):
-        print("_sync_missing_remote_file(%s)" % local_file)
-        self._log_action("NEW", ">", local_file)
-        self._copy_file(self.local, self.remote, local_file)
-    
-    def _sync_missing_remote_dir(self, local_dir):
-        print("_sync_missing_remote_dir(%s)" % local_dir)
-        self._log_action("NEW", ">", local_dir)
-        self._copy_recursive(self.local, self.remote, local_dir)
-    
-    def _sync_older_local(self, local_file, remote_file):
-        print("_sync_older_local(%s, %s)" % (local_file, remote_file))
-        self._log_action("MODIFIED", "<", local_file)
-        self._copy_file(self.remote, self.local, remote_file)
-    
     def _sync_dir(self):
         local_entries = self.local.get_dir()
         local_entry_map = dict(map(lambda e: (e.name, e), local_entries))
@@ -640,7 +724,9 @@ class Synchronizer(object):
         # convert into a dict {name: FileEntry, ...}
         remote_entry_map = dict(map(lambda e: (e.name, e), remote_entries))
         
+        self._inc_stat("local_dirs")
         for local_file in local_files:
+            self._inc_stat("local_files")
             # TODO: case insensitive?
             remote_file = remote_entry_map.get(local_file.name)
 
@@ -651,10 +737,11 @@ class Synchronizer(object):
 #            elif local_file.key in remote_keys:
 #                self._rename_file(local_file, remote_file)
             elif local_file > remote_file:
-                self._sync_newer_local(local_file, remote_file)
+                self._sync_newer_local_file(local_file, remote_file)
+            elif local_file < remote_file:
+                self._sync_older_local_file(local_file, remote_file)
             else:
-                assert local_file < remote_file
-                self._sync_older_local(local_file, remote_file)
+                self._sync_error("files with didentical date but differeent otherwise", local_file, remote_file)
 
         for local_dir in local_directories:
             remote_dir = remote_entry_map.get(local_dir.name)
@@ -679,8 +766,136 @@ class Synchronizer(object):
         self.local.flush_meta()
         self.remote.flush_meta()
 
-    def upload(self, overwrite=True, backups=False, dry_run=False):
-        self._sync_dir()
+    def _sync_error(self, msg, local_file, remote_file):
+        print(msg, local_file, remote_file, file=sys.stderr)
+    
+    def _sync_equal_file(self, local_file, remote_file):
+        self._log_call("_sync_equal_file(%s, %s)" % (local_file, remote_file))
+        self._log_action("EQUAL", "=", local_file)
+    
+    def _sync_equal_dir(self, local_dir, remote_dir):
+        self._log_call("_sync_equal_dir(%s, %s)" % (local_dir, remote_dir))
+        self._log_action("EQUAL", "=", local_dir)
+    
+    def _sync_newer_local_file(self, local_file, remote_file):
+        self._log_call("_sync_newer_local_file(%s, %s)" % (local_file, remote_file))
+        self._log_action("MODIFIED", ">", local_file)
+    
+    def _sync_older_local_file(self, local_file, remote_file):
+        self._log_call("_sync_older_local_file(%s, %s)" % (local_file, remote_file))
+        self._log_action("MODIFIED", "<", local_file)
+#        self._copy_file(self.remote, self.local, remote_file)
+    
+    def _sync_missing_local_file(self, remote_file):
+        self._log_call("_sync_missing_local_file(%s)" % remote_file)
+        self._log_action("MISSING", "<", remote_file)
+#        self._copy_file(self.remote, self.local, remote_file)
+    
+    def _sync_missing_local_dir(self, remote_dir):
+        self._log_call("_sync_missing_local_dir(%s)" % remote_dir)
+        self._log_action("MISSING", "<", remote_dir)
+#        self._copy_recursive(self.remote, self.local, remote_dir)
+    
+    def _sync_missing_remote_file(self, local_file):
+        self._log_call("_sync_missing_remote_file(%s)" % local_file)
+        self._log_action("NEW", ">", local_file)
+#        self._copy_file(self.local, self.remote, local_file)
+    
+    def _sync_missing_remote_dir(self, local_dir):
+        self._log_call("_sync_missing_remote_dir(%s)" % local_dir)
+        self._log_action("NEW", ">", local_dir)
+#        self._copy_recursive(self.local, self.remote, local_dir)
+    
+#    def upload(self, overwrite=True, backups=False, dry_run=False):
+#        self._sync_dir()
+#
+#    def download(self, overwrite=True, backups=False, dry_run=False):
+#        raise NotImplementedError
 
-    def download(self, overwrite=True, backups=False, dry_run=False):
-        raise NotImplementedError
+
+#===============================================================================
+# UploadSynchronizer
+#===============================================================================
+class UploadSynchronizer(BaseSynchronizer):
+    def __init__(self, local, remote, options):
+        super(UploadSynchronizer, self).__init__(local, remote, options)
+        local.readonly = True
+        remote.readonly = False
+        
+    def _sync_newer_local_file(self, local_file, remote_file):
+        self._log_call("_sync_newer_local_file(%s, %s)" % (local_file, remote_file))
+        self._log_action("MODIFIED", ">", local_file)
+        self._copy_file(self.local, self.remote, local_file)
+    
+    def _sync_older_local_file(self, local_file, remote_file):
+        self._log_call("_sync_older_local_file(%s, %s)" % (local_file, remote_file))
+        if self.options.get("force"):
+            self._log_action("RESTORE", ">", local_file)
+            self._copy_file(self.local, self.remote, remote_file)
+
+    def _sync_missing_local_file(self, remote_file):
+        self._log_call("_sync_missing_local_file(%s)" % remote_file)
+        if self.options.get("delete"):
+            self._log_action("DELETE", "> X", remote_file)
+            self._remove_file(remote_file)
+    
+    def _sync_missing_local_dir(self, remote_dir):
+        self._log_call("_sync_missing_local_dir(%s)" % remote_dir)
+        if self.options.get("delete"):
+            self._log_action("DELETE", "> X", remote_dir)
+            self._remove_dir(remote_dir)
+    
+    def _sync_missing_remote_file(self, local_file):
+        self._log_call("_sync_missing_remote_file(%s)" % local_file)
+        self._log_action("NEW", ">", local_file)
+        self._copy_file(self.local, self.remote, local_file)
+    
+    def _sync_missing_remote_dir(self, local_dir):
+        self._log_call("_sync_missing_remote_dir(%s)" % local_dir)
+        self._log_action("NEW", ">", local_dir)
+        self._copy_recursive(self.local, self.remote, local_dir)
+    
+
+#===============================================================================
+# DownloadSynchronizer
+#===============================================================================
+class DownloadSynchronizer(BaseSynchronizer):
+    def __init__(self, local, remote, options):
+        super(DownloadSynchronizer, self).__init__(local, remote, options)
+        local.readonly = False
+        remote.readonly = True
+        
+    def _sync_newer_local_file(self, local_file, remote_file):
+        self._log_call("_sync_newer_local_file(%s, %s)" % (local_file, remote_file))
+        if self.options.get("force"):
+            self._log_action("RESTORE", "<", local_file)
+            self._copy_file(self.remote, self.local, remote_file)
+    
+    def _sync_older_local_file(self, local_file, remote_file):
+        self._log_call("_sync_older_local_file(%s, %s)" % (local_file, remote_file))
+        self._log_action("MODIFIED", "<", local_file)
+        self._copy_file(self.remote, self.local, remote_file)
+    
+    def _sync_missing_local_file(self, remote_file):
+        self._log_call("_sync_missing_local_file(%s)" % remote_file)
+        self._log_action("NEW", "<", remote_file)
+        self._copy_file(self.remote, self.local, remote_file)
+    
+    def _sync_missing_local_dir(self, remote_dir):
+        self._log_call("_sync_missing_local_dir(%s)" % remote_dir)
+        self._log_action("NEW", "<", remote_dir)
+        self._copy_recursive(self.remote, self.local, remote_dir)
+    
+    def _sync_missing_remote_file(self, local_file):
+        self._log_call("_sync_missing_remote_file(%s)" % local_file)
+        if self.options.get("delete"):
+            self._log_action("MISSING", "X <", local_file)
+            self._remove_file(local_file)
+    
+    def _sync_missing_remote_dir(self, local_dir):
+        self._log_call("_sync_missing_remote_dir(%s)" % local_dir)
+        if self.options.get("delete"):
+            self._log_action("MISSING", "X <", local_dir)
+            self._remove_file(local_dir)
+    
+    

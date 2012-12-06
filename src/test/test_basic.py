@@ -64,18 +64,47 @@ class FtpTest(TestCase):
         self.assertEqual(remote.pwd(), self.PATH)
         self.assertRaises(RuntimeError, remote.cwd, "..")
         
-    def test_sync(self):
-        user, passwd = get_stored_credentials("pyftpsync.pw", self.HOST)
+    def test_download_fs_fs(self):
         local = FsTarget("/Users/martin/temp")
-        local.readonly = True
-#        remote = FtpTarget(self.PATH, self.HOST, user, passwd)
         remote = FsTarget("/Users/martin/temp2")
-        remote.readonly = False
-        s = Synchronizer(local, remote)
-        s.upload()
+        opts = {"force": False, "delete": False}
+        s = DownloadSynchronizer(local, remote, opts)
+        s.run()
         stats = s.get_stats()
         pprint(stats)
-        self.assertEqual(stats["source_files"], 1)
+#        self.assertEqual(stats["source_files"], 1)
+
+    def test_download_fs_ftp(self):
+        local = FsTarget("/Users/martin/temp")
+        user, passwd = get_stored_credentials("pyftpsync.pw", self.HOST)
+        remote = FtpTarget(self.PATH, self.HOST, user, passwd)
+        opts = {"force": False, "delete": False}
+        s = DownloadSynchronizer(local, remote, opts)
+        s.run()
+        stats = s.get_stats()
+        pprint(stats)
+#        self.assertEqual(stats["source_files"], 1)
+
+    def test_upload_fs_fs(self):
+        local = FsTarget("/Users/martin/temp")
+        remote = FsTarget("/Users/martin/temp2")
+        opts = {"force": False, "delete": False}
+        s = UploadSynchronizer(local, remote, opts)
+        s.run()
+        stats = s.get_stats()
+        pprint(stats)
+#        self.assertEqual(stats["source_files"], 1)
+
+    def test_upload_fs_ftp(self):
+        local = FsTarget("/Users/martin/temp")
+        user, passwd = get_stored_credentials("pyftpsync.pw", self.HOST)
+        remote = FtpTarget(self.PATH, self.HOST, user, passwd)
+        opts = {"force": False, "delete": False}
+        s = UploadSynchronizer(local, remote, opts)
+        s.run()
+        stats = s.get_stats()
+        pprint(stats)
+#        self.assertEqual(stats["source_files"], 1)
 
 
 #===============================================================================
@@ -85,5 +114,8 @@ if __name__ == "__main__":
 #    unittest.main()
 
     suite = unittest.TestSuite()
-    suite.addTest(FtpTest("test_sync"))
-    unittest.TextTestRunner(verbosity=2).run(suite)
+#    suite.addTest(FtpTest("test_upload_fs_fs"))
+#    suite.addTest(FtpTest("test_download_fs_fs"))
+#    suite.addTest(FtpTest("test_upload_fs_ftp"))
+    suite.addTest(FtpTest("test_download_fs_ftp"))
+    unittest.TextTestRunner(verbosity=1).run(suite)
