@@ -114,7 +114,7 @@ if __name__ == "__main__":
 #    unittest.main()
 
     suite = unittest.TestSuite()
-#    suite.addTest(FtpTest("test_upload_fs_fs"))
+    suite.addTest(FtpTest("test_upload_fs_fs"))
 #    suite.addTest(FtpTest("test_download_fs_fs"))
 #    suite.addTest(FtpTest("test_upload_fs_ftp"))
     suite.addTest(FtpTest("test_download_fs_ftp"))

@@ -10,7 +10,6 @@ import time
 from ftplib import FTP
 from datetime import datetime
 import calendar
-from io import StringIO
 import sys
 import json
 import io
@@ -36,78 +35,13 @@ def get_stored_credentials(filename, url):
     return None
 
 
-#def concat_path(root, rel_path):
-#    """Append rel_path to root.
-#    
-#    I rel_path startswith
-#    """
-#    if rel_path.startswith("/"):
-#        path = rel_path.rtrip("/") + "/"
-#    else:
-#        assert root.endswith("/")
-#        path = root + rel_path.rtrip("/") + "/"
-#    if not path.startswith(root):
-#        raise RuntimeError("Tried to navigate outside root %r: %r" % (root, path))
-#    return path
-
-
-#def st_mtime_to_utc(t):
-#    """Convert a stat.st_mtime stamp to UTC.
-#    
-#    os.lstat().st_mtime is returned  
-#    """
-#    assert isinstance(t, float)
-#    lc_tuple = time.localtime(t)
-#    gt_tuple = time.gmtime(t)
-#    gt = time.mktime(gt_tuple)
-#    print("t: %s, gt: %s" % (t, gt))
-#    return gt
-
-
-#def utc_stamp_to_local(t):
-#    assert isinstance(t, float)
-#    gts = time.localtime(t)
-#    gt = time.mktime(gts)
-#    print("t: %s, gt: %s" % (t, gt))
-#    return gt
-
-
 #===============================================================================
 # LogginFileWrapper
 # Wrapper around a file for writing to write a hash sign every block.
 #===============================================================================
-class LoggingFileWrapper(object):
-    def __init__(self, fp, callback=None):
-        self.fp = fp
-        self.callback = callback or self.default_callback
-        self.bytes = 0
-    
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, tb):
-        self.close()
-
-    @staticmethod
-    def default_callback(wrapper, data):
-        print("#", end="")
-        sys.stdout.flush()
-        
-    def write(self, data):
-        self.bytes += len(data)
-        self.fp.write(data)
-        self.callback(self, data)
-    
-    def close(self):
-        self.fp.close()
-
-
-#===============================================================================
-# FtpFileWriter
-#===============================================================================
-#class FtpFileWriter(object):
-#    def __init__(self, ftp, callback=None):
-#        self.ftp = ftp
+#class LoggingFileWrapper(object):
+#    def __init__(self, fp, callback=None):
+#        self.fp = fp
 #        self.callback = callback or self.default_callback
 #        self.bytes = 0
 #    
@@ -121,79 +55,14 @@ class LoggingFileWrapper(object):
 #    def default_callback(wrapper, data):
 #        print("#", end="")
 #        sys.stdout.flush()
-#
+#        
 #    def write(self, data):
 #        self.bytes += len(data)
 #        self.fp.write(data)
 #        self.callback(self, data)
-#        self.ftp.storbinary("STOR" % self.name, data, blocksize=8192, callback=default_callback)
-##    def storefile(self, name, src, blocksize=8192):
-##        with open(os.path.join(self.cur_dir, name), "wb") as fp:
-##            while True:
-##                buf = src.read(blocksize)
-##                if not buf: 
-##                    break
-##                fp.write(buf)
-###                if callback: callback(buf)
-###        self.ftp.storbinary('STOR %s' % name, fh)
-###        fh.close()
 #    
 #    def close(self):
-#        pass
-
-
-#===============================================================================
-# FTPDirectory
-# @see http://stackoverflow.com/questions/2867217/how-to-delete-files-with-a-python-script-from-a-ftp-server-which-are-older-than/3114477#3114477
-#===============================================================================
-#FTPDir = collections.namedtuple("FTPDir", "name size mtime tree")
-#FTPFile = collections.namedtuple("FTPFile", "name size mtime")
-#
-#class FTPDirectory(object):
-#    def __init__(self, path="."):
-#        self.dirs = []
-#        self.files = []
-#        self.path = path
-#
-#    def getdata(self, ftpobj):
-#        def _addline(line):
-#            data, _, name = line.partition("; ")
-#            target = size = mtime = None
-#            fields = data.split(";")
-#            # http://tools.ietf.org/html/rfc3659#page-23
-#            # "Size" / "Modify" / "Create" / "Type" / "Unique" / "Perm" / "Lang" / "Media-Type" / "CharSet" / os-depend-fact / local-fact
-#            for field in fields:
-#                field_name, _, field_value = field.partition("=")
-#                field_name = field_name.lower()
-#                if field_name == "type":
-#                    target = self.dirs if field_value == "dir" else self.files
-#                elif field_name in ("sizd", "size"):
-#                    size = int(field_value)
-#                elif field_name == "modify":
-#                    mtime = time.mktime(time.strptime(field_value, "%Y%m%d%H%M%S"))
-#            if target is self.files:
-#                target.append(FTPFile(name, size, mtime))
-#            else:
-#                target.append(FTPDir(name, size, mtime, self.__class__(os.path.join(self.path, name))))
-#        # raises error_perm, if command is not supported
-#        ftpobj.retrlines("MLSD", _addline)
-#
-#
-#    def walk(self):
-#        for ftpfile in self.files:
-#            yield self.path, ftpfile
-#        for ftpdir in self.dirs:
-#            for path, ftpfile in ftpdir.tree.walk():
-#                yield path, ftpfile
-#
-#
-#class FTPTree(FTPDirectory):
-#    def getdata(self, ftpobj):
-#        super(FTPTree, self).getdata(ftpobj)
-#        for dirname in self.dirs:
-#            ftpobj.cwd(dirname.name)
-#            dirname.tree.getdata(ftpobj)
-#            ftpobj.cwd("..")
+#        self.fp.close()
 
 
 #===============================================================================
@@ -223,9 +92,6 @@ class _Resource(object):
                                                    os.path.join(self.rel_path, self.name), 
                                                    self.size, self.dt_modified) #+ " ## %s, %s" % (self.mtime, time.asctime(time.gmtime(self.mtime)))
 
-#    def __repr__(self):
-#        return "%s(%s)" % (self.__class__.__name__, self.name)
-    
     def __eq__(self, other):
         raise NotImplementedError
 
@@ -239,6 +105,9 @@ class _Resource(object):
         return False
 
 
+#===============================================================================
+# FileEntry
+#===============================================================================
 class FileEntry(_Resource):
     def __init__(self, target, rel_path, name, size, mtime, unique):
         super(FileEntry, self).__init__(target, rel_path, name, size, mtime, unique)
@@ -253,6 +122,9 @@ class FileEntry(_Resource):
         return True
 
 
+#===============================================================================
+# DirectoryEntry
+#===============================================================================
 class DirectoryEntry(_Resource):
     def __init__(self, target, rel_path, name, size, mtime, unique):
         super(DirectoryEntry, self).__init__(target, rel_path, name, size, mtime, unique)
@@ -264,14 +136,14 @@ class DirectoryEntry(_Resource):
 #===============================================================================
 # _CwdTarget
 #===============================================================================
-class _CwdTarget(object):
-    def __init__(self, target, dir_name):
-        self.target = target
-        self.dir_name = dir_name
-    def __enter__(self):
-        self.target.cwd(self.dir_name)
-    def __exit__(self):
-        self.target.cwd("..")
+#class _CwdTarget(object):
+#    def __init__(self, target, dir_name):
+#        self.target = target
+#        self.dir_name = dir_name
+#    def __enter__(self):
+#        self.target.cwd(self.dir_name)
+#    def __exit__(self):
+#        self.target.cwd("..")
         
 #===============================================================================
 # _Target
@@ -317,12 +189,11 @@ class _Target(object):
         """Return a list of _Resource entries."""
         raise NotImplementedError
 
-    def write_file(self, name, fp_src, blocksize=8192, callback=None):
-        """Write data cur_dir/name."""
+    def open_readable(self, name):
         raise NotImplementedError
 
-    def open_file(self, name):
-        """Open cur_dir/name for reading."""
+    def write_file(self, name, fp_src, blocksize=8192, callback=None):
+        """Write data cur_dir/name."""
         raise NotImplementedError
 
     def remove_file(self, name):
@@ -396,30 +267,10 @@ class FsTarget(_Target):
                                      str(stat.st_ino)))
         return res
 
-#    def write_file(self, name, src):
-#        """Write data cur_dir/name."""
-#        with open(os.path.join(self.cur_dir, name), "wb") as dst:
-#            src.write(dst)
-
-#    def open_file(self, name):
-#        """Open cur_dir/name for reading."""
-#        raise NotImplementedError
-
-    def remove_file(self, name):
-        """Remove cur_dir/name."""
-        self.check_write(name)
-        raise NotImplementedError
-
     def open_readable(self, name):
         fp = open(os.path.join(self.cur_dir, name), "rb")
         return fp
         
-#    def open_writable(self, name):
-#        self.check_write(name)
-#        fp = open(os.path.join(self.cur_dir, name), "wb")
-#        return fp
-##        return LoggingFileWrapper(fp)
-
     def write_file(self, name, fp_src, blocksize=8192, callback=None):
         self.check_write(name)
         with open(os.path.join(self.cur_dir, name), "wb") as fp_dst:
@@ -432,27 +283,10 @@ class FsTarget(_Target):
                     callback(data)
         return
         
-#    def retrbinary(self, name, callback, blocksize=8192):
-#        """Open cur_dir/name for reading."""
-#        # TODO: this mimic the FTP interface, but yield seems better
-#        with open(os.path.join(self.cur_dir, name), "rb") as fp:
-#            while True:
-#                data = fp.read(blocksize)
-#                if not data:
-#                    break
-#                callback(data)
-#        return
-#
-#    def storefile(self, name, src, blocksize=8192):
-#        with open(os.path.join(self.cur_dir, name), "wb") as fp:
-#            while True:
-#                buf = src.read(blocksize)
-#                if not buf: 
-#                    break
-#                fp.write(buf)
-##                if callback: callback(buf)
-##        self.ftp.storbinary('STOR %s' % name, fh)
-##        fh.close()
+    def remove_file(self, name):
+        """Remove cur_dir/name."""
+        self.check_write(name)
+        raise NotImplementedError
 
     def set_mtime(self, name, mtime):
         self.check_write(name)
@@ -573,18 +407,6 @@ class FtpTarget(_Target):
 
         return res
 
-#    def write_file(self, name, src):
-#        """Write data cur_dir/name."""
-#        with open(os.path.join(self.cur_dir, name), "wb") as dst:
-#            src.write(dst)
-
-#    def open_file(self, name):
-#        """Open cur_dir/name for reading."""
-#        out = StringIO()
-#        self.ftp.retrbinary('RETR %s' % name, out.write)
-##        fh.close()
-#        return out
-
     def open_readable(self, name):
         """Open cur_dir/name for reading."""
 #        out = StringIO()
@@ -594,19 +416,10 @@ class FtpTarget(_Target):
         out.seek(0)
         return out
 
-#    def open_writable(self, name):
-#        self.check_write(name)
-#        res = FtpFileWriter(self.ftp, name)
-#        return res
-        
     def write_file(self, name, fp_src, blocksize=8192, callback=None):
         self.check_write(name)
         self.ftp.storbinary("STOR %s" % name, fp_src, blocksize, callback)
         
-#    def retrbinary(self, name, callback, blocksize=8192):
-#        """Open cur_dir/name for reading."""
-#        self.ftp.retrbinary('RETR %s' % name, callback)
-
     def remove_file(self, name):
         """Remove cur_dir/name."""
         self.check_write(name)
@@ -622,14 +435,6 @@ class FtpTarget(_Target):
         self.cwd_meta_modified = True
 
 
-#def make_target(url):
-#    if isinstance(url, _Target):
-#        return url
-#    if url.lower().startswith("ftp:"):
-#        return FtpTarget(path, host, username, password, connect, debug)
-#    return FsTarget(url)
-    
-    
 #===============================================================================
 # BaseSynchronizer
 #===============================================================================
@@ -664,22 +469,15 @@ class BaseSynchronizer(object):
         assert isinstance(file_entry, FileEntry)
         if dest.readonly:
             raise RuntimeError("target is read-only: %s" % dest)
-#        with dest.open_writable(file_entry.name) as dst:
-#            src.retrbinary(file_entry.name, dst.write)
-#        with dest.open_writable(file_entry.name) as d:
-#            with src.open_readable(file_entry.name) as s:
-#                for data in s:
-#                    d.write(data)
-#                    print(">")
-#                    self._stats["bytes_written"] += file_entry.size
+
         def __block_written(data):
 #            print(">(%s), " % len(data))
             self._stats["bytes_written"] += file_entry.size
+
         with src.open_readable(file_entry.name) as fp_src:
             dest.write_file(file_entry.name, fp_src, callback=__block_written)
 
         self._stats["files_written"] += 1
-#        self._stats["bytes_written"] += file_entry.size
         dest.set_mtime(file_entry.name, file_entry.mtime)
     
     def _copy_recursive(self, src, dest, dir_entry):
@@ -784,33 +582,23 @@ class BaseSynchronizer(object):
     def _sync_older_local_file(self, local_file, remote_file):
         self._log_call("_sync_older_local_file(%s, %s)" % (local_file, remote_file))
         self._log_action("MODIFIED", "<", local_file)
-#        self._copy_file(self.remote, self.local, remote_file)
     
     def _sync_missing_local_file(self, remote_file):
         self._log_call("_sync_missing_local_file(%s)" % remote_file)
         self._log_action("MISSING", "<", remote_file)
-#        self._copy_file(self.remote, self.local, remote_file)
     
     def _sync_missing_local_dir(self, remote_dir):
         self._log_call("_sync_missing_local_dir(%s)" % remote_dir)
         self._log_action("MISSING", "<", remote_dir)
-#        self._copy_recursive(self.remote, self.local, remote_dir)
     
     def _sync_missing_remote_file(self, local_file):
         self._log_call("_sync_missing_remote_file(%s)" % local_file)
         self._log_action("NEW", ">", local_file)
-#        self._copy_file(self.local, self.remote, local_file)
     
     def _sync_missing_remote_dir(self, local_dir):
         self._log_call("_sync_missing_remote_dir(%s)" % local_dir)
         self._log_action("NEW", ">", local_dir)
-#        self._copy_recursive(self.local, self.remote, local_dir)
     
-#    def upload(self, overwrite=True, backups=False, dry_run=False):
-#        self._sync_dir()
-#
-#    def download(self, overwrite=True, backups=False, dry_run=False):
-#        raise NotImplementedError
 
 
 #===============================================================================
@@ -897,5 +685,3 @@ class DownloadSynchronizer(BaseSynchronizer):
         if self.options.get("delete"):
             self._log_action("MISSING", "X <", local_dir)
             self._remove_file(local_dir)
-    
-    
