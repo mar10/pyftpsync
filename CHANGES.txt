@@ -2,6 +2,6 @@
 CHANGES
 =======
 
-0.1.6
+1.0.0
 =====
 First release

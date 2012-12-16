@@ -2,27 +2,33 @@
 # revision (set to True for real releases)
 import os
 RELEASE = False
-from tabfix import main
 
 from ez_setup import use_setuptools
 use_setuptools()
 
 from setuptools import setup, find_packages
 
+# Get description and __version__ without using import
+readme = open("README.txt", "rt").read()
+changes = open("CHANGES.txt", "rt").read()
+g_dict = {}
+exec(open("src/ftpsync/_version.py").read(), g_dict)
+version = g_dict["__version__"]
+
 # 'setup.py upload' fails on Vista, because .pypirc is searched on 'HOME' path
 if not "HOME" in os.environ and  "HOMEPATH" in os.environ:
     os.environ.setdefault("HOME", os.environ.get("HOMEPATH", ""))
-    print "Initializing HOME environment variable to '%s'" % os.environ["HOME"]
+    print("Initializing HOME environment variable to '%s'" % os.environ["HOME"])
 
 setup(name="pyftpsync",
-      version = main.__version__,
+      version = version,
       author = "Martin Wendt",
       author_email = "pyftpsync@wwwendt.de",
       maintainer = "Martin Wendt",
       maintainer_email = "pyftpsync@wwwendt.de",
       url = "http://pyftpsync.googlecode.com/",
-      description = "Cleanup whitespace in text files",
-      long_description = main.__doc__,
+      description = "Synchronize folders over FTP.",
+      long_description = readme + "\n\n" + changes,
 
         #Development Status :: 2 - Pre-Alpha
         #Development Status :: 3 - Alpha
@@ -35,7 +41,8 @@ setup(name="pyftpsync",
                      "Intended Audience :: Developers",
                      "License :: OSI Approved :: MIT License",
                      "Operating System :: OS Independent",
-                     "Programming Language :: Python",
+                     "Programming Language :: Python :: 2",
+                     "Programming Language :: Python :: 3",
                      "Topic :: Software Development :: Libraries :: Python Modules",
                      "Topic :: Utilities",
                      ],
@@ -43,7 +50,9 @@ setup(name="pyftpsync",
 #      platforms=["Unix", "Windows"],
       license = "The MIT License",
 #      install_requires = ["lxml"],
-      packages = find_packages(exclude=[]),
+      package_dir = {"": "src"},
+      packages = ["ftpsync"],
+#      packages = find_packages(exclude=[]),
       py_modules = ["ez_setup", ],
 
 #      package_data={"": ["*.txt", "*.html", "*.conf"]},
@@ -52,6 +61,6 @@ setup(name="pyftpsync",
       extras_require = {},
       test_suite = "tests.test_all.run",
       entry_points = {
-          "console_scripts" : ["pyftpsync = tabfix.main:run"],
+          "console_scripts" : ["pyftpsync = ftpsync.pyftpsync:run"],
           },
       )

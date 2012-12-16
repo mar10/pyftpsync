@@ -4,6 +4,8 @@ Created on 14.09.2012
 
 @author: Wendt
 '''
+from __future__ import print_function
+
 import os
 from posixpath import join as join_url
 import time
@@ -13,6 +15,10 @@ import calendar
 import sys
 import json
 import io
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse # python 2
 
 def get_stored_credentials(filename, url):
     """Parse a file in the user's home directory, formatted like:
@@ -33,6 +39,19 @@ def get_stored_credentials(filename, url):
                 creds = creds.strip()
                 return creds.split(":", 1)
     return None
+
+
+def make_target(url, connect=True, debug=1):
+#    scheme, netloc, path, params, query, fragment = urlparse(url, allow_fragments=False)
+    parts = urlparse(url, allow_fragments=False)
+    # scheme is case-insensitive according to http://tools.ietf.org/html/rfc3986
+    if parts.scheme.lower() == "ftp":
+        target = FtpTarget(parts.path, parts.hostname, parts.username, parts.password, connect, debug)
+    elif parts.scheme == "":
+        target = FsTarget(url)
+    else:
+        raise ValueError("Invalid target '%s'" % url)
+    return target
 
 
 #===============================================================================
@@ -297,7 +316,7 @@ class FsTarget(_Target):
 # FtpTarget
 #===============================================================================
 class FtpTarget(_Target):
-    META_FILE_NAME = ".pyftpsync"
+    META_FILE_NAME = "_pyftpsync-meta.json"
     
     def __init__(self, path, host, username=None, password=None, connect=True, debug=1):
         path = path or "/"
@@ -309,7 +328,7 @@ class FtpTarget(_Target):
         self.password = password
         self.cwd_meta = None
         self.cwd_meta_modified = False
-        self.has_old_cwd_meta = None
+#        self.has_old_cwd_meta = None
         if connect:
             self.open()
 
@@ -331,7 +350,8 @@ class FtpTarget(_Target):
         self.connected = True
 
     def close(self):
-        self.ftp.quit()
+        if self.connected:
+            self.ftp.quit()
         self.connected = False
         
     def cwd(self, dir_name):
@@ -340,7 +360,7 @@ class FtpTarget(_Target):
             raise RuntimeError("Tried to navigate outside root %r: %r" % (self.root_dir, path))
         self.ftp.cwd(dir_name)
         self.cur_dir = path
-        self.has_old_cwd_meta = None
+#        self.has_old_cwd_meta = None
         self.cwd_meta = None
         return self.cur_dir
 
@@ -350,17 +370,32 @@ class FtpTarget(_Target):
     def flush_meta(self):
         if self.readonly:
             return
-        if not self.cwd_meta:
-            if self.has_old_cwd_meta:
-                self.ftp.delete(self.META_FILE_NAME)
-                self.has_old_cwd_meta = False
+        if self.cwd_meta:
+            if sys.version_info[0] == 2:
+                # Python 2
+                s = json.dumps(self.cwd_meta, indent=4, sort_keys=True)
+                buf = io.BytesIO(s) 
+            else:
+                # Python 3
+                buf = io.StringIO()
+                json.dump(self.cwd_meta, buf, indent=4, sort_keys=True)
+                buf.flush()
+                buf.seek(0)
+            res = self.ftp.storlines("STOR " + self.META_FILE_NAME, buf)
+            # TODO: check result
+        elif self.cwd_meta is not None:
+            self.ftp.delete(self.META_FILE_NAME)
             return
-        fp = json.dump(self.cwd_meta)
-        self.ftp.storlines("STOR " + self.META_FILE_NAME, fp)
+        self.cwd_meta_modified = False
+#        self.has_old_cwd_meta = True
 
     def get_dir(self):
         res = []
-        self.has_old_cwd_meta = False
+#        self.has_old_cwd_meta = False
+#        has_cwd_meta = True
+        self.cwd_meta = None
+        self.cwd_meta_modified = False
+        
         def _addline(line):
             data, _, name = line.partition("; ")
             res_type = size = mtime = unique = None
@@ -385,7 +420,14 @@ class FtpTarget(_Target):
                 res.append(DirectoryEntry(self, self.cur_dir, name, size, mtime, unique))
             elif res_type == "file":
                 if name == self.META_FILE_NAME:
-                    self.has_old_cwd_meta = True
+#                    self.has_old_cwd_meta = True
+#                    has_cwd_meta = True
+                    self.cwd_meta = {}
+                    try:
+                        m = self.ftp.retrlines("RETR " + self.META_FILE_NAME)
+                        self.cwd_meta = json.loads(m)
+                    except Exception as e:
+                        print("Could not read meta info: %s" % e, file=sys.stderr)
                 else:
                     res.append(FileEntry(self, self.cur_dir, name, size, mtime, unique))
             elif res_type in ("cdir", "pdir"):
@@ -396,14 +438,17 @@ class FtpTarget(_Target):
         # raises error_perm, if command is not supported
         self.ftp.retrlines("MLSD", _addline)
         
-        self.cwd_meta = {}
-        if self.has_old_cwd_meta:
-            try:
-                m = self.ftp.retrlines("RETR " + self.META_FILE_NAME)
-                self.cwd_meta = json.loads(m)
-                # TODO: remove missing files from cwd_meta, and set cwd_meta_modified in this case 
-            except Exception as e:
-                print("Could not read meta info: %s" % e)
+        # TODO: remove missing files from cwd_meta, and set cwd_meta_modified in this case 
+        if self.cwd_meta:
+            for k, v in self.cwd_meta.iteritems():
+                pass
+#        if self.has_old_cwd_meta:
+#            try:
+#                m = self.ftp.retrlines("RETR " + self.META_FILE_NAME)
+#                self.cwd_meta = json.loads(m)
+#                # TODO: remove missing files from cwd_meta, and set cwd_meta_modified in this case 
+#            except Exception as e:
+#                print("Could not read meta info: %s" % e)
 
         return res
 
@@ -423,15 +468,17 @@ class FtpTarget(_Target):
     def remove_file(self, name):
         """Remove cur_dir/name."""
         self.check_write(name)
-        if self.cwd_meta.pop(name, None):
+        if self.cwd_meta and self.cwd_meta.pop(name, None):
             self.cwd_meta_modified = True
-        raise NotImplementedError
+        self.ftp.delete(name)
 
     def set_mtime(self, name, mtime):
         self.check_write(name)
         # We cannot set the mtime on FTP servers, so we store this as additional
         # meta data in the directory
-        self.cwd_meta[name] = {"touch": time.gmtime(), "mtime": mtime}
+        if self.cwd_meta is None:
+            self.cwd_meta = {}
+        self.cwd_meta[name] = {"touch": time.mktime(time.gmtime()), "mtime": mtime}
         self.cwd_meta_modified = True
 
 
@@ -442,6 +489,7 @@ class BaseSynchronizer(object):
     def __init__(self, local, remote, options):
         self.local = local
         self.remote = remote
+        #TODO: check for self-including paths
         self.options = options or {}
         self.debug_level = self.options.get("debug_level", 2) 
         self._stats = {"source_files": 0,
@@ -472,7 +520,7 @@ class BaseSynchronizer(object):
 
         def __block_written(data):
 #            print(">(%s), " % len(data))
-            self._stats["bytes_written"] += file_entry.size
+            self._stats["bytes_written"] += len(data) #file_entry.size
 
         with src.open_readable(file_entry.name) as fp_src:
             dest.write_file(file_entry.name, fp_src, callback=__block_written)
@@ -503,7 +551,7 @@ class BaseSynchronizer(object):
         if file_entry.target.readonly:
             raise RuntimeError("target is read-only: %s" % file_entry.target)
         self._inc_stat("removed_files")
-#        file_entry.target.remove_file(file_entry.name)
+        file_entry.target.remove_file(file_entry.name)
 
     def _log_call(self, msg):
         if self.debug_level >= 2: 
@@ -539,20 +587,20 @@ class BaseSynchronizer(object):
             elif local_file < remote_file:
                 self._sync_older_local_file(local_file, remote_file)
             else:
-                self._sync_error("files with didentical date but differeent otherwise", local_file, remote_file)
+                self._sync_error("file with identical date but different otherwise", local_file, remote_file)
 
         for local_dir in local_directories:
             remote_dir = remote_entry_map.get(local_dir.name)
             if not remote_dir:
                 remote_dir = self._sync_missing_remote_dir(local_dir)
-            if remote_dir:
-                self._sync_equal_dir(local_dir, remote_dir)
-                self.local.cwd(local_dir.name)
-                self.remote.cwd(local_dir.name)
-                self._sync_dir()
-                self.local.cwd("..")
-                self.remote.cwd("..")
-                # TODO: check if cwd is still correct
+#            if remote_dir:
+#                self._sync_equal_dir(local_dir, remote_dir)
+#                self.local.cwd(local_dir.name)
+#                self.remote.cwd(local_dir.name)
+#                self._sync_dir()
+#                self.local.cwd("..")
+#                self.remote.cwd("..")
+#                # TODO: check if cwd is still correct
         
         for remote_entry in remote_entries:
             if not remote_entry.name in local_entry_map:
@@ -564,6 +612,19 @@ class BaseSynchronizer(object):
         self.local.flush_meta()
         self.remote.flush_meta()
 
+        for local_dir in local_directories:
+            remote_dir = remote_entry_map.get(local_dir.name)
+#            if not remote_dir:
+#                remote_dir = self._sync_missing_remote_dir(local_dir)
+            if remote_dir:
+                self._sync_equal_dir(local_dir, remote_dir)
+                self.local.cwd(local_dir.name)
+                self.remote.cwd(local_dir.name)
+                self._sync_dir()
+                self.local.cwd("..")
+                self.remote.cwd("..")
+                # TODO: check if cwd is still correct
+        
     def _sync_error(self, msg, local_file, remote_file):
         print(msg, local_file, remote_file, file=sys.stderr)
     
