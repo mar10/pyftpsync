@@ -1,5 +1,6 @@
 eclipse.preferences.version=1
+encoding//src/ftpsync/ftp_target.py=iso-8859-1
 encoding//src/ftpsync/pyftpsync.py=iso-8859-1
 encoding//src/ftpsync/sfm.py=UTF-8
 encoding//src/ftpsync/targets.py=iso-8859-1
-encoding//src/test/test_basic.py=iso-8859-1
+encoding//src/test/test_basic.py=UTF-8

@@ -1,4 +1,4 @@
-# -*- coding: iso-8859-1 -*-
+# -*- coding: UTF-8 -*-
 """
 Tests for scioweb.eplm.formsheets.eplm_base
 """
@@ -8,7 +8,8 @@ import unittest
 from unittest import TestCase
 
 from ftpsync.targets import *  # @UnusedWildImport
-from ftplib import FTP
+from ftpsync.ftp_target import *  # @UnusedWildImport
+#from ftplib import FTP
 from pprint import pprint
 
 #===============================================================================
@@ -64,6 +65,27 @@ class FtpTest(TestCase):
         self.assertEqual(remote.pwd(), self.PATH)
         self.assertRaises(RuntimeError, remote.cwd, "..")
         
+    def test_readwrite(self):
+        user, passwd = get_stored_credentials("pyftpsync.pw", self.HOST)
+        remote = FtpTarget(self.PATH, self.HOST, user, passwd)
+        remote.readonly = False
+        remote.cwd(self.PATH)
+        self.assertEqual(remote.pwd(), self.PATH)
+        
+        if sys.version_info[0] < 3:
+            # 'abc_äöü_ß¿€'
+            b = 'abc_\xc3\xa4\xc3\xb6\xc3\xbc_\xc3\x9f\xc2\xbf\xe2\x82\xac'
+            u = b.decode("utf8")
+        else:
+            u = "abc_äöü_¿ß"
+        s = u.encode("utf8")
+
+        remote.write_text("write_test_u.txt", u)
+        self.assertEqual(remote.read_text("write_test_u.txt"), u)
+
+        remote.write_text("write_test_s.txt", s)
+        self.assertEqual(remote.read_text("write_test_s.txt"), u)
+        
     def test_download_fs_fs(self):
         local = FsTarget("/Users/martin/temp")
         remote = FsTarget("/Users/martin/temp2")
@@ -99,7 +121,7 @@ class FtpTest(TestCase):
         local = FsTarget("/Users/martin/temp")
         user, passwd = get_stored_credentials("pyftpsync.pw", self.HOST)
         remote = FtpTarget(self.PATH, self.HOST, user, passwd)
-        opts = {"force": False, "delete": False}
+        opts = {"force": False, "delete": True}
         s = UploadSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
@@ -187,8 +209,9 @@ if __name__ == "__main__":
     suite = unittest.TestSuite()
 #    suite.addTest(FtpTest("test_upload_fs_fs"))
 #    suite.addTest(FtpTest("test_download_fs_fs"))
-#    suite.addTest(FtpTest("test_upload_fs_ftp"))
+    suite.addTest(FtpTest("test_upload_fs_ftp"))
 #    suite.addTest(FtpTest("test_download_fs_ftp"))
-    suite.addTest(PlainTest("test_json"))
-    suite.addTest(PlainTest("test_make_target"))
+#    suite.addTest(PlainTest("test_json"))
+#    suite.addTest(PlainTest("test_make_target"))
+#    suite.addTest(FtpTest("test_readwrite"))
     unittest.TextTestRunner(verbosity=1).run(suite)

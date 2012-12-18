@@ -8,17 +8,15 @@ from __future__ import print_function
 
 import os
 from posixpath import join as join_url
-import time
-from ftplib import FTP
 from datetime import datetime
-import calendar
 import sys
-import json
 import io
 try:
     from urllib.parse import urlparse
 except ImportError:
-    from urlparse import urlparse # python 2
+    # Python 2
+    from urlparse import urlparse
+
 
 def get_stored_credentials(filename, url):
     """Parse a file in the user's home directory, formatted like:
@@ -41,12 +39,16 @@ def get_stored_credentials(filename, url):
     return None
 
 
+#===============================================================================
+# make_target
+#===============================================================================
 def make_target(url, connect=True, debug=1):
-#    scheme, netloc, path, params, query, fragment = urlparse(url, allow_fragments=False)
+    """Factory that creates _Target obejcts from URLs."""
     parts = urlparse(url, allow_fragments=False)
     # scheme is case-insensitive according to http://tools.ietf.org/html/rfc3986
     if parts.scheme.lower() == "ftp":
-        target = FtpTarget(parts.path, parts.hostname, parts.username, parts.password, connect, debug)
+        from ftpsync import ftp_target
+        target = ftp_target.FtpTarget(parts.path, parts.hostname, parts.username, parts.password, connect, debug)
     elif parts.scheme == "":
         target = FsTarget(url)
     else:
@@ -54,6 +56,28 @@ def make_target(url, connect=True, debug=1):
     return target
 
 
+def to_binary(s):
+    """Convert unicode (text strings) to binary data on Python 2 and 3."""
+    if sys.version_info[0] < 3:
+        # Python 2
+        if type(s) is not str:
+            s = s.encode("utf8") 
+    elif type(s) is str:
+        # Python 3
+        s = bytes(s, "utf8")
+    return s 
+    
+#def to_text(s):
+#    """Convert binary data to unicode (text strings) on Python 2 and 3."""
+#    if sys.version_info[0] < 3:
+#        # Python 2
+#        if type(s) is not str:
+#            s = s.encode("utf8") 
+#    elif type(s) is str:
+#        # Python 3
+#        s = bytes(s, "utf8")
+#    return s 
+    
 #===============================================================================
 # LogginFileWrapper
 # Wrapper around a file for writing to write a hash sign every block.
@@ -168,6 +192,8 @@ class DirectoryEntry(_Resource):
 # _Target
 #===============================================================================
 class _Target(object):
+    META_FILE_NAME = "_pyftpsync-meta.json"
+
     def __init__(self, root_dir):
         self.readonly = True
         self.root_dir = root_dir.rstrip("/")
@@ -187,18 +213,12 @@ class _Target(object):
         self.connected = False
     
     def check_write(self, name):
-        """Raise exception, if writing cur_dir/name is not allowed."""
+        """Raise exception if writing cur_dir/name is not allowed."""
         if self.readonly:
-            raise RuntimeError("target is read-only: %s / " % (self, name))
+            raise RuntimeError("target is read-only: %s + %s / " % (self, name))
 
     def cwd(self, dir_name):
         raise NotImplementedError
-    
-#    def dip(self, dir_name):
-#        return _CwdTarget(dir_name)
-#    
-#    def walk(self):
-#        raise NotImplementedError
     
     def flush_meta(self):
         """Write additional meta information for current directory."""
@@ -209,11 +229,27 @@ class _Target(object):
         raise NotImplementedError
 
     def open_readable(self, name):
+        """Return file-like object opened in binary mode for cur_dir/name."""
         raise NotImplementedError
 
+    def read_text(self, name):
+        """Read text string from cur_dir/name using open_readable()."""
+#        with self.open_readable(name) as fp:
+#            dest.write_file(file_entry.name, fp_src, callback=__block_written)
+        with self.open_readable(name) as fp:
+#            res = fp.readall()
+            res = fp.getvalue()
+            res = res.decode("utf8")
+            return res
+
     def write_file(self, name, fp_src, blocksize=8192, callback=None):
-        """Write data cur_dir/name."""
+        """Write binary data from file-like to cur_dir/name."""
         raise NotImplementedError
+
+    def write_text(self, name, s):
+        """Write string data to cur_dir/name using write_file()."""
+        buf = io.BytesIO(to_binary(s))
+        self.write_file(name, buf)
 
     def remove_file(self, name):
         """Remove cur_dir/name."""
@@ -235,7 +271,7 @@ class FsTarget(_Target):
         self.open()
 
     def __str__(self):
-        return "FS:%s + %s" % (self.root_dir, os.path.relpath(self.cur_dir, self.root_dir))
+        return "<FS:%s + %s>" % (self.root_dir, os.path.relpath(self.cur_dir, self.root_dir))
 
     def open(self):
         self.connected = True
@@ -313,179 +349,16 @@ class FsTarget(_Target):
 
 
 #===============================================================================
-# FtpTarget
-#===============================================================================
-class FtpTarget(_Target):
-    META_FILE_NAME = "_pyftpsync-meta.json"
-    
-    def __init__(self, path, host, username=None, password=None, connect=True, debug=1):
-        path = path or "/"
-        super(FtpTarget, self).__init__(path)
-        self.ftp = FTP()
-        self.ftp.debug(debug)
-        self.host = host
-        self.username = username
-        self.password = password
-        self.cwd_meta = None
-        self.cwd_meta_modified = False
-#        self.has_old_cwd_meta = None
-        if connect:
-            self.open()
-
-    def __str__(self):
-        return "ftp:%s%s" % (self.host, self.cur_dir)
-
-    def open(self):
-        self.ftp.connect(self.host)
-        if self.username:
-            self.ftp.login(self.username, self.password)
-        # TODO: case senstivity?
-#        resp = self.ftp.sendcmd("system")
-#        self.is_unix = "unix" in resp.lower()
-        self.ftp.cwd(self.root_dir)
-        pwd = self.ftp.pwd()
-        if pwd != self.root_dir:
-            raise RuntimeError("Unable to navigate to working directory %r" % self.root_dir)
-        self.cur_dir = pwd
-        self.connected = True
-
-    def close(self):
-        if self.connected:
-            self.ftp.quit()
-        self.connected = False
-        
-    def cwd(self, dir_name):
-        path = join_url(self.cur_dir, dir_name)
-        if not path.startswith(self.root_dir):
-            raise RuntimeError("Tried to navigate outside root %r: %r" % (self.root_dir, path))
-        self.ftp.cwd(dir_name)
-        self.cur_dir = path
-#        self.has_old_cwd_meta = None
-        self.cwd_meta = None
-        return self.cur_dir
-
-    def pwd(self):
-        return self.ftp.pwd()
-
-    def flush_meta(self):
-        if self.readonly:
-            return
-        if self.cwd_meta:
-            if sys.version_info[0] == 2:
-                # Python 2
-                s = json.dumps(self.cwd_meta, indent=4, sort_keys=True)
-                buf = io.BytesIO(s) 
-            else:
-                # Python 3
-                buf = io.StringIO()
-                json.dump(self.cwd_meta, buf, indent=4, sort_keys=True)
-                buf.flush()
-                buf.seek(0)
-            res = self.ftp.storlines("STOR " + self.META_FILE_NAME, buf)
-            # TODO: check result
-        elif self.cwd_meta is not None:
-            self.ftp.delete(self.META_FILE_NAME)
-            return
-        self.cwd_meta_modified = False
-#        self.has_old_cwd_meta = True
-
-    def get_dir(self):
-        res = []
-#        self.has_old_cwd_meta = False
-#        has_cwd_meta = True
-        self.cwd_meta = None
-        self.cwd_meta_modified = False
-        
-        def _addline(line):
-            data, _, name = line.partition("; ")
-            res_type = size = mtime = unique = None
-            fields = data.split(";")
-            # http://tools.ietf.org/html/rfc3659#page-23
-            # "Size" / "Modify" / "Create" / "Type" / "Unique" / "Perm" / "Lang" / "Media-Type" / "CharSet" / os-depend-fact / local-fact
-            for field in fields:
-                field_name, _, field_value = field.partition("=")
-                field_name = field_name.lower()
-                if field_name == "type":
-                    res_type = field_value
-                elif field_name in ("sizd", "size"):
-                    size = int(field_value)
-                elif field_name == "modify":
-                    # Use calendar.timegm() instead of time.mktime(), because
-                    # the date was returned as UTC
-                    mtime = calendar.timegm(time.strptime(field_value, "%Y%m%d%H%M%S"))
-                elif field_name == "unique":
-                    unique = field_value
-
-            if res_type == "dir":
-                res.append(DirectoryEntry(self, self.cur_dir, name, size, mtime, unique))
-            elif res_type == "file":
-                if name == self.META_FILE_NAME:
-#                    self.has_old_cwd_meta = True
-#                    has_cwd_meta = True
-                    self.cwd_meta = {}
-                    try:
-                        m = self.ftp.retrlines("RETR " + self.META_FILE_NAME)
-                        self.cwd_meta = json.loads(m)
-                    except Exception as e:
-                        print("Could not read meta info: %s" % e, file=sys.stderr)
-                else:
-                    res.append(FileEntry(self, self.cur_dir, name, size, mtime, unique))
-            elif res_type in ("cdir", "pdir"):
-                pass
-            else:
-                raise NotImplementedError
-                
-        # raises error_perm, if command is not supported
-        self.ftp.retrlines("MLSD", _addline)
-        
-        # TODO: remove missing files from cwd_meta, and set cwd_meta_modified in this case 
-        if self.cwd_meta:
-            for k, v in self.cwd_meta.iteritems():
-                pass
-#        if self.has_old_cwd_meta:
-#            try:
-#                m = self.ftp.retrlines("RETR " + self.META_FILE_NAME)
-#                self.cwd_meta = json.loads(m)
-#                # TODO: remove missing files from cwd_meta, and set cwd_meta_modified in this case 
-#            except Exception as e:
-#                print("Could not read meta info: %s" % e)
-
-        return res
-
-    def open_readable(self, name):
-        """Open cur_dir/name for reading."""
-#        out = StringIO()
-        out = io.BytesIO()
-        self.ftp.retrbinary("RETR %s" % name, out.write)
-        out.flush()
-        out.seek(0)
-        return out
-
-    def write_file(self, name, fp_src, blocksize=8192, callback=None):
-        self.check_write(name)
-        self.ftp.storbinary("STOR %s" % name, fp_src, blocksize, callback)
-        
-    def remove_file(self, name):
-        """Remove cur_dir/name."""
-        self.check_write(name)
-        if self.cwd_meta and self.cwd_meta.pop(name, None):
-            self.cwd_meta_modified = True
-        self.ftp.delete(name)
-
-    def set_mtime(self, name, mtime):
-        self.check_write(name)
-        # We cannot set the mtime on FTP servers, so we store this as additional
-        # meta data in the directory
-        if self.cwd_meta is None:
-            self.cwd_meta = {}
-        self.cwd_meta[name] = {"touch": time.mktime(time.gmtime()), "mtime": mtime}
-        self.cwd_meta_modified = True
-
-
-#===============================================================================
 # BaseSynchronizer
 #===============================================================================
 class BaseSynchronizer(object):
+
+    DEFAULT_EXCLUDES = [".DS_Store",
+                        ".hg",
+                        ".svn",
+                        _Target.META_FILE_NAME,
+                        ]
+
     def __init__(self, local, remote, options):
         self.local = local
         self.remote = remote
@@ -520,7 +393,7 @@ class BaseSynchronizer(object):
 
         def __block_written(data):
 #            print(">(%s), " % len(data))
-            self._stats["bytes_written"] += len(data) #file_entry.size
+            self._stats["bytes_written"] += len(data)
 
         with src.open_readable(file_entry.name) as fp_src:
             dest.write_file(file_entry.name, fp_src, callback=__block_written)
@@ -553,13 +426,20 @@ class BaseSynchronizer(object):
         self._inc_stat("removed_files")
         file_entry.target.remove_file(file_entry.name)
 
-    def _log_call(self, msg):
-        if self.debug_level >= 2: 
+    def _log_call(self, msg, min_level=2):
+        if self.debug_level >= min_level: 
             print(msg)
         
-    def _log_action(self, status, action, entry):
-        print("%-8s %-2s %s" % (status, action, entry.get_rel_path()))
+    def _log_action(self, status, action, entry, min_level=1):
+        if self.debug_level >= min_level: 
+            print("%-8s %-2s %s" % (status, action, entry.get_rel_path()))
         
+    def _before_sync(self, entry):
+        if entry.name in self.DEFAULT_EXCLUDES:
+            self._sync_skip(entry)
+            return False
+        return True
+    
     def _sync_dir(self):
         local_entries = self.local.get_dir()
         local_entry_map = dict(map(lambda e: (e.name, e), local_entries))
@@ -573,6 +453,8 @@ class BaseSynchronizer(object):
         self._inc_stat("local_dirs")
         for local_file in local_files:
             self._inc_stat("local_files")
+            if not self._before_sync(local_file):
+                continue
             # TODO: case insensitive?
             remote_file = remote_entry_map.get(local_file.name)
 
@@ -590,19 +472,16 @@ class BaseSynchronizer(object):
                 self._sync_error("file with identical date but different otherwise", local_file, remote_file)
 
         for local_dir in local_directories:
+            if not self._before_sync(local_dir):
+                continue
             remote_dir = remote_entry_map.get(local_dir.name)
             if not remote_dir:
                 remote_dir = self._sync_missing_remote_dir(local_dir)
-#            if remote_dir:
-#                self._sync_equal_dir(local_dir, remote_dir)
-#                self.local.cwd(local_dir.name)
-#                self.remote.cwd(local_dir.name)
-#                self._sync_dir()
-#                self.local.cwd("..")
-#                self.remote.cwd("..")
-#                # TODO: check if cwd is still correct
-        
+
+        #
         for remote_entry in remote_entries:
+            if not self._before_sync(remote_entry):
+                continue
             if not remote_entry.name in local_entry_map:
                 if isinstance(remote_entry, DirectoryEntry):
                     self._sync_missing_local_dir(remote_entry)
@@ -613,9 +492,9 @@ class BaseSynchronizer(object):
         self.remote.flush_meta()
 
         for local_dir in local_directories:
+            if not self._before_sync(local_dir):
+                continue
             remote_dir = remote_entry_map.get(local_dir.name)
-#            if not remote_dir:
-#                remote_dir = self._sync_missing_remote_dir(local_dir)
             if remote_dir:
                 self._sync_equal_dir(local_dir, remote_dir)
                 self.local.cwd(local_dir.name)
@@ -628,13 +507,16 @@ class BaseSynchronizer(object):
     def _sync_error(self, msg, local_file, remote_file):
         print(msg, local_file, remote_file, file=sys.stderr)
     
+    def _sync_skip(self, entry):
+        print("SKIPPING", entry)
+    
     def _sync_equal_file(self, local_file, remote_file):
         self._log_call("_sync_equal_file(%s, %s)" % (local_file, remote_file))
-        self._log_action("EQUAL", "=", local_file)
+        self._log_action("EQUAL", "=", local_file, min_level=2)
     
     def _sync_equal_dir(self, local_dir, remote_dir):
         self._log_call("_sync_equal_dir(%s, %s)" % (local_dir, remote_dir))
-        self._log_action("EQUAL", "=", local_dir)
+        self._log_action("EQUAL", "=", local_dir, min_level=2)
     
     def _sync_newer_local_file(self, local_file, remote_file):
         self._log_call("_sync_newer_local_file(%s, %s)" % (local_file, remote_file))
