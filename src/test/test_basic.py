@@ -118,7 +118,7 @@ class FtpTest(TestCase):
 #        self.assertEqual(stats["source_files"], 1)
 
     def test_upload_fs_ftp(self):
-        local = FsTarget("/Users/martin/temp")
+        local = FsTarget("~/temp")
         user, passwd = get_stored_credentials("pyftpsync.pw", self.HOST)
         remote = FtpTarget(self.PATH, self.HOST, user, passwd)
         opts = {"force": False, "delete": True}

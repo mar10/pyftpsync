@@ -18,6 +18,9 @@ except ImportError:
     from urlparse import urlparse
 
 
+DEFAULT_CREDENTIAL_STORE = "pyftpsync.pw"
+
+
 def get_stored_credentials(filename, url):
     """Parse a file in the user's home directory, formatted like:
     
@@ -42,13 +45,19 @@ def get_stored_credentials(filename, url):
 #===============================================================================
 # make_target
 #===============================================================================
-def make_target(url, connect=True, debug=1):
+def make_target(url, connect=True, debug=1, allow_stored_credentials=True):
     """Factory that creates _Target obejcts from URLs."""
     parts = urlparse(url, allow_fragments=False)
     # scheme is case-insensitive according to http://tools.ietf.org/html/rfc3986
     if parts.scheme.lower() == "ftp":
+        creds = parts.username, parts.password
+        if not parts.username and allow_stored_credentials:
+            sc = get_stored_credentials(DEFAULT_CREDENTIAL_STORE, parts.netloc)
+            if sc:
+                creds = sc
         from ftpsync import ftp_target
-        target = ftp_target.FtpTarget(parts.path, parts.hostname, parts.username, parts.password, connect, debug)
+        target = ftp_target.FtpTarget(parts.path, parts.hostname, 
+                                      creds[0], creds[1], connect, debug)
     elif parts.scheme == "":
         target = FsTarget(url)
     else:
@@ -264,6 +273,7 @@ class _Target(object):
 #===============================================================================
 class FsTarget(_Target):
     def __init__(self, root_dir):
+        root_dir = os.path.expanduser(root_dir)
         root_dir = os.path.abspath(root_dir)
         if not os.path.isdir(root_dir):
             raise ValueError("%s is not a directory" % root_dir)
@@ -354,6 +364,7 @@ class FsTarget(_Target):
 class BaseSynchronizer(object):
 
     DEFAULT_EXCLUDES = [".DS_Store",
+                        ".git",
                         ".hg",
                         ".svn",
                         _Target.META_FILE_NAME,
