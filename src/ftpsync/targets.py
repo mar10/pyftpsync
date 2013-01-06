@@ -7,10 +7,11 @@ Created on 14.09.2012
 from __future__ import print_function
 
 import os
-from posixpath import join as join_url
+from posixpath import join as join_url, normpath as normurl
 from datetime import datetime
 import sys
 import io
+import time
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -58,10 +59,11 @@ def make_target(url, connect=True, debug=1, allow_stored_credentials=True):
         from ftpsync import ftp_target
         target = ftp_target.FtpTarget(parts.path, parts.hostname, 
                                       creds[0], creds[1], connect, debug)
-    elif parts.scheme == "":
-        target = FsTarget(url)
+#    elif parts.scheme == "":
     else:
-        raise ValueError("Invalid target '%s'" % url)
+        target = FsTarget(url)
+#    else:
+#        raise ValueError("Invalid target '%s'" % url)
     return target
 
 
@@ -148,7 +150,7 @@ class _Resource(object):
         raise NotImplementedError
 
     def get_rel_path(self):
-        return join_url(self.rel_path, self.name)
+        return normurl(join_url(self.rel_path, self.name))
     
     def is_file(self):
         return False
@@ -209,7 +211,7 @@ class _Target(object):
         self.cur_dir = None
         self.connected = False
         self.save_mode = True
-        self.dry_run = True
+#        self.dry_run = True
         self.case_sensitive = None # don't know yet
         
     def __del__(self):
@@ -229,6 +231,12 @@ class _Target(object):
     def cwd(self, dir_name):
         raise NotImplementedError
     
+    def pwd(self, dir_name):
+        raise NotImplementedError
+    
+    def mkdir(self, dir_name):
+        raise NotImplementedError
+
     def flush_meta(self):
         """Write additional meta information for current directory."""
         pass
@@ -291,7 +299,7 @@ class FsTarget(_Target):
         self.connected = False
         
     def cwd(self, dir_name):
-        path = join_url(self.cur_dir, dir_name)
+        path = normurl(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
             raise RuntimeError("Tried to navigate outside root %r: %r" % (self.root_dir, path))
         self.cur_dir = path
@@ -302,7 +310,7 @@ class FsTarget(_Target):
 
     def mkdir(self, dir_name):
         self.check_write(dir_name)
-        path = join_url(self.cur_dir, dir_name)
+        path = normurl(join_url(self.cur_dir, dir_name))
         os.mkdir(path)
 
     def get_dir(self):
@@ -362,7 +370,7 @@ class FsTarget(_Target):
 # BaseSynchronizer
 #===============================================================================
 class BaseSynchronizer(object):
-
+    """Synchronizes two target instances in dry_run mode (also base class for other synchonizers)."""
     DEFAULT_EXCLUDES = [".DS_Store",
                         ".git",
                         ".hg",
@@ -376,11 +384,18 @@ class BaseSynchronizer(object):
         #TODO: check for self-including paths
         self.options = options or {}
         self.debug_level = self.options.get("debug_level", 2) 
+        self.dry_run = self.options.get("dry_run", True)
+
+        if self.dry_run:
+            self.local.readonly = True
+            self.remote.readonly = True
+        
         self._stats = {"source_files": 0,
                        "target_files": 0,
                        "created_files": 0,
                        "files_written": 0,
                        "bytes_written": 0,
+                       "elap": None,
                        }
     
     def get_stats(self):
@@ -390,26 +405,30 @@ class BaseSynchronizer(object):
         self._stats[name] = self._stats.get(name, 0) + ofs
     
     def run(self):
-        return self._sync_dir()
+        start = time.clock()
+        res = self._sync_dir()
+        self._stats["elap_secs"] = time.clock() - start
+        self._stats["elap"] = "%0.2d sec" % self._stats["elap_secs"]
+        return res
     
     def _copy_file(self, src, dest, file_entry):
         # 1.remove temp file
         # 2. copy to target.temp
         # 3. use loggingFile for feedback
         # 4. rename target.temp
-        print("_copy_file(%s, %s --> %s)" % (file_entry, src, dest))
+#        print("_copy_file(%s, %s --> %s)" % (file_entry, src, dest))
         assert isinstance(file_entry, FileEntry)
         if dest.readonly:
             raise RuntimeError("target is read-only: %s" % dest)
 
         def __block_written(data):
 #            print(">(%s), " % len(data))
-            self._stats["bytes_written"] += len(data)
+            self._inc_stat("bytes_written", len(data))
 
         with src.open_readable(file_entry.name) as fp_src:
             dest.write_file(file_entry.name, fp_src, callback=__block_written)
 
-        self._stats["files_written"] += 1
+        self._inc_stat("files_written")
         dest.set_mtime(file_entry.name, file_entry.mtime)
     
     def _copy_recursive(self, src, dest, dir_entry):

@@ -41,8 +41,11 @@ def upload_command(parser, args):
     local = make_target(args.local, debug=ftp_debug)
     remote = make_target(args.remote, debug=ftp_debug)
     opts = {"force": args.force, "delete": args.delete, "debug_level": args.verbose}
-    s = UploadSynchronizer(local, remote, opts)
-#    s = BaseSynchronizer(local, remote, opts)
+#    print(args)
+    if args.dry_run:
+        s = BaseSynchronizer(local, remote, opts)
+    else:
+        s = UploadSynchronizer(local, remote, opts)
     s.run()
     stats = s.get_stats()
     pprint(stats)

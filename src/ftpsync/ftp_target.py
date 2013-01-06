@@ -5,7 +5,7 @@ from __future__ import print_function
 
 import time
 import io
-from posixpath import join as join_url
+from posixpath import join as join_url, normpath as normurl
 from ftpsync.targets import FileEntry, DirectoryEntry, _Target
 import calendar
 import json
@@ -54,7 +54,7 @@ class FtpTarget(_Target):
         self.connected = False
         
     def cwd(self, dir_name):
-        path = join_url(self.cur_dir, dir_name)
+        path = normurl(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
             raise RuntimeError("Tried to navigate outside root %r: %r" % (self.root_dir, path))
         self.ftp.cwd(dir_name)
@@ -64,6 +64,10 @@ class FtpTarget(_Target):
 
     def pwd(self):
         return self.ftp.pwd()
+
+    def mkdir(self, dir_name):
+        self.check_write(dir_name)
+        self.ftp.mkd(dir_name)
 
     def flush_meta(self):
         if self.readonly:
