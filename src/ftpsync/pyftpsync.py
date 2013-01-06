@@ -29,10 +29,19 @@ except ImportError:
 from ftpsync._version import __version__
 
 
+def namespace_to_dict(o):
+    """Convert an argparse namespace object to a dictionary."""
+    d = {}
+    for k, v in o.__dict__.iteritems():
+        if not callable(v):
+            d[k] = v
+    return d
+
 
 #===============================================================================
 # backup_command
 #===============================================================================
+
 def upload_command(parser, args):
     #TODO: expand '~'
     ftp_debug = 0
@@ -40,9 +49,12 @@ def upload_command(parser, args):
         ftp_debug = 1 
     local = make_target(args.local, debug=ftp_debug)
     remote = make_target(args.remote, debug=ftp_debug)
-    opts = {"force": args.force, "delete": args.delete, "debug_level": args.verbose}
-    s = UploadSynchronizer(local, remote, opts)
-#    s = BaseSynchronizer(local, remote, opts)
+#    opts = {"force": args.force, "delete": args.delete, "debug_level": args.verbose}
+    opts = namespace_to_dict(args)
+    if args.dry_run:
+        s = BaseSynchronizer(local, remote, opts)
+    else:
+        s = UploadSynchronizer(local, remote, opts)
     s.run()
     stats = s.get_stats()
     pprint(stats)
@@ -62,9 +74,11 @@ def info_command(parser, args):
 def run():
     parser = argparse.ArgumentParser(
         description="Synchronize folders over FTP.",
+        epilog="See also http://pyftpsync.googlecode.com/"
         )
     parser.add_argument("--verbose", "-v", action="count", default=1)
     parser.add_argument("--version", action="version", version="%s" % (__version__))
+    
     subparsers = parser.add_subparsers(help="sub-command help")
     
     # create the parser for the "upload" command
@@ -86,9 +100,14 @@ def run():
     upload_parser.add_argument("--delete", 
                              action="store_true",
                              help="remove remote files if they don't exist locally")
-    upload_parser.add_argument("--dry-run", 
-                             action="store_true",
-                             help="just simulate and log results; don't change anything")
+#    upload_parser.add_argument("--dry-run", 
+#                             action="store_true",
+#                             help="just simulate and log results; don't change anything")
+    upload_parser.add_argument("-x", "--execute", 
+                               action="store_false", dest="dry_run", default=True,
+                               help="turn off the dry-run mode (which is ON by default), "
+                               "that would just print status messages but does "
+                               "not change anything")
     upload_parser.set_defaults(func=upload_command)
     
 

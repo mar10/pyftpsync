@@ -186,18 +186,6 @@ class DirectoryEntry(_Resource):
 
 
 #===============================================================================
-# _CwdTarget
-#===============================================================================
-#class _CwdTarget(object):
-#    def __init__(self, target, dir_name):
-#        self.target = target
-#        self.dir_name = dir_name
-#    def __enter__(self):
-#        self.target.cwd(self.dir_name)
-#    def __exit__(self):
-#        self.target.cwd("..")
-        
-#===============================================================================
 # _Target
 #===============================================================================
 class _Target(object):
