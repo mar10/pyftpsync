@@ -5,7 +5,7 @@ from __future__ import print_function
 
 import time
 import io
-from posixpath import join as join_url
+from posixpath import join as join_url, normpath as normurl
 from ftpsync.targets import FileEntry, DirectoryEntry, _Target
 import calendar
 import json
@@ -18,7 +18,7 @@ from ftplib import FTP
 #===============================================================================
 class FtpTarget(_Target):
     
-    def __init__(self, path, host, username=None, password=None, connect=True, debug=1):
+    def __init__(self, path, host, username=None, password=None, connect=True, debug=0):
         path = path or "/"
         super(FtpTarget, self).__init__(path)
         self.ftp = FTP()
@@ -54,7 +54,7 @@ class FtpTarget(_Target):
         self.connected = False
         
     def cwd(self, dir_name):
-        path = join_url(self.cur_dir, dir_name)
+        path = normurl(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
             raise RuntimeError("Tried to navigate outside root %r: %r" % (self.root_dir, path))
         self.ftp.cwd(dir_name)
@@ -64,6 +64,10 @@ class FtpTarget(_Target):
 
     def pwd(self):
         return self.ftp.pwd()
+
+    def mkdir(self, dir_name):
+        self.check_write(dir_name)
+        self.ftp.mkd(dir_name)
 
     def flush_meta(self):
         if self.readonly:
@@ -136,8 +140,7 @@ class FtpTarget(_Target):
             missing = []
             for n in self.cur_dir_meta:
                 if n in entry_map:
-                    entry_map[n].mtime_real = self.cur_dir_meta[n]["mtime"]
-                    print("*** ADJUST META ENTRY FOR %s: %s -> %s" % (n, entry_map[n].mtime, entry_map[n].mtime_real))
+                    entry_map[n].meta = self.cur_dir_meta[n]
                 else:
                     missing.append(n)
             # Remove missing files from cur_dir_meta 

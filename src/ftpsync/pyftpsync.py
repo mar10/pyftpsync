@@ -43,21 +43,20 @@ def namespace_to_dict(o):
 #===============================================================================
 
 def upload_command(parser, args):
-    #TODO: expand '~'
     ftp_debug = 0
-    if args.verbose >= 3:
+    if args.verbose >= 5:
         ftp_debug = 1 
     local = make_target(args.local, debug=ftp_debug)
     remote = make_target(args.remote, debug=ftp_debug)
-#    opts = {"force": args.force, "delete": args.delete, "debug_level": args.verbose}
     opts = namespace_to_dict(args)
-    if args.dry_run:
-        s = BaseSynchronizer(local, remote, opts)
-    else:
-        s = UploadSynchronizer(local, remote, opts)
+    s = UploadSynchronizer(local, remote, opts)
     s.run()
     stats = s.get_stats()
-    pprint(stats)
+    if args.verbose >= 4:
+        pprint(stats)
+    elif args.verbose >= 1:
+        print("Wrote %s/%s files in %s dirs. Elap: %s" 
+              % (stats["files_written"], stats["local_files"], stats["local_dirs"], stats["elap"]))
     
 
 #===============================================================================
@@ -76,7 +75,10 @@ def run():
         description="Synchronize folders over FTP.",
         epilog="See also http://pyftpsync.googlecode.com/"
         )
-    parser.add_argument("--verbose", "-v", action="count", default=1)
+    parser.add_argument("--verbose", "-v", action="count", default=3,
+                        help="increment verbosity by one (default: %(default)s, range: 0..5")
+    parser.add_argument("--quiet", "-q", action="count", default=0,
+                        help="decrement verbosity by one")
     parser.add_argument("--version", action="version", version="%s" % (__version__))
     
     subparsers = parser.add_subparsers(help="sub-command help")
@@ -171,8 +173,11 @@ def run():
 ##    migrate_parser.set_defaults(func=migrate_command)
     
     args = parser.parse_args()
-    args.func(parser, args)
+    args.verbose -= args.quiet
+    del args.quiet
 
+    args.func(parser, args)
+    
 
 if __name__ == "__main__":
     run()

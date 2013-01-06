@@ -113,6 +113,7 @@ class FtpTest(TestCase):
         opts = {"force": False, "delete": False}
         s = UploadSynchronizer(local, remote, opts)
         s.run()
+        
         stats = s.get_stats()
         pprint(stats)
 #        self.assertEqual(stats["source_files"], 1)
@@ -121,15 +122,16 @@ class FtpTest(TestCase):
         local = FsTarget("~/temp")
         user, passwd = get_stored_credentials("pyftpsync.pw", self.HOST)
         remote = FtpTarget(self.PATH, self.HOST, user, passwd)
-        opts = {"force": False, "delete": True}
+        opts = {"force": False, "delete": True, "verbose": 3, "dry_run": False}
         s = UploadSynchronizer(local, remote, opts)
         s.run()
+        
         stats = s.get_stats()
         pprint(stats)
 #        self.assertEqual(stats["source_files"], 1)
 
 
-class PlainTest(TestCase):                          
+class PlainTest(TestCase):
     """Test ."""
     HOST = "www.wwwendt.de"
     PATH = "/_temp"
@@ -210,7 +212,7 @@ if __name__ == "__main__":
 #    suite.addTest(FtpTest("test_upload_fs_fs"))
 #    suite.addTest(FtpTest("test_download_fs_fs"))
     suite.addTest(FtpTest("test_upload_fs_ftp"))
-#    suite.addTest(FtpTest("test_download_fs_ftp"))
+    suite.addTest(FtpTest("test_download_fs_ftp"))
 #    suite.addTest(PlainTest("test_json"))
 #    suite.addTest(PlainTest("test_make_target"))
 #    suite.addTest(FtpTest("test_readwrite"))

@@ -7,10 +7,11 @@ Created on 14.09.2012
 from __future__ import print_function
 
 import os
-from posixpath import join as join_url
+from posixpath import join as join_url, normpath as normurl
 from datetime import datetime
 import sys
 import io
+import time
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -58,10 +59,9 @@ def make_target(url, connect=True, debug=1, allow_stored_credentials=True):
         from ftpsync import ftp_target
         target = ftp_target.FtpTarget(parts.path, parts.hostname, 
                                       creds[0], creds[1], connect, debug)
-    elif parts.scheme == "":
-        target = FsTarget(url)
     else:
-        raise ValueError("Invalid target '%s'" % url)
+        target = FsTarget(url)
+
     return target
 
 
@@ -138,6 +138,7 @@ class _Resource(object):
         self.mtime = mtime 
         self.dt_modified = datetime.fromtimestamp(self.mtime)
         self.unique = unique
+        self.meta = None
 
     def __str__(self):
         return "%s('%s', size:%s, modified:%s)" % (self.__class__.__name__, 
@@ -148,7 +149,7 @@ class _Resource(object):
         raise NotImplementedError
 
     def get_rel_path(self):
-        return join_url(self.rel_path, self.name)
+        return normurl(join_url(self.rel_path, self.name))
     
     def is_file(self):
         return False
@@ -165,11 +166,23 @@ class FileEntry(_Resource):
         super(FileEntry, self).__init__(target, rel_path, name, size, mtime, unique)
 
     def __eq__(self, other):
-        return other and other.__class__ == self.__class__ and other.name == self.name and other.size == self.size and other.mtime == self.mtime
+#        if other.get_adjusted_mtime() == self.get_adjusted_mtime() and other.mtime != self.mtime:
+#            print("*** Adjusted time match", self, other)
+        return (other and other.__class__ == self.__class__ 
+                and other.name == self.name and other.size == self.size 
+                and other.get_adjusted_mtime() == self.get_adjusted_mtime())
 
     def __gt__(self, other):
-        return other and other.__class__ == self.__class__ and other.name == self.name and self.mtime > other.mtime
+        return (other and other.__class__ == self.__class__ 
+                and other.name == self.name 
+                and self.get_adjusted_mtime() > other.get_adjusted_mtime())
 
+    def get_adjusted_mtime(self):
+        try:
+            return self.meta["mtime"]
+        except:
+            return self.mtime
+        
     def is_file(self):
         return True
 
@@ -192,12 +205,12 @@ class _Target(object):
     META_FILE_NAME = "_pyftpsync-meta.json"
 
     def __init__(self, root_dir):
-        self.readonly = True
+        self.readonly = False
+        self.dry_run = False
         self.root_dir = root_dir.rstrip("/")
         self.cur_dir = None
         self.connected = False
         self.save_mode = True
-        self.dry_run = True
         self.case_sensitive = None # don't know yet
         
     def __del__(self):
@@ -217,6 +230,12 @@ class _Target(object):
     def cwd(self, dir_name):
         raise NotImplementedError
     
+    def pwd(self, dir_name):
+        raise NotImplementedError
+    
+    def mkdir(self, dir_name):
+        raise NotImplementedError
+
     def flush_meta(self):
         """Write additional meta information for current directory."""
         pass
@@ -231,10 +250,7 @@ class _Target(object):
 
     def read_text(self, name):
         """Read text string from cur_dir/name using open_readable()."""
-#        with self.open_readable(name) as fp:
-#            dest.write_file(file_entry.name, fp_src, callback=__block_written)
         with self.open_readable(name) as fp:
-#            res = fp.readall()
             res = fp.getvalue()
             res = res.decode("utf8")
             return res
@@ -279,7 +295,7 @@ class FsTarget(_Target):
         self.connected = False
         
     def cwd(self, dir_name):
-        path = join_url(self.cur_dir, dir_name)
+        path = normurl(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
             raise RuntimeError("Tried to navigate outside root %r: %r" % (self.root_dir, path))
         self.cur_dir = path
@@ -290,7 +306,7 @@ class FsTarget(_Target):
 
     def mkdir(self, dir_name):
         self.check_write(dir_name)
-        path = join_url(self.cur_dir, dir_name)
+        path = normurl(join_url(self.cur_dir, dir_name))
         os.mkdir(path)
 
     def get_dir(self):
@@ -350,7 +366,7 @@ class FsTarget(_Target):
 # BaseSynchronizer
 #===============================================================================
 class BaseSynchronizer(object):
-
+    """Synchronizes two target instances in dry_run mode (also base class for other synchonizers)."""
     DEFAULT_EXCLUDES = [".DS_Store",
                         ".git",
                         ".hg",
@@ -363,12 +379,19 @@ class BaseSynchronizer(object):
         self.remote = remote
         #TODO: check for self-including paths
         self.options = options or {}
-        self.debug_level = self.options.get("debug_level", 2) 
+        self.verbose = self.options.get("verbose", 3) 
+        self.dry_run = self.options.get("dry_run", True)
+
+        if self.dry_run:
+            self.local.readonly = True
+            self.remote.readonly = True
+        
         self._stats = {"source_files": 0,
                        "target_files": 0,
                        "created_files": 0,
                        "files_written": 0,
                        "bytes_written": 0,
+                       "elap": None,
                        }
     
     def get_stats(self):
@@ -378,32 +401,40 @@ class BaseSynchronizer(object):
         self._stats[name] = self._stats.get(name, 0) + ofs
     
     def run(self):
-        return self._sync_dir()
+        start = time.time()
+        res = self._sync_dir()
+        self._stats["elap_secs"] = time.time() - start
+        self._stats["elap"] = "%0.2f sec" % self._stats["elap_secs"]
+        return res
     
     def _copy_file(self, src, dest, file_entry):
         # 1.remove temp file
         # 2. copy to target.temp
         # 3. use loggingFile for feedback
         # 4. rename target.temp
-        print("_copy_file(%s, %s --> %s)" % (file_entry, src, dest))
+#        print("_copy_file(%s, %s --> %s)" % (file_entry, src, dest))
         assert isinstance(file_entry, FileEntry)
-        if dest.readonly:
+        if self.dry_run:
+            return self._dry_run_action("copy file (%s, %s --> %s)" % (file_entry, src, dest))
+        elif dest.readonly:
             raise RuntimeError("target is read-only: %s" % dest)
 
         def __block_written(data):
 #            print(">(%s), " % len(data))
-            self._stats["bytes_written"] += len(data)
+            self._inc_stat("bytes_written", len(data))
 
         with src.open_readable(file_entry.name) as fp_src:
             dest.write_file(file_entry.name, fp_src, callback=__block_written)
 
-        self._stats["files_written"] += 1
+        self._inc_stat("files_written")
         dest.set_mtime(file_entry.name, file_entry.mtime)
     
     def _copy_recursive(self, src, dest, dir_entry):
-        print("_copy_recursive(%s, %s --> %s)" % (dir_entry, src, dest))
+#        print("_copy_recursive(%s, %s --> %s)" % (dir_entry, src, dest))
         assert isinstance(dir_entry, DirectoryEntry)
-        if dest.readonly:
+        if self.dry_run:
+            return self._dry_run_action("copy dir (%s, %s --> %s)" % (dir_entry, src, dest))
+        elif dest.readonly:
             raise RuntimeError("target is read-only: %s" % dest)
         src.cwd(dir_entry.name)
         dest.mkdir(dir_entry.name)
@@ -418,21 +449,41 @@ class BaseSynchronizer(object):
 
     def _remove_file(self, file_entry):
         # TODO: honor backup
-        print("_remove_file(%s)" % (file_entry, ))
+#        print("_remove_file(%s)" % (file_entry, ))
         assert isinstance(file_entry, FileEntry)
-        if file_entry.target.readonly:
+        if self.dry_run:
+            return self._dry_run_action("delete file (%s)" % (file_entry,))
+        elif file_entry.target.readonly:
             raise RuntimeError("target is read-only: %s" % file_entry.target)
         self._inc_stat("removed_files")
         file_entry.target.remove_file(file_entry.name)
 
-    def _log_call(self, msg, min_level=2):
-        if self.debug_level >= min_level: 
+    def _remove_dir(self, dir_entry):
+        # TODO: honor backup
+        assert isinstance(dir_entry, DirectoryEntry)
+        if self.dry_run:
+            return self._dry_run_action("delete directory (%s)" % (dir_entry,))
+        elif dir_entry.target.readonly:
+            raise RuntimeError("target is read-only: %s" % dir_entry.target)
+        self._inc_stat("removed_folders")
+        dir_entry.target.remove_dir(dir_entry.name)
+
+    def _log_call(self, msg, min_level=5):
+        if self.verbose >= min_level: 
             print(msg)
         
-    def _log_action(self, status, action, entry, min_level=1):
-        if self.debug_level >= min_level: 
-            print("%-8s %-2s %s" % (status, action, entry.get_rel_path()))
+    def _log_action(self, status, action, entry, min_level=3):
+        if self.verbose >= min_level:
+            prefix = "" 
+            if self.dry_run:
+                prefix = "(DRY-RUN) "
+            print("%s%-8s %-2s %s" % (prefix, status, action, entry.get_rel_path()))
         
+    def _dry_run_action(self, action):
+        """"Called in dry-run mode after call to _log_action() and before exiting function."""
+#        print("dry-run", action)
+        return
+    
     def _before_sync(self, entry):
         if entry.name in self.DEFAULT_EXCLUDES:
             self._sync_skip(entry)
@@ -507,15 +558,15 @@ class BaseSynchronizer(object):
         print(msg, local_file, remote_file, file=sys.stderr)
     
     def _sync_skip(self, entry):
-        print("SKIPPING", entry)
+        self._log_action("SKIP", "?", entry, min_level=4)
     
     def _sync_equal_file(self, local_file, remote_file):
         self._log_call("_sync_equal_file(%s, %s)" % (local_file, remote_file))
-        self._log_action("EQUAL", "=", local_file, min_level=2)
+        self._log_action("EQUAL", "=", local_file, min_level=4)
     
     def _sync_equal_dir(self, local_dir, remote_dir):
         self._log_call("_sync_equal_dir(%s, %s)" % (local_dir, remote_dir))
-        self._log_action("EQUAL", "=", local_dir, min_level=2)
+        self._log_action("EQUAL", "=", local_dir, min_level=4)
     
     def _sync_newer_local_file(self, local_file, remote_file):
         self._log_call("_sync_newer_local_file(%s, %s)" % (local_file, remote_file))
@@ -550,7 +601,7 @@ class UploadSynchronizer(BaseSynchronizer):
     def __init__(self, local, remote, options):
         super(UploadSynchronizer, self).__init__(local, remote, options)
         local.readonly = True
-        remote.readonly = False
+#        remote.readonly = False
         
     def _sync_newer_local_file(self, local_file, remote_file):
         self._log_call("_sync_newer_local_file(%s, %s)" % (local_file, remote_file))
@@ -562,18 +613,24 @@ class UploadSynchronizer(BaseSynchronizer):
         if self.options.get("force"):
             self._log_action("RESTORE", ">", local_file)
             self._copy_file(self.local, self.remote, remote_file)
+        else:
+            self._log_action("SKIP MODIFIED", "?", local_file)
 
     def _sync_missing_local_file(self, remote_file):
         self._log_call("_sync_missing_local_file(%s)" % remote_file)
         if self.options.get("delete"):
-            self._log_action("DELETE", "> X", remote_file)
+            self._log_action("DELETE", ">", remote_file)
             self._remove_file(remote_file)
+        else:
+            self._log_action("SKIP MISSING", "?", remote_file)
     
     def _sync_missing_local_dir(self, remote_dir):
         self._log_call("_sync_missing_local_dir(%s)" % remote_dir)
         if self.options.get("delete"):
-            self._log_action("DELETE", "> X", remote_dir)
+            self._log_action("DELETE", ">", remote_dir)
             self._remove_dir(remote_dir)
+        else:
+            self._log_action("SKIP MISSING", "?", remote_dir)
     
     def _sync_missing_remote_file(self, local_file):
         self._log_call("_sync_missing_remote_file(%s)" % local_file)
@@ -592,7 +649,7 @@ class UploadSynchronizer(BaseSynchronizer):
 class DownloadSynchronizer(BaseSynchronizer):
     def __init__(self, local, remote, options):
         super(DownloadSynchronizer, self).__init__(local, remote, options)
-        local.readonly = False
+#        local.readonly = False
         remote.readonly = True
         
     def _sync_newer_local_file(self, local_file, remote_file):
@@ -600,6 +657,8 @@ class DownloadSynchronizer(BaseSynchronizer):
         if self.options.get("force"):
             self._log_action("RESTORE", "<", local_file)
             self._copy_file(self.remote, self.local, remote_file)
+        else:
+            self._log_action("SKIP MODIFIED", "?", local_file)
     
     def _sync_older_local_file(self, local_file, remote_file):
         self._log_call("_sync_older_local_file(%s, %s)" % (local_file, remote_file))
@@ -621,9 +680,13 @@ class DownloadSynchronizer(BaseSynchronizer):
         if self.options.get("delete"):
             self._log_action("MISSING", "X <", local_file)
             self._remove_file(local_file)
+        else:
+            self._log_action("SKIP MISSING", "?", local_file)
     
     def _sync_missing_remote_dir(self, local_dir):
         self._log_call("_sync_missing_remote_dir(%s)" % local_dir)
         if self.options.get("delete"):
             self._log_action("MISSING", "X <", local_dir)
             self._remove_file(local_dir)
+        else:
+            self._log_action("SKIP MISSING", "?", local_dir)
