@@ -1,5 +1,7 @@
 # -*- coding: iso-8859-1 -*-
 """
+(c) 2012 Martin Wendt; see http://pyftpsync.googlecode.com/
+Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 """
 from __future__ import print_function
 

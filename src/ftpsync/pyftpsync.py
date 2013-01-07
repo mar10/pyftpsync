@@ -1,7 +1,9 @@
 # -*- coding: iso-8859-1 -*-
 """
 SCIO-Portal collector tool.
-(c) Martin Wendt 2012
+
+(c) 2012 Martin Wendt; see http://pyftpsync.googlecode.com/
+Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 
 Usage examples:
   > pyftpsync.py --help
