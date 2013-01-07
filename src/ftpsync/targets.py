@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-1 -*-
-'''
+"""
 Created on 14.09.2012
 
-@author: Wendt
-'''
+@author: Martin Wendt
+"""
 from __future__ import print_function
 
 import os
@@ -268,7 +268,7 @@ class _Target(object):
         """Remove cur_dir/name."""
         raise NotImplementedError
 
-    def set_mtime(self, name, mtime):
+    def set_mtime(self, name, mtime, size):
         raise NotImplementedError
 
 
@@ -357,7 +357,7 @@ class FsTarget(_Target):
         self.check_write(name)
         raise NotImplementedError
 
-    def set_mtime(self, name, mtime):
+    def set_mtime(self, name, mtime, size):
         self.check_write(name)
         os.utime(os.path.join(self.cur_dir, name), (-1, mtime))
 
@@ -427,7 +427,7 @@ class BaseSynchronizer(object):
             dest.write_file(file_entry.name, fp_src, callback=__block_written)
 
         self._inc_stat("files_written")
-        dest.set_mtime(file_entry.name, file_entry.mtime)
+        dest.set_mtime(file_entry.name, file_entry.mtime, file_entry.size)
     
     def _copy_recursive(self, src, dest, dir_entry):
 #        print("_copy_recursive(%s, %s --> %s)" % (dir_entry, src, dest))
@@ -614,7 +614,7 @@ class UploadSynchronizer(BaseSynchronizer):
             self._log_action("RESTORE", ">", local_file)
             self._copy_file(self.local, self.remote, remote_file)
         else:
-            self._log_action("SKIP MODIFIED", "?", local_file)
+            self._log_action("SKIP OLDER", "?", local_file)
 
     def _sync_missing_local_file(self, remote_file):
         self._log_call("_sync_missing_local_file(%s)" % remote_file)
@@ -658,7 +658,7 @@ class DownloadSynchronizer(BaseSynchronizer):
             self._log_action("RESTORE", "<", local_file)
             self._copy_file(self.remote, self.local, remote_file)
         else:
-            self._log_action("SKIP MODIFIED", "?", local_file)
+            self._log_action("SKIP OLDER", "?", local_file)
     
     def _sync_older_local_file(self, local_file, remote_file):
         self._log_call("_sync_older_local_file(%s, %s)" % (local_file, remote_file))
