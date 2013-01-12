@@ -107,6 +107,10 @@ def run():
     upload_parser.add_argument("--delete", 
                              action="store_true",
                              help="remove remote files if they don't exist locally")
+    upload_parser.add_argument("--delete-unmatched", 
+                             action="store_true",
+                             help="remove remote files if they don't exist locally "
+                             "or don't match the current filter (implies '--delete' option)")
 #    upload_parser.add_argument("--dry-run", 
 #                             action="store_true",
 #                             help="just simulate and log results; don't change anything")
@@ -125,28 +129,29 @@ def run():
     
 
     # create the parser for the "download" command
-    download_parser = subparsers.add_parser("download", 
-                                           help="copy new and modified files to local folder")
-    download_parser.add_argument("remote", 
-                             metavar="REMOTE",
-#                             required=True,
+#    download_parser = subparsers.add_parser("download", 
+#                                           help="copy new and modified files to local folder")
+#    download_parser.add_argument("remote", 
+#                             metavar="REMOTE",
+##                             required=True,
+##                             default=".",
+#                             help="path to remote folder")
+#    download_parser.add_argument("--local", 
+#                             metavar="LOCAL",
+##                             required=True,
 #                             default=".",
-                             help="path to remote folder")
-    download_parser.add_argument("--local", 
-                             metavar="LOCAL",
-#                             required=True,
-                             default=".",
-                             help="path to local folder (default: %(default)s)")      
-    download_parser.add_argument("--force", 
-                             action="store_true",
-                             help="overwrite different local files, even if the source is older")
-    download_parser.add_argument("--delete", 
-                             action="store_true",
-                             help="remove local files if they don't exist remotely")
-    download_parser.add_argument("--dry-run", 
-                             action="store_true",
-                             help="just simulate and log results; don't change anything")
-    download_parser.set_defaults(func=upload_command)
+#                             help="path to local folder (default: %(default)s)")      
+#    download_parser.add_argument("--force", 
+#                             action="store_true",
+#                             help="overwrite different local files, even if the source is older")
+#    download_parser.add_argument("--delete", 
+#                             action="store_true",
+#                             help="remove local files if they don't exist remotely")
+#    download_parser.add_argument("--dry-run", 
+#                             action="store_true",
+#                             help="just simulate and log results; don't change anything")
+#    download_parser.set_defaults(func=upload_command)
+
     
 #    # create the parser for the "dump" command
 #    dump_parser = subparsers.add_parser("dump", help="print or export snapshot data")
@@ -183,12 +188,19 @@ def run():
 ##                             help="pass this argument to actually write changes (otherwise DRY_RUN is enabled)")      
 ##    migrate_parser.set_defaults(func=migrate_command)
     
+    # Parse command line
     args = parser.parse_args()
+    
+    # Post-process and check arguments
     args.verbose -= args.quiet
     del args.quiet
+    if args.delete_unmatched:
+        args.delete = True
 
+    # Let the command handler do it's thing
     args.func(parser, args)
     
 
+# Script entry point
 if __name__ == "__main__":
     run()

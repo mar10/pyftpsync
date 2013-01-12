@@ -437,7 +437,8 @@ class BaseSynchronizer(object):
         return res
     
     def _copy_file(self, src, dest, file_entry):
-        # 1.remove temp file
+        # TODO: save replace:
+        # 1. remove temp file
         # 2. copy to target.temp
         # 3. use loggingFile for feedback
         # 4. rename target.temp
@@ -511,21 +512,27 @@ class BaseSynchronizer(object):
         name = entry.get_rel_path()
         if entry.is_dir():
             name = "[%s]" % name
-        print("%s%-14s %-2s %s" % (prefix, tag, symbol, name))
+        print("%s%-16s %-2s %s" % (prefix, tag, symbol, name))
         
     def _dry_run_action(self, action):
         """"Called in dry-run mode after call to _log_action() and before exiting function."""
 #        print("dry-run", action)
         return
     
-    def _before_sync(self, entry):
-        """Return False to prevent the synchronizer's default action.
-        
-        This method is called by the synchronizer for each entry, before 
-        """
+    def _test_match_or_print(self, entry):
+        """Return True if entry matches filter. Otherwise print 'skip' and return False ."""
         if not self._match(entry):
-            self._sync_skip(entry)
+            self._log_action("skip", "unmatched", "-", entry, min_level=4)
             return False
+        return True
+    
+    def _before_sync(self, entry):
+        """Called by the synchronizer for each entry. 
+        Return False to prevent the synchronizer's default action.
+        """
+#        if not self._match(entry):
+#            self._sync_skip(entry)
+#            return False
         return True
     
     def _sync_dir(self):
@@ -615,8 +622,8 @@ class BaseSynchronizer(object):
     def _sync_error(self, msg, local_file, remote_file):
         print(msg, local_file, remote_file, file=sys.stderr)
     
-    def _sync_skip(self, entry):
-        self._log_action("skip", "", "?", entry, min_level=4)
+#    def _sync_skip(self, entry):
+#        self._log_action("skip", "", "?", entry, min_level=4)
     
     def _sync_equal_file(self, local_file, remote_file):
         self._log_call("_sync_equal_file(%s, %s)" % (local_file, remote_file))
@@ -649,7 +656,6 @@ class BaseSynchronizer(object):
     def _sync_missing_remote_dir(self, local_dir):
         self._log_call("_sync_missing_remote_dir(%s)" % local_dir)
         self._log_action("", "new", ">", local_dir)
-    
 
 
 #===============================================================================
@@ -659,16 +665,25 @@ class UploadSynchronizer(BaseSynchronizer):
     def __init__(self, local, remote, options):
         super(UploadSynchronizer, self).__init__(local, remote, options)
         local.readonly = True
+        # don't set target.readonly to True, because it might have been set to
+        # False by a caller to enforce security
 #        remote.readonly = False
-        
+
     def _sync_newer_local_file(self, local_file, remote_file):
         self._log_call("_sync_newer_local_file(%s, %s)" % (local_file, remote_file))
-        self._log_action("copy", "modified", ">", local_file)
-        self._copy_file(self.local, self.remote, local_file)
-    
+        if not self._match(remote_file) and self.options.get("delete_unmatched"):
+            self._log_action("delete", "unmatched", ">", remote_file)
+            self._remove_file(remote_file)
+        elif self._test_match_or_print(local_file):
+            self._log_action("copy", "modified", ">", local_file)
+            self._copy_file(self.local, self.remote, local_file)
+
     def _sync_older_local_file(self, local_file, remote_file):
         self._log_call("_sync_older_local_file(%s, %s)" % (local_file, remote_file))
-        if self.options.get("force"):
+        if not self._match(remote_file) and self.options.get("delete_unmatched"):
+            self._log_action("delete", "unmatched", ">", remote_file)
+            self._remove_file(remote_file)
+        elif self.options.get("force"):
             self._log_action("restore", "older", ">", local_file)
             self._copy_file(self.local, self.remote, remote_file)
         else:
@@ -676,15 +691,21 @@ class UploadSynchronizer(BaseSynchronizer):
 
     def _sync_missing_local_file(self, remote_file):
         self._log_call("_sync_missing_local_file(%s)" % remote_file)
-        if self.options.get("delete"):
+        # If a file exists locally, but does not match the filter, this will be
+        # handled by _sync_newer_file()/_sync_older_file()
+        if not self._test_match_or_print(remote_file):
+            return
+        elif self.options.get("delete"):
             self._log_action("delete", "missing", ">", remote_file)
             self._remove_file(remote_file)
         else:
             self._log_action("skip", "missing", "?", remote_file, 4)
-    
+
     def _sync_missing_local_dir(self, remote_dir):
         self._log_call("_sync_missing_local_dir(%s)" % remote_dir)
-        if self.options.get("delete"):
+        if not self._test_match_or_print(remote_dir):
+            return
+        elif self.options.get("delete"):
             self._log_action("delete", "missing", ">", remote_dir)
             self._remove_dir(remote_dir)
         else:
@@ -692,59 +713,61 @@ class UploadSynchronizer(BaseSynchronizer):
     
     def _sync_missing_remote_file(self, local_file):
         self._log_call("_sync_missing_remote_file(%s)" % local_file)
-        self._log_action("copy", "new", ">", local_file)
-        self._copy_file(self.local, self.remote, local_file)
+        if self._test_match_or_print(local_file):
+            self._log_action("copy", "new", ">", local_file)
+            self._copy_file(self.local, self.remote, local_file)
     
     def _sync_missing_remote_dir(self, local_dir):
         self._log_call("_sync_missing_remote_dir(%s)" % local_dir)
-        self._log_action("copy", "new", ">", local_dir)
-        self._copy_recursive(self.local, self.remote, local_dir)
+        if self._test_match_or_print(local_dir):
+            self._log_action("copy", "new", ">", local_dir)
+            self._copy_recursive(self.local, self.remote, local_dir)
     
 
 #===============================================================================
 # DownloadSynchronizer
 #===============================================================================
-class DownloadSynchronizer(BaseSynchronizer):
-    def __init__(self, local, remote, options):
-        super(DownloadSynchronizer, self).__init__(local, remote, options)
-#        local.readonly = False
-        remote.readonly = True
-        
-    def _sync_newer_local_file(self, local_file, remote_file):
-        self._log_call("_sync_newer_local_file(%s, %s)" % (local_file, remote_file))
-        if self.options.get("force"):
-            self._log_action("restore", "<", local_file)
-            self._copy_file(self.remote, self.local, remote_file)
-        else:
-            self._log_action("SKIP OLDER", "?", local_file, 4)
-    
-    def _sync_older_local_file(self, local_file, remote_file):
-        self._log_call("_sync_older_local_file(%s, %s)" % (local_file, remote_file))
-        self._log_action("MODIFIED", "<", local_file)
-        self._copy_file(self.remote, self.local, remote_file)
-    
-    def _sync_missing_local_file(self, remote_file):
-        self._log_call("_sync_missing_local_file(%s)" % remote_file)
-        self._log_action("COPY NEW", "<", remote_file)
-        self._copy_file(self.remote, self.local, remote_file)
-    
-    def _sync_missing_local_dir(self, remote_dir):
-        self._log_call("_sync_missing_local_dir(%s)" % remote_dir)
-        self._log_action("COPY NEW FOLDER", "<", remote_dir)
-        self._copy_recursive(self.remote, self.local, remote_dir)
-    
-    def _sync_missing_remote_file(self, local_file):
-        self._log_call("_sync_missing_remote_file(%s)" % local_file)
-        if self.options.get("delete"):
-            self._log_action("REMOVE MISSING", "X <", local_file)
-            self._remove_file(local_file)
-        else:
-            self._log_action("SKIP MISSING", "?", local_file, 4)
-    
-    def _sync_missing_remote_dir(self, local_dir):
-        self._log_call("_sync_missing_remote_dir(%s)" % local_dir)
-        if self.options.get("delete"):
-            self._log_action("MISSING", "X <", local_dir)
-            self._remove_file(local_dir)
-        else:
-            self._log_action("SKIP MISSING", "?", local_dir, 4)
+#class DownloadSynchronizer(BaseSynchronizer):
+#    def __init__(self, local, remote, options):
+#        super(DownloadSynchronizer, self).__init__(local, remote, options)
+##        local.readonly = False
+#        remote.readonly = True
+#        
+#    def _sync_newer_local_file(self, local_file, remote_file):
+#        self._log_call("_sync_newer_local_file(%s, %s)" % (local_file, remote_file))
+#        if self.options.get("force"):
+#            self._log_action("restore", "<", local_file)
+#            self._copy_file(self.remote, self.local, remote_file)
+#        else:
+#            self._log_action("SKIP OLDER", "?", local_file, 4)
+#    
+#    def _sync_older_local_file(self, local_file, remote_file):
+#        self._log_call("_sync_older_local_file(%s, %s)" % (local_file, remote_file))
+#        self._log_action("MODIFIED", "<", local_file)
+#        self._copy_file(self.remote, self.local, remote_file)
+#    
+#    def _sync_missing_local_file(self, remote_file):
+#        self._log_call("_sync_missing_local_file(%s)" % remote_file)
+#        self._log_action("COPY NEW", "<", remote_file)
+#        self._copy_file(self.remote, self.local, remote_file)
+#    
+#    def _sync_missing_local_dir(self, remote_dir):
+#        self._log_call("_sync_missing_local_dir(%s)" % remote_dir)
+#        self._log_action("COPY NEW FOLDER", "<", remote_dir)
+#        self._copy_recursive(self.remote, self.local, remote_dir)
+#    
+#    def _sync_missing_remote_file(self, local_file):
+#        self._log_call("_sync_missing_remote_file(%s)" % local_file)
+#        if self.options.get("delete"):
+#            self._log_action("REMOVE MISSING", "X <", local_file)
+#            self._remove_file(local_file)
+#        else:
+#            self._log_action("SKIP MISSING", "?", local_file, 4)
+#    
+#    def _sync_missing_remote_dir(self, local_dir):
+#        self._log_call("_sync_missing_remote_dir(%s)" % local_dir)
+#        if self.options.get("delete"):
+#            self._log_action("MISSING", "X <", local_dir)
+#            self._remove_file(local_dir)
+#        else:
+#            self._log_action("SKIP MISSING", "?", local_dir, 4)
