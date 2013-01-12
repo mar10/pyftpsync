@@ -462,7 +462,7 @@ class BaseSynchronizer(object):
 #        print("_copy_recursive(%s, %s --> %s)" % (dir_entry, src, dest))
         assert isinstance(dir_entry, DirectoryEntry)
         if self.dry_run:
-            return self._dry_run_action("copy dir (%s, %s --> %s)" % (dir_entry, src, dest))
+            return self._dry_run_action("copy directory (%s, %s --> %s)" % (dir_entry, src, dest))
         elif dest.readonly:
             raise RuntimeError("target is read-only: %s" % dest)
         src.cwd(dir_entry.name)
@@ -519,12 +519,22 @@ class BaseSynchronizer(object):
         return
     
     def _before_sync(self, entry):
+        """Return False to prevent the synchronizer's default action.
+        
+        This method is called by the synchronizer for each entry, before 
+        """
         if not self._match(entry):
             self._sync_skip(entry)
             return False
         return True
     
     def _sync_dir(self):
+        """Traverse the local folder structure and remote peers.
+        
+        This is the core algorithm that generates calls to self._sync_XXX() 
+        handler methods.
+        _sync_dir() is called by self.run().
+        """
         local_entries = self.local.get_dir()
         local_entry_map = dict(map(lambda e: (e.name, e), local_entries))
         local_files = [e for e in local_entries if isinstance(e, FileEntry)]
@@ -534,6 +544,8 @@ class BaseSynchronizer(object):
         # convert into a dict {name: FileEntry, ...}
         remote_entry_map = dict(map(lambda e: (e.name, e), remote_entries))
         
+        # 1. Loop over all local files and classify the relationship to the
+        #    peer entries.
         self._inc_stat("local_dirs")
         for local_file in local_files:
             self._inc_stat("local_files")
@@ -542,12 +554,16 @@ class BaseSynchronizer(object):
                 # considered for deletion on the peer target
                 continue
             # TODO: case insensitive?
+            # We should use os.path.normcase() to convert to lowercase on windows
+            # (i.e. if the FTP server is based on Windows)
             remote_file = remote_entry_map.get(local_file.name)
 
             if remote_file is None:
                 self._sync_missing_remote_file(local_file)
             elif local_file == remote_file:
                 self._sync_equal_file(local_file, remote_file)
+            # TODO: renaming could be triggered, if we find an existing
+            # entry.unique with a different entry.name
 #            elif local_file.key in remote_keys:
 #                self._rename_file(local_file, remote_file)
             elif local_file > remote_file:
@@ -555,8 +571,10 @@ class BaseSynchronizer(object):
             elif local_file < remote_file:
                 self._sync_older_local_file(local_file, remote_file)
             else:
-                self._sync_error("file with identical date but different otherwise", local_file, remote_file)
+                self._sync_error("file with identical date but different otherwise", 
+                                 local_file, remote_file)
 
+        # 2. Handle all local directories that do NOT exist on remote target.
         for local_dir in local_directories:
             if not self._before_sync(local_dir):
                 continue
@@ -564,7 +582,7 @@ class BaseSynchronizer(object):
             if not remote_dir:
                 remote_dir = self._sync_missing_remote_dir(local_dir)
 
-        #
+        # 3. Handle all remote entries that do NOT exist on the local target.
         for remote_entry in remote_entries:
             if not self._before_sync(remote_entry):
                 continue
@@ -574,9 +592,13 @@ class BaseSynchronizer(object):
                 else:  
                     self._sync_missing_local_file(remote_entry)
         
+        # 4. Let the target provider write it's meta data for the files in the 
+        #    current directory.
         self.local.flush_meta()
         self.remote.flush_meta()
 
+        # 5. Finally visit all local sub-directories recursively that also 
+        #    exist on the remote target.
         for local_dir in local_directories:
             if not self._before_sync(local_dir):
                 continue
@@ -588,7 +610,7 @@ class BaseSynchronizer(object):
                 self._sync_dir()
                 self.local.cwd("..")
                 self.remote.cwd("..")
-                # TODO: check if cwd is still correct
+                # TODO: FTP should check if cwd is still correct
         
     def _sync_error(self, msg, local_file, remote_file):
         print(msg, local_file, remote_file, file=sys.stderr)

@@ -59,7 +59,8 @@ class FtpTarget(_Target):
     def cwd(self, dir_name):
         path = normurl(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
-            raise RuntimeError("Tried to navigate outside root %r: %r" % (self.root_dir, path))
+            raise RuntimeError("Tried to navigate outside root %r: %r" 
+                               % (self.root_dir, path))
         self.ftp.cwd(dir_name)
         self.cur_dir = path
         self.cur_dir_meta = None
