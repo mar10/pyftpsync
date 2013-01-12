@@ -12,6 +12,7 @@ from datetime import datetime
 import sys
 import io
 import time
+import fnmatch
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -382,6 +383,14 @@ class BaseSynchronizer(object):
         self.verbose = self.options.get("verbose", 3) 
         self.dry_run = self.options.get("dry_run", True)
 
+        self.include_files = self.options.get("include_files")
+        if self.include_files:
+            self.include_files = [ pat.strip() for pat in self.include_files.split(",") ]
+
+        self.omit = self.options.get("omit")
+        if self.omit:
+            self.omit = [ pat.strip() for pat in self.omit.split(",") ]
+        
         if self.dry_run:
             self.local.readonly = True
             self.remote.readonly = True
@@ -399,6 +408,26 @@ class BaseSynchronizer(object):
     
     def _inc_stat(self, name, ofs=1):
         self._stats[name] = self._stats.get(name, 0) + ofs
+
+    def _match(self, entry):
+        name = entry.name
+        if name == _Target.META_FILE_NAME:
+            return False
+#        if name in self.DEFAULT_EXCLUDES:
+#            return False
+        ok = True
+        if entry.is_file() and self.include_files:
+            ok = False
+            for pat in self.include_files:
+                if fnmatch.fnmatch(name, pat):
+                    ok = True
+                    break
+        if ok and self.omit:
+            for pat in self.omit:
+                if fnmatch.fnmatch(name, pat):
+                    ok = False
+                    break
+        return ok
     
     def run(self):
         start = time.time()
@@ -472,12 +501,17 @@ class BaseSynchronizer(object):
         if self.verbose >= min_level: 
             print(msg)
         
-    def _log_action(self, status, action, entry, min_level=3):
-        if self.verbose >= min_level:
-            prefix = "" 
-            if self.dry_run:
-                prefix = "(DRY-RUN) "
-            print("%s%-8s %-2s %s" % (prefix, status, action, entry.get_rel_path()))
+    def _log_action(self, action, status, symbol, entry, min_level=3):
+        if self.verbose < min_level:
+            return
+        prefix = "" 
+        if self.dry_run:
+            prefix = "(DRY-RUN) "
+        tag = ("%s %s" % (action, status)).upper()
+        name = entry.get_rel_path()
+        if entry.is_dir():
+            name = "[%s]" % name
+        print("%s%-14s %-2s %s" % (prefix, tag, symbol, name))
         
     def _dry_run_action(self, action):
         """"Called in dry-run mode after call to _log_action() and before exiting function."""
@@ -485,7 +519,7 @@ class BaseSynchronizer(object):
         return
     
     def _before_sync(self, entry):
-        if entry.name in self.DEFAULT_EXCLUDES:
+        if not self._match(entry):
             self._sync_skip(entry)
             return False
         return True
@@ -504,6 +538,8 @@ class BaseSynchronizer(object):
         for local_file in local_files:
             self._inc_stat("local_files")
             if not self._before_sync(local_file):
+                # TODO: currently, if a file is skipped, it will not be
+                # considered for deletion on the peer target
                 continue
             # TODO: case insensitive?
             remote_file = remote_entry_map.get(local_file.name)
@@ -558,39 +594,39 @@ class BaseSynchronizer(object):
         print(msg, local_file, remote_file, file=sys.stderr)
     
     def _sync_skip(self, entry):
-        self._log_action("SKIP", "?", entry, min_level=4)
+        self._log_action("skip", "", "?", entry, min_level=4)
     
     def _sync_equal_file(self, local_file, remote_file):
         self._log_call("_sync_equal_file(%s, %s)" % (local_file, remote_file))
-        self._log_action("EQUAL", "=", local_file, min_level=4)
+        self._log_action("", "equal", "=", local_file, min_level=4)
     
     def _sync_equal_dir(self, local_dir, remote_dir):
         self._log_call("_sync_equal_dir(%s, %s)" % (local_dir, remote_dir))
-        self._log_action("EQUAL", "=", local_dir, min_level=4)
+        self._log_action("", "equal", "=", local_dir, min_level=4)
     
     def _sync_newer_local_file(self, local_file, remote_file):
         self._log_call("_sync_newer_local_file(%s, %s)" % (local_file, remote_file))
-        self._log_action("MODIFIED", ">", local_file)
+        self._log_action("", "modified", ">", local_file)
     
     def _sync_older_local_file(self, local_file, remote_file):
         self._log_call("_sync_older_local_file(%s, %s)" % (local_file, remote_file))
-        self._log_action("MODIFIED", "<", local_file)
+        self._log_action("", "modified", "<", local_file)
     
     def _sync_missing_local_file(self, remote_file):
         self._log_call("_sync_missing_local_file(%s)" % remote_file)
-        self._log_action("MISSING", "<", remote_file)
+        self._log_action("", "missing", "<", remote_file)
     
     def _sync_missing_local_dir(self, remote_dir):
         self._log_call("_sync_missing_local_dir(%s)" % remote_dir)
-        self._log_action("MISSING", "<", remote_dir)
+        self._log_action("", "missing", "<", remote_dir)
     
     def _sync_missing_remote_file(self, local_file):
         self._log_call("_sync_missing_remote_file(%s)" % local_file)
-        self._log_action("NEW", ">", local_file)
+        self._log_action("", "new", ">", local_file)
     
     def _sync_missing_remote_dir(self, local_dir):
         self._log_call("_sync_missing_remote_dir(%s)" % local_dir)
-        self._log_action("NEW", ">", local_dir)
+        self._log_action("", "new", ">", local_dir)
     
 
 
@@ -605,41 +641,41 @@ class UploadSynchronizer(BaseSynchronizer):
         
     def _sync_newer_local_file(self, local_file, remote_file):
         self._log_call("_sync_newer_local_file(%s, %s)" % (local_file, remote_file))
-        self._log_action("MODIFIED", ">", local_file)
+        self._log_action("copy", "modified", ">", local_file)
         self._copy_file(self.local, self.remote, local_file)
     
     def _sync_older_local_file(self, local_file, remote_file):
         self._log_call("_sync_older_local_file(%s, %s)" % (local_file, remote_file))
         if self.options.get("force"):
-            self._log_action("RESTORE", ">", local_file)
+            self._log_action("restore", "older", ">", local_file)
             self._copy_file(self.local, self.remote, remote_file)
         else:
-            self._log_action("SKIP OLDER", "?", local_file)
+            self._log_action("skip", "older", "?", local_file, 4)
 
     def _sync_missing_local_file(self, remote_file):
         self._log_call("_sync_missing_local_file(%s)" % remote_file)
         if self.options.get("delete"):
-            self._log_action("DELETE", ">", remote_file)
+            self._log_action("delete", "missing", ">", remote_file)
             self._remove_file(remote_file)
         else:
-            self._log_action("SKIP MISSING", "?", remote_file)
+            self._log_action("skip", "missing", "?", remote_file, 4)
     
     def _sync_missing_local_dir(self, remote_dir):
         self._log_call("_sync_missing_local_dir(%s)" % remote_dir)
         if self.options.get("delete"):
-            self._log_action("DELETE", ">", remote_dir)
+            self._log_action("delete", "missing", ">", remote_dir)
             self._remove_dir(remote_dir)
         else:
-            self._log_action("SKIP MISSING", "?", remote_dir)
+            self._log_action("skip", "missing", "?", remote_dir, 4)
     
     def _sync_missing_remote_file(self, local_file):
         self._log_call("_sync_missing_remote_file(%s)" % local_file)
-        self._log_action("NEW", ">", local_file)
+        self._log_action("copy", "new", ">", local_file)
         self._copy_file(self.local, self.remote, local_file)
     
     def _sync_missing_remote_dir(self, local_dir):
         self._log_call("_sync_missing_remote_dir(%s)" % local_dir)
-        self._log_action("NEW", ">", local_dir)
+        self._log_action("copy", "new", ">", local_dir)
         self._copy_recursive(self.local, self.remote, local_dir)
     
 
@@ -655,10 +691,10 @@ class DownloadSynchronizer(BaseSynchronizer):
     def _sync_newer_local_file(self, local_file, remote_file):
         self._log_call("_sync_newer_local_file(%s, %s)" % (local_file, remote_file))
         if self.options.get("force"):
-            self._log_action("RESTORE", "<", local_file)
+            self._log_action("restore", "<", local_file)
             self._copy_file(self.remote, self.local, remote_file)
         else:
-            self._log_action("SKIP OLDER", "?", local_file)
+            self._log_action("SKIP OLDER", "?", local_file, 4)
     
     def _sync_older_local_file(self, local_file, remote_file):
         self._log_call("_sync_older_local_file(%s, %s)" % (local_file, remote_file))
@@ -667,21 +703,21 @@ class DownloadSynchronizer(BaseSynchronizer):
     
     def _sync_missing_local_file(self, remote_file):
         self._log_call("_sync_missing_local_file(%s)" % remote_file)
-        self._log_action("NEW", "<", remote_file)
+        self._log_action("COPY NEW", "<", remote_file)
         self._copy_file(self.remote, self.local, remote_file)
     
     def _sync_missing_local_dir(self, remote_dir):
         self._log_call("_sync_missing_local_dir(%s)" % remote_dir)
-        self._log_action("NEW", "<", remote_dir)
+        self._log_action("COPY NEW FOLDER", "<", remote_dir)
         self._copy_recursive(self.remote, self.local, remote_dir)
     
     def _sync_missing_remote_file(self, local_file):
         self._log_call("_sync_missing_remote_file(%s)" % local_file)
         if self.options.get("delete"):
-            self._log_action("MISSING", "X <", local_file)
+            self._log_action("REMOVE MISSING", "X <", local_file)
             self._remove_file(local_file)
         else:
-            self._log_action("SKIP MISSING", "?", local_file)
+            self._log_action("SKIP MISSING", "?", local_file, 4)
     
     def _sync_missing_remote_dir(self, local_dir):
         self._log_call("_sync_missing_remote_dir(%s)" % local_dir)
@@ -689,4 +725,4 @@ class DownloadSynchronizer(BaseSynchronizer):
             self._log_action("MISSING", "X <", local_dir)
             self._remove_file(local_dir)
         else:
-            self._log_action("SKIP MISSING", "?", local_dir)
+            self._log_action("SKIP MISSING", "?", local_dir, 4)

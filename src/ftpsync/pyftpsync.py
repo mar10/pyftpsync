@@ -85,6 +85,9 @@ def run():
     
     subparsers = parser.add_subparsers(help="sub-command help")
     
+    def __add_common_sub_args(parser):
+        pass
+    
     # create the parser for the "upload" command
     upload_parser = subparsers.add_parser("upload", 
                                            help="copy new and modified files to remote folder")
@@ -112,6 +115,12 @@ def run():
                                help="turn off the dry-run mode (which is ON by default), "
                                "that would just print status messages but does "
                                "not change anything")
+    upload_parser.add_argument("-f", "--include-files", 
+                               help="wildcard for file names (default: all, "
+                               "separate multiple values with ',')")
+    upload_parser.add_argument("-o", "--omit", 
+                               help="wildcard of files and directories to exclude (applied after --include)")
+
     upload_parser.set_defaults(func=upload_command)
     
 
