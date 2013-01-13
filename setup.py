@@ -3,8 +3,8 @@
 import os
 RELEASE = False
 
-from ez_setup import use_setuptools
-use_setuptools()
+#from ez_setup import use_setuptools
+#use_setuptools()
 
 from setuptools import setup, find_packages
 
@@ -53,7 +53,10 @@ setup(name="pyftpsync",
       package_dir = {"": "src"},
       packages = ["ftpsync"],
 #      packages = find_packages(exclude=[]),
-      py_modules = ["ez_setup", ],
+      
+      py_modules = [
+#                    "ez_setup", 
+                    ],
 
 #      package_data={"": ["*.txt", "*.html", "*.conf"]},
 #      include_package_data = True, # TODO: PP

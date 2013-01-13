@@ -4,6 +4,11 @@ Copyright (c) 2012 Martin Wendt
 
 Synchronize local directories with FTP server.
 
+This is both:
+  - a command line tool 
+  - a library for use in your projects
+
+
 Project home: http://pyftpsync.googlecode.com/
 
 
@@ -15,6 +20,11 @@ The FTP server must support the MLST command.
 
 Usage
 -----
+Note:
+    $ pyftpsync upload A B
+is essentially the same as
+    $ pyftpsync download B A
+
 Verbose modes (default: 3)
     0: quiet
     1: errors only
