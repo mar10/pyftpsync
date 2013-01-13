@@ -9,8 +9,10 @@ Usage examples:
   > pyftpsync.py --help
   > pyftpsync.py upload ftp://example.com/myfolder
 """
-from ftpsync.targets import make_target, UploadSynchronizer, BaseSynchronizer
+from ftpsync.targets import make_target, UploadSynchronizer, BaseSynchronizer,\
+    FsTarget
 from pprint import pprint
+from argparse import ArgumentParser
 #def disable_stdout_buffering():
 #    """http://stackoverflow.com/questions/107705/python-output-buffering"""
 #    # Appending to gc.garbage is a way to stop an object from being
@@ -44,30 +46,12 @@ def namespace_to_dict(o):
 # backup_command
 #===============================================================================
 
-def upload_command(parser, args):
-    ftp_debug = 0
-    if args.verbose >= 5:
-        ftp_debug = 1 
-    local = make_target(args.local, debug=ftp_debug)
-    remote = make_target(args.remote, debug=ftp_debug)
-    opts = namespace_to_dict(args)
-    s = UploadSynchronizer(local, remote, opts)
-    s.run()
-    stats = s.get_stats()
-    if args.verbose >= 4:
-        pprint(stats)
-    elif args.verbose >= 1:
-        print("Wrote %s/%s files in %s dirs. Elap: %s" 
-              % (stats["files_written"], stats["local_files"], stats["local_dirs"], stats["elap"]))
-    
-
-#===============================================================================
-# info_command
-#===============================================================================
-
-def info_command(parser, args):
-    """Dump plugin info."""
-
+#def upload_command(parser, args):
+#    opts = namespace_to_dict(args)
+#    pprint(opts)
+#    exit(2)
+#    s = UploadSynchronizer(args.local_target, args.remote_target, opts)
+#    s.run()
 
 #===============================================================================
 # run
@@ -91,16 +75,16 @@ def run():
     # create the parser for the "upload" command
     upload_parser = subparsers.add_parser("upload", 
                                            help="copy new and modified files to remote folder")
+    upload_parser.add_argument("local", 
+                             metavar="LOCAL",
+#                             required=True,
+                             default=".",
+                             help="path to local folder (default: %(default)s)")      
     upload_parser.add_argument("remote", 
                              metavar="REMOTE",
 #                             required=True,
 #                             default=".",
                              help="path to remote folder")
-    upload_parser.add_argument("--local", 
-                             metavar="LOCAL",
-#                             required=True,
-                             default=".",
-                             help="path to local folder (default: %(default)s)")      
     upload_parser.add_argument("--force", 
                              action="store_true",
                              help="overwrite different remote files, even if the target is newer")
@@ -125,7 +109,8 @@ def run():
     upload_parser.add_argument("-o", "--omit", 
                                help="wildcard of files and directories to exclude (applied after --include)")
 
-    upload_parser.set_defaults(func=upload_command)
+#    upload_parser.set_defaults(handler=upload_command)
+    upload_parser.set_defaults(command="upload")
     
 
     # create the parser for the "download" command
@@ -150,43 +135,7 @@ def run():
 #    download_parser.add_argument("--dry-run", 
 #                             action="store_true",
 #                             help="just simulate and log results; don't change anything")
-#    download_parser.set_defaults(func=upload_command)
-
-    
-#    # create the parser for the "dump" command
-#    dump_parser = subparsers.add_parser("dump", help="print or export snapshot data")
-#    dump_parser.add_argument("--names", 
-#                             default="*",
-#                             help="table name(s) (separate multiple entries with comma, default: %(default)s)")
-##    dump_parser.add_argument("--filter", 
-##                             default="*",
-##                             help="only print lines that contain this string (case insensitive)")
-##    dump_parser.add_argument("--format", 
-##                             help="CSV, ...")
-#    dump_parser.set_defaults(func=dump_command)
-#    
-#    # create the parser for the "backup" command
-#    backup_parser = subparsers.add_parser("backup", help="backup and optionally purge snapshot data")
-#    backup_parser.add_argument("--names", 
-#                               default="*",
-#                               help="table name(s) (separate multiple entries with comma, default: %(default)s)")
-#    backup_parser.add_argument("--format", 
-#                               default="csv",
-#                               help="table name(s) (separate multiple entries with comma, default: %(default)s)")
-#    backup_parser.add_argument("--date-from", 
-#                               help="oldest entry (yyy-mm-dd)")
-#    backup_parser.add_argument("--date-to", 
-#                               help="newest entry (yyy-mm-dd)")
-#    backup_parser.set_defaults(func=backup_command)
-#    
-#    # create the parser for the "migrate" command
-##    migrate_parser = subparsers.add_parser("migrate", help="migrate previous versions to current")
-##    migrate_parser.add_argument("--feature", 
-##                             help="what to migrate")      
-##    migrate_parser.add_argument("--execute", 
-##                             action="store_true",
-##                             help="pass this argument to actually write changes (otherwise DRY_RUN is enabled)")      
-##    migrate_parser.set_defaults(func=migrate_command)
+#    download_parser.set_defaults(handler=upload_command)
     
     # Parse command line
     args = parser.parse_args()
@@ -196,9 +145,38 @@ def run():
     del args.quiet
     if args.delete_unmatched:
         args.delete = True
+    if args.remote == ".":
+        parser.error("'.' is expected to be the local target")
+
+    ftp_debug = 0
+    if args.verbose >= 5:
+        ftp_debug = 1 
+    args.local_target = make_target(args.local, debug=ftp_debug)
+    args.remote_target = make_target(args.remote, debug=ftp_debug)
+    if not isinstance(args.local_target, FsTarget) and isinstance(args.remote_target, FsTarget):
+        parser.error("a file system target is expected to be local")
 
     # Let the command handler do it's thing
-    args.func(parser, args)
+#    args.handler(parser, args)
+    opts = namespace_to_dict(args)
+    if args.command == "upload":
+        s = UploadSynchronizer(args.local_target, args.remote_target, opts)
+    elif args.command == "download":
+        s = DownloadSynchronizer(args.local_target, args.remote_target, opts)
+    elif args.command == "synchronize":
+        s = BidirSynchronizer(args.local_target, args.remote_target, opts)
+    else:
+        parser.error("unknown command %s" % args.command)
+    s.run()
+
+    stats = s.get_stats()
+    if args.verbose >= 4:
+        pprint(stats)
+    elif args.verbose >= 1:
+        if args.dry_run:
+            print("(DRY-RUN) ", end="")
+        print("Wrote %s/%s files in %s dirs. Elap: %s" 
+              % (stats["files_written"], stats["local_files"], stats["local_dirs"], stats["elap"]))
     
 
 # Script entry point
