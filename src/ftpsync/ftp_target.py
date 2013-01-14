@@ -12,8 +12,8 @@ from ftpsync.targets import FileEntry, DirectoryEntry, _Target
 import calendar
 import json
 import sys
-from ftplib import FTP
 from ftpsync._version import __version__
+import ftplib
 
 
 #===============================================================================
@@ -24,7 +24,7 @@ class FtpTarget(_Target):
     def __init__(self, path, host, username=None, password=None, connect=True, debug=0):
         path = path or "/"
         super(FtpTarget, self).__init__(path)
-        self.ftp = FTP()
+        self.ftp = ftplib.FTP()
         self.ftp.debug(debug)
         self.host = host
         self.username = username
@@ -59,6 +59,7 @@ class FtpTarget(_Target):
     def cwd(self, dir_name):
         path = normurl(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
+            # paranoic check to prevent that our sync tool goes berserk
             raise RuntimeError("Tried to navigate outside root %r: %r" 
                                % (self.root_dir, path))
         self.ftp.cwd(dir_name)
@@ -72,6 +73,28 @@ class FtpTarget(_Target):
     def mkdir(self, dir_name):
         self.check_write(dir_name)
         self.ftp.mkd(dir_name)
+
+    def rmdir(self, dir_name):
+        # FTP does not support deletion of non-empty directories.
+        print("rmdir(%s)" % dir_name)
+        self.check_write(dir_name)
+        names = self.ftp.nlst(dir_name)
+        print("rmdir(%s): %s" % (dir_name, names))
+        # TODO: check, if dir is empty
+        self.ftp.cwd(dir_name)
+        for name in names:
+            if name in (".", ".."): 
+                continue
+            try:
+                # try to delete this as a file
+                self.ftp.delete(name)
+            except ftplib.all_errors as e:
+                print("    ftp.delete(%s) failed: %s" % (name, e))
+                # assume <name> is a folder
+                self.rmdir(name)
+        self.ftp.cwd("..")
+        print("ftp.rmd(%s)..." % (dir_name, ))
+        self.ftp.rmd(dir_name)
 
     def flush_meta(self):
         if self.readonly:

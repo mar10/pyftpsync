@@ -7,12 +7,12 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 
 Usage examples:
   > pyftpsync.py --help
-  > pyftpsync.py upload ftp://example.com/myfolder
+  > pyftpsync.py upload . ftp://example.com/myfolder
 """
-from ftpsync.targets import make_target, UploadSynchronizer, BaseSynchronizer,\
-    FsTarget
+from __future__ import print_function
+
+from ftpsync.targets import make_target, UploadSynchronizer, FsTarget
 from pprint import pprint
-from argparse import ArgumentParser
 #def disable_stdout_buffering():
 #    """http://stackoverflow.com/questions/107705/python-output-buffering"""
 #    # Appending to gc.garbage is a way to stop an object from being
@@ -43,7 +43,7 @@ def namespace_to_dict(o):
 
 
 #===============================================================================
-# backup_command
+# upload_command
 #===============================================================================
 
 #def upload_command(parser, args):

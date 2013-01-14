@@ -237,6 +237,10 @@ class _Target(object):
     def mkdir(self, dir_name):
         raise NotImplementedError
 
+    def rmdir(self, name):
+        """Remove cur_dir/name."""
+        raise NotImplementedError
+
     def flush_meta(self):
         """Write additional meta information for current directory."""
         pass
@@ -496,7 +500,7 @@ class BaseSynchronizer(object):
         elif dir_entry.target.readonly:
             raise RuntimeError("target is read-only: %s" % dir_entry.target)
         self._inc_stat("removed_folders")
-        dir_entry.target.remove_dir(dir_entry.name)
+        dir_entry.target.rmdir(dir_entry.name)
 
     def _log_call(self, msg, min_level=5):
         if self.verbose >= min_level: 
