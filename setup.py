@@ -20,6 +20,10 @@ if not "HOME" in os.environ and  "HOMEPATH" in os.environ:
     os.environ.setdefault("HOME", os.environ.get("HOMEPATH", ""))
     print("Initializing HOME environment variable to '%s'" % os.environ["HOME"])
 
+install_requires = []
+if sys.version_info < (2, 7):
+    install_requires += ["argparse"]
+
 setup(name="pyftpsync",
       version = version,
       author = "Martin Wendt",
@@ -49,7 +53,7 @@ setup(name="pyftpsync",
       keywords = "python ftp synchronize tool", 
 #      platforms=["Unix", "Windows"],
       license = "The MIT License",
-#      install_requires = ["lxml"],
+      install_requires = install_requires,
       package_dir = {"": "src"},
       packages = ["ftpsync"],
 #      packages = find_packages(exclude=[]),
@@ -57,7 +61,7 @@ setup(name="pyftpsync",
       py_modules = [
 #                    "ez_setup", 
                     ],
-
+      # See also MANIFEST.in
 #      package_data={"": ["*.txt", "*.html", "*.conf"]},
 #      include_package_data = True, # TODO: PP
       zip_safe = False,
