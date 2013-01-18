@@ -76,24 +76,26 @@ class FtpTarget(_Target):
 
     def rmdir(self, dir_name):
         # FTP does not support deletion of non-empty directories.
-        print("rmdir(%s)" % dir_name)
+#        print("rmdir(%s)" % dir_name)
         self.check_write(dir_name)
         names = self.ftp.nlst(dir_name)
-        print("rmdir(%s): %s" % (dir_name, names))
-        # TODO: check, if dir is empty
-        self.ftp.cwd(dir_name)
-        for name in names:
-            if name in (".", ".."): 
-                continue
+#        print("rmdir(%s): %s" % (dir_name, names))
+        # Skip recursion, if dir is empty
+        names = [ n for n in names if n not in (".", "..")]
+        if len(names) > 0:
+            self.ftp.cwd(dir_name)
             try:
-                # try to delete this as a file
-                self.ftp.delete(name)
-            except ftplib.all_errors as e:
-                print("    ftp.delete(%s) failed: %s, trying rmdir()..." % (name, e))
-                # assume <name> is a folder
-                self.rmdir(name)
-        self.ftp.cwd("..")
-        print("ftp.rmd(%s)..." % (dir_name, ))
+                for name in names:
+                    try:
+                        # try to delete this as a file
+                        self.ftp.delete(name)
+                    except ftplib.all_errors as e:
+        #                print("    ftp.delete(%s) failed: %s, trying rmdir()..." % (name, e))
+                        # assume <name> is a folder
+                        self.rmdir(name)
+            finally:
+                self.ftp.cwd("..")
+#        print("ftp.rmd(%s)..." % (dir_name, ))
         self.ftp.rmd(dir_name)
 
     def flush_meta(self):
@@ -106,6 +108,7 @@ class FtpTarget(_Target):
             self.cur_dir_meta["_version"] = __version__
             self.cur_dir_meta["upload_time"] = time.mktime(time.gmtime())
             s = json.dumps(self.cur_dir_meta, indent=4, sort_keys=True)
+            print("flush_meta() %s" % s)
             self.write_text(self.META_FILE_NAME, s)
         elif self.cur_dir_meta is not None:
             self.ftp.delete(self.META_FILE_NAME)
@@ -216,7 +219,7 @@ class FtpTarget(_Target):
     def set_mtime(self, name, mtime, size):
         self.check_write(name)
         # We cannot set the mtime on FTP servers, so we store this as additional
-        # meta data in the directory
+        # meta data in the same directory
         if self.cur_dir_meta is None:
             self.cur_dir_meta = {"files": {}}
         self.cur_dir_meta["files"][name] = {"uploaded": time.mktime(time.gmtime()),

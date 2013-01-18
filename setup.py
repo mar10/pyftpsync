@@ -1,6 +1,7 @@
 # If true, then the svn revision won't be used to calculate the
 # revision (set to True for real releases)
 import os
+import sys
 RELEASE = False
 
 #from ez_setup import use_setuptools
