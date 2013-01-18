@@ -14,8 +14,8 @@ Project home: http://pyftpsync.googlecode.com/
 
 Known limitations
 -----------------
-The current status is pre-alpha and barely tested.
-The FTP server must support the MLST command.
+  - The current status is pre-alpha and barely tested.
+  - The FTP server must support the MLST command.
 
 
 Usage
