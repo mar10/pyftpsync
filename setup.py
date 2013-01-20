@@ -40,7 +40,7 @@ setup(name="pyftpsync",
         #Development Status :: 4 - Beta
         #Development Status :: 5 - Production/Stable
 
-      classifiers = ["Development Status :: 2 - Pre-Alpha",
+      classifiers = ["Development Status :: 3 - Alpha",
                      "Environment :: Console",
                      "Intended Audience :: Information Technology",
                      "Intended Audience :: Developers",
