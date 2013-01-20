@@ -80,8 +80,8 @@ class FtpTarget(_Target):
         self.check_write(dir_name)
         names = self.ftp.nlst(dir_name)
 #        print("rmdir(%s): %s" % (dir_name, names))
-        # Skip recursion, if dir is empty
-        names = [ n for n in names if n not in (".", "..")]
+        # Skip ftp.cwd(), if dir is empty
+        names = [ n for n in names if n not in (".", "..") ]
         if len(names) > 0:
             self.ftp.cwd(dir_name)
             try:
@@ -89,8 +89,8 @@ class FtpTarget(_Target):
                     try:
                         # try to delete this as a file
                         self.ftp.delete(name)
-                    except ftplib.all_errors as e:
-        #                print("    ftp.delete(%s) failed: %s, trying rmdir()..." % (name, e))
+                    except ftplib.all_errors as _e:
+#                        print("    ftp.delete(%s) failed: %s, trying rmdir()..." % (name, _e))
                         # assume <name> is a folder
                         self.rmdir(name)
             finally:
@@ -108,9 +108,10 @@ class FtpTarget(_Target):
             self.cur_dir_meta["_version"] = __version__
             self.cur_dir_meta["upload_time"] = time.mktime(time.gmtime())
             s = json.dumps(self.cur_dir_meta, indent=4, sort_keys=True)
-            print("flush_meta() %s" % s)
+            print("META: flush_meta(%s)" % (self.cur_dir, ), s)
             self.write_text(self.META_FILE_NAME, s)
         elif self.cur_dir_meta is not None:
+            print("META: flush_meta(%s): DELETE" % self.cur_dir)
             self.ftp.delete(self.META_FILE_NAME)
             return
         self.cur_dir_meta_modified = False
@@ -138,6 +139,7 @@ class FtpTarget(_Target):
                     # Use calendar.timegm() instead of time.mktime(), because
                     # the date was returned as UTC
                     mtime = calendar.timegm(time.strptime(field_value, "%Y%m%d%H%M%S"))
+#                    print("MLST modify: ", field_value, "mtime", mtime, "ctime", time.ctime(mtime))
                 elif field_name == "unique":
                     unique = field_value
                     
@@ -146,6 +148,7 @@ class FtpTarget(_Target):
                 entry = DirectoryEntry(self, self.cur_dir, name, size, mtime, unique)
             elif res_type == "file":
                 if name == self.META_FILE_NAME:
+                    # the meta-data file is silently ignored
                     local_res["has_meta"] = True
                 else:
                     entry = FileEntry(self, self.cur_dir, name, size, mtime, unique)
@@ -164,10 +167,13 @@ class FtpTarget(_Target):
         # load stored meta data if present
         self.cur_dir_meta = None
         self.cur_dir_meta_modified = False
-        if local_res["has_meta"]:        
+        if not local_res["has_meta"]: 
+            print("META: read(%s): Not found" % (self.cur_dir, ))
+        if local_res["has_meta"]:
             try:
                 m = self.read_text(self.META_FILE_NAME)
                 self.cur_dir_meta = json.loads(m)
+#                print("META: read(%s)" % (self.cur_dir, ), self.cur_dir_meta)
             except Exception as e:
                 print("Could not read meta info: %s" % e, file=sys.stderr)
 
@@ -175,19 +181,42 @@ class FtpTarget(_Target):
             meta_files = self.cur_dir_meta.setdefault("files", {})
             last_upload_time = self.cur_dir_meta.setdefault("upload_time", 0)
             
-            # Adjust file mtime from meta data if present
+            # Adjust file mtime from meta-data if present
             missing = []
             for n in meta_files:
                 meta = meta_files[n]
                 if n in entry_map:
 #                    if entry_map[n].size == meta["size"] and entry_map[n].mtime <= last_upload_time:
-                    if entry_map[n].size == meta.get("size") and entry_map[n].mtime <= meta.get("uploaded", 0):
+                    upload_time = meta.get("uploaded", 0)
+                    # ???
+                    # TODO: sollten wir prüfen. ob meta.mtime (nicht meta.upload_time) ??
+                    # ??? 
+                    if entry_map[n].size == meta.get("size") and entry_map[n].mtime <= upload_time:
                         entry_map[n].meta = meta
                     else:
-                        print("Removing outdated meta entry %s" % n, meta)
+                        # Discard stored meta-data if 
+                        #   1. the the mtime reported by the FTP server is later
+                        #      than the stored upload time
+                        #      or
+                        #   2. the reported files size is different than the
+                        #      size we stored in the meta-data 
+#                        print("time", time.time(), ", ctime(time)", time.ctime(time.time()))
+#                        print("upload (%s) > filetime(%s): %s", upload_time, entry_map[n].mtime, bool(entry_map[n].mtime <= upload_time))
+#                        print("upload (%s) > filetime(%s): %s", time.ctime(upload_time), time.ctime(entry_map[n].mtime), bool(entry_map[n].mtime <= upload_time))
+#                        print("META: Removing outdated meta entry %s" % n, meta)
+#                        print("META:     file info", entry_map[n], entry_map[n].mtime)
+#                        print("META:     file info ctime", time.ctime(entry_map[n].mtime))
+#                        print("entry_map[n].mtime", entry_map[n].mtime)
+#                        print("    ctime", time.ctime(entry_map[n].mtime))
+#                        print("    dt_modified", entry_map[n].dt_modified)
+#                        gmtime = time.gmtime()
+#                        print("gmtime", gmtime)
+#                        print("mktime", time.mktime(gmtime))
+#                        print("ctime", time.ctime(time.mktime(gmtime)))
+
                         missing.append(n)
                 else:
-                    print("Removing missing meta entry %s" % n)
+                    print("META: Removing missing meta entry %s" % n)
                     missing.append(n)
             # Remove missing files from cur_dir_meta 
             for n in missing:
@@ -214,6 +243,7 @@ class FtpTarget(_Target):
         self.check_write(name)
         if self.cur_dir_meta and self.cur_dir_meta.pop(name, None):
             self.cur_dir_meta_modified = True
+            print("META remove_file(%s)" % name)
         self.ftp.delete(name)
 
     def set_mtime(self, name, mtime, size):
@@ -222,7 +252,13 @@ class FtpTarget(_Target):
         # meta data in the same directory
         if self.cur_dir_meta is None:
             self.cur_dir_meta = {"files": {}}
-        self.cur_dir_meta["files"][name] = {"uploaded": time.mktime(time.gmtime()),
+        self.cur_dir_meta["files"][name] = {
+#                                            "uploaded": time.mktime(time.gmtime()),
+                                            "uploaded": time.time(), # UTC time stamp
+                                            "uploaded_str": time.ctime(),
                                             "size":  size,
-                                            "mtime": mtime}
+                                            "mtime": mtime,
+                                            "mtime_str": time.ctime(mtime),
+                                            }
+        print("META set_mtime(%s): %s" % (name, time.ctime(mtime)))
         self.cur_dir_meta_modified = True
