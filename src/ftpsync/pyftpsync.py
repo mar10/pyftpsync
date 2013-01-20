@@ -11,7 +11,8 @@ Usage examples:
 """
 from __future__ import print_function
 
-from ftpsync.targets import make_target, UploadSynchronizer, FsTarget
+from ftpsync.targets import make_target, UploadSynchronizer, FsTarget,\
+    DownloadSynchronizer
 from pprint import pprint
 #def disable_stdout_buffering():
 #    """http://stackoverflow.com/questions/107705/python-output-buffering"""
@@ -114,28 +115,36 @@ def run():
     
 
     # create the parser for the "download" command
-#    download_parser = subparsers.add_parser("download", 
-#                                           help="copy new and modified files to local folder")
-#    download_parser.add_argument("remote", 
-#                             metavar="REMOTE",
-##                             required=True,
-##                             default=".",
-#                             help="path to remote folder")
-#    download_parser.add_argument("--local", 
-#                             metavar="LOCAL",
-##                             required=True,
-#                             default=".",
-#                             help="path to local folder (default: %(default)s)")      
-#    download_parser.add_argument("--force", 
-#                             action="store_true",
-#                             help="overwrite different local files, even if the source is older")
-#    download_parser.add_argument("--delete", 
-#                             action="store_true",
-#                             help="remove local files if they don't exist remotely")
-#    download_parser.add_argument("--dry-run", 
-#                             action="store_true",
-#                             help="just simulate and log results; don't change anything")
-#    download_parser.set_defaults(handler=upload_command)
+    download_parser = subparsers.add_parser("download", 
+            help="copy new and modified files from remote folder to local target")
+    download_parser.add_argument("local", 
+                                 metavar="LOCAL",
+                                 default=".",
+                                 help="path to local folder (default: %(default)s)")
+    download_parser.add_argument("remote", 
+                                  metavar="REMOTE",
+                                  help="path to remote folder")
+    download_parser.add_argument("--force", 
+                             action="store_true",
+                             help="overwrite different local files, even if the target is newer")
+    download_parser.add_argument("--delete", 
+                             action="store_true",
+                             help="remove local files if they don't exist on remote target")
+    download_parser.add_argument("--delete-unmatched", 
+                             action="store_true",
+                             help="remove local files if they don't exist on remote target "
+                             "or don't match the current filter (implies '--delete' option)")
+    download_parser.add_argument("-x", "--execute", 
+                               action="store_false", dest="dry_run", default=True,
+                               help="turn off the dry-run mode (which is ON by default), "
+                               "that would just print status messages but does "
+                               "not change anything")
+    download_parser.add_argument("-f", "--include-files", 
+                               help="wildcard for file names (default: all, "
+                               "separate multiple values with ',')")
+    download_parser.add_argument("-o", "--omit", 
+                               help="wildcard of files and directories to exclude (applied after --include)")
+    download_parser.set_defaults(command="download")
     
     # Parse command line
     args = parser.parse_args()

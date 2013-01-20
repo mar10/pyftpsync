@@ -363,7 +363,8 @@ class FsTarget(_Target):
     def remove_file(self, name):
         """Remove cur_dir/name."""
         self.check_write(name)
-        raise NotImplementedError
+        path = os.path.join(self.cur_dir, name)
+        os.remove(path)
 
     def set_mtime(self, name, mtime, size):
         self.check_write(name)
@@ -540,9 +541,6 @@ class BaseSynchronizer(object):
         """Called by the synchronizer for each entry. 
         Return False to prevent the synchronizer's default action.
         """
-#        if not self._match(entry):
-#            self.sync_skip(entry)
-#            return False
         return True
     
     def _sync_dir(self):
@@ -631,9 +629,6 @@ class BaseSynchronizer(object):
         
     def _sync_error(self, msg, local_file, remote_file):
         print(msg, local_file, remote_file, file=sys.stderr)
-    
-#    def sync_skip(self, entry):
-#        self._log_action("skip", "", "?", entry, min_level=4)
     
     def sync_equal_file(self, local_file, remote_file):
         self._log_call("sync_equal_file(%s, %s)" % (local_file, remote_file))
@@ -794,47 +789,22 @@ class UploadSynchronizer(BaseSynchronizer):
 #===============================================================================
 # DownloadSynchronizer
 #===============================================================================
-#class DownloadSynchronizer(BaseSynchronizer):
-#    def __init__(self, local, remote, options):
-#        super(DownloadSynchronizer, self).__init__(local, remote, options)
-##        local.readonly = False
-#        remote.readonly = True
-#        
-#    def sync_newer_local_file(self, local_file, remote_file):
-#        self._log_call("sync_newer_local_file(%s, %s)" % (local_file, remote_file))
-#        if self.options.get("force"):
-#            self._log_action("restore", "<", local_file)
-#            self._copy_file(self.remote, self.local, remote_file)
-#        else:
-#            self._log_action("SKIP OLDER", "?", local_file, 4)
-#    
-#    def sync_older_local_file(self, local_file, remote_file):
-#        self._log_call("sync_older_local_file(%s, %s)" % (local_file, remote_file))
-#        self._log_action("MODIFIED", "<", local_file)
-#        self._copy_file(self.remote, self.local, remote_file)
-#    
-#    def sync_missing_local_file(self, remote_file):
-#        self._log_call("sync_missing_local_file(%s)" % remote_file)
-#        self._log_action("COPY NEW", "<", remote_file)
-#        self._copy_file(self.remote, self.local, remote_file)
-#    
-#    def sync_missing_local_dir(self, remote_dir):
-#        self._log_call("sync_missing_local_dir(%s)" % remote_dir)
-#        self._log_action("COPY NEW FOLDER", "<", remote_dir)
-#        self._copy_recursive(self.remote, self.local, remote_dir)
-#    
-#    def sync_missing_remote_file(self, local_file):
-#        self._log_call("sync_missing_remote_file(%s)" % local_file)
-#        if self.options.get("delete"):
-#            self._log_action("REMOVE MISSING", "X <", local_file)
-#            self._remove_file(local_file)
-#        else:
-#            self._log_action("SKIP MISSING", "?", local_file, 4)
-#    
-#    def sync_missing_remote_dir(self, local_dir):
-#        self._log_call("sync_missing_remote_dir(%s)" % local_dir)
-#        if self.options.get("delete"):
-#            self._log_action("MISSING", "X <", local_dir)
-#            self._remove_file(local_dir)
-#        else:
-#            self._log_action("SKIP MISSING", "?", local_dir, 4)
+class DownloadSynchronizer(UploadSynchronizer):
+    """
+    This download syncronize is implemented as an UploadSynchronizer with
+    swapped local and remote targets. 
+    """
+    def __init__(self, local, remote, options):
+        # swap local and remote target
+        temp = local
+        local = remote
+        remote = temp
+        # behave like an UploadSynchronizer otherwise
+        super(DownloadSynchronizer, self).__init__(local, remote, options)
+
+    def _log_action(self, action, status, symbol, entry, min_level=3):
+        if symbol == "<":
+            symbol = ">"
+        elif symbol == ">":
+            symbol = "<"
+        super(DownloadSynchronizer, self)._log_action(action, status, symbol, entry, min_level)
