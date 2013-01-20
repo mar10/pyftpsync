@@ -108,7 +108,7 @@ class FtpTarget(_Target):
             self.cur_dir_meta["_version"] = __version__
             self.cur_dir_meta["upload_time"] = time.mktime(time.gmtime())
             s = json.dumps(self.cur_dir_meta, indent=4, sort_keys=True)
-            print("META: flush_meta(%s)" % (self.cur_dir, ), s)
+#            print("META: flush_meta(%s)" % (self.cur_dir, ), s)
             self.write_text(self.META_FILE_NAME, s)
         elif self.cur_dir_meta is not None:
             print("META: flush_meta(%s): DELETE" % self.cur_dir)
@@ -167,8 +167,8 @@ class FtpTarget(_Target):
         # load stored meta data if present
         self.cur_dir_meta = None
         self.cur_dir_meta_modified = False
-        if not local_res["has_meta"]: 
-            print("META: read(%s): Not found" % (self.cur_dir, ))
+#        if not local_res["has_meta"]: 
+#            print("META: read(%s): Not found" % (self.cur_dir, ))
         if local_res["has_meta"]:
             try:
                 m = self.read_text(self.META_FILE_NAME)
@@ -179,7 +179,7 @@ class FtpTarget(_Target):
 
             self.cur_dir_meta = self.cur_dir_meta or {}
             meta_files = self.cur_dir_meta.setdefault("files", {})
-            last_upload_time = self.cur_dir_meta.setdefault("upload_time", 0)
+            _last_upload_time = self.cur_dir_meta.setdefault("upload_time", 0)
             
             # Adjust file mtime from meta-data if present
             missing = []
@@ -203,7 +203,6 @@ class FtpTarget(_Target):
 #                        print("time", time.time(), ", ctime(time)", time.ctime(time.time()))
 #                        print("upload (%s) > filetime(%s): %s", upload_time, entry_map[n].mtime, bool(entry_map[n].mtime <= upload_time))
 #                        print("upload (%s) > filetime(%s): %s", time.ctime(upload_time), time.ctime(entry_map[n].mtime), bool(entry_map[n].mtime <= upload_time))
-#                        print("META: Removing outdated meta entry %s" % n, meta)
 #                        print("META:     file info", entry_map[n], entry_map[n].mtime)
 #                        print("META:     file info ctime", time.ctime(entry_map[n].mtime))
 #                        print("entry_map[n].mtime", entry_map[n].mtime)
@@ -214,6 +213,7 @@ class FtpTarget(_Target):
 #                        print("mktime", time.mktime(gmtime))
 #                        print("ctime", time.ctime(time.mktime(gmtime)))
 
+                        print("META: Removing outdated meta entry %s" % n, meta)
                         missing.append(n)
                 else:
                     print("META: Removing missing meta entry %s" % n)
@@ -260,5 +260,5 @@ class FtpTarget(_Target):
                                             "mtime": mtime,
                                             "mtime_str": time.ctime(mtime),
                                             }
-        print("META set_mtime(%s): %s" % (name, time.ctime(mtime)))
+#        print("META set_mtime(%s): %s" % (name, time.ctime(mtime)))
         self.cur_dir_meta_modified = True

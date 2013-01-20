@@ -180,7 +180,10 @@ class FileEntry(_Resource):
 
     def get_adjusted_mtime(self):
         try:
-            return self.meta["mtime"]
+#            print("META: %s reporting %s instead of " % (self.name, self.meta, self.mtime))
+            res = self.meta["mtime"]
+            print("META: %s reporting %s instead of %s" % (self.name, time.ctime(res), time.ctime(self.mtime)))
+            return res
         except:
             return self.mtime
         
@@ -512,7 +515,10 @@ class BaseSynchronizer(object):
         prefix = "" 
         if self.dry_run:
             prefix = "(DRY-RUN) "
-        tag = ("%s %s" % (action, status)).upper()
+        if action and status:
+            tag = ("%s %s" % (action, status)).upper()
+        else:
+            tag = ("%s%s" % (action, status)).upper()
         name = entry.get_rel_path()
         if entry.is_dir():
             name = "[%s]" % name
