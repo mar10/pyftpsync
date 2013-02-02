@@ -180,9 +180,8 @@ class FileEntry(_Resource):
 
     def get_adjusted_mtime(self):
         try:
-#            print("META: %s reporting %s instead of " % (self.name, self.meta, self.mtime))
             res = self.meta["mtime"]
-            print("META: %s reporting %s instead of %s" % (self.name, time.ctime(res), time.ctime(self.mtime)))
+#            print("META: %s reporting %s instead of %s" % (self.name, time.ctime(res), time.ctime(self.mtime)))
             return res
         except:
             return self.mtime

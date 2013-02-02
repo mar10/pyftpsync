@@ -11,10 +11,11 @@ This is both:
 
 Project home: http://pyftpsync.googlecode.com/
 
+Requires Python 2.6+ or 3
 
 Known limitations
 -----------------
-  - The current status is pre-alpha and barely tested.
+  - The current status is alpha and barely tested.
   - The FTP server must support the MLST command.
 
 

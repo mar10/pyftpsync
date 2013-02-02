@@ -200,20 +200,7 @@ class FtpTarget(_Target):
                         #      or
                         #   2. the reported files size is different than the
                         #      size we stored in the meta-data 
-#                        print("time", time.time(), ", ctime(time)", time.ctime(time.time()))
-#                        print("upload (%s) > filetime(%s): %s", upload_time, entry_map[n].mtime, bool(entry_map[n].mtime <= upload_time))
-#                        print("upload (%s) > filetime(%s): %s", time.ctime(upload_time), time.ctime(entry_map[n].mtime), bool(entry_map[n].mtime <= upload_time))
-#                        print("META:     file info", entry_map[n], entry_map[n].mtime)
-#                        print("META:     file info ctime", time.ctime(entry_map[n].mtime))
-#                        print("entry_map[n].mtime", entry_map[n].mtime)
-#                        print("    ctime", time.ctime(entry_map[n].mtime))
-#                        print("    dt_modified", entry_map[n].dt_modified)
-#                        gmtime = time.gmtime()
-#                        print("gmtime", gmtime)
-#                        print("mktime", time.mktime(gmtime))
-#                        print("ctime", time.ctime(time.mktime(gmtime)))
-
-                        print("META: Removing outdated meta entry %s" % n, meta)
+#                        print("META: Removing outdated meta entry %s" % n, meta)
                         missing.append(n)
                 else:
                     print("META: Removing missing meta entry %s" % n)
