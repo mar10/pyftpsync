@@ -402,12 +402,18 @@ class BaseSynchronizer(object):
             self.local.readonly = True
             self.remote.readonly = True
         
-        self._stats = {"source_files": 0,
-                       "target_files": 0,
-                       "created_files": 0,
+        self._stats = {"local_files": 0,
+                       "local_dirs": 0,
+                       "remote_files": 0,
+                       "remote_dirs": 0,
+                       "files_created": 0,
+                       "files_deleted": 0,
                        "files_written": 0,
+                       "dirs_written": 0,
+                       "dirs_deleted": 0,
                        "bytes_written": 0,
                        "elap": None,
+                       "elap_secs": None,
                        }
     
     def get_stats(self):
@@ -451,6 +457,7 @@ class BaseSynchronizer(object):
         # 4. rename target.temp
 #        print("_copy_file(%s, %s --> %s)" % (file_entry, src, dest))
         assert isinstance(file_entry, FileEntry)
+        self._inc_stat("files_written")
         if self.dry_run:
             return self._dry_run_action("copy file (%s, %s --> %s)" % (file_entry, src, dest))
         elif dest.readonly:
@@ -463,12 +470,12 @@ class BaseSynchronizer(object):
         with src.open_readable(file_entry.name) as fp_src:
             dest.write_file(file_entry.name, fp_src, callback=__block_written)
 
-        self._inc_stat("files_written")
         dest.set_mtime(file_entry.name, file_entry.mtime, file_entry.size)
     
     def _copy_recursive(self, src, dest, dir_entry):
 #        print("_copy_recursive(%s, %s --> %s)" % (dir_entry, src, dest))
         assert isinstance(dir_entry, DirectoryEntry)
+        self._inc_stat("dirs_written")
         if self.dry_run:
             return self._dry_run_action("copy directory (%s, %s --> %s)" % (dir_entry, src, dest))
         elif dest.readonly:
@@ -488,21 +495,21 @@ class BaseSynchronizer(object):
         # TODO: honor backup
 #        print("_remove_file(%s)" % (file_entry, ))
         assert isinstance(file_entry, FileEntry)
+        self._inc_stat("files_deleted")
         if self.dry_run:
             return self._dry_run_action("delete file (%s)" % (file_entry,))
         elif file_entry.target.readonly:
             raise RuntimeError("target is read-only: %s" % file_entry.target)
-        self._inc_stat("removed_files")
         file_entry.target.remove_file(file_entry.name)
 
     def _remove_dir(self, dir_entry):
         # TODO: honor backup
         assert isinstance(dir_entry, DirectoryEntry)
+        self._inc_stat("dirs_deleted")
         if self.dry_run:
             return self._dry_run_action("delete directory (%s)" % (dir_entry,))
         elif dir_entry.target.readonly:
             raise RuntimeError("target is read-only: %s" % dir_entry.target)
-        self._inc_stat("removed_folders")
         dir_entry.target.rmdir(dir_entry.name)
 
     def _log_call(self, msg, min_level=5):
@@ -560,7 +567,6 @@ class BaseSynchronizer(object):
         
         # 1. Loop over all local files and classify the relationship to the
         #    peer entries.
-        self._inc_stat("local_dirs")
         for local_file in local_files:
             self._inc_stat("local_files")
             if not self._before_sync(local_file):
@@ -590,6 +596,7 @@ class BaseSynchronizer(object):
 
         # 2. Handle all local directories that do NOT exist on remote target.
         for local_dir in local_directories:
+            self._inc_stat("local_dirs")
             if not self._before_sync(local_dir):
                 continue
             remote_dir = remote_entry_map.get(local_dir.name)
@@ -598,6 +605,11 @@ class BaseSynchronizer(object):
 
         # 3. Handle all remote entries that do NOT exist on the local target.
         for remote_entry in remote_entries:
+            if isinstance(remote_entry, DirectoryEntry):
+                self._inc_stat("remote_dirs")
+            else:
+                self._inc_stat("remote_files")
+                
             if not self._before_sync(remote_entry):
                 continue
             if not remote_entry.name in local_entry_map:
