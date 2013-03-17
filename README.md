@@ -1,4 +1,4 @@
-# pyftpsync
+# pyftpsync [![Build Status](https://travis-ci.org/mar10/pyftpsync.png?branch=master)](https://travis-ci.org/mar10/pyftpsync)
 Copyright (c) 2012 Martin Wendt
 
 Synchronize local directories with FTP server.
