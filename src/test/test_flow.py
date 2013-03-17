@@ -19,7 +19,7 @@ from ftpsync.targets import make_target, FsTarget, DownloadSynchronizer,\
     UploadSynchronizer
 
 # Remote URL, e.g. "ftp://user:password@example.com/my/test/folder"
-FTP_URL = os.environ["TEST_FTP_URL"]
+#FTP_URL = os.environ["TEST_FTP_URL"]
 # 
 TEMP_FOLDER = os.environ.get("TEST_TEMP_FOLDER") or tempfile.mkdtemp()
 

@@ -9,7 +9,7 @@ from unittest import TestCase
 
 from ftpsync.targets import *  # @UnusedWildImport
 from ftpsync.ftp_target import *  # @UnusedWildImport
-#from ftplib import FTP
+from ftplib import FTP
 from pprint import pprint
 
 #===============================================================================
