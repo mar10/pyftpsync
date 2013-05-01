@@ -13,7 +13,7 @@ from setuptools import setup, find_packages
 readme = open("README.txt", "rt").read()
 changes = open("CHANGES.txt", "rt").read()
 g_dict = {}
-exec(open("src/ftpsync/_version.py").read(), g_dict)
+exec(open("ftpsync/_version.py").read(), g_dict)
 version = g_dict["__version__"]
 
 # 'setup.py upload' fails on Vista, because .pypirc is searched on 'HOME' path
@@ -55,7 +55,7 @@ setup(name="pyftpsync",
 #      platforms=["Unix", "Windows"],
       license = "The MIT License",
       install_requires = install_requires,
-      package_dir = {"": "src"},
+#      package_dir = {"": "src"},
       packages = ["ftpsync"],
 #      packages = find_packages(exclude=[]),
       
@@ -67,7 +67,7 @@ setup(name="pyftpsync",
 #      include_package_data = True, # TODO: PP
       zip_safe = False,
       extras_require = {},
-      test_suite = "tests.test_all.run",
+      test_suite = "test.test_flow",
       entry_points = {
           "console_scripts" : ["pyftpsync = ftpsync.pyftpsync:run"],
           },
