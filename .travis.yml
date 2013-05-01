@@ -5,4 +5,4 @@ python:
   - "3.2"
   - "3.3"
 script:
-  - nosetests --tests=src/test/test_flow.py
+  - nosetests --tests=test/test_flow.py
