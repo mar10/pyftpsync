@@ -10,8 +10,8 @@ RELEASE = False
 from setuptools import setup, find_packages
 
 # Get description and __version__ without using import
-readme = open("README.txt", "rt").read()
-changes = open("CHANGES.txt", "rt").read()
+readme = open("readme_pypi.txt", "rt").read()
+#changes = open("CHANGES.txt", "rt").read()
 g_dict = {}
 exec(open("ftpsync/_version.py").read(), g_dict)
 version = g_dict["__version__"]
@@ -33,7 +33,7 @@ setup(name="pyftpsync",
       maintainer_email = "pyftpsync@wwwendt.de",
       url = "http://pyftpsync.googlecode.com/",
       description = "Synchronize folders over FTP.",
-      long_description = readme + "\n\n" + changes,
+      long_description = readme, #+ "\n\n" + changes,
 
         #Development Status :: 2 - Pre-Alpha
         #Development Status :: 3 - Alpha
