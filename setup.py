@@ -10,8 +10,7 @@ RELEASE = False
 from setuptools import setup, find_packages
 
 # Get description and __version__ without using import
-readme = open("readme_pypi.txt", "rt").read()
-#changes = open("CHANGES.txt", "rt").read()
+readme = open("readme_pypi.rst", "rt").read()
 g_dict = {}
 exec(open("ftpsync/_version.py").read(), g_dict)
 version = g_dict["__version__"]
