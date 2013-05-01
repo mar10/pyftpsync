@@ -40,7 +40,7 @@ $ sudo easy_install -U pyftpsync
 ```
 
 or on Windows:
-```bash
+```
 > easy_install -U pyftpsync
 ```
 
@@ -67,7 +67,7 @@ local = FsTarget("~/temp")
 user ="joe"
 passwd = "secret"
 remote = FtpTarget("/temp", "example.com", user, passwd)
-opts = {"force": False, "delete_unmatched": True, "verbose": 3, "execute": True}
+opts = {"force": False, "delete_unmatched": True, "verbose": 3, "execute": True, "dry_run" : False}
 s = UploadSynchronizer(local, remote, opts)
 s.run()
 ```
@@ -77,6 +77,7 @@ s.run()
 
 ```
 $ pyftpsync --help
+macmartin:pyftpsync martin$ pyftpsync -h
 usage: pyftpsync [-h] [--verbose] [--quiet] [--version] {upload,download} ...
 
 Synchronize folders over FTP.
@@ -89,11 +90,11 @@ positional arguments:
 
 optional arguments:
   -h, --help         show this help message and exit
-  --verbose, -v      increment verbosity by one (default: 3, range: 0..5
+  --verbose, -v      increment verbosity by one (default: 3, range: 0..5)
   --quiet, -q        decrement verbosity by one
   --version          show program's version number and exit
 
-See also http://pyftpsync.googlecode.com/
+See also https://github.com/mar10/pyftpsync
 ```
 
 

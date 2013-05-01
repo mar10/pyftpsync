@@ -60,10 +60,10 @@ def namespace_to_dict(o):
 def run():
     parser = argparse.ArgumentParser(
         description="Synchronize folders over FTP.",
-        epilog="See also http://pyftpsync.googlecode.com/"
+        epilog="See also https://github.com/mar10/pyftpsync"
         )
     parser.add_argument("--verbose", "-v", action="count", default=3,
-                        help="increment verbosity by one (default: %(default)s, range: 0..5")
+                        help="increment verbosity by one (default: %(default)s, range: 0..5)")
     parser.add_argument("--quiet", "-q", action="count", default=0,
                         help="decrement verbosity by one")
     parser.add_argument("--version", action="version", version="%s" % (__version__))
