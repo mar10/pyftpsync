@@ -21,6 +21,8 @@ except ImportError:
 
 
 DEFAULT_CREDENTIAL_STORE = "pyftpsync.pw"
+DRY_RUN_PREFIX = "(DRY-RUN) "
+IS_REDIRECTED = (os.fstat(0) != os.fstat(1))
 
 
 def get_stored_credentials(filename, url):
@@ -42,6 +44,8 @@ def get_stored_credentials(filename, url):
                 creds = creds.strip()
                 return creds.split(":", 1)
     return None
+
+
 
 
 #===============================================================================
@@ -412,6 +416,8 @@ class BaseSynchronizer(object):
                        "dirs_written": 0,
                        "dirs_deleted": 0,
                        "bytes_written": 0,
+                       "entries_seen": 0,
+                       "entries_touched": 0,
                        "elap": None,
                        "elap_secs": None,
                        }
@@ -458,6 +464,8 @@ class BaseSynchronizer(object):
 #        print("_copy_file(%s, %s --> %s)" % (file_entry, src, dest))
         assert isinstance(file_entry, FileEntry)
         self._inc_stat("files_written")
+        self._inc_stat("entries_touched")
+        self._tick()
         if self.dry_run:
             return self._dry_run_action("copy file (%s, %s --> %s)" % (file_entry, src, dest))
         elif dest.readonly:
@@ -475,7 +483,9 @@ class BaseSynchronizer(object):
     def _copy_recursive(self, src, dest, dir_entry):
 #        print("_copy_recursive(%s, %s --> %s)" % (dir_entry, src, dest))
         assert isinstance(dir_entry, DirectoryEntry)
+        self._inc_stat("entries_touched")
         self._inc_stat("dirs_written")
+        self._tick()
         if self.dry_run:
             return self._dry_run_action("copy directory (%s, %s --> %s)" % (dir_entry, src, dest))
         elif dest.readonly:
@@ -484,6 +494,8 @@ class BaseSynchronizer(object):
         dest.mkdir(dir_entry.name)
         dest.cwd(dir_entry.name)
         for entry in src.get_dir():
+            # the outer call was already accompanied by an increment, but not recursions
+            self._inc_stat("entries_seen")
             if entry.is_dir():
                 self._copy_recursive(src, dest, entry)
             else:
@@ -495,6 +507,7 @@ class BaseSynchronizer(object):
         # TODO: honor backup
 #        print("_remove_file(%s)" % (file_entry, ))
         assert isinstance(file_entry, FileEntry)
+        self._inc_stat("entries_touched")
         self._inc_stat("files_deleted")
         if self.dry_run:
             return self._dry_run_action("delete file (%s)" % (file_entry,))
@@ -505,6 +518,7 @@ class BaseSynchronizer(object):
     def _remove_dir(self, dir_entry):
         # TODO: honor backup
         assert isinstance(dir_entry, DirectoryEntry)
+        self._inc_stat("entries_touched")
         self._inc_stat("dirs_deleted")
         if self.dry_run:
             return self._dry_run_action("delete directory (%s)" % (dir_entry,))
@@ -521,7 +535,7 @@ class BaseSynchronizer(object):
             return
         prefix = "" 
         if self.dry_run:
-            prefix = "(DRY-RUN) "
+            prefix = DRY_RUN_PREFIX
         if action and status:
             tag = ("%s %s" % (action, status)).upper()
         else:
@@ -543,10 +557,24 @@ class BaseSynchronizer(object):
             return False
         return True
     
+    def _tick(self):
+        """Write progress info and move cursor to beginning of line."""
+        if (self.verbose >= 3 and not IS_REDIRECTED) or self.options.get("progress"):
+            stats = self.get_stats()
+            prefix = DRY_RUN_PREFIX if self.dry_run else ""
+            sys.stdout.write("%sTouched %s/%s entries in %s dirs...\r" 
+                % (prefix,
+                   stats["entries_touched"], stats["entries_seen"], 
+                   stats["local_dirs"]))
+        sys.stdout.flush()
+        return
+    
     def _before_sync(self, entry):
         """Called by the synchronizer for each entry. 
         Return False to prevent the synchronizer's default action.
         """
+        self._inc_stat("entries_seen")
+        self._tick()
         return True
     
     def _sync_dir(self):

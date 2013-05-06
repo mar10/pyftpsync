@@ -67,6 +67,10 @@ def run():
     parser.add_argument("--quiet", "-q", action="count", default=0,
                         help="decrement verbosity by one")
     parser.add_argument("--version", action="version", version="%s" % (__version__))
+    parser.add_argument("--progress", "-p", 
+                        action="store_true",
+                        default=False, 
+                        help="show progress info, even if redirected or verbose < 3")
     
     subparsers = parser.add_subparsers(help="sub-command help")
     
