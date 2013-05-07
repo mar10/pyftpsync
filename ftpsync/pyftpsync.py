@@ -37,7 +37,7 @@ from ftpsync._version import __version__
 def namespace_to_dict(o):
     """Convert an argparse namespace object to a dictionary."""
     d = {}
-    for k, v in o.__dict__.iteritems():
+    for k, v in o.__dict__.items():
         if not callable(v):
             d[k] = v
     return d
