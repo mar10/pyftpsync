@@ -13,6 +13,7 @@ import sys
 import io
 import time
 import fnmatch
+import shutil
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -257,7 +258,7 @@ class _Target(object):
     def mkdir(self, dir_name):
         raise NotImplementedError
 
-    def rmdir(self, name):
+    def rmdir(self, dir_name):
         """Remove cur_dir/name."""
         raise NotImplementedError
 
@@ -333,6 +334,13 @@ class FsTarget(_Target):
         self.check_write(dir_name)
         path = normurl(join_url(self.cur_dir, dir_name))
         os.mkdir(path)
+
+    def rmdir(self, dir_name):
+        """Remove cur_dir/name."""
+        self.check_write(dir_name)
+        path = normurl(join_url(self.cur_dir, dir_name))
+#         print("REMOVE %r" % path)
+        shutil.rmtree(path)
 
     def get_dir(self):
         res = []
