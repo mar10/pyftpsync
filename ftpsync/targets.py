@@ -167,20 +167,34 @@ class _Resource(object):
 # FileEntry
 #===============================================================================
 class FileEntry(_Resource):
+    EPS_TIME = 0.1 # 2 seconds difference is considered equal
+    
     def __init__(self, target, rel_path, name, size, mtime, unique):
         super(FileEntry, self).__init__(target, rel_path, name, size, mtime, unique)
 
+    @staticmethod
+    def _eps_compare(date_1, date_2):
+        res = date_1 - date_2
+        if abs(res) <= FileEntry.EPS_TIME: # '<=',so eps == 0 works as expected
+#             print("DTC: %s, %s => %s" % (date_1, date_2, res))
+            return 0
+        elif res < 0:
+            return -1
+        return 1
+        
     def __eq__(self, other):
 #        if other.get_adjusted_mtime() == self.get_adjusted_mtime() and other.mtime != self.mtime:
 #            print("*** Adjusted time match", self, other)
+        same_time = self._eps_compare(self.get_adjusted_mtime(), other.get_adjusted_mtime()) == 0
         return (other and other.__class__ == self.__class__ 
                 and other.name == self.name and other.size == self.size 
-                and other.get_adjusted_mtime() == self.get_adjusted_mtime())
+                and same_time)
 
     def __gt__(self, other):
+        time_greater = self._eps_compare(self.get_adjusted_mtime(), other.get_adjusted_mtime()) > 0
         return (other and other.__class__ == self.__class__ 
                 and other.name == self.name 
-                and self.get_adjusted_mtime() > other.get_adjusted_mtime())
+                and time_greater)
 
     def get_adjusted_mtime(self):
         try:
