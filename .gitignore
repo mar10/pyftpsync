@@ -34,3 +34,5 @@ nosetests.xml
 .project
 .pydevproject
 __pycache__
+
+/.settings
