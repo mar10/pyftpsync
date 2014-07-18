@@ -57,7 +57,7 @@ $ python
 '0.0.1pre'
 ```
 
-*Sript example*
+*Script example*
 
 ```python
 from ftpsync.targets import FsTarget, UploadSynchronizer
@@ -98,10 +98,7 @@ See also https://github.com/mar10/pyftpsync
 ```
 
 
-*Example: Upload files*
-
-Upload all new and modified files from user's temp folder to an FTP server.<br>
-No files are changed on the local directory.
+*Upload files syntax*:
 
 ```
 $ pyftpsync upload --help
@@ -131,6 +128,11 @@ optional arguments:
                         after --include)
 ```
 
+*Example: Upload files*
+
+Upload all new and modified files from user's temp folder to an FTP server.<br>
+No files are changed on the local directory.
+
 ```bash
 $ pyftpsync upload ~/temp ftp://example.com/target/folder
 ```
@@ -140,7 +142,7 @@ Add the ´--delete´ option to remove all files from the remote target that don'
 $ pyftpsync upload ~/temp ftp://example.com/target/folder --delete
 ```
 
-Add the ´--x´ option to switch from DRY-RUN mode to real execution:
+Add the ´-x´ option to switch from DRY-RUN mode to real execution:
 ```bash
 $ pyftpsync upload ~/temp ftp://example.com/target/folder --delete -x
 ```
