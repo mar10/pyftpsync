@@ -7,4 +7,4 @@ http://peak.telecommunity.com/DevCenter/setuptools#tagging-and-daily-build-or-sn
 Imported by ftpsync.__init__, so it can be accessed as 'ftpsync.__version__'.
 Accessed by setup.py using read().
 """
-__version__ = "0.2.1"
+__version__ = "1.0.0.beta.1"

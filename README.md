@@ -1,10 +1,10 @@
 # pyftpsync [![Build Status](https://travis-ci.org/mar10/pyftpsync.png?branch=master)](https://travis-ci.org/mar10/pyftpsync) [![Latest Version](https://pypip.in/v/pyftpsync/badge.png)](https://pypi.python.org/pypi/pyftpsync/) [![Downloads](https://pypip.in/d/pyftpsync/badge.png)](https://pypi.python.org/pypi/pyftpsync/) [![License](https://pypip.in/license/pyftpsync/badge.png)](https://pypi.python.org/pypi/pyftpsync/)
-Copyright (c) 2013 Martin Wendt
+Copyright (c) 2012-2015 Martin Wendt
 
 Synchronize local directories with FTP server.
 
 ## Status
-*This project has alpha status: (under development) use at your own risk!*
+*This project has beta status: use at your own risk!*
 
 Please submit bugs as you find them.
 
@@ -13,20 +13,18 @@ Please submit bugs as you find them.
 Synchronize local directories with FTP server.
 
   * This is a command line tool...
-  *  ... and a library for use in your Python projects
-  * upload mode
-  * download mode
-  * TODO: bidirectional sync mode
-  * Allows FTP-to-FTP and Filesystem-to-Filesystem synchronisation as well
+  * ... and a library for use in your Python projects
+  * Upload, download, and bi-directional synch mode
+  * Allows FTP-to-FTP and Filesystem-to-Filesystem synchronization as well
   * Architecture is open to add other target types.
 
 Note: 
-The FTP server must support the [MLST command] (http://tools.ietf.org/html/rfc3659).
+The FTP server must support the [MLST command](http://tools.ietf.org/html/rfc3659).
 
 ## Usage 
 *Preconditions:* [Python](http://www.python.org/download/ Python) 2.6+ or 3 is required, 
-[pip] (http://www.pip-installer.org/) or
-[EasyInstall] (http://pypi.python.org/pypi/setuptools#using-setuptools-and-easyinstall)
+[pip](http://www.pip-installer.org/) or
+[EasyInstall](http://pypi.python.org/pypi/setuptools#using-setuptools-and-easyinstall)
 recommended. 
 
 Install like this:
@@ -41,7 +39,7 @@ $ sudo easy_install -U pyftpsync
 
 or on Windows:
 ```
-> easy_install -U pyftpsync
+> pip install pyftpsync --upgrade
 ```
 
 If you plan to debug or contribute, install to run directly from the source:
@@ -54,7 +52,7 @@ After that the `ftpsync` package is available:
 $ python
 >>> from ftpsync import __version__
 >>> __version__
-'0.0.1pre'
+'0.2.1'
 ```
 
 *Script example*
@@ -146,3 +144,9 @@ Add the ´-x´ option to switch from DRY-RUN mode to real execution:
 ```bash
 $ pyftpsync upload ~/temp ftp://example.com/target/folder --delete -x
 ```
+
+
+## FAQ
+
+  * Passwords may be stored and read from a custom file:
+    https://github.com/mar10/pyftpsync/blob/master/ftpsync/sample_pyftpsync.pw

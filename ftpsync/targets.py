@@ -1,72 +1,157 @@
 # -*- coding: iso-8859-1 -*-
 """
-(c) 2012 Martin Wendt; see http://pyftpsync.googlecode.com/
+(c) 2012-2015 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 """
 
 from __future__ import print_function
 
-import os
-from posixpath import join as join_url, normpath as normurl
-from datetime import datetime
-import sys
 import io
-import time
-import fnmatch
+import os
+from posixpath import join as join_url, normpath as normpath_url
 import shutil
+import sys
+import json
+import time
+import getpass
+from ftpsync._version import __version__
+from ftpsync.resources import DirectoryEntry, FileEntry
+
+
 try:
     from urllib.parse import urlparse
 except ImportError:
     # Python 2
     from urlparse import urlparse
 
+try:
+    import colorama  # provide color codes, ...
+    colorama.init()  # improve color handling on windows terminals
+except ImportError:
+    print("Unable to import 'colorama' library: Colored output is not available. Try `pip install colorama`.")
+    colorama = None
+
+try:
+    import keyring
+except ImportError:
+    print("Unable to import 'keyring' library: Storage of passwords is not available. Try `pip install keyring`.")
+    keyring = None
+
 
 DEFAULT_CREDENTIAL_STORE = "pyftpsync.pw"
 DRY_RUN_PREFIX = "(DRY-RUN) "
 IS_REDIRECTED = (os.fstat(0) != os.fstat(1))
+DEFAULT_BLOCKSIZE = 8 * 1024
+# DEFAULT_BLOCKSIZE = 32 * 1024
 
 
-def get_stored_credentials(filename, url):
-    """Parse a file in the user's home directory, formatted like:
-    
-    URL = user:password
+#===============================================================================
+# 
+#===============================================================================
+
+def prompt_for_password(url, user=None):
+    if user is None:
+        default_user = getpass.getuser()
+        while user is None:
+            user = raw_input("Enter username for ftp://%s [%s]: " % (url, default_user))
+            if user.strip() == "" and default_user:
+                user = default_user
+    if user:
+        pw = getpass.getpass("Enter password for ftp://%s@%s: " % (user, url))
+        if pw:
+            return (user, pw)
+    return None
+
+
+def get_credentials_for_url(url, allow_prompt):
     """
+    @returns 2-tuple (username, password) or None
+    """
+    creds = None
+    
+    # Lookup our own credential store
+    # Parse a file in the user's home directory, formatted like:
+    # URL = user:password
     home_path = os.path.expanduser("~")
-    file_path = os.path.join(home_path, filename)
+    file_path = os.path.join(home_path, DEFAULT_CREDENTIAL_STORE)
     if os.path.isfile(file_path):
         with open(file_path, "rt") as f:
             for line in f:
                 line = line.strip()
                 if not "=" in line or line.startswith("#") or line.startswith(";"):
                     continue
-                u, creds = line.split("=", 1)
-                if not creds or u.strip().lower() != url:
-                    continue
-                creds = creds.strip()
-                return creds.split(":", 1)
-    return None
+                u, c = line.split("=", 1)
+                if c and u.strip().lower() == url.lower():
+                    c = c.strip()
+                    creds = c.split(":", 1)
+                    print("Using credentials from %s ('%s'): %s:***)" % (file_path, url, creds[0]))
+                    break
+    
+    # Query 
+    if creds is None and keyring:
+        try:
+            # Note: we pass the url as `username` and username:password as `password`
+            c = keyring.get_password("pyftpsync", url)
+            if c is not None:
+                creds = c.split(":", 1)
+#                print(creds)
+                print("Using credentials from keyring('pyftpsync', '%s'): %s:***)" % (url, creds[0]))
+        except keyring.errors.TransientKeyringError:
+            pass # e.g. user clicked 'no' 
+
+    # Prompt
+    if creds is None and allow_prompt:
+        creds = prompt_for_password(url)
+    
+    return creds
 
 
+def save_password(url, username, password):
+    if keyring:
+        if ":" in username:
+            raise RuntimeError("Unable to store credentials if username contains a ':' (%s)" % username)
+
+        try:
+            # Note: we pass the url as `username` and username:password as `password`
+            if password is None:
+                keyring.delete_password("pyftpsync", url)
+                print("delete_password(%s)" % url)
+            else:
+                keyring.set_password("pyftpsync", url, "%s:%s" % (username, password))
+                print("save_password(%s, %s:***)" % (url, username))
+        except keyring.errors.TransientKeyringError:
+            pass # e.g. user clicked 'no'
+    else:
+        print("Could not store password (missing keyring library)")
+    return
+
+
+def ansi_code(name):
+    """Return ansi color or style codes or '' if colorama is not available."""
+    try:
+        obj = colorama
+        for part in name.split("."):
+            obj = getattr(obj, part)
+        return obj
+    except AttributeError:
+        return ""
 
 
 #===============================================================================
 # make_target
 #===============================================================================
-def make_target(url, connect=True, debug=1, allow_stored_credentials=True):
-    """Factory that creates _Target obejcts from URLs."""
+def make_target(url, extra_opts=None):
+    """Factory that creates _Target objects from URLs."""
+#    debug = extra_opts.get("debug", 1)
     parts = urlparse(url, allow_fragments=False)
     # scheme is case-insensitive according to http://tools.ietf.org/html/rfc3986
     if parts.scheme.lower() == "ftp":
         creds = parts.username, parts.password
-        if not parts.username and allow_stored_credentials:
-            sc = get_stored_credentials(DEFAULT_CREDENTIAL_STORE, parts.netloc)
-            if sc:
-                creds = sc
         from ftpsync import ftp_target
         target = ftp_target.FtpTarget(parts.path, parts.hostname, 
-                                      creds[0], creds[1], connect, debug)
+                                      creds[0], creds[1], extra_opts)
     else:
-        target = FsTarget(url)
+        target = FsTarget(url, extra_opts)
 
     return target
 
@@ -124,120 +209,163 @@ def to_binary(s):
 
 
 #===============================================================================
-# _Resource
+# DirMetadata
 #===============================================================================
-class _Resource(object):
-    def __init__(self, target, rel_path, name, size, mtime, unique):
-        """
-        
-        @param target
-        @param rel_path
-        @param name base name
-        @param size file size in bytes
-        @param mtime modification time as UTC stamp
-        @param uniqe string
-        """
+class DirMetadata(object):
+    
+    META_FILE_NAME = ".pyftpsync-meta.json"
+    PRETTY = True # False: Reduce meta file size to 35% (3759 -> 1375 bytes)
+    VERSION = 1 # Increment if format changes. Old files will be discarded then.
+    
+    def __init__(self, target):
         self.target = target
-        self.rel_path = rel_path
-        self.name = name
-        self.size = size
-        self.mtime = mtime 
-        self.dt_modified = datetime.fromtimestamp(self.mtime)
-        self.unique = unique
-        self.meta = None
-
-    def __str__(self):
-        return "%s('%s', size:%s, modified:%s)" % (self.__class__.__name__, 
-                                                   os.path.join(self.rel_path, self.name), 
-                                                   self.size, self.dt_modified) #+ " ## %s, %s" % (self.mtime, time.asctime(time.gmtime(self.mtime)))
-
-    def __eq__(self, other):
-        raise NotImplementedError
-
-    def get_rel_path(self):
-        return normurl(join_url(self.rel_path, self.name))
-    
-    def is_file(self):
-        return False
-    
-    def is_dir(self):
-        return False
-
-
-#===============================================================================
-# FileEntry
-#===============================================================================
-class FileEntry(_Resource):
-    EPS_TIME = 0.1 # 2 seconds difference is considered equal
-    
-    def __init__(self, target, rel_path, name, size, mtime, unique):
-        super(FileEntry, self).__init__(target, rel_path, name, size, mtime, unique)
-
-    @staticmethod
-    def _eps_compare(date_1, date_2):
-        res = date_1 - date_2
-        if abs(res) <= FileEntry.EPS_TIME: # '<=',so eps == 0 works as expected
-#             print("DTC: %s, %s => %s" % (date_1, date_2, res))
-            return 0
-        elif res < 0:
-            return -1
-        return 1
+        self.path = target.cur_dir
+        self.list = {}
+        self.peer_sync = {}
+        self.dir = {"files": self.list,
+                    "peer_sync": self.peer_sync,
+                    }
+        self.filename = self.META_FILE_NAME
+        self.modified_list = False
+        self.modified_sync = False
+        self.was_read = False
         
-    def __eq__(self, other):
-#        if other.get_adjusted_mtime() == self.get_adjusted_mtime() and other.mtime != self.mtime:
-#            print("*** Adjusted time match", self, other)
-        same_time = self._eps_compare(self.get_adjusted_mtime(), other.get_adjusted_mtime()) == 0
-        return (other and other.__class__ == self.__class__ 
-                and other.name == self.name and other.size == self.size 
-                and same_time)
+    def set_mtime(self, filename, mtime, size):
+        """Store real file mtime in meta data.
+        
+        This is needed, because FTP targets don't allow to set file mtime, but 
+        use to the upload time instead.
+        We also record size and upload time, so we can detect if the file was
+        changed by other means and we have to discard our meta data.
+        """
+        ut = time.time()  # UTC time stamp
+        self.list[filename] = {"m": mtime,
+                               "s": size,
+                               "u": ut,
+                               }
+        if self.PRETTY:
+            self.list[filename].update({
+                "mtime_str": time.ctime(mtime),
+                "uploaded_str": time.ctime(ut),
+                })
+        self.modified_list = True
+    
+    def set_sync_info(self, filename, mtime, size):
+        """Store mtime/size when local and remote file was last synchronized.
+        
+        This is stored in the local file's folder as meta data.
+        The information is used to detect conflicts, i.e. if both source and
+        remote had been modified by other means since last synchronization.
+        """
+        assert self.target.is_local()
+        remote_target = self.target.peer
+        ps = self.dir["peer_sync"].setdefault(remote_target.get_id(), {})
+        pse = ps[filename] = {"m": mtime,
+                              "s": size,
+                              }
+        if self.PRETTY:
+            pse["mtime_str"] = time.ctime(mtime) if mtime else "(directory)"
+        self.modified_sync = True
+        
+    def remove(self, filename):
+        if self.list.pop(filename, None):
+            self.modified_list = True
+        if self.target.is_local():
+            remote_target = self.target.peer
+            self.modified_sync = self.dir["peer_sync"][remote_target.get_id()].pop(filename, None)
+        return
 
-    def __gt__(self, other):
-        time_greater = self._eps_compare(self.get_adjusted_mtime(), other.get_adjusted_mtime()) > 0
-        return (other and other.__class__ == self.__class__ 
-                and other.name == self.name 
-                and time_greater)
-
-    def get_adjusted_mtime(self):
+    def read(self):
+        assert self.path == self.target.cur_dir
         try:
-            res = self.meta["mtime"]
-#            print("META: %s reporting %s instead of %s" % (self.name, time.ctime(res), time.ctime(self.mtime)))
-            return res
-        except:
-            return self.mtime
+            s = self.target.read_text(self.filename)
+            self.target.synchronizer._inc_stat("meta_bytes_read", len(s))
+            self.was_read = True # True, if exists (even invalid)
+            self.dir = json.loads(s)
+            if self.dir.get("_file_version", 0) < self.VERSION:
+                raise RuntimeError("Invalid meta data version: %s (expected %s)" % (self.dir.get("_file_version"), self.VERSION))
+            self.list = self.dir["files"]
+            self.peer_sync = self.dir["peer_sync"] 
+            self.modified_list = False
+            self.modified_sync = False
+#              print("DirMetadata: read(%s)" % (self.filename, ), self.dir)
+        except Exception as e:
+            print("Could not read meta info: %s" % e, file=sys.stderr)
+
+    def flush(self):
+        # We DO write even on read-only targets, but not in dry-run mode
+#         if self.target.readonly:
+#             print("DirMetadata.flush(%s): read-only; nothing to do" % self.target)
+#             return
+        assert self.path == self.target.cur_dir
+        if self.target.dry_run:
+#             print("DirMetadata.flush(%s): dry-run; nothing to do" % self.target)
+            pass
         
-    def is_file(self):
-        return True
+        elif self.was_read and len(self.list) == 0 and len(self.peer_sync) == 0:
+#             print("DirMetadata.flush(%s): DELETE" % self.target)
+            self.target.remove_file(self.filename)
 
+        elif not self.modified_list and not self.modified_sync:
+#             print("DirMetadata.flush(%s): unmodified; nothing to do" % self.target)
+            pass
 
-#===============================================================================
-# DirectoryEntry
-#===============================================================================
-class DirectoryEntry(_Resource):
-    def __init__(self, target, rel_path, name, size, mtime, unique):
-        super(DirectoryEntry, self).__init__(target, rel_path, name, size, mtime, unique)
+        else:        
+            self.dir["_disclaimer"] = "Generated by https://github.com/mar10/pyftpsync"
+            self.dir["_time_str"] = "%s" % time.ctime()
+            self.dir["_file_version"] = self.VERSION
+            self.dir["_version"] = __version__
+            self.dir["_time"] = time.mktime(time.gmtime())
+            if self.PRETTY:
+                s = json.dumps(self.dir, indent=4, sort_keys=True)
+            else:
+                s = json.dumps(self.dir)
+#             print("DirMetadata.flush(%s)" % (self.target, ))#, s)
+            self.target.write_text(self.filename, s)
+            self.target.synchronizer._inc_stat("meta_bytes_written", len(s))
 
-    def is_dir(self):
-        return True
+        self.modified_list = False
+        self.modified_sync = False
 
 
 #===============================================================================
 # _Target
 #===============================================================================
 class _Target(object):
-    META_FILE_NAME = "_pyftpsync-meta.json"
 
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, extra_opts):
+        self.root_dir = root_dir.rstrip("/")
+        self.extra_opts = extra_opts or {}
         self.readonly = False
         self.dry_run = False
-        self.root_dir = root_dir.rstrip("/")
+        self.host = None
+        self.synchronizer = None # Set by BaseSynchronizer.__init__()
+        self.peer = None
         self.cur_dir = None
         self.connected = False
         self.save_mode = True
-        self.case_sensitive = None # don't know yet
+        self.case_sensitive = None # TODO: don't know yet
+        self.time_ofs = None # TODO: don't know yet
+        self.support_set_time = None # TODO: don't know yet
+        self.cur_dir_meta = DirMetadata(self)
+        self.meta_stack = []
         
     def __del__(self):
+        # TODO: http://pydev.blogspot.de/2015/01/creating-safe-cyclic-reference.html
         self.close()
-        
+
+    def get_base_name(self):
+        return "%s" % self.root_dir
+
+    def is_local(self):
+        return self.synchronizer.local is self
+    
+    def get_option(self, key, default=None):
+        """Return option from synchronizer (possibly overridden by target extra_opts)."""
+        if self.synchronizer:
+            return self.extra_opts.get(key, self.synchronizer.options.get(key, default))
+        return self.extra_opts.get(key, default)
+          
     def open(self):
         self.connected = True
     
@@ -246,12 +374,38 @@ class _Target(object):
     
     def check_write(self, name):
         """Raise exception if writing cur_dir/name is not allowed."""
-        if self.readonly:
+        if self.readonly and name != DirMetadata.META_FILE_NAME:
             raise RuntimeError("target is read-only: %s + %s / " % (self, name))
+
+    def get_id(self):
+        return self.root_dir
+
+    def get_sync_info(self, name):
+        """Get mtime/size when this target's current dir was last synchronized with remote."""
+        peer_target = self.peer
+        if self.is_local():
+            info = self.cur_dir_meta.dir["peer_sync"].get(peer_target.get_id())
+        else:
+            info = peer_target.cur_dir_meta.dir["peer_sync"].get(self.get_id())
+        if name is not None:
+            info = info.get(name) if info else None
+        return info
 
     def cwd(self, dir_name):
         raise NotImplementedError
     
+    def push_meta(self):
+        self.meta_stack.append( self.cur_dir_meta)
+        self.cur_dir_meta = None
+    
+    def pop_meta(self):
+        self.cur_dir_meta = self.meta_stack.pop()
+        
+    def flush_meta(self):
+        """Write additional meta information for current directory."""
+        if self.cur_dir_meta:
+            self.cur_dir_meta.flush()
+
     def pwd(self, dir_name):
         raise NotImplementedError
     
@@ -261,10 +415,6 @@ class _Target(object):
     def rmdir(self, dir_name):
         """Remove cur_dir/name."""
         raise NotImplementedError
-
-    def flush_meta(self):
-        """Write additional meta information for current directory."""
-        pass
 
     def get_dir(self):
         """Return a list of _Resource entries."""
@@ -277,7 +427,11 @@ class _Target(object):
     def read_text(self, name):
         """Read text string from cur_dir/name using open_readable()."""
         with self.open_readable(name) as fp:
-            res = fp.getvalue()
+            res = fp.read()  # StringIO or file object
+#             try:
+#                 res = fp.getvalue()  # StringIO returned by FtpTarget
+#             except AttributeError:
+#                 res = fp.read()  # file object returned by FsTarget
             res = res.decode("utf8")
             return res
 
@@ -297,17 +451,28 @@ class _Target(object):
     def set_mtime(self, name, mtime, size):
         raise NotImplementedError
 
+    def set_sync_info(self, name, mtime, size):
+        """Store mtime/size when this resource was last synchronized with remote."""
+        if not self.is_local():
+            return self.peer.set_sync_info(name, mtime, size)
+        return self.cur_dir_meta.set_sync_info(name, mtime, size)
+
+    def remove_sync_info(self, name):
+        if not self.is_local():
+            return self.peer.remove_sync_info(name)
+        return self.cur_dir_meta.remove(name)
+
 
 #===============================================================================
 # FsTarget
 #===============================================================================
 class FsTarget(_Target):
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, extra_opts=None):
         root_dir = os.path.expanduser(root_dir)
         root_dir = os.path.abspath(root_dir)
         if not os.path.isdir(root_dir):
             raise ValueError("%s is not a directory" % root_dir)
-        super(FsTarget, self).__init__(root_dir)
+        super(FsTarget, self).__init__(root_dir, extra_opts)
         self.open()
 
     def __str__(self):
@@ -321,9 +486,10 @@ class FsTarget(_Target):
         self.connected = False
         
     def cwd(self, dir_name):
-        path = normurl(join_url(self.cur_dir, dir_name))
+        path = normpath_url(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
             raise RuntimeError("Tried to navigate outside root %r: %r" % (self.root_dir, path))
+        self.cur_dir_meta = None
         self.cur_dir = path
         return self.cur_dir
 
@@ -332,18 +498,25 @@ class FsTarget(_Target):
 
     def mkdir(self, dir_name):
         self.check_write(dir_name)
-        path = normurl(join_url(self.cur_dir, dir_name))
+        path = normpath_url(join_url(self.cur_dir, dir_name))
         os.mkdir(path)
 
     def rmdir(self, dir_name):
         """Remove cur_dir/name."""
         self.check_write(dir_name)
-        path = normurl(join_url(self.cur_dir, dir_name))
+        path = normpath_url(join_url(self.cur_dir, dir_name))
 #         print("REMOVE %r" % path)
         shutil.rmtree(path)
 
+    def flush_meta(self):
+        """Write additional meta information for current directory."""
+        if self.cur_dir_meta:
+            self.cur_dir_meta.flush()
+
     def get_dir(self):
         res = []
+#        self.cur_dir_meta = None
+        self.cur_dir_meta = DirMetadata(self)
         for name in os.listdir(self.cur_dir):
             path = os.path.join(self.cur_dir, name)
             stat = os.lstat(path)
@@ -364,16 +537,19 @@ class FsTarget(_Target):
                                           mtime, 
                                           str(stat.st_ino)))
             elif os.path.isfile(path):
-                res.append(FileEntry(self, self.cur_dir, name, stat.st_size, 
-                                     mtime, 
-                                     str(stat.st_ino)))
+                if name == DirMetadata.META_FILE_NAME:
+                    self.cur_dir_meta.read()
+                else:
+                    res.append(FileEntry(self, self.cur_dir, name, stat.st_size, 
+                                         mtime, 
+                                         str(stat.st_ino)))
         return res
 
     def open_readable(self, name):
         fp = open(os.path.join(self.cur_dir, name), "rb")
         return fp
         
-    def write_file(self, name, fp_src, blocksize=8192, callback=None):
+    def write_file(self, name, fp_src, blocksize=DEFAULT_BLOCKSIZE, callback=None):
         self.check_write(name)
         with open(os.path.join(self.cur_dir, name), "wb") as fp_dst:
             while True:
@@ -392,480 +568,6 @@ class FsTarget(_Target):
         os.remove(path)
 
     def set_mtime(self, name, mtime, size):
+        """Set modification time on file."""
         self.check_write(name)
         os.utime(os.path.join(self.cur_dir, name), (-1, mtime))
-
-
-#===============================================================================
-# BaseSynchronizer
-#===============================================================================
-class BaseSynchronizer(object):
-    """Synchronizes two target instances in dry_run mode (also base class for other synchonizers)."""
-    DEFAULT_EXCLUDES = [".DS_Store",
-                        ".git",
-                        ".hg",
-                        ".svn",
-                        _Target.META_FILE_NAME,
-                        ]
-
-    def __init__(self, local, remote, options):
-        self.local = local
-        self.remote = remote
-        #TODO: check for self-including paths
-        self.options = options or {}
-        self.verbose = self.options.get("verbose", 3) 
-        self.dry_run = self.options.get("dry_run", True)
-
-        self.include_files = self.options.get("include_files")
-        if self.include_files:
-            self.include_files = [ pat.strip() for pat in self.include_files.split(",") ]
-
-        self.omit = self.options.get("omit")
-        if self.omit:
-            self.omit = [ pat.strip() for pat in self.omit.split(",") ]
-        
-        if self.dry_run:
-            self.local.readonly = True
-            self.remote.readonly = True
-        
-        self._stats = {"local_files": 0,
-                       "local_dirs": 0,
-                       "remote_files": 0,
-                       "remote_dirs": 0,
-                       "files_created": 0,
-                       "files_deleted": 0,
-                       "files_written": 0,
-                       "dirs_written": 0,
-                       "dirs_deleted": 0,
-                       "bytes_written": 0,
-                       "entries_seen": 0,
-                       "entries_touched": 0,
-                       "elap": None,
-                       "elap_secs": None,
-                       }
-    
-    def get_stats(self):
-        return self._stats
-    
-    def _inc_stat(self, name, ofs=1):
-        self._stats[name] = self._stats.get(name, 0) + ofs
-
-    def _match(self, entry):
-        name = entry.name
-        if name == _Target.META_FILE_NAME:
-            return False
-#        if name in self.DEFAULT_EXCLUDES:
-#            return False
-        ok = True
-        if entry.is_file() and self.include_files:
-            ok = False
-            for pat in self.include_files:
-                if fnmatch.fnmatch(name, pat):
-                    ok = True
-                    break
-        if ok and self.omit:
-            for pat in self.omit:
-                if fnmatch.fnmatch(name, pat):
-                    ok = False
-                    break
-        return ok
-    
-    def run(self):
-        start = time.time()
-        res = self._sync_dir()
-        self._stats["elap_secs"] = time.time() - start
-        self._stats["elap"] = "%0.2f sec" % self._stats["elap_secs"]
-        return res
-    
-    def _copy_file(self, src, dest, file_entry):
-        # TODO: save replace:
-        # 1. remove temp file
-        # 2. copy to target.temp
-        # 3. use loggingFile for feedback
-        # 4. rename target.temp
-#        print("_copy_file(%s, %s --> %s)" % (file_entry, src, dest))
-        assert isinstance(file_entry, FileEntry)
-        self._inc_stat("files_written")
-        self._inc_stat("entries_touched")
-        self._tick()
-        if self.dry_run:
-            return self._dry_run_action("copy file (%s, %s --> %s)" % (file_entry, src, dest))
-        elif dest.readonly:
-            raise RuntimeError("target is read-only: %s" % dest)
-
-        def __block_written(data):
-#            print(">(%s), " % len(data))
-            self._inc_stat("bytes_written", len(data))
-
-        with src.open_readable(file_entry.name) as fp_src:
-            dest.write_file(file_entry.name, fp_src, callback=__block_written)
-
-        dest.set_mtime(file_entry.name, file_entry.mtime, file_entry.size)
-    
-    def _copy_recursive(self, src, dest, dir_entry):
-#        print("_copy_recursive(%s, %s --> %s)" % (dir_entry, src, dest))
-        assert isinstance(dir_entry, DirectoryEntry)
-        self._inc_stat("entries_touched")
-        self._inc_stat("dirs_written")
-        self._tick()
-        if self.dry_run:
-            return self._dry_run_action("copy directory (%s, %s --> %s)" % (dir_entry, src, dest))
-        elif dest.readonly:
-            raise RuntimeError("target is read-only: %s" % dest)
-        src.cwd(dir_entry.name)
-        dest.mkdir(dir_entry.name)
-        dest.cwd(dir_entry.name)
-        for entry in src.get_dir():
-            # the outer call was already accompanied by an increment, but not recursions
-            self._inc_stat("entries_seen")
-            if entry.is_dir():
-                self._copy_recursive(src, dest, entry)
-            else:
-                self._copy_file(src, dest, entry)
-        src.cwd("..")
-        dest.cwd("..")
-
-    def _remove_file(self, file_entry):
-        # TODO: honor backup
-#        print("_remove_file(%s)" % (file_entry, ))
-        assert isinstance(file_entry, FileEntry)
-        self._inc_stat("entries_touched")
-        self._inc_stat("files_deleted")
-        if self.dry_run:
-            return self._dry_run_action("delete file (%s)" % (file_entry,))
-        elif file_entry.target.readonly:
-            raise RuntimeError("target is read-only: %s" % file_entry.target)
-        file_entry.target.remove_file(file_entry.name)
-
-    def _remove_dir(self, dir_entry):
-        # TODO: honor backup
-        assert isinstance(dir_entry, DirectoryEntry)
-        self._inc_stat("entries_touched")
-        self._inc_stat("dirs_deleted")
-        if self.dry_run:
-            return self._dry_run_action("delete directory (%s)" % (dir_entry,))
-        elif dir_entry.target.readonly:
-            raise RuntimeError("target is read-only: %s" % dir_entry.target)
-        dir_entry.target.rmdir(dir_entry.name)
-
-    def _log_call(self, msg, min_level=5):
-        if self.verbose >= min_level: 
-            print(msg)
-        
-    def _log_action(self, action, status, symbol, entry, min_level=3):
-        if self.verbose < min_level:
-            return
-        prefix = "" 
-        if self.dry_run:
-            prefix = DRY_RUN_PREFIX
-        if action and status:
-            tag = ("%s %s" % (action, status)).upper()
-        else:
-            tag = ("%s%s" % (action, status)).upper()
-        name = entry.get_rel_path()
-        if entry.is_dir():
-            name = "[%s]" % name
-        print("%s%-16s %-2s %s" % (prefix, tag, symbol, name))
-        
-    def _dry_run_action(self, action):
-        """"Called in dry-run mode after call to _log_action() and before exiting function."""
-#        print("dry-run", action)
-        return
-    
-    def _test_match_or_print(self, entry):
-        """Return True if entry matches filter. Otherwise print 'skip' and return False ."""
-        if not self._match(entry):
-            self._log_action("skip", "unmatched", "-", entry, min_level=4)
-            return False
-        return True
-    
-    def _tick(self):
-        """Write progress info and move cursor to beginning of line."""
-        if (self.verbose >= 3 and not IS_REDIRECTED) or self.options.get("progress"):
-            stats = self.get_stats()
-            prefix = DRY_RUN_PREFIX if self.dry_run else ""
-            sys.stdout.write("%sTouched %s/%s entries in %s dirs...\r" 
-                % (prefix,
-                   stats["entries_touched"], stats["entries_seen"], 
-                   stats["local_dirs"]))
-        sys.stdout.flush()
-        return
-    
-    def _before_sync(self, entry):
-        """Called by the synchronizer for each entry. 
-        Return False to prevent the synchronizer's default action.
-        """
-        self._inc_stat("entries_seen")
-        self._tick()
-        return True
-    
-    def _sync_dir(self):
-        """Traverse the local folder structure and remote peers.
-        
-        This is the core algorithm that generates calls to self.sync_XXX() 
-        handler methods.
-        _sync_dir() is called by self.run().
-        """
-        local_entries = self.local.get_dir()
-        local_entry_map = dict(map(lambda e: (e.name, e), local_entries))
-        local_files = [e for e in local_entries if isinstance(e, FileEntry)]
-        local_directories = [e for e in local_entries if isinstance(e, DirectoryEntry)]
-        
-        remote_entries = self.remote.get_dir()
-        # convert into a dict {name: FileEntry, ...}
-        remote_entry_map = dict(map(lambda e: (e.name, e), remote_entries))
-        
-        # 1. Loop over all local files and classify the relationship to the
-        #    peer entries.
-        for local_file in local_files:
-            self._inc_stat("local_files")
-            if not self._before_sync(local_file):
-                # TODO: currently, if a file is skipped, it will not be
-                # considered for deletion on the peer target
-                continue
-            # TODO: case insensitive?
-            # We should use os.path.normcase() to convert to lowercase on windows
-            # (i.e. if the FTP server is based on Windows)
-            remote_file = remote_entry_map.get(local_file.name)
-
-            if remote_file is None:
-                self.sync_missing_remote_file(local_file)
-            elif local_file == remote_file:
-                self.sync_equal_file(local_file, remote_file)
-            # TODO: renaming could be triggered, if we find an existing
-            # entry.unique with a different entry.name
-#            elif local_file.key in remote_keys:
-#                self._rename_file(local_file, remote_file)
-            elif local_file > remote_file:
-                self.sync_newer_local_file(local_file, remote_file)
-            elif local_file < remote_file:
-                self.sync_older_local_file(local_file, remote_file)
-            else:
-                self._sync_error("file with identical date but different otherwise", 
-                                 local_file, remote_file)
-
-        # 2. Handle all local directories that do NOT exist on remote target.
-        for local_dir in local_directories:
-            self._inc_stat("local_dirs")
-            if not self._before_sync(local_dir):
-                continue
-            remote_dir = remote_entry_map.get(local_dir.name)
-            if not remote_dir:
-                self.sync_missing_remote_dir(local_dir)
-
-        # 3. Handle all remote entries that do NOT exist on the local target.
-        for remote_entry in remote_entries:
-            if isinstance(remote_entry, DirectoryEntry):
-                self._inc_stat("remote_dirs")
-            else:
-                self._inc_stat("remote_files")
-                
-            if not self._before_sync(remote_entry):
-                continue
-            if not remote_entry.name in local_entry_map:
-                if isinstance(remote_entry, DirectoryEntry):
-                    self.sync_missing_local_dir(remote_entry)
-                else:  
-                    self.sync_missing_local_file(remote_entry)
-        
-        # 4. Let the target provider write it's meta data for the files in the 
-        #    current directory.
-        self.local.flush_meta()
-        self.remote.flush_meta()
-
-        # 5. Finally visit all local sub-directories recursively that also 
-        #    exist on the remote target.
-        for local_dir in local_directories:
-            if not self._before_sync(local_dir):
-                continue
-            remote_dir = remote_entry_map.get(local_dir.name)
-            if remote_dir:
-                res = self.sync_equal_dir(local_dir, remote_dir)
-                if res is not False:
-                    self.local.cwd(local_dir.name)
-                    self.remote.cwd(local_dir.name)
-                    self._sync_dir()
-                    self.local.cwd("..")
-                    self.remote.cwd("..")
-        
-    def _sync_error(self, msg, local_file, remote_file):
-        print(msg, local_file, remote_file, file=sys.stderr)
-    
-    def sync_equal_file(self, local_file, remote_file):
-        self._log_call("sync_equal_file(%s, %s)" % (local_file, remote_file))
-        self._log_action("", "equal", "=", local_file, min_level=4)
-    
-    def sync_equal_dir(self, local_dir, remote_dir):
-        """Return False to prevent visiting of children"""
-        self._log_call("sync_equal_dir(%s, %s)" % (local_dir, remote_dir))
-        self._log_action("", "equal", "=", local_dir, min_level=4)
-        return True
-    
-    def sync_newer_local_file(self, local_file, remote_file):
-        self._log_call("sync_newer_local_file(%s, %s)" % (local_file, remote_file))
-        self._log_action("", "modified", ">", local_file)
-    
-    def sync_older_local_file(self, local_file, remote_file):
-        self._log_call("sync_older_local_file(%s, %s)" % (local_file, remote_file))
-        self._log_action("", "modified", "<", local_file)
-    
-    def sync_missing_local_file(self, remote_file):
-        self._log_call("sync_missing_local_file(%s)" % remote_file)
-        self._log_action("", "missing", "<", remote_file)
-    
-    def sync_missing_local_dir(self, remote_dir):
-        """Return False to prevent visiting of children"""
-        self._log_call("sync_missing_local_dir(%s)" % remote_dir)
-        self._log_action("", "missing", "<", remote_dir)
-    
-    def sync_missing_remote_file(self, local_file):
-        self._log_call("sync_missing_remote_file(%s)" % local_file)
-        self._log_action("", "new", ">", local_file)
-    
-    def sync_missing_remote_dir(self, local_dir):
-        self._log_call("sync_missing_remote_dir(%s)" % local_dir)
-        self._log_action("", "new", ">", local_dir)
-
-
-#===============================================================================
-# UploadSynchronizer
-#===============================================================================
-class UploadSynchronizer(BaseSynchronizer):
-    def __init__(self, local, remote, options):
-        super(UploadSynchronizer, self).__init__(local, remote, options)
-        local.readonly = True
-        # don't set target.readonly to True, because it might have been set to
-        # False by a caller to enforce security
-#        remote.readonly = False
-
-    def _check_del_unmatched(self, remote_entry):
-        """Return True if entry is NOT matched (i.e. excluded by filter).
-        
-        If --delete-unmatched is on, remove the remote resource. 
-        is on.
-        
-        """
-        if not self._match(remote_entry):
-            if self.options.get("delete_unmatched"):
-                self._log_action("delete", "unmatched", ">", remote_entry)
-                if remote_entry.is_dir():
-                    self._remove_dir(remote_entry)
-                else:
-                    self._remove_file(remote_entry)
-            else:
-                self._log_action("skip", "unmatched", "-", remote_entry, min_level=4)
-            return True
-        return False
-
-    def sync_equal_file(self, local_file, remote_file):
-        self._log_call("sync_equal_file(%s, %s)" % (local_file, remote_file))
-        self._log_action("", "equal", "=", local_file, min_level=4)
-        self._check_del_unmatched(remote_file)
-    
-    def sync_equal_dir(self, local_dir, remote_dir):
-        """Return False to prevent visiting of children"""
-        self._log_call("sync_equal_dir(%s, %s)" % (local_dir, remote_dir))
-        if self._check_del_unmatched(remote_dir):
-            return False
-        self._log_action("", "equal", "=", local_dir, min_level=4)
-        return True
-
-    def sync_newer_local_file(self, local_file, remote_file):
-        self._log_call("sync_newer_local_file(%s, %s)" % (local_file, remote_file))
-        if self._check_del_unmatched(remote_file):
-            return False
-        self._log_action("copy", "modified", ">", local_file)
-        self._copy_file(self.local, self.remote, local_file)
-#        if not self._match(remote_file) and self.options.get("delete_unmatched"):
-#            self._log_action("delete", "unmatched", ">", remote_file)
-#            self._remove_file(remote_file)
-#        elif self._test_match_or_print(local_file):
-#            self._log_action("copy", "modified", ">", local_file)
-#            self._copy_file(self.local, self.remote, local_file)
-
-    def sync_older_local_file(self, local_file, remote_file):
-        self._log_call("sync_older_local_file(%s, %s)" % (local_file, remote_file))
-        if self._check_del_unmatched(remote_file):
-            return False
-        elif self.options.get("force"):
-            self._log_action("restore", "older", ">", local_file)
-            self._copy_file(self.local, self.remote, remote_file)
-        else:
-            self._log_action("skip", "older", "?", local_file, 4)
-#        if not self._match(remote_file) and self.options.get("delete_unmatched"):
-#            self._log_action("delete", "unmatched", ">", remote_file)
-#            self._remove_file(remote_file)
-#        elif self.options.get("force"):
-#            self._log_action("restore", "older", ">", local_file)
-#            self._copy_file(self.local, self.remote, remote_file)
-#        else:
-#            self._log_action("skip", "older", "?", local_file, 4)
-
-    def sync_missing_local_file(self, remote_file):
-        self._log_call("sync_missing_local_file(%s)" % remote_file)
-        # If a file exists locally, but does not match the filter, this will be
-        # handled by sync_newer_file()/sync_older_file()
-        if self._check_del_unmatched(remote_file):
-            return False
-        elif not self._test_match_or_print(remote_file):
-            return
-        elif self.options.get("delete"):
-            self._log_action("delete", "missing", ">", remote_file)
-            self._remove_file(remote_file)
-        else:
-            self._log_action("skip", "missing", "?", remote_file, 4)
-#        if not self._test_match_or_print(remote_file):
-#            return
-#        elif self.options.get("delete"):
-#            self._log_action("delete", "missing", ">", remote_file)
-#            self._remove_file(remote_file)
-#        else:
-#            self._log_action("skip", "missing", "?", remote_file, 4)
-
-    def sync_missing_local_dir(self, remote_dir):
-        self._log_call("sync_missing_local_dir(%s)" % remote_dir)
-        if self._check_del_unmatched(remote_dir):
-            return False
-        elif not self._test_match_or_print(remote_dir):
-            return False
-        elif self.options.get("delete"):
-            self._log_action("delete", "missing", ">", remote_dir)
-            self._remove_dir(remote_dir)
-        else:
-            self._log_action("skip", "missing", "?", remote_dir, 4)
-    
-    def sync_missing_remote_file(self, local_file):
-        self._log_call("sync_missing_remote_file(%s)" % local_file)
-        if self._test_match_or_print(local_file):
-            self._log_action("copy", "new", ">", local_file)
-            self._copy_file(self.local, self.remote, local_file)
-    
-    def sync_missing_remote_dir(self, local_dir):
-        self._log_call("sync_missing_remote_dir(%s)" % local_dir)
-        if self._test_match_or_print(local_dir):
-            self._log_action("copy", "new", ">", local_dir)
-            self._copy_recursive(self.local, self.remote, local_dir)
-    
-
-#===============================================================================
-# DownloadSynchronizer
-#===============================================================================
-class DownloadSynchronizer(UploadSynchronizer):
-    """
-    This download syncronize is implemented as an UploadSynchronizer with
-    swapped local and remote targets. 
-    """
-    def __init__(self, local, remote, options):
-        # swap local and remote target
-        temp = local
-        local = remote
-        remote = temp
-        # behave like an UploadSynchronizer otherwise
-        super(DownloadSynchronizer, self).__init__(local, remote, options)
-
-    def _log_action(self, action, status, symbol, entry, min_level=3):
-        if symbol == "<":
-            symbol = ">"
-        elif symbol == ">":
-            symbol = "<"
-        super(DownloadSynchronizer, self)._log_action(action, status, symbol, entry, min_level)

@@ -21,7 +21,9 @@ if not "HOME" in os.environ and  "HOMEPATH" in os.environ:
     os.environ.setdefault("HOME", os.environ.get("HOMEPATH", ""))
     print("Initializing HOME environment variable to '%s'" % os.environ["HOME"])
 
-install_requires = []
+install_requires = ["colorama",
+                    "keyring",
+                    ]
 if sys.version_info < (2, 7):
     install_requires += ["argparse"]
 
@@ -31,7 +33,7 @@ setup(name="pyftpsync",
       author_email = "pyftpsync@wwwendt.de",
       maintainer = "Martin Wendt",
       maintainer_email = "pyftpsync@wwwendt.de",
-      url = "http://pyftpsync.googlecode.com/",
+      url = "https://github.com/mar10/pyftpsync",
       description = "Synchronize folders over FTP.",
       long_description = readme, #+ "\n\n" + changes,
 
@@ -40,7 +42,7 @@ setup(name="pyftpsync",
         #Development Status :: 4 - Beta
         #Development Status :: 5 - Production/Stable
 
-      classifiers = ["Development Status :: 3 - Alpha",
+      classifiers = ["Development Status :: 4 - Beta",
                      "Environment :: Console",
                      "Intended Audience :: Information Technology",
                      "Intended Audience :: Developers",

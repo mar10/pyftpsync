@@ -1,63 +1,106 @@
 # -*- coding: iso-8859-1 -*-
 """
-(c) 2012 Martin Wendt; see http://pyftpsync.googlecode.com/
+(c) 2012-2015 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 """
 from __future__ import print_function
 
-import time
-import io
-from posixpath import join as join_url, normpath as normurl
-from ftpsync.targets import FileEntry, DirectoryEntry, _Target
 import calendar
-import json
-import sys
-from ftpsync._version import __version__
 import ftplib
+import io
+from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
+import sys
+import time
 
+from ftpsync import targets
+from ftpsync.targets import _Target, DirMetadata, prompt_for_password,\
+    save_password, get_credentials_for_url
+from ftpsync.resources import DirectoryEntry, FileEntry
+from ftplib import error_perm
+
+DEFAULT_BLOCKSIZE = targets.DEFAULT_BLOCKSIZE
 
 #===============================================================================
 # FtpTarget
 #===============================================================================
 class FtpTarget(_Target):
     
-    def __init__(self, path, host, username=None, password=None, connect=True, debug=0):
+    def __init__(self, path, host, username=None, password=None, extra_opts=None):
         path = path or "/"
-        super(FtpTarget, self).__init__(path)
+        super(FtpTarget, self).__init__(path, extra_opts)
         self.ftp = ftplib.FTP()
-        self.ftp.debug(debug)
+        self.ftp.debug(self.get_option("ftp_debug", 0))
         self.host = host
         self.username = username
         self.password = password
-        self.cur_dir_meta = None
-        self.cur_dir_meta_modified = False
-        if connect:
-            self.open()
+#        if connect:
+#            self.open()
 
     def __str__(self):
-        return "ftp:%s%s" % (self.host, self.cur_dir)
+        return "<ftp:%s%s + %s>" % (self.host, self.root_dir, relpath_url(self.cur_dir, self.root_dir))
+
+    def get_base_name(self):
+        return "ftp:%s%s" % (self.host, self.root_dir)
 
     def open(self):
+        assert not self.connected
+        no_prompt  = self.get_option("no_prompt", True)
+        store_password = self.get_option("store_password", False)
+        
         self.ftp.connect(self.host)
-        if self.username:
+        # 
+        if self.username is None or self.password is None:
+            creds = get_credentials_for_url(self.host, allow_prompt=not no_prompt)
+            if creds:
+                self.username, self.password = creds
+
+        try:
+            # Login (as 'anonymous' if self.username is undefined):
             self.ftp.login(self.username, self.password)
-        # TODO: case sensivity?
+        except error_perm as e:
+            # If credentials were passed, but authentication fails, prompt 
+            # for new password
+            if not e.args[0].startswith("530"):
+                raise # error other then '530 Login incorrect'
+            print(e)
+            if not no_prompt:
+                self.user, self.password = prompt_for_password(self.host, self.username)
+                self.ftp.login(self.username, self.password)
+
+        # TODO: case sensitivity?
 #        resp = self.ftp.sendcmd("system")
-#        self.is_unix = "unix" in resp.lower()
-        self.ftp.cwd(self.root_dir)
+#        self.is_unix = "unix" in resp.lower() # not necessarily true, better check with read/write tests
+        
+        try:
+            # 
+            self.ftp.cwd(self.root_dir)
+        except error_perm as e:
+            # If credentials were passed, but authentication fails, prompt 
+            # for new password
+            if not e.args[0].startswith("550"):
+                raise # error other then 550 No such directory'
+            print("Could not change directory to %s (%s): missing permissions?" % (self.root_dir, e))
+
         pwd = self.ftp.pwd()
         if pwd != self.root_dir:
             raise RuntimeError("Unable to navigate to working directory %r" % self.root_dir)
         self.cur_dir = pwd
         self.connected = True
+        # Successfully authenticated: store password
+        if store_password:
+            save_password(self.host, self.username, self.password)
+        return
 
     def close(self):
         if self.connected:
             self.ftp.quit()
         self.connected = False
         
+    def get_id(self):
+        return self.host + self.root_dir
+
     def cwd(self, dir_name):
-        path = normurl(join_url(self.cur_dir, dir_name))
+        path = normpath_url(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
             # paranoic check to prevent that our sync tool goes berserk
             raise RuntimeError("Tried to navigate outside root %r: %r" 
@@ -74,7 +117,7 @@ class FtpTarget(_Target):
         self.check_write(dir_name)
         self.ftp.mkd(dir_name)
 
-    def rmdir(self, dir_name):
+    def _rmdir_impl(self, dir_name, keep_root=False):
         # FTP does not support deletion of non-empty directories.
 #        print("rmdir(%s)" % dir_name)
         self.check_write(dir_name)
@@ -94,27 +137,17 @@ class FtpTarget(_Target):
                         # assume <name> is a folder
                         self.rmdir(name)
             finally:
-                self.ftp.cwd("..")
+                if dir_name != ".":
+                    self.ftp.cwd("..")
 #        print("ftp.rmd(%s)..." % (dir_name, ))
-        self.ftp.rmd(dir_name)
+        if not keep_root:
+            self.ftp.rmd(dir_name)
+        return
 
-    def flush_meta(self):
-        if self.readonly:
-            return
-        has_data = self.cur_dir_meta and self.cur_dir_meta.get("files")
-        if has_data:
-            self.cur_dir_meta["_disclaimer"] = "Generated by http://pyfilesync.googlecode.com/"
-            self.cur_dir_meta["_time"] = "%s" % time.ctime()
-            self.cur_dir_meta["_version"] = __version__
-            self.cur_dir_meta["upload_time"] = time.mktime(time.gmtime())
-            s = json.dumps(self.cur_dir_meta, indent=4, sort_keys=True)
-#            print("META: flush_meta(%s)" % (self.cur_dir, ), s)
-            self.write_text(self.META_FILE_NAME, s)
-        elif self.cur_dir_meta is not None:
-            print("META: flush_meta(%s): DELETE" % self.cur_dir)
-            self.ftp.delete(self.META_FILE_NAME)
-            return
-        self.cur_dir_meta_modified = False
+    
+    def rmdir(self, dir_name):
+        return self._rmdir_impl(dir_name)
+
 
     def get_dir(self):
         entry_list = []
@@ -147,7 +180,7 @@ class FtpTarget(_Target):
             if res_type == "dir":
                 entry = DirectoryEntry(self, self.cur_dir, name, size, mtime, unique)
             elif res_type == "file":
-                if name == self.META_FILE_NAME:
+                if name == DirMetadata.META_FILE_NAME:
                     # the meta-data file is silently ignored
                     local_res["has_meta"] = True
                 else:
@@ -165,34 +198,28 @@ class FtpTarget(_Target):
         self.ftp.retrlines("MLSD", _addline)
 
         # load stored meta data if present
-        self.cur_dir_meta = None
-        self.cur_dir_meta_modified = False
-#        if not local_res["has_meta"]: 
-#            print("META: read(%s): Not found" % (self.cur_dir, ))
+        self.cur_dir_meta = DirMetadata(self)
+
         if local_res["has_meta"]:
             try:
-                m = self.read_text(self.META_FILE_NAME)
-                self.cur_dir_meta = json.loads(m)
-#                print("META: read(%s)" % (self.cur_dir, ), self.cur_dir_meta)
+                self.cur_dir_meta.read()
             except Exception as e:
                 print("Could not read meta info: %s" % e, file=sys.stderr)
 
-            self.cur_dir_meta = self.cur_dir_meta or {}
-            meta_files = self.cur_dir_meta.setdefault("files", {})
-            _last_upload_time = self.cur_dir_meta.setdefault("upload_time", 0)
-            
+            meta_files = self.cur_dir_meta.list
+
             # Adjust file mtime from meta-data if present
             missing = []
             for n in meta_files:
                 meta = meta_files[n]
                 if n in entry_map:
-#                    if entry_map[n].size == meta["size"] and entry_map[n].mtime <= last_upload_time:
-                    upload_time = meta.get("uploaded", 0)
-                    # ???
-                    # TODO: sollten wir prüfen. ob meta.mtime (nicht meta.upload_time) ??
-                    # ??? 
-                    if entry_map[n].size == meta.get("size") and entry_map[n].mtime <= upload_time:
+                    # We have a meta-data entry for this resource
+                    upload_time = meta.get("u", 0)
+                    # TODO: use 3 sec EPS, to compare mtimes
+                    if entry_map[n].size == meta.get("s") and entry_map[n].mtime <= upload_time:
+                        # Use meta-data mtime instead of the one reported by FTP server 
                         entry_map[n].meta = meta
+                        entry_map[n].mtime = meta["m"]
                     else:
                         # Discard stored meta-data if 
                         #   1. the the mtime reported by the FTP server is later
@@ -203,12 +230,12 @@ class FtpTarget(_Target):
 #                        print("META: Removing outdated meta entry %s" % n, meta)
                         missing.append(n)
                 else:
-                    print("META: Removing missing meta entry %s" % n)
+                    # File is stored in meta-data, but no longer exists on FTP server
+#                     print("META: Removing missing meta entry %s" % n)
                     missing.append(n)
-            # Remove missing files from cur_dir_meta 
+            # Remove missing or invalid files from cur_dir_meta 
             for n in missing:
-                meta_files.pop(n)
-                self.cur_dir_meta_modified = True
+                self.cur_dir_meta.remove(n)
 
         return entry_list
 
@@ -220,7 +247,7 @@ class FtpTarget(_Target):
         out.seek(0)
         return out
 
-    def write_file(self, name, fp_src, blocksize=8192, callback=None):
+    def write_file(self, name, fp_src, blocksize=DEFAULT_BLOCKSIZE, callback=None):
         self.check_write(name)
         self.ftp.storbinary("STOR %s" % name, fp_src, blocksize, callback)
         # TODO: check result
@@ -228,24 +255,14 @@ class FtpTarget(_Target):
     def remove_file(self, name):
         """Remove cur_dir/name."""
         self.check_write(name)
-        if self.cur_dir_meta and self.cur_dir_meta.pop(name, None):
-            self.cur_dir_meta_modified = True
-            print("META remove_file(%s)" % name)
+#         self.cur_dir_meta.remove(name)
         self.ftp.delete(name)
+        self.remove_sync_info(name)
 
     def set_mtime(self, name, mtime, size):
         self.check_write(name)
+#         print("META set_mtime(%s): %s" % (name, time.ctime(mtime)))
         # We cannot set the mtime on FTP servers, so we store this as additional
         # meta data in the same directory
-        if self.cur_dir_meta is None:
-            self.cur_dir_meta = {"files": {}}
-        self.cur_dir_meta["files"][name] = {
-#                                            "uploaded": time.mktime(time.gmtime()),
-                                            "uploaded": time.time(), # UTC time stamp
-                                            "uploaded_str": time.ctime(),
-                                            "size":  size,
-                                            "mtime": mtime,
-                                            "mtime_str": time.ctime(mtime),
-                                            }
-#        print("META set_mtime(%s): %s" % (name, time.ctime(mtime)))
-        self.cur_dir_meta_modified = True
+        # TODO: try "SITE UTIME", "MDTM (set version)", or "SRFT" command
+        self.cur_dir_meta.set_mtime(name, mtime, size)
