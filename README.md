@@ -3,6 +3,8 @@ Copyright (c) 2012-2015 Martin Wendt
 
 Synchronize local directories with FTP server.
 
+[ ![sample](teaser.png?raw=true) ](https://github.com/mar10/pyftpsync "Live demo")
+
 ## Status
 *This project has beta status: use at your own risk!*
 
@@ -29,8 +31,8 @@ Synchronize local directories with FTP server.
     meta data file inside the local folders. This is not bullet proof and may
     fail under some conditions.
 
-In short: pyftpsync is not (nor tries to be) a distributed version control 
-system. Make sure you have backups.
+In short: pyftpsync is not (nor tries to be a replacement for) a distributed 
+version control system. Make sure you have backups.
 
 
 ## Usage 

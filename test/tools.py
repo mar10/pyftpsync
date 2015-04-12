@@ -115,7 +115,7 @@ def _get_test_folder(folder_name):
                 continue
             stat = os.lstat(abs_file_path)
             dt = datetime.datetime.utcfromtimestamp(stat.st_mtime)
-            rel_file_path = os.path.join(rel_folder_path, fn) 
+            rel_file_path = os.path.join(rel_folder_path, fn).replace(os.sep, "/")
             file_map[rel_file_path] = { 
                             "date": dt.strftime("%Y-%m-%d %H:%M:%S"),
                             #"size": stat.st_size,

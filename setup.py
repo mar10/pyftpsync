@@ -24,8 +24,11 @@ if not "HOME" in os.environ and  "HOMEPATH" in os.environ:
 install_requires = ["colorama",
                     "keyring",
                     ]
+tests_require = []
+
 if sys.version_info < (2, 7):
     install_requires += ["argparse"]
+    tests_require += ["unittest2"]
 
 setup(name="pyftpsync",
       version = version,
@@ -57,6 +60,7 @@ setup(name="pyftpsync",
 #      platforms=["Unix", "Windows"],
       license = "The MIT License",
       install_requires = install_requires,
+      tests_require = tests_require,
 #      package_dir = {"": "src"},
       packages = ["ftpsync"],
 #      packages = find_packages(exclude=[]),

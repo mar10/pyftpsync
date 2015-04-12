@@ -8,12 +8,17 @@ import datetime
 import os
 from pprint import pprint
 import sys
-from unittest import TestCase
-import unittest
 
-# Note: SkipTest requires Python 2.7+, so it breaks CI, when checked in.
-#       Use only while debugging!
-# from unittest.case import SkipTest
+if sys.version_info < (2, 7):
+    # Python 2.6
+    import unittest2 as unittest
+    from unittest2 import TestCase
+    from unittest2.case import SkipTest
+else:
+    # Python 2.7+
+    import unittest
+    from unittest import TestCase
+    from unittest.case import SkipTest
 
 
 from ftpsync.targets import FsTarget, DirMetadata
