@@ -54,7 +54,7 @@ def prompt_for_password(url, user=None):
         while user is None:
             try: # python 2
                 user = raw_input("Enter username for ftp://%s [%s]: " % (url, default_user))
-            except: # python 3
+            except NameError: # python 3
                 user = input("Enter username for ftp://%s [%s]: " % (url, default_user))
             if user.strip() == "" and default_user:
                 user = default_user
