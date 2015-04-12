@@ -10,6 +10,7 @@ Please submit bugs as you find them.
 
 
 ## Summary
+
 Synchronize local directories with FTP server.
 
   * This is a command line tool...
@@ -18,10 +19,22 @@ Synchronize local directories with FTP server.
   * Allows FTP-to-FTP and Filesystem-to-Filesystem synchronization as well
   * Architecture is open to add other target types.
 
-Note: 
-The FTP server must support the [MLST command](http://tools.ietf.org/html/rfc3659).
+#### Known limitations 
+
+  * The FTP server must support the [MLST command](http://tools.ietf.org/html/rfc3659).
+  * pyftpsync uses file size and modification dates to detect file changes. 
+    This is efficient, but not as robust as CRC checksums could be.
+  * pyftpsync tries to detect conflicts (i.e. simultaneous modifications of 
+    local and remote targets) by storing last sync time and size in a separate
+    meta data file inside the local folders. This is not bullet proof and may
+    fail under some conditions.
+
+In short: pyftpsync is not (nor tries to be) a distributed version control 
+system. Make sure you have backups.
+
 
 ## Usage 
+
 *Preconditions:* [Python](http://www.python.org/download/ Python) 2.6+ or 3 is required, 
 [pip](http://www.pip-installer.org/) or
 [EasyInstall](http://pypi.python.org/pypi/setuptools#using-setuptools-and-easyinstall)
@@ -65,8 +78,21 @@ local = FsTarget("~/temp")
 user ="joe"
 passwd = "secret"
 remote = FtpTarget("/temp", "example.com", user, passwd)
-opts = {"force": False, "delete_unmatched": True, "verbose": 3, "execute": True, "dry_run" : False}
+opts = {"force": False, "delete_unmatched": True, "verbose": 3, "dry_run" : False}
 s = UploadSynchronizer(local, remote, opts)
+s.run()
+```
+
+```python
+from ftpsync.targets import FsTarget, BiDirSynchronizer
+from ftpsync.ftp_target import FtpTarget
+
+local = FsTarget("~/temp")
+user ="joe"
+passwd = "secret"
+remote = FtpTarget("/temp", "example.com", user, passwd)
+opts = {"resolve": "skip", "verbose": 1, "dry_run" : False}
+s = BiDirSynchronizer(local, remote, opts)
 s.run()
 ```
 
@@ -74,25 +100,30 @@ s.run()
 *Command line syntax*:
 
 ```
-$ pyftpsync --help
-macmartin:pyftpsync martin$ pyftpsync -h
-usage: pyftpsync [-h] [--verbose] [--quiet] [--version] {upload,download} ...
+$ pyftpsync -h
+usage: pyftpsync [-h] [--verbose | --quiet] [--version] [--progress]
+                 {upload,download,sync} ...
 
 Synchronize folders over FTP.
 
 positional arguments:
-  {upload,download}  sub-command help
-    upload           copy new and modified files to remote folder
-    download         copy new and modified files from remote folder to local
-                     target
+  {upload,download,sync}
+                        sub-command help
+    upload              copy new and modified files to remote folder
+    download            copy new and modified files from remote folder to
+                        local target
+    sync                synchronize new and modified files between remote
+                        folder and local target
 
 optional arguments:
-  -h, --help         show this help message and exit
-  --verbose, -v      increment verbosity by one (default: 3, range: 0..5)
-  --quiet, -q        decrement verbosity by one
-  --version          show program's version number and exit
+  -h, --help            show this help message and exit
+  --verbose, -v         increment verbosity by one (default: 3, range: 0..5)
+  --quiet, -q           decrement verbosity by one
+  --version             show program's version number and exit
+  --progress, -p        show progress info, even if redirected or verbose < 3
 
 See also https://github.com/mar10/pyftpsync
+$ 
 ```
 
 
@@ -100,8 +131,9 @@ See also https://github.com/mar10/pyftpsync
 
 ```
 $ pyftpsync upload --help
-usage: pyftpsync upload [-h] [--force] [--delete] [--delete-unmatched] [-x]
-                        [-f INCLUDE_FILES] [-o OMIT]
+usage: pyftpsync upload [-h] [-x] [-f INCLUDE_FILES] [-o OMIT]
+                        [--store-password] [--no-prompt] [--no-color]
+                        [--force] [--delete] [--delete-unmatched]
                         LOCAL REMOTE
 
 positional arguments:
@@ -110,12 +142,6 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  --force               overwrite different remote files, even if the target
-                        is newer
-  --delete              remove remote files if they don't exist locally
-  --delete-unmatched    remove remote files if they don't exist locally or
-                        don't match the current filter (implies '--delete'
-                        option)
   -x, --execute         turn off the dry-run mode (which is ON by default),
                         that would just print status messages but does not
                         change anything
@@ -124,6 +150,16 @@ optional arguments:
                         multiple values with ',')
   -o OMIT, --omit OMIT  wildcard of files and directories to exclude (applied
                         after --include)
+  --store-password      save password to keyring if login succeeds
+  --no-prompt           prevent prompting for missing credentials
+  --no-color            prevent use of ansi terminal color codes
+  --force               overwrite different remote files, even if the target
+                        is newer
+  --delete              remove remote files if they don't exist locally
+  --delete-unmatched    remove remote files if they don't exist locally or
+                        don't match the current filter (implies '--delete'
+                        option)
+$
 ```
 
 *Example: Upload files*
@@ -145,8 +181,38 @@ Add the ´-x´ option to switch from DRY-RUN mode to real execution:
 $ pyftpsync upload ~/temp ftp://example.com/target/folder --delete -x
 ```
 
+*Synchronize files syntax*:
+
+```
+$ pyftpsync sync --help
+usage: pyftpsync sync [-h] [-x] [-f INCLUDE_FILES] [-o OMIT]
+                      [--store-password] [--no-prompt] [--no-color]
+                      [--resolve {old,new,local,remote,ask}]
+                      LOCAL REMOTE
+
+positional arguments:
+  LOCAL                 path to local folder (default: .)
+  REMOTE                path to remote folder
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -x, --execute         turn off the dry-run mode (which is ON by default),
+                        that would just print status messages but does not
+                        change anything
+  -f INCLUDE_FILES, --include-files INCLUDE_FILES
+                        wildcard for file names (default: all, separate
+                        multiple values with ',')
+  -o OMIT, --omit OMIT  wildcard of files and directories to exclude (applied
+                        after --include)
+  --store-password      save password to keyring if login succeeds
+  --no-prompt           prevent prompting for missing credentials
+  --no-color            prevent use of ansi terminal color codes
+  --resolve {old,new,local,remote,ask}
+                        conflict resolving strategy
+$
+```
+
 
 ## FAQ
 
-  * Passwords may be stored and read from a custom file:
-    https://github.com/mar10/pyftpsync/blob/master/ftpsync/sample_pyftpsync.pw
+  * ...

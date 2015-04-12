@@ -42,7 +42,6 @@ DEFAULT_CREDENTIAL_STORE = "pyftpsync.pw"
 DRY_RUN_PREFIX = "(DRY-RUN) "
 IS_REDIRECTED = (os.fstat(0) != os.fstat(1))
 DEFAULT_BLOCKSIZE = 8 * 1024
-# DEFAULT_BLOCKSIZE = 32 * 1024
 
 
 #===============================================================================
@@ -75,17 +74,18 @@ def get_credentials_for_url(url, allow_prompt):
     home_path = os.path.expanduser("~")
     file_path = os.path.join(home_path, DEFAULT_CREDENTIAL_STORE)
     if os.path.isfile(file_path):
-        with open(file_path, "rt") as f:
-            for line in f:
-                line = line.strip()
-                if not "=" in line or line.startswith("#") or line.startswith(";"):
-                    continue
-                u, c = line.split("=", 1)
-                if c and u.strip().lower() == url.lower():
-                    c = c.strip()
-                    creds = c.split(":", 1)
-                    print("Using credentials from %s ('%s'): %s:***)" % (file_path, url, creds[0]))
-                    break
+        raise RuntimeError("Custom password files are no longer supported. Consider deleting {0}.".format(file_path))
+#         with open(file_path, "rt") as f:
+#             for line in f:
+#                 line = line.strip()
+#                 if not "=" in line or line.startswith("#") or line.startswith(";"):
+#                     continue
+#                 u, c = line.split("=", 1)
+#                 if c and u.strip().lower() == url.lower():
+#                     c = c.strip()
+#                     creds = c.split(":", 1)
+#                     print("Using credentials from %s ('%s'): %s:***)" % (file_path, url, creds[0]))
+#                     break
     
     # Query 
     if creds is None and keyring:
@@ -156,28 +156,46 @@ def make_target(url, extra_opts=None):
     return target
 
 
-def to_binary(s):
-    """Convert unicode (text strings) to binary data on Python 2 and 3."""
-    if sys.version_info[0] < 3:
-        # Python 2
+if sys.version_info[0] < 3:
+    # Python 2
+    def to_binary(s):
+        """Convert unicode (text strings) to binary data on Python 2 and 3."""
         if type(s) is not str:
-            s = s.encode("utf8") 
-    elif type(s) is str:
-        # Python 3
-        s = bytes(s, "utf8")
-    return s 
+            s = s.encode("utf8")
+        return s
     
-#def to_text(s):
-#    """Convert binary data to unicode (text strings) on Python 2 and 3."""
-#    if sys.version_info[0] < 3:
-#        # Python 2
-#        if type(s) is not str:
-#            s = s.encode("utf8") 
-#    elif type(s) is str:
-#        # Python 3
-#        s = bytes(s, "utf8")
-#    return s 
+    def to_text(s):
+        """Convert binary data to unicode (text strings) on Python 2 and 3."""
+        if type(s) is not unicode:
+            s = s.decode("utf8")
+        return s
+
+    def to_str(s):
+        """Convert unicode to native str on Python 2 and 3."""
+        if type(s) is unicode:
+            s = s.encode("utf8")
+        return s
+else: 
+    # Python 3
+    def to_binary(s):
+        """Convert unicode (text strings) to binary data on Python 2 and 3."""
+        if type(s) is str:
+            s = bytes(s, "utf8")
+        return s
     
+    def to_text(s):
+        """Convert binary data to unicode (text strings) on Python 2 and 3."""
+        if type(s) is bytes:
+            s = str(s, "utf8")
+        return s 
+
+    def to_str(s):
+        """Convert binary data to unicode (text strings) on Python 2 and 3."""
+        if type(s) is bytes:
+            s = str(s, "utf8")
+        return s 
+
+
 #===============================================================================
 # LogginFileWrapper
 # Wrapper around a file for writing to write a hash sign every block.
@@ -214,7 +232,9 @@ def to_binary(s):
 class DirMetadata(object):
     
     META_FILE_NAME = ".pyftpsync-meta.json"
-    PRETTY = True # False: Reduce meta file size to 35% (3759 -> 1375 bytes)
+    DEBUG_META_FILE_NAME = "_pyftpsync-meta.json"
+    DEBUG = False # True: write a copy that is not a dot-file
+    PRETTY = False # False: Reduce meta file size to 35% (3759 -> 1375 bytes)
     VERSION = 1 # Increment if format changes. Old files will be discarded then.
     
     def __init__(self, target):
@@ -243,7 +263,7 @@ class DirMetadata(object):
                                "s": size,
                                "u": ut,
                                }
-        if self.PRETTY:
+        if self.PRETTY or self.DEBUG:
             self.list[filename].update({
                 "mtime_str": time.ctime(mtime),
                 "uploaded_str": time.ctime(ut),
@@ -263,7 +283,7 @@ class DirMetadata(object):
         pse = ps[filename] = {"m": mtime,
                               "s": size,
                               }
-        if self.PRETTY:
+        if self.PRETTY or self.DEBUG:
             pse["mtime_str"] = time.ctime(mtime) if mtime else "(directory)"
         self.modified_sync = True
         
@@ -293,7 +313,7 @@ class DirMetadata(object):
             print("Could not read meta info: %s" % e, file=sys.stderr)
 
     def flush(self):
-        # We DO write even on read-only targets, but not in dry-run mode
+        # We DO write meta files even on read-only targets, but not in dry-run mode
 #         if self.target.readonly:
 #             print("DirMetadata.flush(%s): read-only; nothing to do" % self.target)
 #             return
@@ -316,14 +336,16 @@ class DirMetadata(object):
             self.dir["_file_version"] = self.VERSION
             self.dir["_version"] = __version__
             self.dir["_time"] = time.mktime(time.gmtime())
-            if self.PRETTY:
+            if self.PRETTY or self.DEBUG:
                 s = json.dumps(self.dir, indent=4, sort_keys=True)
             else:
                 s = json.dumps(self.dir)
 #             print("DirMetadata.flush(%s)" % (self.target, ))#, s)
             self.target.write_text(self.filename, s)
             self.target.synchronizer._inc_stat("meta_bytes_written", len(s))
-
+            if self.DEBUG:
+                self.target.write_text(self.DEBUG_META_FILE_NAME, s)
+        
         self.modified_list = False
         self.modified_sync = False
 
@@ -539,7 +561,7 @@ class FsTarget(_Target):
             elif os.path.isfile(path):
                 if name == DirMetadata.META_FILE_NAME:
                     self.cur_dir_meta.read()
-                else:
+                elif not name in (DirMetadata.DEBUG_META_FILE_NAME, ):
                     res.append(FileEntry(self, self.cur_dir, name, stat.st_size, 
                                          mtime, 
                                          str(stat.st_ino)))

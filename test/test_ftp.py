@@ -14,9 +14,10 @@ from ftpsync.targets import *  # @UnusedWildImport
 
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer, \
     BiDirSynchronizer
-from test.test_flow import prepare_fixtures, PYFTPSYNC_TEST_FTP_URL, \
+from test.tools import PYFTPSYNC_TEST_FTP_URL, prepare_fixtures, \
     PYFTPSYNC_TEST_FOLDER, _get_test_file_date, STAMP_20140101_120000, \
-    _set_test_file_date, _empty_folder, _write_test_file
+    _empty_folder, _write_test_file, _touch_test_file
+
 
 DO_BENCHMARKS = False #True
 
@@ -204,7 +205,7 @@ class FtpTargetTest(TestCase):
         
         # Change one file and upload again
         
-        _set_test_file_date("temp1/file1.txt")
+        _touch_test_file("temp1/file1.txt")
 
         opts = {"force": False, "delete": True, "verbose": 3, "dry_run": False}
         s = UploadSynchronizer(local, remote, opts)

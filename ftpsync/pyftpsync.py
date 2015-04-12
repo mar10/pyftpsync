@@ -47,17 +47,6 @@ def namespace_to_dict(o):
 
 
 #===============================================================================
-# upload_command
-#===============================================================================
-
-#def upload_command(parser, args):
-#    opts = namespace_to_dict(args)
-#    pprint(opts)
-#    exit(2)
-#    s = UploadSynchronizer(args.local_target, args.remote_target, opts)
-#    s.run()
-
-#===============================================================================
 # run
 #===============================================================================
 def run():
@@ -72,7 +61,7 @@ def run():
     qv_group.add_argument("--quiet", "-q", action="count", default=0,
                         help="decrement verbosity by one")
 
-    parser.add_argument("--version", action="version", version="%s" % (__version__))
+    parser.add_argument("--version", action="version", version="%s" % __version__)
     parser.add_argument("--progress", "-p", 
                         action="store_true",
                         default=False, 
@@ -81,21 +70,42 @@ def run():
     subparsers = parser.add_subparsers(help="sub-command help")
     
     def __add_common_sub_args(parser):
-        pass
+        parser.add_argument("local", 
+                            metavar="LOCAL",
+#                             required=True,
+                            default=".",
+                            help="path to local folder (default: %(default)s)")      
+        parser.add_argument("remote", 
+                            metavar="REMOTE",
+                            help="path to remote folder")
+#        upload_parser.add_argument("--dry-run", 
+#                                   action="store_true",
+#                                   help="just simulate and log results; don't change anything")
+        parser.add_argument("-x", "--execute", 
+                            action="store_false", dest="dry_run", default=True,
+                            help="turn off the dry-run mode (which is ON by default), "
+                            "that would just print status messages but does "
+                            "not change anything")
+        parser.add_argument("-f", "--include-files", 
+                            help="wildcard for file names (default: all, "
+                            "separate multiple values with ',')")
+        parser.add_argument("-o", "--omit", 
+                            help="wildcard of files and directories to exclude (applied after --include)")
+        parser.add_argument("--store-password", 
+                                 action="store_true",
+                                 help="save password to keyring if login succeeds")
+        parser.add_argument("--no-prompt", 
+                            action="store_true",
+                            help="prevent prompting for missing credentials")
+        parser.add_argument("--no-color", 
+                            action="store_true",
+                            help="prevent use of ansi terminal color codes")    
     
-    # create the parser for the "upload" command
+    # Create the parser for the "upload" command
     upload_parser = subparsers.add_parser("upload", 
                                           help="copy new and modified files to remote folder")
-    upload_parser.add_argument("local", 
-                               metavar="LOCAL",
-#                             required=True,
-                               default=".",
-                               help="path to local folder (default: %(default)s)")      
-    upload_parser.add_argument("remote", 
-                               metavar="REMOTE",
-#                             required=True,
-#                             default=".",
-                               help="path to remote folder")
+    __add_common_sub_args(upload_parser)
+
     upload_parser.add_argument("--force", 
                                action="store_true",
                                help="overwrite different remote files, even if the target is newer")
@@ -106,34 +116,15 @@ def run():
                                action="store_true",
                                help="remove remote files if they don't exist locally "
                                "or don't match the current filter (implies '--delete' option)")
-#    upload_parser.add_argument("--dry-run", 
-#                             action="store_true",
-#                             help="just simulate and log results; don't change anything")
-    upload_parser.add_argument("-x", "--execute", 
-                               action="store_false", dest="dry_run", default=True,
-                               help="turn off the dry-run mode (which is ON by default), "
-                               "that would just print status messages but does "
-                               "not change anything")
-    upload_parser.add_argument("-f", "--include-files", 
-                               help="wildcard for file names (default: all, "
-                               "separate multiple values with ',')")
-    upload_parser.add_argument("-o", "--omit", 
-                               help="wildcard of files and directories to exclude (applied after --include)")
 
-#    upload_parser.set_defaults(handler=upload_command)
     upload_parser.set_defaults(command="upload")
     
 
-    # create the parser for the "download" command
+    # Create the parser for the "download" command
     download_parser = subparsers.add_parser("download", 
             help="copy new and modified files from remote folder to local target")
-    download_parser.add_argument("local", 
-                                 metavar="LOCAL",
-                                 default=".",
-                                 help="path to local folder (default: %(default)s)")
-    download_parser.add_argument("remote", 
-                                 metavar="REMOTE",
-                                 help="path to remote folder")
+    __add_common_sub_args(download_parser)
+    
     download_parser.add_argument("--force", 
                                  action="store_true",
                                  help="overwrite different local files, even if the target is newer")
@@ -144,88 +135,56 @@ def run():
                                  action="store_true",
                                  help="remove local files if they don't exist on remote target "
                                  "or don't match the current filter (implies '--delete' option)")
-    download_parser.add_argument("-x", "--execute", 
-                                 action="store_false", dest="dry_run", default=True,
-                                 help="turn off the dry-run mode (which is ON by default), "
-                                 "that would just print status messages but does "
-                                 "not change anything")
-    download_parser.add_argument("-f", "--include-files", 
-                                 help="wildcard for file names (default: all, "
-                                 "separate multiple values with ',')")
-    download_parser.add_argument("-o", "--omit", 
-                                 help="wildcard of files and directories to exclude (applied after --include)")
+    
     download_parser.set_defaults(command="download")
     
-    # create the parser for the "sync" command
+    # Create the parser for the "sync" command
     sync_parser = subparsers.add_parser("sync", 
             help="synchronize new and modified files between remote folder and local target")
-    sync_parser.add_argument("local", 
-                             metavar="LOCAL",
-                             default=".",
-                             help="path to local folder (default: %(default)s)")
-    sync_parser.add_argument("remote", 
-                             metavar="REMOTE",
-                             help="path to remote folder")
-#     sync_parser.add_argument("--force", 
+    __add_common_sub_args(sync_parser)
+    
+#     sync_parser.add_argument("--store-password", 
 #                              action="store_true",
-#                              help="overwrite conflicted files with newer version")
-#     sync_parser.add_argument("--delete", 
+#                              help="save password to keyring if login succeeds")
+#     sync_parser.add_argument("--no-prompt", 
 #                              action="store_true",
-#                              help="remove local files if they don't exist on remote target")
-#     sync_parser.add_argument("--delete-unmatched", 
+#                              help="prevent prompting for missing credentials")
+#     sync_parser.add_argument("--no-color", 
 #                              action="store_true",
-#                              help="remove local files if they don't exist on remote target "
-#                              "or don't match the current filter (implies '--delete' option)")
-    sync_parser.add_argument("-x", "--execute", 
-                             action="store_false", dest="dry_run", default=True,
-                             help="turn off the dry-run mode (which is ON by default), "
-                             "that would just print status messages but does "
-                             "not change anything")
-    sync_parser.add_argument("-f", "--include-files", 
-                             help="wildcard for file names (default: all, "
-                             "separate multiple values with ',')")
-    sync_parser.add_argument("-o", "--omit", 
-#                             nargs="?",
-#                             default=",".join(DEFAULT_OMIT),
-                             help="wildcard of files and directories to exclude (applied after --include)")
-    sync_parser.add_argument("--store-password", 
-                             action="store_true",
-                             help="save password to keyring if login succeeds")
-    sync_parser.add_argument("--no-prompt", 
-                             action="store_true",
-                             help="prevent prompting for missing credentials")
-    sync_parser.add_argument("--no-color", 
-                             action="store_true",
-                             help="prevent use of ansi terminal color codes")
+#                              help="prevent use of ansi terminal color codes")
     sync_parser.add_argument("--resolve", 
-#                             action="store_true",
                              default="ask",
-                             choices=["old", "new", "local", "remove", "ask"],
-                             help="conflict resolving strategy")
+                             choices=["old", "new", "local", "remote", "skip", "ask"],
+                             help="conflict resolving strategy (default: 'ask')")
+    
     sync_parser.set_defaults(command="synchronize")
     
     # Parse command line
     args = parser.parse_args()
-#    print("args %s %s" % (args.omit, args))
-#    return
+
+    if not hasattr(args, "command"):
+        parser.error("missing command (choose from 'upload', 'download', 'sync')")
+
     # Post-process and check arguments
     args.verbose -= args.quiet
     del args.quiet
+
     if hasattr(args, "delete_unmatched") and args.delete_unmatched:
         args.delete = True
-    if args.remote == ".":
-        parser.error("'.' is expected to be the local target")
-
+    
     ftp_debug = 0
     if args.verbose >= 5:
         ftp_debug = 1 
+        
     args.local_target = make_target(args.local, {"ftp_debug": ftp_debug})
+    
+    if args.remote == ".":
+        parser.error("'.' is expected to be the local target (not remote)")
     args.remote_target = make_target(args.remote, {"ftp_debug": ftp_debug})
     if not isinstance(args.local_target, FsTarget) and isinstance(args.remote_target, FsTarget):
         parser.error("a file system target is expected to be local")
 
     # Let the command handler do its thing
-#    args.handler(parser, args)
     opts = namespace_to_dict(args)
     if args.command == "upload":
         s = UploadSynchronizer(args.local_target, args.remote_target, opts)

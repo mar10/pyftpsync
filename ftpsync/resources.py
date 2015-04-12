@@ -97,9 +97,6 @@ class FileEntry(_Resource):
         return True
 
     def __eq__(self, other):
-#        if other.get_adjusted_mtime() == self.get_adjusted_mtime() and other.mtime != self.mtime:
-#            print("*** Adjusted time match", self, other)
-#         same_time = self._eps_compare(self.get_adjusted_mtime(), other.get_adjusted_mtime()) == 0
         same_time = self._eps_compare(self.mtime, other.mtime) == 0
         return (other and other.__class__ == self.__class__ 
                 and other.name == self.name and other.size == self.size 
@@ -111,24 +108,10 @@ class FileEntry(_Resource):
                 and other.name == self.name 
                 and time_greater)
 
-#     def set_sync_info(self):
-#         """Store mtime/size when this resource was last synchronized with remote."""
-#         assert self.is_local()
-#         return self.cur_dir_meta.set_sync_info(self)
-
     def get_sync_info(self):
         """Get mtime/size when this resource was last synchronized with remote."""
         return self.target.get_sync_info(self.name)
 
-#     def get_adjusted_mtime(self):
-#         """Return modification time as stored in metadata (else system mtime)."""
-#         try:
-#             res = float(self.meta["m"])
-# #            print("META: %s reporting %s instead of %s" % (self.name, time.ctime(res), time.ctime(self.mtime)))
-#             return res
-#         except TypeError:
-#             return self.mtime
-        
     def was_modified_since_last_sync(self):
         """Return True if this resource was modified since last sync.
         

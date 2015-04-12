@@ -183,7 +183,7 @@ class FtpTarget(_Target):
                 if name == DirMetadata.META_FILE_NAME:
                     # the meta-data file is silently ignored
                     local_res["has_meta"] = True
-                else:
+                elif not name in (DirMetadata.DEBUG_META_FILE_NAME, ):
                     entry = FileEntry(self, self.cur_dir, name, size, mtime, unique)
             elif res_type in ("cdir", "pdir"):
                 pass
