@@ -52,7 +52,10 @@ def prompt_for_password(url, user=None):
     if user is None:
         default_user = getpass.getuser()
         while user is None:
-            user = raw_input("Enter username for ftp://%s [%s]: " % (url, default_user))
+            try: # python 2
+                user = raw_input("Enter username for ftp://%s [%s]: " % (url, default_user))
+            except: # python 3
+                user = input("Enter username for ftp://%s [%s]: " % (url, default_user))
             if user.strip() == "" and default_user:
                 user = default_user
     if user:
@@ -148,7 +151,7 @@ def make_target(url, extra_opts=None):
     if parts.scheme.lower() == "ftp":
         creds = parts.username, parts.password
         from ftpsync import ftp_target
-        target = ftp_target.FtpTarget(parts.path, parts.hostname, 
+        target = ftp_target.FtpTarget(parts.path, parts.hostname, parts.port,
                                       creds[0], creds[1], extra_opts)
     else:
         target = FsTarget(url, extra_opts)

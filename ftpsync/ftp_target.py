@@ -25,12 +25,13 @@ DEFAULT_BLOCKSIZE = targets.DEFAULT_BLOCKSIZE
 #===============================================================================
 class FtpTarget(_Target):
     
-    def __init__(self, path, host, username=None, password=None, extra_opts=None):
+    def __init__(self, path, host, port, username=None, password=None, extra_opts=None):
         path = path or "/"
         super(FtpTarget, self).__init__(path, extra_opts)
         self.ftp = ftplib.FTP()
         self.ftp.debug(self.get_option("ftp_debug", 0))
         self.host = host
+        self.port = port
         self.username = username
         self.password = password
 #        if connect:
@@ -46,8 +47,11 @@ class FtpTarget(_Target):
         assert not self.connected
         no_prompt  = self.get_option("no_prompt", True)
         store_password = self.get_option("store_password", False)
-        
-        self.ftp.connect(self.host)
+
+        if self.port:
+            self.ftp.connect(self.host, self.port)
+        else:
+            self.ftp.connect(self.host)
         # 
         if self.username is None or self.password is None:
             creds = get_credentials_for_url(self.host, allow_prompt=not no_prompt)
