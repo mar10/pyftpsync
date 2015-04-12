@@ -10,7 +10,11 @@ from pprint import pprint
 import sys
 from unittest import TestCase
 import unittest
-from unittest.case import SkipTest
+
+# Note: SkipTest requires Python 2.7+, so it breaks CI, when checked in.
+#       Use only while debugging!
+# from unittest.case import SkipTest
+
 
 from ftpsync.targets import FsTarget, DirMetadata
 
