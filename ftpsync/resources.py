@@ -48,7 +48,8 @@ class _Resource(object):
                                                    self.size, self.dt_modified) #+ " ## %s, %s" % (self.mtime, time.asctime(time.gmtime(self.mtime)))
 
     def as_string(self):
-        dt = datetime.fromtimestamp(self.get_adjusted_mtime())
+#         dt = datetime.fromtimestamp(self.get_adjusted_mtime())
+        dt = datetime.fromtimestamp(self.mtime)
         return "%s, %8s bytes" % (dt.strftime("%Y-%m-%d %H:%M:%S"), self.size)
 
     def __eq__(self, other):
@@ -78,7 +79,11 @@ class _Resource(object):
 # FileEntry
 #===============================================================================
 class FileEntry(_Resource):
-    EPS_TIME = 0.1 # 2 seconds difference is considered equal
+    
+    # 2 seconds difference is considered equal.
+    # mtime stamp resolution depends on filesystem: FAT32. 2 seconds, NTFS ms, OSX. 1 sec.
+    EPS_TIME = 2.01 
+#     EPS_TIME = 0.1
     
     def __init__(self, target, rel_path, name, size, mtime, unique):
         super(FileEntry, self).__init__(target, rel_path, name, size, mtime, unique)

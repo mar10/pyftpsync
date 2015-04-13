@@ -405,6 +405,7 @@ class BaseSynchronizer(object):
                 self.sync_newer_local_file(local_file, remote_file)
             elif local_file < remote_file:
                 self._log_call("sync_older_local_file(%s, %s)" % (local_file, remote_file))
+#                 print (local_file < remote_file)
                 self.sync_older_local_file(local_file, remote_file)
             else:
                 self._log_call("_sync_error(%s, %s)" % (local_file, remote_file))

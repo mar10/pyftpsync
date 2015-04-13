@@ -175,7 +175,10 @@ class FtpTarget(_Target):
                 elif field_name == "modify":
                     # Use calendar.timegm() instead of time.mktime(), because
                     # the date was returned as UTC
-                    mtime = calendar.timegm(time.strptime(field_value, "%Y%m%d%H%M%S"))
+                    if "." in field_value:
+                        mtime = calendar.timegm(time.strptime(field_value, "%Y%m%d%H%M%S.%f"))
+                    else:
+                        mtime = calendar.timegm(time.strptime(field_value, "%Y%m%d%H%M%S"))
 #                    print("MLST modify: ", field_value, "mtime", mtime, "ctime", time.ctime(mtime))
                 elif field_name == "unique":
                     unique = field_value
