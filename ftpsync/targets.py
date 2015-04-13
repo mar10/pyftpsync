@@ -52,10 +52,7 @@ def prompt_for_password(url, user=None):
     if user is None:
         default_user = getpass.getuser()
         while user is None:
-            try: # python 2
-                user = raw_input("Enter username for ftp://%s [%s]: " % (url, default_user))
-            except NameError: # python 3
-                user = input("Enter username for ftp://%s [%s]: " % (url, default_user))
+            user = console_input("Enter username for ftp://%s [%s]: " % (url, default_user))
             if user.strip() == "" and default_user:
                 user = default_user
     if user:
@@ -198,6 +195,10 @@ else:
             s = str(s, "utf8")
         return s 
 
+try:
+    console_input = raw_input
+except NameError:
+    console_input = input
 
 #===============================================================================
 # LogginFileWrapper

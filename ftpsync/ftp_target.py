@@ -25,7 +25,7 @@ DEFAULT_BLOCKSIZE = targets.DEFAULT_BLOCKSIZE
 #===============================================================================
 class FtpTarget(_Target):
     
-    def __init__(self, path, host, port, username=None, password=None, extra_opts=None):
+    def __init__(self, path, host, port=None, username=None, password=None, extra_opts=None):
         path = path or "/"
         super(FtpTarget, self).__init__(path, extra_opts)
         self.ftp = ftplib.FTP()

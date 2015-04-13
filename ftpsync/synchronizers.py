@@ -12,11 +12,11 @@ import time
 from datetime import datetime
 
 from ftpsync.targets import IS_REDIRECTED, DRY_RUN_PREFIX, DirMetadata,\
-    ansi_code
+    ansi_code, console_input
 from ftpsync.resources import FileEntry, DirectoryEntry
 
 def _ts(timestamp):
-    return "{} ({})".format(datetime.fromtimestamp(timestamp), timestamp)
+    return "{0} ({1})".format(datetime.fromtimestamp(timestamp), timestamp)
 
 DEFAULT_OMIT = [".DS_Store",
                 ".git",
@@ -545,9 +545,11 @@ class BiDirSynchronizer(BaseSynchronizer):
 #               % (remote_file.get_sync_info()))
 # #         print("    last sync: %s" % _ts(self.local.cur_dir_meta.get_last_sync()))
 #         pass
-
+    
+    _resolve_shortcuts = {"l": "local", "r": "remote", "s": "skip"}
+    
     def _interactive_resolve(self, local, remote):
-        """Return 'l', 'r', or 's' to use local, remote resource or skip."""
+        """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
         if self.resolve_all:
             return self.resolve_all
         resolve = self.options.get("resolve", "skip")
@@ -565,7 +567,7 @@ class BiDirSynchronizer(BaseSynchronizer):
 
         while True:
             prompt = "Use " + M + "L" + R + "ocal, use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + M + "H" + R + "elp)? "
-            r = raw_input(prompt).strip()
+            r = console_input(prompt).strip()
             if r in ("h", "H", "?"):
                 print("The following keys are supported:")
                 print("  'r': Use remote file")
@@ -575,10 +577,11 @@ class BiDirSynchronizer(BaseSynchronizer):
                 print("Hit Ctrl+C to abort.")
                 continue
             elif r in ("L", "R", "S"):
-                r = r.lower()
+                r = self._resolve_shortcuts[r.lower()]
                 self.resolve_all = r
                 break
             elif r in ("l", "r", "s"):
+                r = self._resolve_shortcuts[r]
                 break
 
         return r

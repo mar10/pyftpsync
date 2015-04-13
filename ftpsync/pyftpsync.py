@@ -197,6 +197,8 @@ def run():
 
     try:    
         s.run()
+        s.local.close()
+        s.remote.close()
     except KeyboardInterrupt:
         print("\nAborted by user.")
         return
@@ -210,6 +212,8 @@ def run():
         print("Wrote %s/%s files in %s dirs. Elap: %s" 
               % (stats["files_written"], stats["local_files"], stats["local_dirs"], stats["elap_str"]))
     
+    return
+
 
 # Script entry point
 if __name__ == "__main__":
