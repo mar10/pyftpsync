@@ -1,14 +1,13 @@
 #!/usr/bin/env python
-# If true, then the svn revision won't be used to calculate the
-# revision (set to True for real releases)
+
 import os
 import sys
-RELEASE = False
+
+from setuptools import setup
+from cx_Freeze import setup, Executable
 
 #from ez_setup import use_setuptools
 #use_setuptools()
-
-from setuptools import setup #, find_packages
 
 # Get description and __version__ without using import
 readme = open("readme_pypi.rst", "rt").read()
@@ -30,10 +29,32 @@ if sys.version_info < (2, 7):
     install_requires += ["argparse"]
     tests_require += ["unittest2"]
 
+setup_requires = install_requires
+
+executables = [
+    Executable("ftpsync/pyftpsync.py")
+    ]
+
+build_exe_options = {
+    # "init_script": "Console",
+    "includes": install_requires,
+    "packages": ["keyring.backends",  # loaded dynamically
+                 ],
+    # "constants": "BUILD_COPYRIGHT=(c) 2012-2015 Martin Wendt",
+    }
+
+bdist_msi_options = {
+    "upgrade_code": "{8F4CA3EF-06AD-418E-A64D-B975E3CFA3F6}",
+    "add_to_path": True,
+#   "initial_target_dir": r"[ProgramFilesFolder]\%s\%s" % (company_name, product_name),
+    }
+
+
 setup(name="pyftpsync",
       version = version,
       author = "Martin Wendt",
       author_email = "pyftpsync@wwwendt.de",
+      # copyright = "(c) 2012-2015 Martin Wendt",
       maintainer = "Martin Wendt",
       maintainer_email = "pyftpsync@wwwendt.de",
       url = "https://github.com/mar10/pyftpsync",
@@ -60,10 +81,10 @@ setup(name="pyftpsync",
 #      platforms=["Unix", "Windows"],
       license = "The MIT License",
       install_requires = install_requires,
+      setup_requires = setup_requires,
       tests_require = tests_require,
 #      package_dir = {"": "src"},
       packages = ["ftpsync"],
-#      packages = find_packages(exclude=[]),
       
       py_modules = [
 #                    "ez_setup", 
@@ -77,4 +98,8 @@ setup(name="pyftpsync",
       entry_points = {
           "console_scripts" : ["pyftpsync = ftpsync.pyftpsync:run"],
           },
+      executables = executables,
+      options = {"build_exe": build_exe_options,
+                 "bdist_msi": bdist_msi_options,
+                 }
       )
