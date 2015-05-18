@@ -12,12 +12,10 @@ import sys
 if sys.version_info < (2, 7):
     # Python 2.6
     import unittest2 as unittest
-    from unittest2 import TestCase
     from unittest2.case import SkipTest
 else:
     # Python 2.7+
     import unittest
-    from unittest import TestCase
     from unittest.case import SkipTest
 
 
@@ -48,7 +46,7 @@ def tearDownModule():
 # FilesystemTest
 #===============================================================================
 
-class FilesystemTest(TestCase):
+class FilesystemTest(unittest.TestCase):
     """Test different synchronizers on file system targets."""
     def setUp(self):
 #         raise SkipTest
@@ -212,7 +210,7 @@ class FilesystemTest(TestCase):
 # BidirSyncTest
 #===============================================================================
 
-class BidirResolveTest(TestCase):
+class BidirResolveTest(unittest.TestCase):
     """Test BiDirSynchronizer on file system targets with different resolve modes."""
     def setUp(self):
         prepare_fixtures_2()
@@ -376,7 +374,7 @@ class BidirResolveTest(TestCase):
 #===============================================================================
 # BidirSpecialTest
 #===============================================================================
-class BidirSpecialTest(TestCase):
+class BidirSpecialTest(unittest.TestCase):
     """Test BiDirSynchronizer on file system targets."""
     def setUp(self):
         prepare_fixtures_2()
