@@ -26,6 +26,9 @@ pip-log.txt
 .coverage
 .tox
 nosetests.xml
+htmlcov/
+# Sphinx
+docs/_build
 
 # Translations
 *.mo

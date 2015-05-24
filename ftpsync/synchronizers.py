@@ -509,8 +509,7 @@ class BaseSynchronizer(object):
 # BiDirSynchronizer
 #===============================================================================
 class BiDirSynchronizer(BaseSynchronizer):
-    """
-    This bi-directional synchronizer is 
+    """Synchronizer that performs up- and download operations as required.
     
     - Newer files override unmodified older files
     

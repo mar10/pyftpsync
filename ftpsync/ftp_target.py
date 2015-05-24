@@ -24,8 +24,27 @@ DEFAULT_BLOCKSIZE = targets.DEFAULT_BLOCKSIZE
 # FtpTarget
 #===============================================================================
 class FtpTarget(_Target):
-    
+    """Represents a synchronisation target on a FTP server.
+
+    Attributes:
+        path (str): Current working directory on FTP server.
+        ftp (FTP): Instance of ftplib.FTP.
+        host (str): hostname of FTP server
+        port (int): FTP port (defaults to 21)
+        username (str): 
+        password (str): 
+    """
     def __init__(self, path, host, port=None, username=None, password=None, extra_opts=None):
+        """Create FTP target with host, initial path, optional credentials and options.
+        
+        Args:
+            path (str): path on FTP server, relative to *host*
+            host (str): hostname of FTP server
+            port (int): FTP port (defaults to 21)
+            username (str): 
+            password (str): 
+            extra_opts (dict): 
+        """
         path = path or "/"
         super(FtpTarget, self).__init__(path, extra_opts)
         self.ftp = ftplib.FTP()
