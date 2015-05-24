@@ -1,16 +1,60 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import os
 import sys
 
 from setuptools import setup
-from cx_Freeze import setup, Executable
+from setuptools.command.test import test as TestCommand
+
+
+# Override 'setup.py test' command
+class Tox(TestCommand):
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+    def run_tests(self):
+        # Import here, cause outside the eggs aren't loaded
+        import tox
+        errcode = tox.cmdline(self.test_args)
+        sys.exit(errcode)
+
+
+# Override 'setup.py test' command
+# class PyTest(TestCommand):
+#      def finalize_options(self):
+#          TestCommand.finalize_options(self)
+#          self.test_args = []
+#          self.test_suite = True
+#      def run_tests(self):
+#          import pytest
+#          errcode = pytest.main(self.test_args)
+#          sys.exit(errcode)
+
+
+# TODO: Add support for 'setup.py sphinx'
+#       see http://stackoverflow.com/a/22273180/19166
+
+
+try:
+    from cx_Freeze import setup, Executable
+    executables = [
+        Executable("ftpsync/pyftpsync.py")
+        ]
+except ImportError:
+    # tox has problems to install cx_Freeze to it's venvs, but it is not needed
+    # for the tests anyway
+    print("Could not import cx_Freeze; 'build' and 'bdist' commands will not be available.")
+    executables = []
 
 #from ez_setup import use_setuptools
 #use_setuptools()
 
 # Get description and __version__ without using import
 readme = open("readme_pypi.rst", "rt").read()
+
 g_dict = {}
 exec(open("ftpsync/_version.py").read(), g_dict)
 version = g_dict["__version__"]
@@ -23,17 +67,13 @@ if not "HOME" in os.environ and  "HOMEPATH" in os.environ:
 install_requires = ["colorama",
                     "keyring",
                     ]
-tests_require = []
+tests_require = ["tox"]
 
 if sys.version_info < (2, 7):
     install_requires += ["argparse"]
     tests_require += ["unittest2"]
 
 setup_requires = install_requires
-
-executables = [
-    Executable("ftpsync/pyftpsync.py")
-    ]
 
 build_exe_options = {
     # "init_script": "Console",
@@ -94,7 +134,8 @@ setup(name="pyftpsync",
 #      include_package_data = True, # TODO: PP
       zip_safe = False,
       extras_require = {},
-      test_suite = "test.test_flow",
+#      test_suite = "test.test_flow",
+      cmdclass = {"test": Tox},
       entry_points = {
           "console_scripts" : ["pyftpsync = ftpsync.pyftpsync:run"],
           },
