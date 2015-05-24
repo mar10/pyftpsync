@@ -14,7 +14,7 @@ from ftpsync.targets import *  # @UnusedWildImport
 
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer, \
     BiDirSynchronizer
-from test.tools import PYFTPSYNC_TEST_FTP_URL, prepare_fixtures, \
+from test.tools import PYFTPSYNC_TEST_FTP_URL, prepare_fixtures_1, \
     PYFTPSYNC_TEST_FOLDER, _get_test_file_date, STAMP_20140101_120000, \
     _empty_folder, _write_test_file, _touch_test_file
 
@@ -94,7 +94,7 @@ class FtpTargetTest(TestCase):
         self.assertTrue("/test" in ftp_url or "/temp" in ftp_url, "FTP target path must include '/test' or '/temp'")
 
         # Create local /temp1 folder with files and empty /temp2 folder
-        prepare_fixtures()
+        prepare_fixtures_1()
 
 #        print(ftp_url)
         
@@ -295,7 +295,7 @@ class BenchmarkTest(TestCase):
         self.assertTrue("/test" in ftp_url or "/temp" in ftp_url, "FTP target path must include '/test' or '/temp'")
 
         # Create local /temp1 folder with files and empty /temp2 folder
-        prepare_fixtures()
+        prepare_fixtures_1()
 
         self.remote = make_target(ftp_url)
         self.remote.open()
