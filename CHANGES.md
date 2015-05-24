@@ -14,6 +14,7 @@ CHANGES
 - Colored output
 - Interactive mode
 - Renamed _pyftpsync-meta.json to .pyftpsync-meta.json
+- MSI installer for MS Windows
 
 0.2.1 (2013-05-07)
 ==================

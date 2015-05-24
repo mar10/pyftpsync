@@ -197,11 +197,13 @@ def run():
 
     try:    
         s.run()
-        s.local.close()
-        s.remote.close()
     except KeyboardInterrupt:
         print("\nAborted by user.")
         return
+    finally:
+        # prevent sporadic exceptions in ftplib, when closing in __del__
+        s.local.close()
+        s.remote.close()
 
     stats = s.get_stats()
     if args.verbose >= 4:

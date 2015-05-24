@@ -96,7 +96,9 @@ def get_credentials_for_url(url, allow_prompt):
                 creds = c.split(":", 1)
 #                print(creds)
                 print("Using credentials from keyring('pyftpsync', '%s'): %s:***)" % (url, creds[0]))
-        except keyring.errors.TransientKeyringError:
+#        except keyring.errors.TransientKeyringError:
+        except Exception as e:
+            print("Could not get password {0}".format(e))
             pass # e.g. user clicked 'no' 
 
     # Prompt
@@ -119,7 +121,9 @@ def save_password(url, username, password):
             else:
                 keyring.set_password("pyftpsync", url, "%s:%s" % (username, password))
                 print("save_password(%s, %s:***)" % (url, username))
-        except keyring.errors.TransientKeyringError:
+#        except keyring.errors.TransientKeyringError:
+        except Exception as e:
+            print("Could not delete/set password {0}".format(e))
             pass # e.g. user clicked 'no'
     else:
         print("Could not store password (missing keyring library)")
