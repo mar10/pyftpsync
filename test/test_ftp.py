@@ -93,7 +93,7 @@ class FtpTargetTest(TestCase):
             self.skipTest("Must configure a FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
         self.assertTrue("/test" in ftp_url or "/temp" in ftp_url, "FTP target path must include '/test' or '/temp'")
 
-        # Create local /temp1 folder with files and empty /temp2 folder
+        # Create temp/local folder with files and empty temp/remote folder
         prepare_fixtures_1()
 
 #        print(ftp_url)
@@ -172,7 +172,7 @@ class FtpTargetTest(TestCase):
         print(res)
 
 #     def test_download_fs_ftp(self):
-#         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "temp1"))
+#         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
 #         remote = self.remote
 #         opts = {"force": False, "delete": False}
 #         s = DownloadSynchronizer(local, remote, opts)
@@ -183,10 +183,10 @@ class FtpTargetTest(TestCase):
 
 
     def test_sync_fs_ftp(self):
-        local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "temp1"))
+        local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
         remote = self.remote
         
-        # Upload all of /temp1 to remote
+        # Upload all of temp/local to remote
         
         opts = {"force": False, "delete": True, "verbose": 3, "dry_run": False}
         s = UploadSynchronizer(local, remote, opts)
@@ -205,7 +205,7 @@ class FtpTargetTest(TestCase):
         
         # Change one file and upload again
         
-        _touch_test_file("temp1/file1.txt")
+        _touch_test_file("local/file1.txt")
 
         opts = {"force": False, "delete": True, "verbose": 3, "dry_run": False}
         s = UploadSynchronizer(local, remote, opts)
@@ -224,9 +224,9 @@ class FtpTargetTest(TestCase):
         self.assertEqual(stats["conflict_files"], 0)
         self.assertEqual(stats["bytes_written"], 3)
         
-        # Download all from remote to /temp2
+        # Download all from remote to temp/remote
         
-        local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "temp2"))
+        local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
 
         opts = {"force": False, "delete": True, "verbose": 3, "dry_run": False}
         s = DownloadSynchronizer(local, remote, opts)
@@ -247,15 +247,15 @@ class FtpTargetTest(TestCase):
 
         # Original file times are preserved, even when retrieved from FTP
         
-        self.assertNotEqual(_get_test_file_date("temp1/file1.txt"), STAMP_20140101_120000)
-        self.assertEqual(_get_test_file_date("temp1/file1.txt"), _get_test_file_date("temp2/file1.txt"))
+        self.assertNotEqual(_get_test_file_date("local/file1.txt"), STAMP_20140101_120000)
+        self.assertEqual(_get_test_file_date("local/file1.txt"), _get_test_file_date("local//file1.txt"))
 
-        self.assertEqual(_get_test_file_date("temp1/file2.txt"), STAMP_20140101_120000)
-        self.assertEqual(_get_test_file_date("temp2/file2.txt"), STAMP_20140101_120000)
+        self.assertEqual(_get_test_file_date("local/file2.txt"), STAMP_20140101_120000)
+        self.assertEqual(_get_test_file_date("remote//file2.txt"), STAMP_20140101_120000)
 
-        # Synchronize /temp1 <=> remote : nothing to do
+        # Synchronize temp/local <=> remote : nothing to do
         
-        local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "temp1"))
+        local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
 
         opts = {"verbose": 3, "dry_run": False}
         s = BiDirSynchronizer(local, remote, opts)
@@ -266,9 +266,9 @@ class FtpTargetTest(TestCase):
         self.assertEqual(stats["conflict_files"], 0)
         self.assertEqual(stats["bytes_written"], 0)
 
-        # Synchronize /temp2 <=> remote : nothing to do
+        # Synchronize temp/remote <=> remote : nothing to do
         
-        local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "temp2"))
+        local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
 
         opts = {"verbose": 3, "dry_run": False}
         s = BiDirSynchronizer(local, remote, opts)
@@ -294,7 +294,7 @@ class BenchmarkTest(TestCase):
             self.skipTest("Must configure a FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
         self.assertTrue("/test" in ftp_url or "/temp" in ftp_url, "FTP target path must include '/test' or '/temp'")
 
-        # Create local /temp1 folder with files and empty /temp2 folder
+        # Create temp/local folder with files and empty temp/remote folder
         prepare_fixtures_1()
 
         self.remote = make_target(ftp_url)
@@ -307,16 +307,16 @@ class BenchmarkTest(TestCase):
         del self.remote
 
     def _transfer_files(self, count, size):
-        temp1_path = os.path.join(PYFTPSYNC_TEST_FOLDER, "temp1")
+        temp1_path = os.path.join(PYFTPSYNC_TEST_FOLDER, "local")
         _empty_folder(temp1_path) # remove standard test files 
 
         local = FsTarget(temp1_path)
         remote = self.remote
         
         for i in range(count):
-            _write_test_file("temp1/file_%s.txt" % i, size=size)
+            _write_test_file("local/file_%s.txt" % i, size=size)
 
-        # Upload all of /temp1 to remote
+        # Upload all of temp/local to remote
         
         opts = {"force": False, "delete": False, "verbose": 3, "dry_run": False}
         s = UploadSynchronizer(local, remote, opts)
@@ -329,9 +329,9 @@ class BenchmarkTest(TestCase):
 #        pprint(stats)
         print("Upload %s x %s bytes took %s: %s" % (count, size, stats["upload_write_time"], stats["upload_rate_str"]), file=sys.stderr)
 
-        # Download all of remote to /temp2
+        # Download all of remote to temp/remote
         
-        local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "temp2"))
+        local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
 
         opts = {"force": False, "delete": True, "verbose": 3, "dry_run": False}
         s = DownloadSynchronizer(local, remote, opts)
