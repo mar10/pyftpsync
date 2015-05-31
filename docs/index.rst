@@ -13,7 +13,7 @@ pyftpsync Documentation
 
 
 :Project:   https://github.com/mar10/pyftpsync/
-:Copyright: Copyright (c) 2012-2015 Martin Wendt.
+:Copyright: (c) 2012-2015 Martin Wendt
 :License:   `The MIT License <https://raw.github.com/mar10/pyftpsync/master/LICENSE>`_
 :Author:    Martin Wendt
 :Version:   |version|
@@ -39,21 +39,8 @@ pyftpsync Documentation
    search
    :ref:`modindex`
 
-.. image:: https://travis-ci.org/mar10/pyftpsync.png?branch=master
-   :alt: Build Status
-   :target: https://travis-ci.org/mar10/pyftpsync
 
-.. image:: https://img.shields.io/pypi/v/pyftpsync.svg
-   :name: PyPI Version
-   :target: https://pypi.python.org/pypi/pyftpsync/
-
-.. image:: https://img.shields.io/pypi/dm/pyftpsync.svg
-   :alt: Downloads
-   :target: https://pypi.python.org/pypi/pyftpsync/
-
-.. image:: https://img.shields.io/pypi/l/pyftpsync.svg
-   :alt: License
-   :target: https://pypi.python.org/pypi/pyftpsync/
+|travis_badge| |nbsp| |pypi_badge| |nbsp| |dl_badge| |nbsp| |lic_badge| |nbsp| |rtd_badge|
 
 
 .. image:: ../teaser.png
@@ -91,7 +78,7 @@ Quickstart
   for details.
 
 .. todo::
-  On Windows, there is a MSI installer available.
+   There will be a MSI installer available for Windows.
 
 *Requirements:* `Python <http://www.python.org/download/ Python>`_ 2.6+ or 3 is required. 
 
@@ -184,7 +171,7 @@ Command specific help is available like so::
 Example: Upload files
 ---------------------
 
-Upload all new and modified files from user's temp folder to an FTP server.<br>
+Upload all new and modified files from user's temp folder to an FTP server. 
 No files are changed on the local directory::
 
   $ pyftpsync upload ~/temp ftp://example.com/target/folder
@@ -229,6 +216,13 @@ Synchronize files syntax
     --resolve {old,new,local,remote,ask}
                           conflict resolving strategy
   $
+
+Example: Synchronize folders
+----------------------------
+
+Two-way synchronization of a local folder with an FTP server::
+
+  $ pyftpsync sync --store-password --resolve=ask --execute ~/temp ftp://example.com/target/folder
 
 
 Script examples
@@ -277,10 +271,33 @@ If you plan to debug or contribute, install to run directly from the source::
 The use of `virtualenv <https://virtualenv.pypa.io/en/latest/>`_ is recommended.
 
 
-
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+.. |travis_badge| image:: https://travis-ci.org/mar10/pyftpsync.png?branch=master
+   :alt: Build Status
+   :target: https://travis-ci.org/mar10/pyftpsync
+
+.. |pypi_badge| image:: https://img.shields.io/pypi/v/pyftpsync.svg
+   :alt: PyPI Version
+   :target: https://pypi.python.org/pypi/pyftpsync/
+
+.. |dl_badge| image:: https://img.shields.io/pypi/dm/pyftpsync.svg
+   :alt: Downloads
+   :target: https://pypi.python.org/pypi/pyftpsync/
+
+.. |lic_badge| image:: https://img.shields.io/pypi/l/pyftpsync.svg
+   :alt: License
+   :target: https://pypi.python.org/pypi/pyftpsync/
+
+.. |rtd_badge| image:: https://readthedocs.org/projects/pyftpsync/badge/?version=latest
+   :target: http://pyftpsync.readthedocs.org/en/latest/
+   :alt: Documentation Status
+
+.. |nbsp| unicode:: 0xA0 
+   :trim:
