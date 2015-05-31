@@ -2,6 +2,13 @@
 pyftpsync Architecture
 ======================
 
+.. COMMENT
+
+.. toctree::
+   :maxdepth: 2
+
+
+
 .. comment, because grqphwiz currently doesn't work on my mac
   x
 

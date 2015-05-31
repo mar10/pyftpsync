@@ -5,12 +5,11 @@
 
 .. _main-index:
 
-#############################
+#######################
 pyftpsync Documentation
-#############################
+#######################
 
 *Synchronize local directories with FTP server.*
-
 
 
 :Project:   https://github.com/mar10/pyftpsync/
@@ -22,29 +21,37 @@ pyftpsync Documentation
 
 
 .. toctree::
-   :maxdepth: 2
    :hidden:
 
+   self
    architecture
+   modules
+
+.. .. toctree::
+..    :titlesonly:
+
+..    architecture
+..    modules
 
 .. comment
    genindex
    modindex
    search
+   :ref:`modindex`
 
 .. image:: https://travis-ci.org/mar10/pyftpsync.png?branch=master
    :alt: Build Status
    :target: https://travis-ci.org/mar10/pyftpsync
 
-.. image:: https://pypip.in/v/pyftpsync/badge.png
-   :alt: Latest Version
+.. image:: https://img.shields.io/pypi/v/pyftpsync.svg
+   :name: PyPI Version
    :target: https://pypi.python.org/pypi/pyftpsync/
 
-.. image:: https://pypip.in/d/pyftpsync/badge.png
+.. image:: https://img.shields.io/pypi/dm/pyftpsync.svg
    :alt: Downloads
    :target: https://pypi.python.org/pypi/pyftpsync/
 
-.. image:: https://pypip.in/license/pyftpsync/badge.png
+.. image:: https://img.shields.io/pypi/l/pyftpsync.svg
    :alt: License
    :target: https://pypi.python.org/pypi/pyftpsync/
 
@@ -265,8 +272,10 @@ Contribute
 If you plan to debug or contribute, install to run directly from the source::
 
   $ python setup.py develop
+  $ python setup.py test
 
 The use of `virtualenv <https://virtualenv.pypa.io/en/latest/>`_ is recommended.
+
 
 
 Indices and tables

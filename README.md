@@ -1,4 +1,4 @@
-# pyftpsync [![Build Status](https://travis-ci.org/mar10/pyftpsync.png?branch=master)](https://travis-ci.org/mar10/pyftpsync) [![Latest Version](https://pypip.in/v/pyftpsync/badge.png)](https://pypi.python.org/pypi/pyftpsync/) [![Downloads](https://pypip.in/d/pyftpsync/badge.png)](https://pypi.python.org/pypi/pyftpsync/) [![License](https://pypip.in/license/pyftpsync/badge.png)](https://pypi.python.org/pypi/pyftpsync/)
+# pyftpsync [![Build Status](https://travis-ci.org/mar10/pyftpsync.png?branch=master)](https://travis-ci.org/mar10/pyftpsync) [![Latest Version](https://img.shields.io/pypi/v/pyftpsync.svg)](https://pypi.python.org/pypi/pyftpsync/) [![Downloads](https://img.shields.io/pypi/dm/pyftpsync.svg)](https://pypi.python.org/pypi/pyftpsync/) [![License](https://img.shields.io/pypi/l/pyftpsync.svg)](https://pypi.python.org/pypi/pyftpsync/)
 Copyright (c) 2012-2015 Martin Wendt
 
 Synchronize local directories with FTP servers.
@@ -31,12 +31,10 @@ version control system. Make sure you have backups.
 
 ## Quickstart 
 
-*Preconditions:* [Python](http://www.python.org/download/ Python) 2.6+ or 3 is required, 
+[Python](http://www.python.org/download/ Python) 2.6+ or 3 is required, 
 [pip](http://www.pip-installer.org/) or
 [EasyInstall](http://pypi.python.org/pypi/setuptools#using-setuptools-and-easyinstall)
-recommended. 
-
-Install like this:
+recommended:
 
 ```bash
 $ pip install pyftpsync --upgrade
