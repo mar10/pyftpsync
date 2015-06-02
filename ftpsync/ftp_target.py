@@ -95,7 +95,6 @@ class FtpTarget(_Target):
 #        self.is_unix = "unix" in resp.lower() # not necessarily true, better check with read/write tests
         
         try:
-            # 
             self.ftp.cwd(self.root_dir)
         except error_perm as e:
             # If credentials were passed, but authentication fails, prompt 
@@ -106,7 +105,7 @@ class FtpTarget(_Target):
 
         pwd = self.ftp.pwd()
         if pwd != self.root_dir:
-            raise RuntimeError("Unable to navigate to working directory %r" % self.root_dir)
+            raise RuntimeError("Unable to navigate to working directory %r (now at %r)" % (self.root_dir, pwd))
         self.cur_dir = pwd
         self.connected = True
         # Successfully authenticated: store password

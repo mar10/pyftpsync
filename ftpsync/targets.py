@@ -364,7 +364,9 @@ class DirMetadata(object):
 class _Target(object):
 
     def __init__(self, root_dir, extra_opts):
-        self.root_dir = root_dir.rstrip("/")
+        if root_dir != "/":
+            root_dir = root_dir.rstrip("/")
+        self.root_dir = root_dir
         self.extra_opts = extra_opts or {}
         self.readonly = False
         self.dry_run = False
