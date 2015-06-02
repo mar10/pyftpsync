@@ -562,7 +562,7 @@ class BiDirSynchronizer(BaseSynchronizer):
 
         print((RED + "CONFLICT in %s:" + R) % local.name)
         print("    local:  %s" % local.as_string())
-        print("    remote: %s" % remote.as_string() if remote else "n.a.")
+        print("    remote: %s" % (remote.as_string() if remote else "n.a."))
 
         while True:
             prompt = "Use " + M + "L" + R + "ocal, use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + M + "H" + R + "elp)? "
