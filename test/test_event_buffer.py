@@ -19,7 +19,7 @@ else:
     import unittest
     from unittest.case import SkipTest
 
-from event_buffer import EventBuffer
+from .event_buffer import EventBuffer
 
 #-------------------------------------------------------------------------------
 # EventBufferTest
@@ -43,7 +43,7 @@ class EventBufferTest(unittest.TestCase):
 
         def _cb(event_queue, event_throttle):
             stats["e_count"] += len(event_queue)
-            logging.debug("### EMIT START queue_lengt={}: {}".format(len(event_queue), event_queue))
+            logging.debug("### EMIT START queue_lengt={0}: {1}".format(len(event_queue), event_queue))
             time.sleep(0.3)
             logging.debug("### EMIT STOP")
              
@@ -52,7 +52,7 @@ class EventBufferTest(unittest.TestCase):
 
         def _worker(stats):
             for i in range(50):
-                # logging.debug("send trigger({})".format(i))
+                # logging.debug("send trigger({0})".format(i))
                 stats["t_count"] += 1
                 eb.trigger(data=i, force_emit=False)
                 time.sleep(0.12)
@@ -61,12 +61,12 @@ class EventBufferTest(unittest.TestCase):
         worker.start()
         worker.join()
 
-        logging.debug("DONE triggered:{}, emitted:{}".format(stats["t_count"], stats["e_count"]))
+        logging.debug("DONE triggered:{0}, emitted:{1}".format(stats["t_count"], stats["e_count"]))
         eb.join()  # Wait for emit timer
-        logging.debug("Joined triggered:{}, emitted:{}".format(stats["t_count"], stats["e_count"]))
+        logging.debug("Joined triggered:{0}, emitted:{1}".format(stats["t_count"], stats["e_count"]))
         
         self.assertEqual(stats["t_count"], stats["e_count"])
-        logging.debug("ELAP: {} sec".format(time.time() - stats["start"]))
+        logging.debug("ELAP: {0} sec".format(time.time() - stats["start"]))
 
     def test_2(self):
         # Slow 
@@ -75,7 +75,7 @@ class EventBufferTest(unittest.TestCase):
 
         def _cb(event_queue, event_throttle):
             stats["e_count"] += len(event_queue)
-            logging.debug("### EMIT START queue_lengt={}: {}".format(len(event_queue), event_queue))
+            logging.debug("### EMIT START queue_lengt={0}: {1}".format(len(event_queue), event_queue))
             time.sleep(0.3)
             logging.debug("### EMIT STOP")
              
@@ -84,7 +84,7 @@ class EventBufferTest(unittest.TestCase):
 
         def _worker(stats):
             for i in range(50):
-                # logging.debug("send trigger({})".format(i))
+                # logging.debug("send trigger({0})".format(i))
                 stats["t_count"] += 1
                 if i == 42:
                     eb.trigger(data=i, force_emit=True, wait=True)
@@ -96,12 +96,12 @@ class EventBufferTest(unittest.TestCase):
         worker.start()
         worker.join()
 
-        logging.debug("DONE triggered:{}, emitted:{}".format(stats["t_count"], stats["e_count"]))
+        logging.debug("DONE triggered:{0}, emitted:{1}".format(stats["t_count"], stats["e_count"]))
         eb.join()  # Wait for emit timer
-        logging.debug("Joined triggered:{}, emitted:{}".format(stats["t_count"], stats["e_count"]))
+        logging.debug("Joined triggered:{0}, emitted:{1}".format(stats["t_count"], stats["e_count"]))
         
         self.assertEqual(stats["t_count"], stats["e_count"])
-        logging.debug("ELAP: {} sec".format(time.time() - stats["start"]))
+        logging.debug("ELAP: {0} sec".format(time.time() - stats["start"]))
 
 #===============================================================================
 # Main

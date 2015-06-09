@@ -98,7 +98,7 @@ class EventBuffer(object):
         Emitting may be asynchronous (called in a seperate thread), so while 
         the buffer is being processed, new calls to trigger() are accepted.
         """
-        # logging.debug("### _do_emit({})".format(async))
+        # logging.debug("### _do_emit({0})".format(async))
         with self._lock:
             if self._emit_timer:
                 self._emit_timer.cancel()
@@ -122,17 +122,17 @@ class EventBuffer(object):
             if async:
                 assert self._emit_thread is None
                 EventBuffer._thread_id += 1
-                self._emit_thread = threading.Thread(name="emit_worker_{}".format(EventBuffer._thread_id), 
+                self._emit_thread = threading.Thread(name="emit_worker_{0}".format(EventBuffer._thread_id), 
                                                      target=_worker)
                 self._emit_thread.start()
-                # self._emit_thread.name = "emit_worker_{}".format(self._emit_thread.ident)
+                # self._emit_thread.name = "emit_worker_{0}".format(self._emit_thread.ident)
                 # print ("start _emit_thread", self._emit_thread)
             else:
                 _worker()
 
     def _start_emit_timer(self, timeout):
         """Schedule a timer that will emit, even if trigger() method is not called again."""
-        # logging.debug("### start timer({})".format(self.flush_timeout))
+        # logging.debug("### start timer({0})".format(self.flush_timeout))
         if self._emit_timer:
             self._emit_timer.cancel()
 
@@ -153,15 +153,15 @@ class EventBuffer(object):
         if self._emit_timer:
             if cancel:
                 self._emit_timer.cancel()
-            # logging.debug("join _emit_timer {}...".format(self._emit_timer))
+            # logging.debug("join _emit_timer {0}...".format(self._emit_timer))
             self._emit_timer.join()
-            # logging.debug("join _emit_timer {}... done.".format(self._emit_timer))
+            # logging.debug("join _emit_timer {0}... done.".format(self._emit_timer))
             self._emit_timer = None
         # Also wait for emit thread if any
         if self._emit_thread:
-            # logging.debug("join _emit_thread {}...".format(self._emit_thread))
+            # logging.debug("join _emit_thread {0}...".format(self._emit_thread))
             self._emit_thread.join()
-            # logging.debug("join _emit_thread {}... done.".format(self._emit_thread))
+            # logging.debug("join _emit_thread {0}... done.".format(self._emit_thread))
         
     def trigger(self, data=None, force_emit=False, wait=False):
         """Queue an event (with optional data) and emit if conditions are met.
@@ -178,7 +178,7 @@ class EventBuffer(object):
             if self.last_reset is None:
                 self.last_reset = now
             self.event_queue.append(data)
-            logging.debug("trigger({})".format(data))
+            logging.debug("trigger({0})".format(data))
             do_emit = (force_emit 
                        or (self.max_collect_count and len(self.event_queue) >= self.max_collect_count)
                        or (self.max_collect_time and (now - self.last_reset) >= self.max_collect_time)
