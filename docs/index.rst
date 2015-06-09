@@ -13,7 +13,6 @@ pyftpsync Documentation
 
 
 :Project:   https://github.com/mar10/pyftpsync/
-:Copyright: (c) 2012-2015 Martin Wendt
 :License:   `The MIT License <https://raw.github.com/mar10/pyftpsync/master/LICENSE>`_
 :Author:    Martin Wendt
 :Version:   |version|

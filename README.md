@@ -1,5 +1,4 @@
 # pyftpsync [![Build Status](https://travis-ci.org/mar10/pyftpsync.png?branch=master)](https://travis-ci.org/mar10/pyftpsync) [![Latest Version](https://img.shields.io/pypi/v/pyftpsync.svg)](https://pypi.python.org/pypi/pyftpsync/) [![Downloads](https://img.shields.io/pypi/dm/pyftpsync.svg)](https://pypi.python.org/pypi/pyftpsync/) [![License](https://img.shields.io/pypi/l/pyftpsync.svg)](https://pypi.python.org/pypi/pyftpsync/)
-Copyright (c) 2012-2015 Martin Wendt
 
 Synchronize local directories with FTP servers.
 
