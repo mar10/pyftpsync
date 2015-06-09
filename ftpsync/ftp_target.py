@@ -240,19 +240,23 @@ class FtpTarget(_Target):
                 if n in entry_map:
                     # We have a meta-data entry for this resource
                     upload_time = meta.get("u", 0)
-                    # TODO: use 3 sec EPS, to compare mtimes
-                    if entry_map[n].size == meta.get("s") and entry_map[n].mtime <= upload_time:
+                    if(entry_map[n].size == meta.get("s") and 
+                           FileEntry._eps_compare(entry_map[n].mtime, upload_time) <= 0):
                         # Use meta-data mtime instead of the one reported by FTP server 
                         entry_map[n].meta = meta
                         entry_map[n].mtime = meta["m"]
                     else:
                         # Discard stored meta-data if 
                         #   1. the the mtime reported by the FTP server is later
-                        #      than the stored upload time
+                        #      than the stored upload time (which indicates
+                        #      that the file was modified directly on the server)
                         #      or
                         #   2. the reported files size is different than the
-                        #      size we stored in the meta-data 
-#                        print("META: Removing outdated meta entry %s" % n, meta)
+                        #      size we stored in the meta-data
+                        if self.synchronizer.verbose >= 3:
+                            print(("META: Removing outdated meta entry %s\n" +
+                                   "      modified after upload (%s > %s)") % 
+                                  (n, time.ctime(entry_map[n].mtime), time.ctime(upload_time)))
                         missing.append(n)
                 else:
                     # File is stored in meta-data, but no longer exists on FTP server
