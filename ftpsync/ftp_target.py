@@ -17,6 +17,7 @@ from ftpsync.targets import _Target, DirMetadata, prompt_for_password,\
     save_password, get_credentials_for_url
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftplib import error_perm
+import json
 
 DEFAULT_BLOCKSIZE = targets.DEFAULT_BLOCKSIZE
 
@@ -38,7 +39,7 @@ class FtpTarget(_Target):
         """Create FTP target with host, initial path, optional credentials and options.
         
         Args:
-            path (str): path on FTP server, relative to *host*
+            path (str): root path on FTP server, relative to *host*
             host (str): hostname of FTP server
             port (int): FTP port (defaults to 21)
             username (str): 
@@ -53,6 +54,10 @@ class FtpTarget(_Target):
         self.port = port
         self.username = username
         self.password = password
+        self.lock_data = None
+        self.is_unix = None
+        self.time_zone_ofs = None
+        self.clock_ofs = None
 #        if connect:
 #            self.open()
 
@@ -90,10 +95,6 @@ class FtpTarget(_Target):
                 self.user, self.password = prompt_for_password(self.host, self.username)
                 self.ftp.login(self.username, self.password)
 
-        # TODO: case sensitivity?
-#        resp = self.ftp.sendcmd("system")
-#        self.is_unix = "unix" in resp.lower() # not necessarily true, better check with read/write tests
-        
         try:
             self.ftp.cwd(self.root_dir)
         except error_perm as e:
@@ -106,17 +107,56 @@ class FtpTarget(_Target):
         pwd = self.ftp.pwd()
         if pwd != self.root_dir:
             raise RuntimeError("Unable to navigate to working directory %r (now at %r)" % (self.root_dir, pwd))
+
         self.cur_dir = pwd
         self.connected = True
         # Successfully authenticated: store password
         if store_password:
             save_password(self.host, self.username, self.password)
+
+        # TODO: case sensitivity?
+#         resp = self.ftp.sendcmd("system")
+#         self.is_unix = "unix" in resp.lower() # not necessarily true, better check with read/write tests
+        
+        self._lock()
+        
         return
 
     def close(self):
         if self.connected:
+            self._unlock()
             self.ftp.quit()
         self.connected = False
+        
+    def _lock(self, break_existing=False):
+        """Write a special file to the target root folder.
+        
+        """
+        data = {"lock_time": time.time(),
+                "lock_holder": None}
+        
+        try:
+            assert self.cur_dir == self.root_dir
+            self.write_text(DirMetadata.LOCK_FILE_NAME, json.dumps(data))
+            self.lock_data = data
+        except Exception as e:
+            print("Could not write lock file: %s" % e, file=sys.stderr)
+
+    def _unlock(self):
+        """Write a special file to the target root folder.
+        
+        """
+        try:
+            assert self.cur_dir == self.root_dir
+            self.remove_file(DirMetadata.LOCK_FILE_NAME)
+            self.lock_data = None
+        except Exception as e:
+            print("Could not remove lock file: %s" % e, file=sys.stderr)
+
+    def _probe_lock_file(self, reported_mtime):
+        """Called by get_dir"""
+        delta = reported_mtime - self.lock_data["lock_time"]
+        print("Server time offset: {0:.2f} seconds".format(delta))
         
     def get_id(self):
         return self.host + self.root_dir
@@ -139,7 +179,7 @@ class FtpTarget(_Target):
         self.check_write(dir_name)
         self.ftp.mkd(dir_name)
 
-    def _rmdir_impl(self, dir_name, keep_root=False):
+    def _rmdir_impl(self, dir_name, keep_root_folder=False, predicate=None):
         # FTP does not support deletion of non-empty directories.
 #        print("rmdir(%s)" % dir_name)
         self.check_write(dir_name)
@@ -147,6 +187,9 @@ class FtpTarget(_Target):
 #        print("rmdir(%s): %s" % (dir_name, names))
         # Skip ftp.cwd(), if dir is empty
         names = [ n for n in names if n not in (".", "..") ]
+        if predicate:
+            names = [ n for n in names if predicate(n) ]
+            
         if len(names) > 0:
             self.ftp.cwd(dir_name)
             try:
@@ -162,7 +205,7 @@ class FtpTarget(_Target):
                 if dir_name != ".":
                     self.ftp.cwd("..")
 #        print("ftp.rmd(%s)..." % (dir_name, ))
-        if not keep_root:
+        if not keep_root_folder:
             self.ftp.rmd(dir_name)
         return
 
@@ -208,6 +251,10 @@ class FtpTarget(_Target):
                 if name == DirMetadata.META_FILE_NAME:
                     # the meta-data file is silently ignored
                     local_res["has_meta"] = True
+                elif name == DirMetadata.LOCK_FILE_NAME and self.cur_dir == self.root_dir:
+                    # this is the root lock file. compare reported mtime with
+                    # local upload time
+                    self._probe_lock_file(mtime)
                 elif not name in (DirMetadata.DEBUG_META_FILE_NAME, ):
                     entry = FileEntry(self, self.cur_dir, name, size, mtime, unique)
             elif res_type in ("cdir", "pdir"):

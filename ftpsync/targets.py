@@ -240,6 +240,7 @@ except NameError:
 class DirMetadata(object):
     
     META_FILE_NAME = ".pyftpsync-meta.json"
+    LOCK_FILE_NAME = ".pyftpsync-lock.json"
     DEBUG_META_FILE_NAME = "_pyftpsync-meta.json"
     DEBUG = False # True: write a copy that is not a dot-file
     PRETTY = False # False: Reduce meta file size to 35% (3759 -> 1375 bytes)
@@ -406,7 +407,7 @@ class _Target(object):
     
     def check_write(self, name):
         """Raise exception if writing cur_dir/name is not allowed."""
-        if self.readonly and name != DirMetadata.META_FILE_NAME:
+        if self.readonly and name not in (DirMetadata.META_FILE_NAME, DirMetadata.LOCK_FILE_NAME):
             raise RuntimeError("target is read-only: %s + %s / " % (self, name))
 
     def get_id(self):

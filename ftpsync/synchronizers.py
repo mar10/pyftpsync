@@ -23,6 +23,7 @@ DEFAULT_OMIT = [".DS_Store",
                 ".hg",
                 ".svn",
                 DirMetadata.META_FILE_NAME,
+                DirMetadata.LOCK_FILE_NAME,
                 ]
 
 
