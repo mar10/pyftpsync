@@ -317,7 +317,7 @@ class DirMetadata(object):
             self.peer_sync = self.dir["peer_sync"] 
             self.modified_list = False
             self.modified_sync = False
-#              print("DirMetadata: read(%s)" % (self.filename, ), self.dir)
+#             print("DirMetadata: read(%s)" % (self.filename, ), self.dir)
         except Exception as e:
             print("Could not read meta info: %s" % e, file=sys.stderr)
 
@@ -348,7 +348,7 @@ class DirMetadata(object):
             if self.PRETTY or self.DEBUG:
                 s = json.dumps(self.dir, indent=4, sort_keys=True)
             else:
-                s = json.dumps(self.dir)
+                s = json.dumps(self.dir, sort_keys=True)
 #             print("DirMetadata.flush(%s)" % (self.target, ))#, s)
             self.target.write_text(self.filename, s)
             self.target.synchronizer._inc_stat("meta_bytes_written", len(s))
