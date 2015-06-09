@@ -47,6 +47,7 @@ except ImportError:
     # tox has problems to install cx_Freeze to it's venvs, but it is not needed
     # for the tests anyway
     print("Could not import cx_Freeze; 'build' and 'bdist' commands will not be available.")
+    print("See https://pypi.python.org/pypi/cx_Freeze")
     executables = []
 
 #from ez_setup import use_setuptools

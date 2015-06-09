@@ -6,8 +6,16 @@ from __future__ import print_function
 
 from ftplib import FTP
 from pprint import pprint
-from unittest import TestCase
-import unittest
+import sys
+
+if sys.version_info < (2, 7):
+    # Python 2.6
+    import unittest2 as unittest
+    from unittest2.case import SkipTest
+else:
+    # Python 2.7+
+    import unittest
+    from unittest.case import SkipTest
 
 from ftpsync.ftp_target import *  # @UnusedWildImport
 from ftpsync.targets import *  # @UnusedWildImport
@@ -34,7 +42,7 @@ def tearDownModule():
 #===============================================================================
 # FtpTest
 #===============================================================================
-class FtpTest(TestCase):                          
+class FtpTest(unittest.TestCase):
     """Test basic ftplib.FTP functionality."""
     def setUp(self):
         # Remote URL, e.g. "ftp://user:password@example.com/my/test/folder"
@@ -84,7 +92,7 @@ class FtpTest(TestCase):
 #===============================================================================
 # FtpTargetTest
 #===============================================================================
-class FtpTargetTest(TestCase):                          
+class FtpTargetTest(unittest.TestCase):                          
     """Test ftp_target.FtpTarget functionality."""
     def setUp(self):
         # Remote URL, e.g. "ftp://user:password@example.com/my/test/folder"
@@ -111,10 +119,12 @@ class FtpTargetTest(TestCase):
         # This check is already preformed in the constructor:
 #        self.assertEqual(self.remote.pwd(), self.PATH)
 
-        # Delete all files in remote target folder
-        self.remote._rmdir_impl(".", keep_root=True)
+        # Delete all files in remote target folder, except for LOCK file
+        self.remote._rmdir_impl(".", keep_root_folder=True,
+                                predicate=lambda n: n != DirMetadata.LOCK_FILE_NAME)
 
     def tearDown(self):
+        # self.remote._rmdir_impl(".", keep_root=True)
         self.remote.close()
         del self.remote
 
@@ -193,7 +203,7 @@ class FtpTargetTest(TestCase):
         s.run()
         
         stats = s.get_stats()
-#        pprint(stats)
+#         pprint(stats)
 
         self.assertEqual(stats["local_dirs"], 2)
         self.assertEqual(stats["local_files"], 4) # currently files are not counted, when inside a *new* folder
@@ -211,7 +221,8 @@ class FtpTargetTest(TestCase):
         s = UploadSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
-#        pprint(stats)
+#         pprint(stats)
+#         assert False
 
         self.assertEqual(stats["entries_seen"], 18) # ???
         self.assertEqual(stats["entries_touched"], 1)
@@ -283,7 +294,7 @@ class FtpTargetTest(TestCase):
 #===============================================================================
 # BenchmarkTest
 #===============================================================================
-class BenchmarkTest(TestCase):                          
+class BenchmarkTest(unittest.TestCase):                          
     """Test ftp_target.FtpTarget functionality."""
     def setUp(self):
         if not DO_BENCHMARKS:
@@ -356,7 +367,7 @@ class BenchmarkTest(TestCase):
 #===============================================================================
 # PlainTest
 #===============================================================================
-class PlainTest(TestCase):
+class PlainTest(unittest.TestCase):
     """Tests that don't connect."""
     def setUp(self):
 #        user, passwd = get_stored_credentials("pyftpsync.pw", self.HOST)

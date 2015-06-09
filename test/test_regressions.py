@@ -6,8 +6,16 @@ from __future__ import print_function
 
 from ftplib import FTP
 from pprint import pprint
-from unittest import TestCase
-import unittest
+import sys
+
+if sys.version_info < (2, 7):
+    # Python 2.6
+    import unittest2 as unittest
+    from unittest2.case import SkipTest
+else:
+    # Python 2.7+
+    import unittest
+    from unittest.case import SkipTest
 
 from ftpsync.ftp_target import *  # @UnusedWildImport
 from ftpsync.targets import *  # @UnusedWildImport
@@ -34,7 +42,7 @@ def tearDownModule():
 #===============================================================================
 # FtpTest
 #===============================================================================
-class RegressionTest(TestCase):                          
+class RegressionTest(unittest.TestCase):                          
     """Test basic ftplib.FTP functionality."""
     def setUp(self):
         # Remote URL, e.g. "ftp://user:password@example.com/my/test/folder"
