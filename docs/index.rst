@@ -105,30 +105,28 @@ Command line syntax
 
 Use the ``--help`` or ``-h`` argument to get help::
 
-  $ pyftpsync -h
-  usage: pyftpsync [-h] [--verbose | --quiet] [--version] [--progress]
-                   {upload,download,sync} ...
-
-  Synchronize folders over FTP.
-
-  positional arguments:
-    {upload,download,sync}
-                          sub-command help
-      upload              copy new and modified files to remote folder
-      download            copy new and modified files from remote folder to
-                          local target
-      sync                synchronize new and modified files between remote
-                          folder and local target
-
-  optional arguments:
-    -h, --help            show this help message and exit
-    --verbose, -v         increment verbosity by one (default: 3, range: 0..5)
-    --quiet, -q           decrement verbosity by one
-    --version             show program's version number and exit
-    --progress, -p        show progress info, even if redirected or verbose < 3
-
-  See also https://github.com/mar10/pyftpsync
-  $ 
+    $ pyftpsync -h
+    usage: pyftpsync [-h] [--verbose | --quiet] [--version] [--progress]
+                     {upload,download,sync} ...
+    
+    Synchronize folders over FTP.
+    
+    positional arguments:
+      {upload,download,sync}
+                            sub-command help
+        upload              copy new and modified files to remote folder
+        download            copy new and modified files from remote folder to
+                            local target
+        sync                synchronize new and modified files between remote
+                            folder and local target
+    
+    optional arguments:
+      -h, --help            show this help message and exit
+      --verbose, -v         increment verbosity by one (default: 3, range: 0..5)
+      --quiet, -q           decrement verbosity by one
+      --version             show program's version number and exit
+      --progress, -p        show progress info, even if redirected or verbose < 3
+   $ 
 
 
 Upload files syntax
@@ -136,36 +134,39 @@ Upload files syntax
 
 Command specific help is available like so::
 
-  $ pyftpsync upload --help
-  usage: pyftpsync upload [-h] [-x] [-f INCLUDE_FILES] [-o OMIT]
-                          [--store-password] [--no-prompt] [--no-color]
-                          [--force] [--delete] [--delete-unmatched]
-                          LOCAL REMOTE
-
-  positional arguments:
-    LOCAL                 path to local folder (default: .)
-    REMOTE                path to remote folder
-
-  optional arguments:
-    -h, --help            show this help message and exit
-    -x, --execute         turn off the dry-run mode (which is ON by default),
-                          that would just print status messages but does not
-                          change anything
-    -f INCLUDE_FILES, --include-files INCLUDE_FILES
-                          wildcard for file names (default: all, separate
-                          multiple values with ',')
-    -o OMIT, --omit OMIT  wildcard of files and directories to exclude (applied
-                          after --include)
-    --store-password      save password to keyring if login succeeds
-    --no-prompt           prevent prompting for missing credentials
-    --no-color            prevent use of ansi terminal color codes
-    --force               overwrite different remote files, even if the target
-                          is newer
-    --delete              remove remote files if they don't exist locally
-    --delete-unmatched    remove remote files if they don't exist locally or
-                          don't match the current filter (implies '--delete'
-                          option)
-  $
+    $ pyftpsync upload --help
+    usage: pyftpsync upload [-h] [-x] [-f INCLUDE_FILES] [-o OMIT]
+                            [--store-password] [--no-prompt] [--no-color]
+                            [--force] [--resolve {local,skip,ask}] [--delete]
+                            [--delete-unmatched]
+                            LOCAL REMOTE
+    
+    positional arguments:
+      LOCAL                 path to local folder (default: .)
+      REMOTE                path to remote folder
+    
+    optional arguments:
+      -h, --help            show this help message and exit
+      -x, --execute         turn off the dry-run mode (which is ON by default),
+                            that would just print status messages but does not
+                            change anything
+      -f INCLUDE_FILES, --include-files INCLUDE_FILES
+                            wildcard for file names (default: all, separate
+                            multiple values with ',')
+      -o OMIT, --omit OMIT  wildcard of files and directories to exclude (applied
+                            after --include)
+      --store-password      save password to keyring if login succeeds
+      --no-prompt           prevent prompting for missing credentials
+      --no-color            prevent use of ansi terminal color codes
+      --force               overwrite remote files, even if the target is newer
+                            (but no conflict was detected)
+      --resolve {local,skip,ask}
+                            conflict resolving strategy (default: 'skip')
+      --delete              remove remote files if they don't exist locally
+      --delete-unmatched    remove remote files if they don't exist locally or
+                            don't match the current filter (implies '--delete'
+                            option)
+   $
 
 Example: Upload files
 ---------------------
@@ -189,32 +190,32 @@ Synchronize files syntax
 ------------------------
 ::
 
-  $ pyftpsync sync --help
-  usage: pyftpsync sync [-h] [-x] [-f INCLUDE_FILES] [-o OMIT]
-                        [--store-password] [--no-prompt] [--no-color]
-                        [--resolve {old,new,local,remote,ask}]
-                        LOCAL REMOTE
-
-  positional arguments:
-    LOCAL                 path to local folder (default: .)
-    REMOTE                path to remote folder
-
-  optional arguments:
-    -h, --help            show this help message and exit
-    -x, --execute         turn off the dry-run mode (which is ON by default),
-                          that would just print status messages but does not
-                          change anything
-    -f INCLUDE_FILES, --include-files INCLUDE_FILES
-                          wildcard for file names (default: all, separate
-                          multiple values with ',')
-    -o OMIT, --omit OMIT  wildcard of files and directories to exclude (applied
-                          after --include)
-    --store-password      save password to keyring if login succeeds
-    --no-prompt           prevent prompting for missing credentials
-    --no-color            prevent use of ansi terminal color codes
-    --resolve {old,new,local,remote,ask}
-                          conflict resolving strategy
-  $
+    $ pyftpsync sync --help
+    usage: pyftpsync sync [-h] [-x] [-f INCLUDE_FILES] [-o OMIT]
+                          [--store-password] [--no-prompt] [--no-color]
+                          [--resolve {old,new,local,remote,skip,ask}]
+                          LOCAL REMOTE
+    
+    positional arguments:
+      LOCAL                 path to local folder (default: .)
+      REMOTE                path to remote folder
+    
+    optional arguments:
+      -h, --help            show this help message and exit
+      -x, --execute         turn off the dry-run mode (which is ON by default),
+                            that would just print status messages but does not
+                            change anything
+      -f INCLUDE_FILES, --include-files INCLUDE_FILES
+                            wildcard for file names (default: all, separate
+                            multiple values with ',')
+      -o OMIT, --omit OMIT  wildcard of files and directories to exclude (applied
+                            after --include)
+      --store-password      save password to keyring if login succeeds
+      --no-prompt           prevent prompting for missing credentials
+      --no-color            prevent use of ansi terminal color codes
+      --resolve {old,new,local,remote,skip,ask}
+                            conflict resolving strategy (default: 'ask')
+    $
 
 Example: Synchronize folders
 ----------------------------

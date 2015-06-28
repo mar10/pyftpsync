@@ -108,7 +108,11 @@ def run():
 
     upload_parser.add_argument("--force", 
                                action="store_true",
-                               help="overwrite different remote files, even if the target is newer")
+                               help="overwrite remote files, even if the target is newer (but no conflict was detected)")
+    upload_parser.add_argument("--resolve", 
+                               default="skip",
+                               choices=["local", "skip", "ask"],
+                               help="conflict resolving strategy (default: '%(default)s')")
     upload_parser.add_argument("--delete", 
                                action="store_true",
                                help="remove remote files if they don't exist locally")
@@ -127,7 +131,11 @@ def run():
     
     download_parser.add_argument("--force", 
                                  action="store_true",
-                                 help="overwrite different local files, even if the target is newer")
+                                 help="overwrite local files, even if the target is newer (but no conflict was detected)")
+    download_parser.add_argument("--resolve", 
+                                 default="skip",
+                                 choices=["remote", "skip", "ask"],
+                                 help="conflict resolving strategy (default: '%(default)s')")
     download_parser.add_argument("--delete", 
                                  action="store_true",
                                  help="remove local files if they don't exist on remote target")
@@ -143,19 +151,10 @@ def run():
             help="synchronize new and modified files between remote folder and local target")
     __add_common_sub_args(sync_parser)
     
-#     sync_parser.add_argument("--store-password", 
-#                              action="store_true",
-#                              help="save password to keyring if login succeeds")
-#     sync_parser.add_argument("--no-prompt", 
-#                              action="store_true",
-#                              help="prevent prompting for missing credentials")
-#     sync_parser.add_argument("--no-color", 
-#                              action="store_true",
-#                              help="prevent use of ansi terminal color codes")
     sync_parser.add_argument("--resolve", 
                              default="ask",
                              choices=["old", "new", "local", "remote", "skip", "ask"],
-                             help="conflict resolving strategy (default: 'ask')")
+                             help="conflict resolving strategy (default: '%(default)s')")
     
     sync_parser.set_defaults(command="synchronize")
     

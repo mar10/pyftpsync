@@ -6,6 +6,7 @@ from __future__ import print_function
 
 from ftplib import FTP
 from pprint import pprint
+import platform
 import sys
 
 if sys.version_info < (2, 7):
@@ -16,6 +17,8 @@ else:
     # Python 2.7+
     import unittest
     from unittest.case import SkipTest
+
+on_windows = platform.system() == "Windows"
 
 from ftpsync.ftp_target import *  # @UnusedWildImport
 from ftpsync.targets import *  # @UnusedWildImport
@@ -65,6 +68,8 @@ class RegressionTest(unittest.TestCase):
         
     def test_issue_5(self):
         """issue #5: Unable to navigate to working directory '' (Windows)"""
+        if not on_windows:
+            raise SkipTest("Windows only")
         local = targets.FsTarget("c:/temp")
         remote = FtpTarget("/", "www.wwwendt.de", None, self.username, self.password)
         opts = {

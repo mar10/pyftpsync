@@ -33,6 +33,8 @@ DEFAULT_OMIT = [".DS_Store",
 class BaseSynchronizer(object):
     """Synchronizes two target instances in dry_run mode (also base class for other synchronizers)."""
 
+    _resolve_shortcuts = {"l": "local", "r": "remote", "s": "skip"}
+    
     def __init__(self, local, remote, options):
         self.local = local
         self.remote = remote
@@ -546,8 +548,6 @@ class BiDirSynchronizer(BaseSynchronizer):
 # #         print("    last sync: %s" % _ts(self.local.cur_dir_meta.get_last_sync()))
 #         pass
     
-    _resolve_shortcuts = {"l": "local", "r": "remote", "s": "skip"}
-    
     def _interactive_resolve(self, local, remote):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
         if self.resolve_all:
@@ -713,6 +713,85 @@ class UploadSynchronizer(BaseSynchronizer):
             return True
         return False
 
+    def _interactive_resolve(self, local, remote):
+        """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
+        if self.resolve_all:
+            return self.resolve_all
+        resolve = self.options.get("resolve", "skip")
+        assert resolve in ("local", "ask", "skip")
+        if resolve in ("local", "skip"):
+            self.resolve_all = resolve
+            return resolve
+
+        RED = ansi_code("Fore.LIGHTRED_EX")
+        M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
+        R = ansi_code("Style.RESET_ALL")
+
+        print((RED + "CONFLICT in %s:" + R) % local.name)
+        print("    local:  %s" % local.as_string())
+        print("    remote: %s" % (remote.as_string() if remote else "n.a."))
+
+        while True:
+            prompt = "Use " + M + "L" + R + "ocal, " + M + "S" + R + "kip, " + M + "H" + R + "elp)? "
+            r = console_input(prompt).strip()
+            if r in ("h", "H", "?"):
+                print("The following keys are supported:")
+                print("  'l': Upload local file")
+                print("  's': Skip this file (leave both versions unchanged)")
+                print("Hold Shift (upper case letters) to apply choice for all remaining conflicts.")
+                print("Hit Ctrl+C to abort.")
+                continue
+            elif r in ("L", "R", "S"):
+                r = self._resolve_shortcuts[r.lower()]
+                self.resolve_all = r
+                break
+            elif r in ("l", "r", "s"):
+                r = self._resolve_shortcuts[r]
+                break
+
+        return r
+        
+    def sync_conflict(self, local_entry, remote_entry):
+        """Both targets changed; resolve according to strategy, but never modify local."""
+        if not self._test_match_or_print(local_entry or remote_entry):
+            return
+        resolve = self._interactive_resolve(local_entry, remote_entry)
+        if resolve == "skip":
+            self._log_action("skip", "conflict", "*?*", local_entry or remote_entry)
+            return
+        if local_entry and remote_entry:
+            assert local_entry.is_file()
+            is_newer = local_entry > remote_entry
+            if resolve == "local" or (is_newer and resolve == "newer") or (not is_newer and resolve == "older"):
+                self._log_action("copy", "conflict", "*>*", local_entry)
+                self._copy_file(self.local, self.remote, local_entry)
+#             elif resolve == "remote" or (is_newer and resolve == "older") or (not is_newer and resolve == "newer"):
+#                 self._log_action("copy", "conflict", "*<*", local_entry)
+#                 self._copy_file(self.remote, self.local, remote_entry)
+            else:
+                raise NotImplementedError
+        elif local_entry:
+            assert local_entry.is_file()
+            if resolve == "local":
+                self._log_action("restore", "conflict", "*>x", local_entry)
+                self._copy_file(self.local, self.remote, local_entry)
+#             elif resolve == "remote":
+#                 self._log_action("delete", "conflict", "*<x", local_entry)
+#                 self._remove_file(local_entry)
+            else:
+                raise NotImplementedError
+        else:
+            assert remote_entry.is_file()
+            if resolve == "local":
+                self._log_action("delete", "conflict", "x>*", remote_entry)
+                self._remove_file(remote_entry)
+#             elif resolve == "remote":
+#                 self._log_action("restore", "conflict", "x<*", remote_entry)
+#                 self._copy_file(self.remote, self.local, remote_entry)
+            else:
+                raise NotImplementedError
+        return
+
     def sync_equal_file(self, local_file, remote_file):
         self._log_action("", "equal", "=", local_file, min_level=4)
         self._check_del_unmatched(remote_file)
@@ -804,6 +883,85 @@ class DownloadSynchronizer(BaseSynchronizer):
                 self._log_action("skip", "unmatched", "-", local_entry, min_level=4)
             return True
         return False
+
+    def _interactive_resolve(self, local, remote):
+        """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
+        if self.resolve_all:
+            return self.resolve_all
+        resolve = self.options.get("resolve", "skip")
+        assert resolve in ("remote", "ask", "skip")
+        if resolve in ("remote", "skip"):
+            self.resolve_all = resolve
+            return resolve
+
+        RED = ansi_code("Fore.LIGHTRED_EX")
+        M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
+        R = ansi_code("Style.RESET_ALL")
+
+        print((RED + "CONFLICT in %s:" + R) % local.name)
+        print("    local:  %s" % local.as_string())
+        print("    remote: %s" % (remote.as_string() if remote else "n.a."))
+
+        while True:
+            prompt = "Use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + M + "H" + R + "elp)? "
+            r = console_input(prompt).strip()
+            if r in ("h", "H", "?"):
+                print("The following keys are supported:")
+                print("  'r': Download remote file")
+                print("  's': Skip this file (leave both versions unchanged)")
+                print("Hold Shift (upper case letters) to apply choice for all remaining conflicts.")
+                print("Hit Ctrl+C to abort.")
+                continue
+            elif r in ("L", "R", "S"):
+                r = self._resolve_shortcuts[r.lower()]
+                self.resolve_all = r
+                break
+            elif r in ("l", "r", "s"):
+                r = self._resolve_shortcuts[r]
+                break
+
+        return r
+        
+    def sync_conflict(self, local_entry, remote_entry):
+        """Both targets changed; resolve according to strategy, but never modify remote."""
+        if not self._test_match_or_print(local_entry or remote_entry):
+            return
+        resolve = self._interactive_resolve(local_entry, remote_entry)
+        if resolve == "skip":
+            self._log_action("skip", "conflict", "*?*", local_entry or remote_entry)
+            return
+        if local_entry and remote_entry:
+            assert local_entry.is_file()
+            is_newer = local_entry > remote_entry
+#             if resolve == "local" or (is_newer and resolve == "newer") or (not is_newer and resolve == "older"):
+#                 self._log_action("copy", "conflict", "*>*", local_entry)
+#                 self._copy_file(self.local, self.remote, local_entry)
+            if resolve == "remote" or (is_newer and resolve == "older") or (not is_newer and resolve == "newer"):
+                self._log_action("copy", "conflict", "*<*", local_entry)
+                self._copy_file(self.remote, self.local, remote_entry)
+            else:
+                raise NotImplementedError
+        elif local_entry:
+            assert local_entry.is_file()
+#             if resolve == "local":
+#                 self._log_action("restore", "conflict", "*>x", local_entry)
+#                 self._copy_file(self.local, self.remote, local_entry)
+            if resolve == "remote":
+                self._log_action("delete", "conflict", "*<x", local_entry)
+                self._remove_file(local_entry)
+            else:
+                raise NotImplementedError
+        else:
+            assert remote_entry.is_file()
+#             if resolve == "local":
+#                 self._log_action("delete", "conflict", "x>*", remote_entry)
+#                 self._remove_file(remote_entry)
+            if resolve == "remote":
+                self._log_action("restore", "conflict", "x<*", remote_entry)
+                self._copy_file(self.remote, self.local, remote_entry)
+            else:
+                raise NotImplementedError
+        return
 
     def sync_equal_file(self, local_file, remote_file):
         self._log_action("", "equal", "=", local_file, min_level=4)
