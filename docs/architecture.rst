@@ -14,7 +14,7 @@ pyftpsync Architecture
 
 Classes
 =======
-.. inheritance-diagram:: ftpsync.targets ftpsync.resources ftpsync.synchronizers
+.. inheritance-diagram:: ftpsync.targets ftpsync.ftp_target ftpsync.resources ftpsync.synchronizers
    :parts: 1
    :private-bases:
 
