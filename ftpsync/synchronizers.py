@@ -978,7 +978,7 @@ class DownloadSynchronizer(BaseSynchronizer):
         if self._check_del_unmatched(local_file):
             return False
         self._log_action("copy", "modified", "<", local_file)
-        self._copy_file(self.local, self.remote, remote_file)
+        self._copy_file(self.remote, self.local, remote_file)
 
     def sync_newer_local_file(self, local_file, remote_file):
         if self._check_del_unmatched(local_file):
