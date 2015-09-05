@@ -493,7 +493,10 @@ class _Target(object):
     def remove_sync_info(self, name):
         if not self.is_local():
             return self.peer.remove_sync_info(name)
-        return self.cur_dir_meta.remove(name)
+        if self.cur_dir_meta:
+            return self.cur_dir_meta.remove(name)
+        # print("%s.remove_sync_info(%s): nothing to do" % (self, name))
+        return
 
 
 #===============================================================================
