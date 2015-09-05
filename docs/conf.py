@@ -91,7 +91,7 @@ except pkg_resources.DistributionNotFound:
     # TODO: 2015-09-05: fails since last month: workaround like this:
     # sys.exit(1)
     g_dict = {}
-    exec(open("ftpsync/__init__.py").read(), g_dict)
+    exec(open("../ftpsync/__init__.py").read(), g_dict)
     release = g_dict["__version__"]
     del g_dict
 
