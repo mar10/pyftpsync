@@ -23,6 +23,8 @@ import shlex
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('..'))
 print sys.path, os.path.abspath('..')
+for fn in os.listdir(os.path.abspath('..')):
+  print "-", fn
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
