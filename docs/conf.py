@@ -21,10 +21,13 @@ import shlex
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('..'))
-print sys.path, os.path.abspath('..')
-for fn in os.listdir(os.path.abspath('..')):
-  print "-", fn
+#package_root = os.path.abspath('..')
+package_root = os.path.abspath(os.path.join('..', 'ftpsync'))
+sys.path.insert(0, package_root)
+print "Add package root to sys.path: %r" % package_root
+#for fn in os.listdir(package_root):
+#  print "-", fn
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
