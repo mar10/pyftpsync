@@ -21,7 +21,7 @@ import shlex
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#package_root = os.path.abspath('..')
+# package_root = os.path.abspath('..')
 package_root = os.path.abspath(os.path.join('..', 'ftpsync'))
 sys.path.insert(0, package_root)
 print "Add package root to sys.path: %r" % package_root
@@ -78,12 +78,15 @@ author = u'Martin Wendt'
 #release = '1.0'
 import pkg_resources
 try:
+#    release = pkg_resources.get_distribution('pyftpsync').version
     release = pkg_resources.get_distribution('pyftpsync').version
+    print  "release", release
 except pkg_resources.DistributionNotFound:
     print 'To build the documentation, The distribution information'
     print 'Has to be available.  Either install the package into your'
     print 'development environment or run "setup.py develop" to setup the'
     print 'metadata.  A virtualenv is recommended!'
+    raise
     sys.exit(1)
 del pkg_resources
 

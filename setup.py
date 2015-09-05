@@ -57,7 +57,7 @@ except ImportError:
 readme = open("readme_pypi.rst", "rt").read()
 
 g_dict = {}
-exec(open("ftpsync/_version.py").read(), g_dict)
+exec(open("ftpsync/__init__.py").read(), g_dict)
 version = g_dict["__version__"]
 
 # 'setup.py upload' fails on Vista, because .pypirc is searched on 'HOME' path

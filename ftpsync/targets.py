@@ -14,7 +14,7 @@ import sys
 import json
 import time
 import getpass
-from ftpsync._version import __version__
+from ftpsync import __version__
 from ftpsync.resources import DirectoryEntry, FileEntry
 
 

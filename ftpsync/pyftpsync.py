@@ -13,7 +13,7 @@ from __future__ import print_function
 
 from pprint import pprint
 
-from ftpsync._version import __version__
+from ftpsync import __version__
 from ftpsync.targets import make_target, FsTarget
 
 from ftpsync.synchronizers import UploadSynchronizer, \
