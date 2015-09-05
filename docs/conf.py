@@ -25,8 +25,8 @@ import shlex
 package_root = os.path.abspath(os.path.join('..', 'ftpsync'))
 sys.path.insert(0, package_root)
 print "Add package root to sys.path: %r" % package_root
-#for fn in os.listdir(package_root):
-#  print "-", fn
+for fn in os.listdir(package_root):
+  print "-", fn
 
 # -- General configuration ------------------------------------------------
 
