@@ -517,7 +517,8 @@ class BiDirSynchronizer(BaseSynchronizer):
     - Newer files override unmodified older files
     
     - When both files are newer than last sync -> conflict!
-      Conflicts may be resolved by these options
+      Conflicts may be resolved by these options::
+
         --resolve=old:         use the older version
         --resolve=new:         use the newer version
         --resolve=local:       use the local file
