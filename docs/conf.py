@@ -16,6 +16,8 @@ import sys
 import os
 import shlex
 
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
 #import sphinx_bootstrap_theme
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -79,15 +81,19 @@ author = u'Martin Wendt'
 import pkg_resources
 try:
     release = pkg_resources.get_distribution('pyftpsync').version
-    print  "release", release
+    # print  "release", release
+    del pkg_resources
 except pkg_resources.DistributionNotFound:
     print 'To build the documentation, The distribution information'
     print 'Has to be available.  Either install the package into your'
     print 'development environment or run "setup.py develop" to setup the'
     print 'metadata.  A virtualenv is recommended!'
-    raise
-    sys.exit(1)
-del pkg_resources
+    # TODO: 2015-09-05: fails since last month: workaround like this:
+    # sys.exit(1)
+    g_dict = {}
+    exec(open("ftpsync/__init__.py").read(), g_dict)
+    release = g_dict["__version__"]
+    del g_dict
 
 version = '.'.join(release.split('.')[:2])
 
@@ -141,7 +147,6 @@ todo_include_todos = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 # html_theme = 'alabaster'
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if not on_rtd:
     # only import and set the theme if we're building docs locally
     # otherwise, readthedocs.org uses their theme by default, so no need to specify it
