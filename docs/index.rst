@@ -233,8 +233,9 @@ Script examples
 
 Upload changes from local folder to FTP server::
 
-  from ftpsync.targets import FsTarget, UploadSynchronizer
+  from ftpsync.targets import FsTarget
   from ftpsync.ftp_target import FtpTarget
+  from ftpsync.synchronizers import UploadSynchronizer
 
   local = FsTarget("~/temp")
   user ="joe"
@@ -246,8 +247,9 @@ Upload changes from local folder to FTP server::
 
 Synchronize local folder with FTP server::
 
-  from ftpsync.targets import FsTarget, BiDirSynchronizer
+  from ftpsync.targets import FsTarget
   from ftpsync.ftp_target import FtpTarget
+  from ftpsync.synchronizers import BiDirSynchronizer
 
   local = FsTarget("~/temp")
   user ="joe"
