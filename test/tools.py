@@ -26,7 +26,7 @@ STAMP_20140101_120000 = 1388577600.0  # Wed, 01 Jan 2014 12:00:00 GMT
 
 def _write_test_file(name, size=None, content=None, dt=None, age=None):
     """Create a file inside the temporary folder, optionally creating subfolders.
-    
+
     `name` must use '/' as path separator, even on Windows.
     """
     path = os.path.join(PYFTPSYNC_TEST_FOLDER, name.replace("/", os.sep))
@@ -34,7 +34,7 @@ def _write_test_file(name, size=None, content=None, dt=None, age=None):
         parent_dir = os.path.dirname(path)
         if not os.path.isdir(parent_dir):
             os.makedirs(parent_dir)
-        
+
 
     with open(path, "wt") as f:
         if content is None:
@@ -116,7 +116,7 @@ def _get_test_folder(folder_name):
             stat = os.lstat(abs_file_path)
             dt = datetime.datetime.utcfromtimestamp(stat.st_mtime)
             rel_file_path = os.path.join(rel_folder_path, fn).replace(os.sep, "/")
-            file_map[rel_file_path] = { 
+            file_map[rel_file_path] = {
                             "date": dt.strftime("%Y-%m-%d %H:%M:%S"),
                             #"size": stat.st_size,
                             }
@@ -138,7 +138,7 @@ def _sync_test_folders(options):
     opts = {"dry_run": False, "verbose": 3}
     if options:
         opts.update(options)
-    
+
     s = BiDirSynchronizer(local, remote, opts)
     s.run()
     return s.get_stats()
@@ -150,7 +150,7 @@ def _sync_test_folders(options):
 
 def prepare_fixtures_1():
     """Create two test folders and some files.
-    
+
     """
     print("prepare_fixtures", PYFTPSYNC_TEST_FOLDER)
     assert os.path.isdir(PYFTPSYNC_TEST_FOLDER)
@@ -175,7 +175,7 @@ def prepare_fixtures_1():
 def prepare_fixtures_2():
     """
     Create two folders that have already been synched (so meta data is available).
-    
+
                               Local           Remote
       file1.txt               12:00           12:00
       file2.txt               12:00           12:00
@@ -196,7 +196,7 @@ def prepare_fixtures_2():
     # Add some files to ../local/
     dt = "2014-01-01 12:00:00"
     for i in range(1, 9):
-        _write_test_file("local/file{0}.txt".format(i), dt=dt, 
+        _write_test_file("local/file{0}.txt".format(i), dt=dt,
                          content="local{0}".format(i))
 
     _write_test_file("local/folder1/file1_1.txt", dt=dt, content="local1_1")

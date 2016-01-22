@@ -40,7 +40,7 @@ def setUpModule():
 def tearDownModule():
 #    _empty_folder(PYFTPSYNC_TEST_FOLDER)
     pass
-    
+
 
 #===============================================================================
 # FilesystemTest
@@ -51,10 +51,10 @@ class FilesystemTest(unittest.TestCase):
     def setUp(self):
 #         raise SkipTest
         prepare_fixtures_1()
-    
+
     def tearDown(self):
         pass
-        
+
     def test_download_fs_fs(self):
         # Download files from local to remote (which is empty)
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
@@ -126,8 +126,8 @@ class FilesystemTest(unittest.TestCase):
         # file times are preserved
         self.assertEqual(_get_test_file_date("local/file1.txt"), STAMP_20140101_120000)
         self.assertEqual(_get_test_file_date("remote/file1.txt"), STAMP_20140101_120000)
-        
-        
+
+
         # Again: nothing to do
         s = BiDirSynchronizer(local, remote, opts)
         s.run()
@@ -170,18 +170,18 @@ class FilesystemTest(unittest.TestCase):
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
         remote = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
         opts = {"dry_run": False, "verbose": 3}
-        
+
         # Copy local -> remote
-        
+
         s = BiDirSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
         self.assertEqual(stats["files_written"], 6)
         self.assertEqual(stats["dirs_created"], 2)
-        
+
         # Modify local and remote
 
-        # conflict 1: local is newer 
+        # conflict 1: local is newer
         dt = datetime.datetime.now()
         _touch_test_file("local/file1.txt", dt)
         dt = datetime.datetime.now() - datetime.timedelta(seconds=10)
@@ -190,7 +190,7 @@ class FilesystemTest(unittest.TestCase):
 #         stamp = time.time() - 10
 #         os.utime(path, (stamp, stamp))
 
-        # conflict 2: remote is newer 
+        # conflict 2: remote is newer
         _touch_test_file("remote/file2.txt")
         dt = datetime.datetime.now() - datetime.timedelta(seconds=10)
         _touch_test_file("local/file2.txt", dt=dt)
@@ -215,13 +215,13 @@ class BidirResolveTest(unittest.TestCase):
     def setUp(self):
         prepare_fixtures_2()
         self.maxDiff = None # do not trunkate Dict diffs
-    
+
     def tearDown(self):
         pass
-    
+
     def _do_run_suite(self, opts):
         """Modify both folders and run sync with specific options.
-        
+
                                   Local           Remote
           file1.txt               13:00           12:00
           file2.txt                 x             12:00
@@ -271,12 +271,12 @@ class BidirResolveTest(unittest.TestCase):
     def test_setUp(self):
         # Test that setUp code worked
 #         raise SkipTest
-        # Set should have created a copy of /local in /remote... 
+        # Set should have created a copy of /local in /remote...
         self.assertTrue(_is_test_file("local/" + DirMetadata.META_FILE_NAME))
         self.assertTrue(not _is_test_file("remote/" + DirMetadata.META_FILE_NAME))
 #         self.assertEqual(stats["files_written"], 8)
         self.assertDictEqual(_get_test_folder("local"), _get_test_folder("remote"))
- 
+
     def test_default(self):
 #         raise SkipTest
         opts = {} # default options, i.e. 'skip' conflicts
@@ -285,14 +285,14 @@ class BidirResolveTest(unittest.TestCase):
 #         pprint(stats)
 #         pprint(_get_test_folder("local"))
 #         pprint(_get_test_folder("remote"))
- 
+
         self.assertEqual(stats["files_written"], 6)
         self.assertEqual(stats["download_files_written"], 3)
         self.assertEqual(stats["upload_files_written"], 3)
         self.assertEqual(stats["files_deleted"], 2)
         self.assertEqual(stats["dirs_deleted"], 2)
         self.assertEqual(stats["conflict_files"], 4)
- 
+
         expect_local = {
             'file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
             'file3.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
@@ -317,8 +317,8 @@ class BidirResolveTest(unittest.TestCase):
             }
         self.assertDictEqual(_get_test_folder("local"), expect_local)
         self.assertDictEqual(_get_test_folder("remote"), expect_remote)
-        
-        
+
+
     def test_resolve_local(self):
 #         raise SkipTest
         opts = {"resolve": "local"}
@@ -344,7 +344,7 @@ class BidirResolveTest(unittest.TestCase):
             }
         self.assertDictEqual(_get_test_folder("local"), expect_local)
         self.assertDictEqual(_get_test_folder("remote"), expect_local)
-        
+
 
     def test_resolve_remote(self):
 #         raise SkipTest
@@ -355,7 +355,7 @@ class BidirResolveTest(unittest.TestCase):
         self.assertEqual(stats["upload_files_written"], 3)
         self.assertEqual(stats["files_deleted"], 3)
         self.assertEqual(stats["dirs_deleted"], 2)
-        self.assertEqual(stats["conflict_files"], 4)        
+        self.assertEqual(stats["conflict_files"], 4)
 
         expect_local = {
             'file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
@@ -379,12 +379,12 @@ class BidirSpecialTest(unittest.TestCase):
     def setUp(self):
         prepare_fixtures_2()
         self.maxDiff = None # do not trunkate Dict diffs
-    
+
     def tearDown(self):
         pass
 
     def test_folder_conflict(self):
-        # delete a folder on one side, but change content on other side 
+        # delete a folder on one side, but change content on other side
         # Note: currently
 #         raise SkipTest
         _write_test_file("local/folder1/file1_1.txt", dt="2014-01-01 13:00:00", content="local 13:00")
@@ -398,7 +398,7 @@ class BidirSpecialTest(unittest.TestCase):
         self.assertEqual(stats["upload_files_written"], 0)
         self.assertEqual(stats["files_deleted"], 0)
         self.assertEqual(stats["dirs_deleted"], 1)
-        self.assertEqual(stats["conflict_files"], 0)        
+        self.assertEqual(stats["conflict_files"], 0)
 
         expect_local = {
             'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
@@ -416,7 +416,7 @@ class BidirSpecialTest(unittest.TestCase):
             }
         self.assertDictEqual(_get_test_folder("local"), expect_local)
         self.assertDictEqual(_get_test_folder("remote"), expect_local)
-        
+
 #===============================================================================
 # Main
 #===============================================================================

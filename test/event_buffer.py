@@ -14,7 +14,7 @@ import time
 #-------------------------------------------------------------------------------
 class EventBuffer(object):
     """
-    This object consumes events that are generated in arbitrary frequency and 
+    This object consumes events that are generated in arbitrary frequency and
     emits a predictable sequence of events with a minimum and maximum frequency.
 
     IN (1 character is 1 second)
@@ -22,45 +22,45 @@ class EventBuffer(object):
 
     OUT (max_collect_time=5)
            |               |     |
-           
-    OUT (max_collect_time=5, at_start=True) 
+
+    OUT (max_collect_time=5, at_start=True)
       |    |               |      |
-      
-    OUT (max_collect_time=5, flush_timeout=True) 
+
+    OUT (max_collect_time=5, flush_timeout=True)
            |    |               |       |
-    
+
     Example 1:
     Use a callback and set flush_timeout=True to emit at end of event sequence:
 
         def _cb(event_queue, event_throttle):
             print("### EMIT queue_lengt={}".format(len(event_queue)))
-            
+
         eb = EventBuffer(0.5, callback=_cb, at_start=False, flush_timeout=True)
-    
+
         for i in range(300):
             eb.trigger()
             time.sleep(0.01)
-        
+
         et.join()  # Optionally wait for timer to emit remaining queue entries
-    
+
     Example 2:
     Use a derived class and pass True to last trigger call, so no timer is needed:
-    
+
         class MyThrottle(EventBuffer):
             def __init__(self, max_collect_time, flush_timeout):
                 super(MyThrottle, self).__init__(max_collect_time, flush_timeout)
             def on_emit(self, event_queue):
                 print("### EMIT queue_lengt={}".format(len(event_queue)))
-            
+
         eb = MyThrottle(0.5, flush_timeout=False)
-    
+
         for i in range(300):
             eb.trigger(force_emit=(i==299))
             time.sleep(0.01)
-    
+
     """
     _thread_id = 0
-    
+
     def __init__(self, max_collect_time=None, max_collect_count=None,
                  at_start=False, flush_timeout=True, async_emit=True,
                  callback=None):
@@ -81,7 +81,7 @@ class EventBuffer(object):
         self.last_emit = None
         self.last_reset = None
         self.last_trigger = None
-        
+
         self.max_collect_time = max_collect_time
         self.max_collect_count = max_collect_count
         self.at_start = bool(at_start)
@@ -95,7 +95,7 @@ class EventBuffer(object):
     def _do_emit(self, async):
         """Emit current buffer and clear event queue.
 
-        Emitting may be asynchronous (called in a seperate thread), so while 
+        Emitting may be asynchronous (called in a seperate thread), so while
         the buffer is being processed, new calls to trigger() are accepted.
         """
         # logging.debug("### _do_emit({0})".format(async))
@@ -110,7 +110,7 @@ class EventBuffer(object):
             self._emit_lock.acquire()
             def _worker():
                 self.last_emit = self.last_reset = time.time()
-                
+
                 # Here we flush the current event queue. This may take some time!
                 try:
                     self.on_emit(event_queue)
@@ -122,7 +122,7 @@ class EventBuffer(object):
             if async:
                 assert self._emit_thread is None
                 EventBuffer._thread_id += 1
-                self._emit_thread = threading.Thread(name="emit_worker_{0}".format(EventBuffer._thread_id), 
+                self._emit_thread = threading.Thread(name="emit_worker_{0}".format(EventBuffer._thread_id),
                                                      target=_worker)
                 self._emit_thread.start()
                 # self._emit_thread.name = "emit_worker_{0}".format(self._emit_thread.ident)
@@ -146,8 +146,8 @@ class EventBuffer(object):
 
     def join(self, cancel=False):
         """Wait for emit timer to flush pending events.
-        
-        :param bool cancel: interrupt pending timer (and preventing final emit) 
+
+        :param bool cancel: interrupt pending timer (and preventing final emit)
         """
         # Wait for emit timer thread
         if self._emit_timer:
@@ -162,12 +162,12 @@ class EventBuffer(object):
             # logging.debug("join _emit_thread {0}...".format(self._emit_thread))
             self._emit_thread.join()
             # logging.debug("join _emit_thread {0}... done.".format(self._emit_thread))
-        
+
     def trigger(self, data=None, force_emit=False, wait=False):
         """Queue an event (with optional data) and emit if conditions are met.
-        
+
         :param data: optional event data (appended to event queue)
-        :param bool force_emit: Immediately flush event queue  
+        :param bool force_emit: Immediately flush event queue
         :param bool wait: Wait for async emit
         :return: True if event queue was flushed.
         :rtype: bool
@@ -179,7 +179,7 @@ class EventBuffer(object):
                 self.last_reset = now
             self.event_queue.append(data)
             logging.debug("trigger({0})".format(data))
-            do_emit = (force_emit 
+            do_emit = (force_emit
                        or (self.max_collect_count and len(self.event_queue) >= self.max_collect_count)
                        or (self.max_collect_time and (now - self.last_reset) >= self.max_collect_time)
                        or (self.at_start and self.last_emit is None)
@@ -191,7 +191,7 @@ class EventBuffer(object):
                     self._do_emit(self.async_emit)
 
             elif self.flush_timeout and not self._emit_timer:
-                # This is the first trigger after a flush. 
+                # This is the first trigger after a flush.
                 # Schedule a timer that will emit even if trigger() method is not called again.
                 self._start_emit_timer(self.flush_timeout)
 
@@ -199,10 +199,10 @@ class EventBuffer(object):
 
     def on_emit(self, event_queue):
         """This callback is triggered when the event queue is flushed.
-        
+
         Either pass a handler function as `callback` argument to the constructor,
         or override this `on_emit()` method.
-        
+
         :param list event_queue: event list to be flushed (self.event_queue is already cleared)
         """
         return self.callback(event_queue, self)

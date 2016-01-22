@@ -29,13 +29,13 @@ class EventBufferTest(unittest.TestCase):
 
     def setUp(self):
 #         raise SkipTest
-        logging.basicConfig(level=logging.DEBUG, 
+        logging.basicConfig(level=logging.DEBUG,
             format="%(threadName)-14s - %(asctime)s.%(msecs).03d - %(message)s",
             datefmt="%H:%M:%S")
-    
+
     def tearDown(self):
         pass
-        
+
     def test_1(self):
 
         logging.debug("START")
@@ -46,8 +46,8 @@ class EventBufferTest(unittest.TestCase):
             logging.debug("### EMIT START queue_lengt={0}: {1}".format(len(event_queue), event_queue))
             time.sleep(0.3)
             logging.debug("### EMIT STOP")
-             
-        eb = EventBuffer(1.0, max_collect_count=None, callback=_cb, at_start=False, 
+
+        eb = EventBuffer(1.0, max_collect_count=None, callback=_cb, at_start=False,
                          flush_timeout=True, async_emit=True)
 
         def _worker(stats):
@@ -64,12 +64,12 @@ class EventBufferTest(unittest.TestCase):
         logging.debug("DONE triggered:{0}, emitted:{1}".format(stats["t_count"], stats["e_count"]))
         eb.join()  # Wait for emit timer
         logging.debug("Joined triggered:{0}, emitted:{1}".format(stats["t_count"], stats["e_count"]))
-        
+
         self.assertEqual(stats["t_count"], stats["e_count"])
         logging.debug("ELAP: {0} sec".format(time.time() - stats["start"]))
 
     def test_2(self):
-        # Slow 
+        # Slow
         logging.debug("START")
         stats = {"t_count": 0, "e_count": 0, "start": time.time()}
 
@@ -78,8 +78,8 @@ class EventBufferTest(unittest.TestCase):
             logging.debug("### EMIT START queue_lengt={0}: {1}".format(len(event_queue), event_queue))
             time.sleep(0.3)
             logging.debug("### EMIT STOP")
-             
-        eb = EventBuffer(1.0, max_collect_count=10, callback=_cb, at_start=False, 
+
+        eb = EventBuffer(1.0, max_collect_count=10, callback=_cb, at_start=False,
                          flush_timeout=True, async_emit=True)
 
         def _worker(stats):
@@ -99,7 +99,7 @@ class EventBufferTest(unittest.TestCase):
         logging.debug("DONE triggered:{0}, emitted:{1}".format(stats["t_count"], stats["e_count"]))
         eb.join()  # Wait for emit timer
         logging.debug("Joined triggered:{0}, emitted:{1}".format(stats["t_count"], stats["e_count"]))
-        
+
         self.assertEqual(stats["t_count"], stats["e_count"])
         logging.debug("ELAP: {0} sec".format(time.time() - stats["start"]))
 

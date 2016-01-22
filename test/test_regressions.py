@@ -45,7 +45,7 @@ def tearDownModule():
 #===============================================================================
 # FtpTest
 #===============================================================================
-class RegressionTest(unittest.TestCase):                          
+class RegressionTest(unittest.TestCase):
     """Test basic ftplib.FTP functionality."""
     def setUp(self):
         # Remote URL, e.g. "ftp://user:password@example.com/my/test/folder"
@@ -65,7 +65,7 @@ class RegressionTest(unittest.TestCase):
         if self.remote:
             self.remote.close()
             self.remote = None
-        
+
     def test_issue_5(self):
         """issue #5: Unable to navigate to working directory '' (Windows)"""
         if not on_windows:
@@ -78,7 +78,7 @@ class RegressionTest(unittest.TestCase):
             "dry_run": True
         }
         s = DownloadSynchronizer(local, remote, opts)
-        s.run()        
+        s.run()
 
 #===============================================================================
 # Main

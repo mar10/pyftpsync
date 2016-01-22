@@ -55,7 +55,7 @@ class FtpTest(unittest.TestCase):
         host = parts.netloc.split("@", 1)[1]
         self.PATH = parts.path
         self.ftp = FTP()
-#        self.ftp.debug(1) 
+#        self.ftp.debug(1)
         self.ftp.connect(host)
         self.ftp.login(parts.username, parts.password)
 
@@ -64,7 +64,7 @@ class FtpTest(unittest.TestCase):
 #        self.ftp.close()
         self.ftp.quit()
         del self.ftp
-        
+
     def test_ftp(self):
         ftp = self.ftp
         self.assertEqual(ftp.pwd(), "/")
@@ -80,7 +80,7 @@ class FtpTest(unittest.TestCase):
         self.assertEqual(ftp.pwd(), "/")
         ftp.cwd(self.PATH)
         self.assertEqual(ftp.pwd(), self.PATH)
-        
+
         def adder(line):
             print(line)
         ftp.retrlines("MLSD", adder)
@@ -92,7 +92,7 @@ class FtpTest(unittest.TestCase):
 #===============================================================================
 # FtpTargetTest
 #===============================================================================
-class FtpTargetTest(unittest.TestCase):                          
+class FtpTargetTest(unittest.TestCase):
     """Test ftp_target.FtpTarget functionality."""
     def setUp(self):
         # Remote URL, e.g. "ftp://user:password@example.com/my/test/folder"
@@ -105,7 +105,7 @@ class FtpTargetTest(unittest.TestCase):
         prepare_fixtures_1()
 
 #        print(ftp_url)
-        
+
         parts = urlparse(ftp_url, allow_fragments=False)
         self.assertEqual(parts.scheme.lower(), "ftp")
 #        print(parts)
@@ -130,7 +130,7 @@ class FtpTargetTest(unittest.TestCase):
 
     def test_remote(self):
         remote = self.remote
-        
+
         self.assertEqual(remote.pwd(), self.PATH)
 
         remote.cwd(self.PATH)
@@ -138,11 +138,11 @@ class FtpTargetTest(unittest.TestCase):
 
         self.assertRaises(RuntimeError, remote.cwd, "..")
         self.assertEqual(remote.pwd(), self.PATH)
-        
-        
+
+
     def test_readwrite(self):
         remote = self.remote
-        
+
         if sys.version_info[0] < 3:
             # 'abc_äöü_ß¿€'
             b = 'abc_\xc3\xa4\xc3\xb6\xc3\xbc_\xc3\x9f\xc2\xbf\xe2\x82\xac'
@@ -164,7 +164,7 @@ class FtpTargetTest(unittest.TestCase):
         pprint(d)
         if sys.version_info[0] == 2:
             s = json.dumps(d, indent=4, sort_keys=True)
-            b = io.BytesIO(s) 
+            b = io.BytesIO(s)
         else:
             buf = io.StringIO()
             json.dump(d, buf, indent=4, sort_keys=True)
@@ -177,7 +177,7 @@ class FtpTargetTest(unittest.TestCase):
                 print("%r" % s)
             buf.seek(0)
             print(buf.getvalue())
-            b = io.BytesIO(bytes(buf.getvalue(), "utf8")) 
+            b = io.BytesIO(bytes(buf.getvalue(), "utf8"))
         res = remote.ftp.storlines("STOR " + "meta.json", b)
         print(res)
 
@@ -195,13 +195,13 @@ class FtpTargetTest(unittest.TestCase):
     def test_sync_fs_ftp(self):
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
         remote = self.remote
-        
+
         # Upload all of temp/local to remote
-        
+
         opts = {"force": False, "delete": True, "verbose": 3, "dry_run": False}
         s = UploadSynchronizer(local, remote, opts)
         s.run()
-        
+
         stats = s.get_stats()
 #         pprint(stats)
 
@@ -212,9 +212,9 @@ class FtpTargetTest(unittest.TestCase):
         self.assertEqual(stats["files_written"], 6)
         self.assertEqual(stats["dirs_created"], 2)
         self.assertEqual(stats["bytes_written"], 16403)
-        
+
         # Change one file and upload again
-        
+
         _touch_test_file("local/file1.txt")
 
         opts = {"force": False, "delete": True, "verbose": 3, "dry_run": False}
@@ -234,9 +234,9 @@ class FtpTargetTest(unittest.TestCase):
         self.assertEqual(stats["upload_files_written"], 1)
         self.assertEqual(stats["conflict_files"], 0)
         self.assertEqual(stats["bytes_written"], 3)
-        
+
         # Download all from remote to temp/remote
-        
+
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
 
         opts = {"force": False, "delete": True, "verbose": 3, "dry_run": False}
@@ -257,7 +257,7 @@ class FtpTargetTest(unittest.TestCase):
         self.assertEqual(stats["bytes_written"], 16403)
 
         # Original file times are preserved, even when retrieved from FTP
-        
+
         self.assertNotEqual(_get_test_file_date("local/file1.txt"), STAMP_20140101_120000)
         self.assertEqual(_get_test_file_date("local/file1.txt"), _get_test_file_date("local//file1.txt"))
 
@@ -265,7 +265,7 @@ class FtpTargetTest(unittest.TestCase):
         self.assertEqual(_get_test_file_date("remote//file2.txt"), STAMP_20140101_120000)
 
         # Synchronize temp/local <=> remote : nothing to do
-        
+
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
 
         opts = {"verbose": 3, "dry_run": False}
@@ -278,7 +278,7 @@ class FtpTargetTest(unittest.TestCase):
         self.assertEqual(stats["bytes_written"], 0)
 
         # Synchronize temp/remote <=> remote : nothing to do
-        
+
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
 
         opts = {"verbose": 3, "dry_run": False}
@@ -294,7 +294,7 @@ class FtpTargetTest(unittest.TestCase):
 #===============================================================================
 # BenchmarkTest
 #===============================================================================
-class BenchmarkTest(unittest.TestCase):                          
+class BenchmarkTest(unittest.TestCase):
     """Test ftp_target.FtpTarget functionality."""
     def setUp(self):
         if not DO_BENCHMARKS:
@@ -319,16 +319,16 @@ class BenchmarkTest(unittest.TestCase):
 
     def _transfer_files(self, count, size):
         temp1_path = os.path.join(PYFTPSYNC_TEST_FOLDER, "local")
-        _empty_folder(temp1_path) # remove standard test files 
+        _empty_folder(temp1_path) # remove standard test files
 
         local = FsTarget(temp1_path)
         remote = self.remote
-        
+
         for i in range(count):
             _write_test_file("local/file_%s.txt" % i, size=size)
 
         # Upload all of temp/local to remote
-        
+
         opts = {"force": False, "delete": False, "verbose": 3, "dry_run": False}
         s = UploadSynchronizer(local, remote, opts)
         s.run()
@@ -341,7 +341,7 @@ class BenchmarkTest(unittest.TestCase):
         print("Upload %s x %s bytes took %s: %s" % (count, size, stats["upload_write_time"], stats["upload_rate_str"]), file=sys.stderr)
 
         # Download all of remote to temp/remote
-        
+
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
 
         opts = {"force": False, "delete": True, "verbose": 3, "dry_run": False}
@@ -372,7 +372,7 @@ class PlainTest(unittest.TestCase):
     def setUp(self):
 #        user, passwd = get_stored_credentials("pyftpsync.pw", self.HOST)
         pass
-    
+
     def tearDown(self):
         pass
 
@@ -385,7 +385,7 @@ class PlainTest(unittest.TestCase):
         # scheme is case-insensitive
         t = make_target("FTP://ftp.example.com/target/folder")
         self.assertTrue(isinstance(t, FtpTarget))
-        
+
         # pass credentials wit URL
         t = make_target("ftp://user:secret@ftp.example.com/target/folder")
         self.assertTrue(isinstance(t, FtpTarget))
