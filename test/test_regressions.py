@@ -48,13 +48,13 @@ def tearDownModule():
 class RegressionTest(unittest.TestCase):
     """Test basic ftplib.FTP functionality."""
     def setUp(self):
-        # Remote URL, e.g. "ftp://user:password@example.com/my/test/folder"
+        # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"
         ftp_url = PYFTPSYNC_TEST_FTP_URL
         if not ftp_url:
             self.skipTest("Must configure a FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
 
         parts = urlparse(ftp_url, allow_fragments=False)
-        # self.assertEqual(parts.scheme.lower(), "ftp")
+        # self.assertIn(parts.scheme.lower(), ["ftp", "ftps"])
         self.host = parts.netloc.split("@", 1)[1]
         self.path = parts.path
         self.username = parts.username

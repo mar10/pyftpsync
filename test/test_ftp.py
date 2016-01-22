@@ -45,13 +45,13 @@ def tearDownModule():
 class FtpTest(unittest.TestCase):
     """Test basic ftplib.FTP functionality."""
     def setUp(self):
-        # Remote URL, e.g. "ftp://user:password@example.com/my/test/folder"
+        # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"
         ftp_url = PYFTPSYNC_TEST_FTP_URL
         if not ftp_url:
             self.skipTest("Must configure a FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
 
         parts = urlparse(ftp_url, allow_fragments=False)
-        self.assertEqual(parts.scheme.lower(), "ftp")
+        self.assertIn(parts.scheme.lower(), ["ftp", "ftps"])
         host = parts.netloc.split("@", 1)[1]
         self.PATH = parts.path
         self.ftp = FTP()
@@ -95,7 +95,7 @@ class FtpTest(unittest.TestCase):
 class FtpTargetTest(unittest.TestCase):
     """Test ftp_target.FtpTarget functionality."""
     def setUp(self):
-        # Remote URL, e.g. "ftp://user:password@example.com/my/test/folder"
+        # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"
         ftp_url = PYFTPSYNC_TEST_FTP_URL
         if not ftp_url:
             self.skipTest("Must configure a FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
@@ -107,7 +107,7 @@ class FtpTargetTest(unittest.TestCase):
 #        print(ftp_url)
 
         parts = urlparse(ftp_url, allow_fragments=False)
-        self.assertEqual(parts.scheme.lower(), "ftp")
+        self.assertIn(parts.scheme.lower(), ["ftp", "ftps"])
 #        print(parts)
 #        self.creds = parts.username, parts.password
 #        self.HOST = parts.netloc.split("@", 1)[1]
@@ -299,7 +299,7 @@ class BenchmarkTest(unittest.TestCase):
     def setUp(self):
         if not DO_BENCHMARKS:
             self.skipTest("DO_BENCHMARKS is not set")
-        # Remote URL, e.g. "ftp://user:password@example.com/my/test/folder"
+        # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"
         ftp_url = PYFTPSYNC_TEST_FTP_URL
         if not ftp_url:
             self.skipTest("Must configure a FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
@@ -377,30 +377,46 @@ class PlainTest(unittest.TestCase):
         pass
 
     def test_make_target(self):
-        t = make_target("ftp://ftp.example.com/target/folder")
+        t = make_target("ftps://ftp.example.com/target/folder")
         self.assertTrue(isinstance(t, FtpTarget))
         self.assertEqual(t.host, "ftp.example.com")
         self.assertEqual(t.root_dir, "/target/folder")
         self.assertEqual(t.username, None)
+        self.assertEqual(t.tls, True)
+
         # scheme is case-insensitive
-        t = make_target("FTP://ftp.example.com/target/folder")
+        t = make_target("FTPS://ftp.example.com/target/folder")
         self.assertTrue(isinstance(t, FtpTarget))
+        self.assertEqual(t.host, "ftp.example.com")
+        self.assertEqual(t.root_dir, "/target/folder")
+        self.assertEqual(t.username, None)
+        self.assertEqual(t.tls, True)
 
         # pass credentials wit URL
-        t = make_target("ftp://user:secret@ftp.example.com/target/folder")
+        t = make_target("ftps://user:secret@ftp.example.com/target/folder")
         self.assertTrue(isinstance(t, FtpTarget))
         self.assertEqual(t.host, "ftp.example.com")
         self.assertEqual(t.username, "user")
         self.assertEqual(t.password, "secret")
         self.assertEqual(t.root_dir, "/target/folder")
+        self.assertEqual(t.tls, True)
 
-        t = make_target("ftp://www.user.com:secret@ftp.example.com/target/folder")
+        t = make_target("ftps://user@example.com:secret@ftp.example.com/target/folder")
         self.assertTrue(isinstance(t, FtpTarget))
         self.assertEqual(t.username, "www.user.com")
         self.assertEqual(t.password, "secret")
         self.assertEqual(t.root_dir, "/target/folder")
+        self.assertEqual(t.tls, True)
+
+        t = make_target("ftp://user@example.com:secret@ftp.example.com/target/folder")
+        self.assertTrue(isinstance(t, FtpTarget))
+        self.assertEqual(t.username, "www.user.com")
+        self.assertEqual(t.password, "secret")
+        self.assertEqual(t.root_dir, "/target/folder")
+        self.assertEqual(t.tls, False)
 
         # unsupported schemes
+        self.assertRaises(ValueError, make_target, "ftpa://ftp.example.com/test")
         self.assertRaises(ValueError, make_target, "http://example.com/test")
         self.assertRaises(ValueError, make_target, "https://example.com/test")
 

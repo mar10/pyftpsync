@@ -15,6 +15,7 @@ CHANGES
 - Interactive mode
 - Renamed _pyftpsync-meta.json to .pyftpsync-meta.json
 - MSI installer for MS Windows
+- FTPS (TLS) support on Python 2.7/3.2+
 
 0.2.1 (2013-05-07)
 ==================
