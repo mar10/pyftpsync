@@ -403,14 +403,16 @@ class PlainTest(unittest.TestCase):
 
         t = make_target("ftps://user@example.com:secret@ftp.example.com/target/folder")
         self.assertTrue(isinstance(t, FtpTarget))
-        self.assertEqual(t.username, "www.user.com")
+        self.assertEqual(t.host, "ftp.example.com")
+        self.assertEqual(t.username, "user@example.com")
         self.assertEqual(t.password, "secret")
         self.assertEqual(t.root_dir, "/target/folder")
         self.assertEqual(t.tls, True)
 
         t = make_target("ftp://user@example.com:secret@ftp.example.com/target/folder")
         self.assertTrue(isinstance(t, FtpTarget))
-        self.assertEqual(t.username, "www.user.com")
+        self.assertEqual(t.host, "ftp.example.com")
+        self.assertEqual(t.username, "user@example.com")
         self.assertEqual(t.password, "secret")
         self.assertEqual(t.root_dir, "/target/folder")
         self.assertEqual(t.tls, False)
