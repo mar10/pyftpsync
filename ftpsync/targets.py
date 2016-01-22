@@ -45,7 +45,7 @@ DEFAULT_BLOCKSIZE = 8 * 1024
 
 
 #===============================================================================
-# 
+#
 #===============================================================================
 
 def prompt_for_password(url, user=None):
@@ -67,7 +67,7 @@ def get_credentials_for_url(url, allow_prompt):
     @returns 2-tuple (username, password) or None
     """
     creds = None
-    
+
     # Lookup our own credential store
     # Parse a file in the user's home directory, formatted like:
     # URL = user:password
@@ -86,8 +86,8 @@ def get_credentials_for_url(url, allow_prompt):
 #                     creds = c.split(":", 1)
 #                     print("Using credentials from %s ('%s'): %s:***)" % (file_path, url, creds[0]))
 #                     break
-    
-    # Query 
+
+    # Query
     if creds is None and keyring:
         try:
             # Note: we pass the url as `username` and username:password as `password`
@@ -99,12 +99,12 @@ def get_credentials_for_url(url, allow_prompt):
 #        except keyring.errors.TransientKeyringError:
         except Exception as e:
             print("Could not get password {0}".format(e))
-            pass # e.g. user clicked 'no' 
+            pass # e.g. user clicked 'no'
 
     # Prompt
     if creds is None and allow_prompt:
         creds = prompt_for_password(url)
-    
+
     return creds
 
 
@@ -167,7 +167,7 @@ if sys.version_info[0] < 3:
         if type(s) is not str:
             s = s.encode("utf8")
         return s
-    
+
     def to_text(s):
         """Convert binary data to unicode (text strings) on Python 2 and 3."""
         if type(s) is not unicode:
@@ -179,25 +179,25 @@ if sys.version_info[0] < 3:
         if type(s) is unicode:
             s = s.encode("utf8")
         return s
-else: 
+else:
     # Python 3
     def to_binary(s):
         """Convert unicode (text strings) to binary data on Python 2 and 3."""
         if type(s) is str:
             s = bytes(s, "utf8")
         return s
-    
+
     def to_text(s):
         """Convert binary data to unicode (text strings) on Python 2 and 3."""
         if type(s) is bytes:
             s = str(s, "utf8")
-        return s 
+        return s
 
     def to_str(s):
         """Convert binary data to unicode (text strings) on Python 2 and 3."""
         if type(s) is bytes:
             s = str(s, "utf8")
-        return s 
+        return s
 
 try:
     console_input = raw_input
@@ -213,7 +213,7 @@ except NameError:
 #        self.fp = fp
 #        self.callback = callback or self.default_callback
 #        self.bytes = 0
-#    
+#
 #    def __enter__(self):
 #        return self
 #
@@ -224,12 +224,12 @@ except NameError:
 #    def default_callback(wrapper, data):
 #        print("#", end="")
 #        sys.stdout.flush()
-#        
+#
 #    def write(self, data):
 #        self.bytes += len(data)
 #        self.fp.write(data)
 #        self.callback(self, data)
-#    
+#
 #    def close(self):
 #        self.fp.close()
 
@@ -238,14 +238,14 @@ except NameError:
 # DirMetadata
 #===============================================================================
 class DirMetadata(object):
-    
+
     META_FILE_NAME = ".pyftpsync-meta.json"
     LOCK_FILE_NAME = ".pyftpsync-lock.json"
     DEBUG_META_FILE_NAME = "_pyftpsync-meta.json"
     DEBUG = False # True: write a copy that is not a dot-file
     PRETTY = False # False: Reduce meta file size to 35% (3759 -> 1375 bytes)
     VERSION = 1 # Increment if format changes. Old files will be discarded then.
-    
+
     def __init__(self, target):
         self.target = target
         self.path = target.cur_dir
@@ -258,11 +258,11 @@ class DirMetadata(object):
         self.modified_list = False
         self.modified_sync = False
         self.was_read = False
-        
+
     def set_mtime(self, filename, mtime, size):
         """Store real file mtime in meta data.
-        
-        This is needed, because FTP targets don't allow to set file mtime, but 
+
+        This is needed, because FTP targets don't allow to set file mtime, but
         use to the upload time instead.
         We also record size and upload time, so we can detect if the file was
         changed by other means and we have to discard our meta data.
@@ -278,10 +278,10 @@ class DirMetadata(object):
                 "uploaded_str": time.ctime(ut),
                 })
         self.modified_list = True
-    
+
     def set_sync_info(self, filename, mtime, size):
         """Store mtime/size when local and remote file was last synchronized.
-        
+
         This is stored in the local file's folder as meta data.
         The information is used to detect conflicts, i.e. if both source and
         remote had been modified by other means since last synchronization.
@@ -295,7 +295,7 @@ class DirMetadata(object):
         if self.PRETTY or self.DEBUG:
             pse["mtime_str"] = time.ctime(mtime) if mtime else "(directory)"
         self.modified_sync = True
-        
+
     def remove(self, filename):
         if self.list.pop(filename, None):
             self.modified_list = True
@@ -314,7 +314,7 @@ class DirMetadata(object):
             if self.dir.get("_file_version", 0) < self.VERSION:
                 raise RuntimeError("Invalid meta data version: %s (expected %s)" % (self.dir.get("_file_version"), self.VERSION))
             self.list = self.dir["files"]
-            self.peer_sync = self.dir["peer_sync"] 
+            self.peer_sync = self.dir["peer_sync"]
             self.modified_list = False
             self.modified_sync = False
 #             print("DirMetadata: read(%s)" % (self.filename, ), self.dir)
@@ -330,7 +330,7 @@ class DirMetadata(object):
         if self.target.dry_run:
 #             print("DirMetadata.flush(%s): dry-run; nothing to do" % self.target)
             pass
-        
+
         elif self.was_read and len(self.list) == 0 and len(self.peer_sync) == 0:
 #             print("DirMetadata.flush(%s): DELETE" % self.target)
             self.target.remove_file(self.filename)
@@ -339,7 +339,7 @@ class DirMetadata(object):
 #             print("DirMetadata.flush(%s): unmodified; nothing to do" % self.target)
             pass
 
-        else:        
+        else:
             self.dir["_disclaimer"] = "Generated by https://github.com/mar10/pyftpsync"
             self.dir["_time_str"] = "%s" % time.ctime()
             self.dir["_file_version"] = self.VERSION
@@ -354,7 +354,7 @@ class DirMetadata(object):
             self.target.synchronizer._inc_stat("meta_bytes_written", len(s))
             if self.DEBUG:
                 self.target.write_text(self.DEBUG_META_FILE_NAME, s)
-        
+
         self.modified_list = False
         self.modified_sync = False
 
@@ -382,7 +382,7 @@ class _Target(object):
         self.support_set_time = None # TODO: don't know yet
         self.cur_dir_meta = DirMetadata(self)
         self.meta_stack = []
-        
+
     def __del__(self):
         # TODO: http://pydev.blogspot.de/2015/01/creating-safe-cyclic-reference.html
         self.close()
@@ -392,19 +392,19 @@ class _Target(object):
 
     def is_local(self):
         return self.synchronizer.local is self
-    
+
     def get_option(self, key, default=None):
         """Return option from synchronizer (possibly overridden by target extra_opts)."""
         if self.synchronizer:
             return self.extra_opts.get(key, self.synchronizer.options.get(key, default))
         return self.extra_opts.get(key, default)
-          
+
     def open(self):
         self.connected = True
-    
+
     def close(self):
         self.connected = False
-    
+
     def check_write(self, name):
         """Raise exception if writing cur_dir/name is not allowed."""
         if self.readonly and name not in (DirMetadata.META_FILE_NAME, DirMetadata.LOCK_FILE_NAME):
@@ -426,14 +426,14 @@ class _Target(object):
 
     def cwd(self, dir_name):
         raise NotImplementedError
-    
+
     def push_meta(self):
         self.meta_stack.append( self.cur_dir_meta)
         self.cur_dir_meta = None
-    
+
     def pop_meta(self):
         self.cur_dir_meta = self.meta_stack.pop()
-        
+
     def flush_meta(self):
         """Write additional meta information for current directory."""
         if self.cur_dir_meta:
@@ -441,7 +441,7 @@ class _Target(object):
 
     def pwd(self, dir_name):
         raise NotImplementedError
-    
+
     def mkdir(self, dir_name):
         raise NotImplementedError
 
@@ -520,7 +520,7 @@ class FsTarget(_Target):
 
     def close(self):
         self.connected = False
-        
+
     def cwd(self, dir_name):
         path = normpath_url(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
@@ -569,22 +569,22 @@ class FsTarget(_Target):
             # stat.st_mtime is returned as UTC
             mtime = stat.st_mtime
             if os.path.isdir(path):
-                res.append(DirectoryEntry(self, self.cur_dir, name, stat.st_size, 
-                                          mtime, 
+                res.append(DirectoryEntry(self, self.cur_dir, name, stat.st_size,
+                                          mtime,
                                           str(stat.st_ino)))
             elif os.path.isfile(path):
                 if name == DirMetadata.META_FILE_NAME:
                     self.cur_dir_meta.read()
                 elif not name in (DirMetadata.DEBUG_META_FILE_NAME, ):
-                    res.append(FileEntry(self, self.cur_dir, name, stat.st_size, 
-                                         mtime, 
+                    res.append(FileEntry(self, self.cur_dir, name, stat.st_size,
+                                         mtime,
                                          str(stat.st_ino)))
         return res
 
     def open_readable(self, name):
         fp = open(os.path.join(self.cur_dir, name), "rb")
         return fp
-        
+
     def write_file(self, name, fp_src, blocksize=DEFAULT_BLOCKSIZE, callback=None):
         self.check_write(name)
         with open(os.path.join(self.cur_dir, name), "wb") as fp_dst:
@@ -596,7 +596,7 @@ class FsTarget(_Target):
                 if callback:
                     callback(data)
         return
-        
+
     def remove_file(self, name):
         """Remove cur_dir/name."""
         self.check_write(name)

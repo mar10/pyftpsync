@@ -24,7 +24,7 @@ except ImportError:
 class _Resource(object):
     def __init__(self, target, rel_path, name, size, mtime, unique):
         """
-        
+
         @param target
         @param rel_path
         @param name base name
@@ -43,8 +43,8 @@ class _Resource(object):
         self.meta = None # Set by target.get_dir()
 
     def __str__(self):
-        return "%s('%s', size:%s, modified:%s)" % (self.__class__.__name__, 
-                                                   os.path.join(self.rel_path, self.name), 
+        return "%s('%s', size:%s, modified:%s)" % (self.__class__.__name__,
+                                                   os.path.join(self.rel_path, self.name),
                                                    self.size, self.dt_modified) #+ " ## %s, %s" % (self.mtime, time.asctime(time.gmtime(self.mtime)))
 
     def as_string(self):
@@ -58,10 +58,10 @@ class _Resource(object):
     def get_rel_path(self):
         path = relpath_url(self.target.cur_dir, self.target.root_dir)
         return normpath_url(join_url(path, self.name))
-    
+
     def is_file(self):
         return False
-    
+
     def is_dir(self):
         return False
 
@@ -79,12 +79,12 @@ class _Resource(object):
 # FileEntry
 #===============================================================================
 class FileEntry(_Resource):
-    
+
     # 2 seconds difference is considered equal.
     # mtime stamp resolution depends on filesystem: FAT32. 2 seconds, NTFS ms, OSX. 1 sec.
-    EPS_TIME = 2.01 
+    EPS_TIME = 2.01
 #     EPS_TIME = 0.1
-    
+
     def __init__(self, target, rel_path, name, size, mtime, unique):
         super(FileEntry, self).__init__(target, rel_path, name, size, mtime, unique)
 
@@ -97,20 +97,20 @@ class FileEntry(_Resource):
         elif res < 0:
             return -1
         return 1
-        
+
     def is_file(self):
         return True
 
     def __eq__(self, other):
         same_time = self._eps_compare(self.mtime, other.mtime) == 0
-        return (other and other.__class__ == self.__class__ 
-                and other.name == self.name and other.size == self.size 
+        return (other and other.__class__ == self.__class__
+                and other.name == self.name and other.size == self.size
                 and same_time)
 
     def __gt__(self, other):
         time_greater = self._eps_compare(self.mtime, other.mtime) > 0
-        return (other and other.__class__ == self.__class__ 
-                and other.name == self.name 
+        return (other and other.__class__ == self.__class__
+                and other.name == self.name
                 and time_greater)
 
     def get_sync_info(self):
@@ -119,7 +119,7 @@ class FileEntry(_Resource):
 
     def was_modified_since_last_sync(self):
         """Return True if this resource was modified since last sync.
-        
+
         None is returned if we don't know (because of missing meta data).
         """
         info = self.get_sync_info()
@@ -132,7 +132,7 @@ class FileEntry(_Resource):
 #         if res:
 #             print("%s was_modified_since_last_sync: %s" % (self, (self.get_adjusted_mtime() - self.target.cur_dir_meta.get_last_sync_with(peer_target))))
         return False
-        
+
 
 #===============================================================================
 # DirectoryEntry

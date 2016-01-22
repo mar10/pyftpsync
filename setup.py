@@ -118,7 +118,7 @@ setup(name="pyftpsync",
                      "Topic :: Software Development :: Libraries :: Python Modules",
                      "Topic :: Utilities",
                      ],
-      keywords = "python ftp synchronize tool", 
+      keywords = "python ftp synchronize tool",
 #      platforms=["Unix", "Windows"],
       license = "The MIT License",
       install_requires = install_requires,
@@ -126,9 +126,9 @@ setup(name="pyftpsync",
       tests_require = tests_require,
 #      package_dir = {"": "src"},
       packages = ["ftpsync"],
-      
+
       py_modules = [
-#                    "ez_setup", 
+#                    "ez_setup",
                     ],
       # See also MANIFEST.in
 #      package_data={"": ["*.txt", "*.html", "*.conf"]},
