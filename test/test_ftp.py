@@ -17,15 +17,6 @@ else:
     import unittest
     from unittest.case import SkipTest
 
-# Python 2.7/3.2+ supports ftps://.
-if (sys.version_info.major == 2 and sys.version_info >= (2, 7)) or \
-        (sys.version_info.major == 3 and sys.version_info >= (3, 2)):
-    tls = True
-    scheme = 'ftps'
-else:
-    tls = False
-    scheme = 'ftp'
-
 from ftpsync.ftp_target import *  # @UnusedWildImport
 from ftpsync.targets import *  # @UnusedWildImport
 
@@ -386,47 +377,42 @@ class PlainTest(unittest.TestCase):
         pass
 
     def test_make_target(self):
-        t = make_target(scheme + "://ftp.example.com/target/folder")
-        self.assertTrue(isinstance(t, FtpTarget))
-        self.assertEqual(t.host, "ftp.example.com")
-        self.assertEqual(t.root_dir, "/target/folder")
-        self.assertEqual(t.username, None)
-        self.assertEqual(t.tls, tls)
+        for scheme in ['ftp', 'ftps']:
+            tls = True if scheme == 'ftps' else False
 
-        # scheme is case-insensitive
-        t = make_target(scheme.upper() + "://ftp.example.com/target/folder")
-        self.assertTrue(isinstance(t, FtpTarget))
-        self.assertEqual(t.host, "ftp.example.com")
-        self.assertEqual(t.root_dir, "/target/folder")
-        self.assertEqual(t.username, None)
-        self.assertEqual(t.tls, tls)
+            t = make_target(scheme + "://ftp.example.com/target/folder")
+            self.assertTrue(isinstance(t, FtpTarget))
+            self.assertEqual(t.host, "ftp.example.com")
+            self.assertEqual(t.root_dir, "/target/folder")
+            self.assertEqual(t.username, None)
+            self.assertEqual(t.tls, tls)
 
-        # pass credentials wit URL
-        t = make_target(scheme +
-                        "://user:secret@ftp.example.com/target/folder")
-        self.assertTrue(isinstance(t, FtpTarget))
-        self.assertEqual(t.host, "ftp.example.com")
-        self.assertEqual(t.username, "user")
-        self.assertEqual(t.password, "secret")
-        self.assertEqual(t.root_dir, "/target/folder")
-        self.assertEqual(t.tls, tls)
+            # scheme is case-insensitive
+            t = make_target(scheme.upper() + "://ftp.example.com/target/folder")
+            self.assertTrue(isinstance(t, FtpTarget))
+            self.assertEqual(t.host, "ftp.example.com")
+            self.assertEqual(t.root_dir, "/target/folder")
+            self.assertEqual(t.username, None)
+            self.assertEqual(t.tls, tls)
 
-        t = make_target(scheme +
-                        "://user@example.com:secret@ftp.example.com/target/folder")
-        self.assertTrue(isinstance(t, FtpTarget))
-        self.assertEqual(t.host, "ftp.example.com")
-        self.assertEqual(t.username, "user@example.com")
-        self.assertEqual(t.password, "secret")
-        self.assertEqual(t.root_dir, "/target/folder")
-        self.assertEqual(t.tls, tls)
+            # pass credentials with URL
+            url = 'user:secret@ftp.example.com/target/folder'
+            t = make_target(scheme + "://" + url)
+            self.assertTrue(isinstance(t, FtpTarget))
+            self.assertEqual(t.host, "ftp.example.com")
+            self.assertEqual(t.username, "user")
+            self.assertEqual(t.password, "secret")
+            self.assertEqual(t.root_dir, "/target/folder")
+            self.assertEqual(t.tls, tls)
 
-        t = make_target("ftp://user@example.com:secret@ftp.example.com/target/folder")
-        self.assertTrue(isinstance(t, FtpTarget))
-        self.assertEqual(t.host, "ftp.example.com")
-        self.assertEqual(t.username, "user@example.com")
-        self.assertEqual(t.password, "secret")
-        self.assertEqual(t.root_dir, "/target/folder")
-        self.assertEqual(t.tls, False)
+            url = 'user@example.com:secret@ftp.example.com/target/folder'
+            t = make_target(scheme + "://" + url)
+            self.assertTrue(isinstance(t, FtpTarget))
+            self.assertEqual(t.host, "ftp.example.com")
+            self.assertEqual(t.username, "user@example.com")
+            self.assertEqual(t.password, "secret")
+            self.assertEqual(t.root_dir, "/target/folder")
+            self.assertEqual(t.tls, tls)
 
         # unsupported schemes
         self.assertRaises(ValueError, make_target, "ftpa://ftp.example.com/test")
