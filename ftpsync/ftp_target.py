@@ -35,7 +35,8 @@ class FtpTarget(_Target):
         username (str):
         password (str):
     """
-    def __init__(self, path, host, port=None, username=None, password=None, extra_opts=None):
+    def __init__(self, path, host, port=None, username=None, password=None,
+                 tls=False, extra_opts=None):
         """Create FTP target with host, initial path, optional credentials and options.
 
         Args:
@@ -44,16 +45,25 @@ class FtpTarget(_Target):
             port (int): FTP port (defaults to 21)
             username (str):
             password (str):
+            tls (bool): encrypt the connection using TLS (Python 2.7/3.2+)
             extra_opts (dict):
         """
         path = path or "/"
         super(FtpTarget, self).__init__(path, extra_opts)
-        self.ftp = ftplib.FTP()
+        if tls:
+            try:
+                self.ftp = ftplib.FTP_TLS()
+            except AttributeError:
+                print("Python 2.7/3.2+ required for FTPS (TLS).")
+                raise
+        else:
+            self.ftp = ftplib.FTP()
         self.ftp.debug(self.get_option("ftp_debug", 0))
         self.host = host
         self.port = port
         self.username = username
         self.password = password
+        self.tls = tls
         self.lock_data = None
         self.is_unix = None
         self.time_zone_ofs = None
@@ -62,10 +72,12 @@ class FtpTarget(_Target):
 #            self.open()
 
     def __str__(self):
-        return "<ftp:%s%s + %s>" % (self.host, self.root_dir, relpath_url(self.cur_dir, self.root_dir))
+        return "<%s + %s>" % (self.get_base_name(),
+                              relpath_url(self.cur_dir, self.root_dir))
 
     def get_base_name(self):
-        return "ftp:%s%s" % (self.host, self.root_dir)
+        scheme = "ftps" if self.tls else "ftp"
+        return "%s://%s%s" % (scheme, self.host, self.root_dir)
 
     def open(self):
         assert not self.connected
@@ -76,7 +88,7 @@ class FtpTarget(_Target):
             self.ftp.connect(self.host, self.port)
         else:
             self.ftp.connect(self.host)
-        #
+
         if self.username is None or self.password is None:
             creds = get_credentials_for_url(self.host, allow_prompt=not no_prompt)
             if creds:
@@ -94,6 +106,10 @@ class FtpTarget(_Target):
             if not no_prompt:
                 self.user, self.password = prompt_for_password(self.host, self.username)
                 self.ftp.login(self.username, self.password)
+
+        if self.tls:
+            # Upgrade data connection to TLS.
+            self.ftp.prot_p()
 
         try:
             self.ftp.cwd(self.root_dir)

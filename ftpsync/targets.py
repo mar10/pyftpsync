@@ -52,11 +52,11 @@ def prompt_for_password(url, user=None):
     if user is None:
         default_user = getpass.getuser()
         while user is None:
-            user = console_input("Enter username for ftp://%s [%s]: " % (url, default_user))
+            user = console_input("Enter username for %s [%s]: " % (url, default_user))
             if user.strip() == "" and default_user:
                 user = default_user
     if user:
-        pw = getpass.getpass("Enter password for ftp://%s@%s: " % (user, url))
+        pw = getpass.getpass("Enter password for %s@%s: " % (user, url))
         if pw:
             return (user, pw)
     return None
@@ -145,15 +145,21 @@ def ansi_code(name):
 # make_target
 #===============================================================================
 def make_target(url, extra_opts=None):
-    """Factory that creates _Target objects from URLs."""
+    """Factory that creates _Target objects from URLs.
+
+    FTP targets must begin with the scheme ftp:// or ftps:// for TLS.
+    TLS is only supported on Python 2.7/3.2+.
+    """
 #    debug = extra_opts.get("debug", 1)
     parts = urlparse(url, allow_fragments=False)
     # scheme is case-insensitive according to http://tools.ietf.org/html/rfc3986
-    if parts.scheme.lower() == "ftp":
+    scheme = parts.scheme.lower()
+    if scheme in ["ftp", "ftps"]:
         creds = parts.username, parts.password
+        tls = scheme == "ftps"
         from ftpsync import ftp_target
         target = ftp_target.FtpTarget(parts.path, parts.hostname, parts.port,
-                                      creds[0], creds[1], extra_opts)
+                                      creds[0], creds[1], tls, extra_opts)
     else:
         target = FsTarget(url, extra_opts)
 

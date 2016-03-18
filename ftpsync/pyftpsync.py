@@ -7,7 +7,7 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 
 Usage examples:
   > pyftpsync.py --help
-  > pyftpsync.py upload . ftp://example.com/myfolder
+  > pyftpsync.py upload . ftps://example.com/myfolder
 """
 from __future__ import print_function
 
