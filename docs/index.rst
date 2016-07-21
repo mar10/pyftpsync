@@ -175,18 +175,18 @@ Example: Upload files
 Upload all new and modified files from user's temp folder to an FTP server. 
 No files are changed on the local directory::
 
-  $ pyftpsync upload ~/temp ftps://example.com/target/folder
+  $ pyftpsync upload ~/temp ftp://example.com/target/folder
 
 Add the ``--delete`` option to remove all files from the remote target that 
 don't exist locally::
 
-  $ pyftpsync upload ~/temp ftps://example.com/target/folder --delete
+  $ pyftpsync upload ~/temp ftp://example.com/target/folder --delete
 
 Add the ``-x`` option to switch from DRY-RUN mode to real execution::
 
-  $ pyftpsync upload ~/temp ftps://example.com/target/folder --delete -x
+  $ pyftpsync upload ~/temp ftp://example.com/target/folder --delete -x
 
-Replace ``ftps://`` with ``ftp://`` to disable TLS encryption.
+Replace ``ftp://`` with ``ftps://`` to enable TLS encryption.
 
 
 Synchronize files syntax
@@ -227,6 +227,8 @@ Two-way synchronization of a local folder with an FTP server::
 
   $ pyftpsync sync --store-password --resolve=ask --execute ~/temp ftps://example.com/target/folder
 
+Note that ``ftps:`` protocol was specified to enable TLS.
+
 
 Script examples
 ===============
@@ -240,12 +242,12 @@ Upload changes from local folder to FTP server::
   local = FsTarget("~/temp")
   user ="joe"
   passwd = "secret"
-  remote = FtpTarget("/temp", "example.com", user, passwd, tls=True)
+  remote = FtpTarget("/temp", "example.com", username=user, password=passwd)
   opts = {"force": False, "delete_unmatched": True, "verbose": 3, "dry_run" : False}
   s = UploadSynchronizer(local, remote, opts)
   s.run()
 
-Synchronize local folder with FTP server::
+Synchronize local folder with FTP server using TLS::
 
   from ftpsync.targets import FsTarget
   from ftpsync.ftp_target import FtpTarget
@@ -254,7 +256,7 @@ Synchronize local folder with FTP server::
   local = FsTarget("~/temp")
   user ="joe"
   passwd = "secret"
-  remote = FtpTarget("/temp", "example.com", user, passwd, tls=True)
+  remote = FtpTarget("/temp", "example.com", username=user, password=passwd, tls=True)
   opts = {"resolve": "skip", "verbose": 1, "dry_run" : False}
   s = BiDirSynchronizer(local, remote, opts)
   s.run()
