@@ -2,7 +2,11 @@
 CHANGES
 =======
 
-1.0.0 (unreleased)
+1.1.0 (unreleased)
+==================
+- Remove lock file on Ctrl-C
+
+1.0.3 (2015-06-28)
 ==================
 - Bi-directional synchronization
 - Detect conflicts if both targets are modified since last sync.

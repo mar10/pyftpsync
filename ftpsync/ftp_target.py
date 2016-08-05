@@ -140,14 +140,12 @@ class FtpTarget(_Target):
 
     def close(self):
         if self.connected:
-            self._unlock()
+            self._unlock(closing=True)
             self.ftp.quit()
         self.connected = False
 
     def _lock(self, break_existing=False):
-        """Write a special file to the target root folder.
-
-        """
+        """Write a special file to the target root folder."""
         data = {"lock_time": time.time(),
                 "lock_holder": None}
 
@@ -158,16 +156,24 @@ class FtpTarget(_Target):
         except Exception as e:
             print("Could not write lock file: %s" % e, file=sys.stderr)
 
-    def _unlock(self):
-        """Write a special file to the target root folder.
+    def _unlock(self, closing=False):
+        """Remove lock file to the target root folder.
 
         """
         try:
-            assert self.cur_dir == self.root_dir
+            if self.cur_dir != self.root_dir:
+                if closing:
+                    print("Changing to ftp root folder to remove lock file: {0}".format(self.root_dir))
+                    self.cwd(self.root_dir)
+                else:
+                    print("Could not remove lock file, because CWD != ftp root: {0}".format(self.cur_dir), file=sys.stderr)
+                    return
+                
             self.remove_file(DirMetadata.LOCK_FILE_NAME)
             self.lock_data = None
         except Exception as e:
             print("Could not remove lock file: %s" % e, file=sys.stderr)
+            raise
 
     def _probe_lock_file(self, reported_mtime):
         """Called by get_dir"""
