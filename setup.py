@@ -81,7 +81,7 @@ build_exe_options = {
     "includes": install_requires,
     "packages": ["keyring.backends",  # loaded dynamically
                  ],
-    # "constants": "BUILD_COPYRIGHT=(c) 2012-2015 Martin Wendt",
+    # "constants": "BUILD_COPYRIGHT=(c) 2012-2016 Martin Wendt",
     }
 
 bdist_msi_options = {
@@ -95,7 +95,7 @@ setup(name="pyftpsync",
       version = version,
       author = "Martin Wendt",
       author_email = "pyftpsync@wwwendt.de",
-      # copyright = "(c) 2012-2015 Martin Wendt",
+      # copyright = "(c) 2012-2016 Martin Wendt",
       maintainer = "Martin Wendt",
       maintainer_email = "pyftpsync@wwwendt.de",
       url = "https://github.com/mar10/pyftpsync",
