@@ -30,7 +30,7 @@ version control system. Make sure you have backups.
 
 ## Quickstart 
 
-[Python](http://www.python.org/download/ Python) 2.6+ or 3 is required, 
+[Python](http://www.python.org/download/ Python) 2.7+ or 3.3+ is required, 
 [pip](http://www.pip-installer.org/) or
 [EasyInstall](http://pypi.python.org/pypi/setuptools#using-setuptools-and-easyinstall)
 recommended:
@@ -43,4 +43,4 @@ $ pyftpsync --help
 
 ## Documentation
 
-[Read the Docs](http://pyftpsync.readthedocs.org/en/latest/) for details.
+[Read the Docs](http://pyftpsync.readthedocs.io/) for details.

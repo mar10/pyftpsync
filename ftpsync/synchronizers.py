@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 
 from ftpsync.targets import IS_REDIRECTED, DRY_RUN_PREFIX, DirMetadata,\
-    ansi_code, console_input
+    ansi_code, console_input, VT_ERASE_LINE
 from ftpsync.resources import FileEntry, DirectoryEntry
 
 def _ts(timestamp):
@@ -133,9 +133,35 @@ class BaseSynchronizer(object):
 
         def _add(rate, size, time):
             if stats.get(time) and stats.get(size):
-                stats[rate] = "%0.2f kb/sec" % (.001 * stats[size] / stats[time])
+                stats[rate] = "%0.2f kB/sec" % (.001 * stats[size] / stats[time])
         _add("upload_rate_str", "upload_bytes_written", "upload_write_time")
         _add("download_rate_str", "download_bytes_written", "download_write_time")
+        return res
+
+    def _compare_file(self, src, dest, file_entry):
+        """Byte compare two files (early out on first difference)."""
+        print("_compare_file(%s, %s --> %s)... " % (file_entry, src, dest), end="")
+#         sys.stdout.write("Comparing %s/%s entries in %s dirs...\r"
+#             % (prefix,
+#                stats["entries_touched"], stats["entries_seen"],
+#                stats["local_dirs"]))
+        assert isinstance(file_entry, FileEntry)
+#         is_upload = (dest is self.remote)
+
+#         start = time.time()
+        res = False
+        with src.open_readable(file_entry.name) as fp_src, dest.open_readable(file_entry.name) as fp_dest:
+            bufsize = 8 * 1024
+            while True:
+                b1 = fp_src.read(bufsize)
+                b2 = fp_dest.read(bufsize)
+                if b1 != b2:
+                    break
+                if not b1:
+                    res = False
+                    break
+        print(res)
+#         elap = time.time() - start
         return res
 
     def _copy_file(self, src, dest, file_entry):
@@ -341,10 +367,15 @@ class BaseSynchronizer(object):
         """Return True if this is a conflict, i.e. both targets are modified."""
         any_entry = local or remote
         if any_entry.is_dir():
-            # Currently we cnnot detect directory conflicts
+            # Currently we cannot detect directory conflicts
             return False
         if local and remote:
             is_conflict = local.was_modified_since_last_sync() and remote.was_modified_since_last_sync()
+            if is_conflict:
+                info = local.get_sync_info()
+                print("%s was_modified_since_last_sync: delta-t: %s, delta-size: %s" % (local, (local.mtime - info["m"]), (local.size - info["s"])))
+                info = remote.get_sync_info()
+                print("%s was_modified_since_last_sync: delta-t: %s, delta-size: %s" % (remote, (remote.mtime - info["m"]), (remote.size - info["s"])))
         elif local:
             # remote was deleted, but local was modified
             existed = local.get_sync_info()
@@ -562,9 +593,9 @@ class BiDirSynchronizer(BaseSynchronizer):
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
-        print((RED + "CONFLICT in %s:" + R) % local.name)
+        print((VT_ERASE_LINE + RED + "CONFLICT in %s:" + R) % local.name)
         print("    local:  %s" % local.as_string())
-        print("    remote: %s" % (remote.as_string() if remote else "n.a."))
+        print("    remote: %s" % (remote.as_string(local) if remote else "n.a."))
 
         while True:
             prompt = "Use " + M + "L" + R + "ocal, use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + M + "H" + R + "elp)? "
@@ -716,21 +747,22 @@ class UploadSynchronizer(BaseSynchronizer):
 
     def _interactive_resolve(self, local, remote):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
-        if self.resolve_all:
-            return self.resolve_all
-        resolve = self.options.get("resolve", "skip")
-        assert resolve in ("local", "ask", "skip")
-        if resolve in ("local", "skip"):
-            self.resolve_all = resolve
-            return resolve
-
         RED = ansi_code("Fore.LIGHTRED_EX")
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
-        print((RED + "CONFLICT in %s:" + R) % local.name)
+        print((VT_ERASE_LINE + RED + "CONFLICT in %s:" + R) % local.name)
         print("    local:  %s" % local.as_string())
-        print("    remote: %s" % (remote.as_string() if remote else "n.a."))
+        print("    remote: %s" % (remote.as_string(local) if remote else "n.a."))
+
+        if self.resolve_all:
+            return self.resolve_all
+        resolve = self.options.get("resolve", "skip")
+        assert resolve in ("local", "ask", "skip")
+
+        if resolve in ("local", "skip"):
+            self.resolve_all = resolve
+            return resolve
 
         while True:
             prompt = "Use " + M + "L" + R + "ocal, " + M + "S" + R + "kip, " + M + "H" + R + "elp)? "
@@ -899,9 +931,9 @@ class DownloadSynchronizer(BaseSynchronizer):
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
-        print((RED + "CONFLICT in %s:" + R) % local.name)
+        print((VT_ERASE_LINE + RED + "CONFLICT in %s:" + R) % local.name)
         print("    local:  %s" % local.as_string())
-        print("    remote: %s" % (remote.as_string() if remote else "n.a."))
+        print("    remote: %s" % (remote.as_string(local) if remote else "n.a."))
 
         while True:
             prompt = "Use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + M + "H" + R + "elp)? "

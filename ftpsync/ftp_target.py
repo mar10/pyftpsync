@@ -25,7 +25,7 @@ DEFAULT_BLOCKSIZE = targets.DEFAULT_BLOCKSIZE
 # FtpTarget
 #===============================================================================
 class FtpTarget(_Target):
-    """Represents a synchronisation target on a FTP server.
+    """Represents a synchronization target on a FTP server.
 
     Attributes:
         path (str): Current working directory on FTP server.

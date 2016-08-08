@@ -42,7 +42,7 @@ DEFAULT_CREDENTIAL_STORE = "pyftpsync.pw"
 DRY_RUN_PREFIX = "(DRY-RUN) "
 IS_REDIRECTED = (os.fstat(0) != os.fstat(1))
 DEFAULT_BLOCKSIZE = 8 * 1024
-
+VT_ERASE_LINE = "\x1b[2K"
 
 #===============================================================================
 #
@@ -249,7 +249,7 @@ class DirMetadata(object):
     LOCK_FILE_NAME = ".pyftpsync-lock.json"
     DEBUG_META_FILE_NAME = "_pyftpsync-meta.json"
     DEBUG = False # True: write a copy that is not a dot-file
-    PRETTY = False # False: Reduce meta file size to 35% (3759 -> 1375 bytes)
+    PRETTY = True # False: Reduce meta file size to 35% (3759 -> 1375 bytes)
     VERSION = 1 # Increment if format changes. Old files will be discarded then.
 
     def __init__(self, target):
@@ -307,7 +307,8 @@ class DirMetadata(object):
             self.modified_list = True
         if self.target.is_local():
             remote_target = self.target.peer
-            self.modified_sync = self.dir["peer_sync"][remote_target.get_id()].pop(filename, None)
+            if remote_target.get_id() in self.dir["peer_sync"]:
+                self.modified_sync = self.dir["peer_sync"][remote_target.get_id()].pop(filename, None)
         return
 
     def read(self):
@@ -315,7 +316,7 @@ class DirMetadata(object):
         try:
             s = self.target.read_text(self.filename)
             self.target.synchronizer._inc_stat("meta_bytes_read", len(s))
-            self.was_read = True # True, if exists (even invalid)
+            self.was_read = True # True if exists (even invalid)
             self.dir = json.loads(s)
             if self.dir.get("_file_version", 0) < self.VERSION:
                 raise RuntimeError("Invalid meta data version: %s (expected %s)" % (self.dir.get("_file_version"), self.VERSION))

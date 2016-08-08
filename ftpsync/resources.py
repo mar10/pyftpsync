@@ -47,10 +47,25 @@ class _Resource(object):
                                                    os.path.join(self.rel_path, self.name),
                                                    self.size, self.dt_modified) #+ " ## %s, %s" % (self.mtime, time.asctime(time.gmtime(self.mtime)))
 
-    def as_string(self):
+    def as_string(self, other_resource=None):
 #         dt = datetime.fromtimestamp(self.get_adjusted_mtime())
         dt = datetime.fromtimestamp(self.mtime)
-        return "%s, %8s bytes" % (dt.strftime("%Y-%m-%d %H:%M:%S"), self.size)
+        res = "%s, %8s bytes" % (dt.strftime("%Y-%m-%d %H:%M:%S"), self.size)
+        if other_resource:
+            comp = []
+            if self.mtime < other_resource.mtime:
+                comp.append("newer")
+            elif self.mtime > other_resource.mtime:
+                comp.append("older")
+            
+            if self.size < other_resource.size:
+                comp.append("smaller")
+            elif self.size > other_resource.size:
+                comp.append("larger")
+
+            if comp:
+                res += " (%s)" % ", ".join(comp)
+        return res
 
     def __eq__(self, other):
         raise NotImplementedError
