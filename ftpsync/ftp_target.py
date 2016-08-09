@@ -13,11 +13,13 @@ import sys
 import time
 
 from ftpsync import targets
-from ftpsync.targets import _Target, DirMetadata, prompt_for_password,\
-    save_password, get_credentials_for_url
+from ftpsync.targets import _Target
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftplib import error_perm
 import json
+from ftpsync.util import get_credentials_for_url, prompt_for_password,\
+    save_password
+from ftpsync.metadata import DirMetadata
 
 DEFAULT_BLOCKSIZE = targets.DEFAULT_BLOCKSIZE
 

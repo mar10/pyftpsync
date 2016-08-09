@@ -11,9 +11,10 @@ import sys
 import time
 from datetime import datetime
 
-from ftpsync.targets import IS_REDIRECTED, DRY_RUN_PREFIX, DirMetadata,\
+from ftpsync.util import IS_REDIRECTED, DRY_RUN_PREFIX,\
     ansi_code, console_input, VT_ERASE_LINE
 from ftpsync.resources import FileEntry, DirectoryEntry
+from ftpsync.metadata import DirMetadata
 
 def _ts(timestamp):
     return "{0} ({1})".format(datetime.fromtimestamp(timestamp), timestamp)
