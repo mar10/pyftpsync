@@ -178,6 +178,32 @@ try:
 except NameError:
     console_input = input
 
+
+def byte_compare(stream_a, stream_b):
+    """Byte compare two files (early out on first difference).
+    
+    @return: (bool, int): offset of first mismatch or 0 if equal
+    """
+    bufsize = DEFAULT_BLOCKSIZE
+    equal = True
+    ofs = 0
+    while True:
+        b1 = stream_a.read(bufsize)
+        b2 = stream_b.read(bufsize)
+        if b1 != b2:
+            equal = False
+            if b1 and b2:
+                # we have two different buffers: find first mismatch
+                for a, b in zip(b1, b2):
+                    if a != b:
+                        break
+                    ofs += 1
+            break
+        ofs += len(b1)
+        if not b1:  # both buffers empty
+            break
+    return (equal, ofs)
+
 #===============================================================================
 # LogginFileWrapper
 # Wrapper around a file for writing to write a hash sign every block.

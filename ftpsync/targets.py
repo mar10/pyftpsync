@@ -93,7 +93,7 @@ class _Target(object):
     def get_id(self):
         return self.root_dir
 
-    def get_sync_info(self, name):
+    def get_sync_info(self, name, key=None):
         """Get mtime/size when this target's current dir was last synchronized with remote."""
         peer_target = self.peer
         if self.is_local():
@@ -102,6 +102,8 @@ class _Target(object):
             info = peer_target.cur_dir_meta.dir["peer_sync"].get(self.get_id())
         if name is not None:
             info = info.get(name) if info else None
+        if info and key:
+            info = info.get(key)
         return info
 
     def cwd(self, dir_name):

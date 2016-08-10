@@ -12,12 +12,10 @@ import time
 from datetime import datetime
 
 from ftpsync.util import IS_REDIRECTED, DRY_RUN_PREFIX,\
-    ansi_code, console_input, VT_ERASE_LINE
+    ansi_code, console_input, VT_ERASE_LINE, byte_compare
 from ftpsync.resources import FileEntry, DirectoryEntry
 from ftpsync.metadata import DirMetadata
 
-def _ts(timestamp):
-    return "{0} ({1})".format(datetime.fromtimestamp(timestamp), timestamp)
 
 DEFAULT_OMIT = [".DS_Store",
                 ".git",
@@ -26,6 +24,16 @@ DEFAULT_OMIT = [".DS_Store",
                 DirMetadata.META_FILE_NAME,
                 DirMetadata.LOCK_FILE_NAME,
                 ]
+
+
+#===============================================================================
+# Helpers
+#===============================================================================
+
+def _ts(timestamp):
+    """Convert timestamp to verbose string."""
+#     return "{0} ({1})".format(datetime.fromtimestamp(timestamp), timestamp)
+    return "{}".format(datetime.fromtimestamp(timestamp))
 
 
 #===============================================================================
@@ -139,30 +147,29 @@ class BaseSynchronizer(object):
         _add("download_rate_str", "download_bytes_written", "download_write_time")
         return res
 
-    def _compare_file(self, src, dest, file_entry):
+    def _compare_file(self, local, remote):
         """Byte compare two files (early out on first difference)."""
-        print("_compare_file(%s, %s --> %s)... " % (file_entry, src, dest), end="")
+#         print("_compare_file(%s, %s --> %s)... " % (local.target, remote.target, local.name), end="")
 #         sys.stdout.write("Comparing %s/%s entries in %s dirs...\r"
 #             % (prefix,
 #                stats["entries_touched"], stats["entries_seen"],
 #                stats["local_dirs"]))
-        assert isinstance(file_entry, FileEntry)
-#         is_upload = (dest is self.remote)
+        assert isinstance(local, FileEntry) and isinstance(remote, FileEntry) 
+        
+        if not local or not remote:
+            print("    Files cannot be compared (%s != %s)" % (local, remote))
+            return False
+        elif local.size != remote.size:
+            print("    Files are different (size {:,} != {:,})".format(local.size, remote.size))
+            return False
 
-#         start = time.time()
-        res = False
-        with src.open_readable(file_entry.name) as fp_src, dest.open_readable(file_entry.name) as fp_dest:
-            bufsize = 8 * 1024
-            while True:
-                b1 = fp_src.read(bufsize)
-                b2 = fp_dest.read(bufsize)
-                if b1 != b2:
-                    break
-                if not b1:
-                    res = False
-                    break
-        print(res)
-#         elap = time.time() - start
+        with local.target.open_readable(local.name) as fp_src, remote.target.open_readable(remote.name) as fp_dest:
+            res, ofs = byte_compare(fp_src, fp_dest)
+
+        if not res:
+            print("    Files are different at offset {:,}".format(ofs))
+        else:
+            print("    Files are equal.")
         return res
 
     def _copy_file(self, src, dest, file_entry):
@@ -594,7 +601,10 @@ class BiDirSynchronizer(BaseSynchronizer):
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
-        print((VT_ERASE_LINE + RED + "CONFLICT in %s:" + R) % local.name)
+        print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})" + R)
+              .format(local.name, _ts(local.get_sync_info("u"))))
+        print("    original modification time: {}, size: {:,} bytes"
+              .format(_ts(local.get_sync_info("m")), local.get_sync_info("s")))
         print("    local:  %s" % local.as_string())
         print("    remote: %s" % (remote.as_string(local) if remote else "n.a."))
 
@@ -752,9 +762,12 @@ class UploadSynchronizer(BaseSynchronizer):
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
-        print((VT_ERASE_LINE + RED + "CONFLICT in %s:" + R) % local.name)
-        print("    local:  %s" % local.as_string())
-        print("    remote: %s" % (remote.as_string(local) if remote else "n.a."))
+        print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})" + R)
+              .format(local.name, _ts(local.get_sync_info("u"))))
+        print("    original modification time: {}, size: {:,} bytes"
+              .format(_ts(local.get_sync_info("m")), local.get_sync_info("s")))
+        print("    local:  {}".format(local.as_string()))
+        print("    remote: {}".format(remote.as_string(local) if remote else "n.a."))
 
         if self.resolve_all:
             return self.resolve_all
@@ -766,7 +779,7 @@ class UploadSynchronizer(BaseSynchronizer):
             return resolve
 
         while True:
-            prompt = "Use " + M + "L" + R + "ocal, " + M + "S" + R + "kip, " + M + "H" + R + "elp)? "
+            prompt = "Use " + M + "L" + R + "ocal, " + M + "S" + R + "kip, " + M + "B" + R + "inary compare, " + M + "H" + R + "elp)? "
             r = console_input(prompt).strip()
             if r in ("h", "H", "?"):
                 print("The following keys are supported:")
@@ -774,6 +787,9 @@ class UploadSynchronizer(BaseSynchronizer):
                 print("  's': Skip this file (leave both versions unchanged)")
                 print("Hold Shift (upper case letters) to apply choice for all remaining conflicts.")
                 print("Hit Ctrl+C to abort.")
+                continue
+            elif r in ("B", "b"):
+                self._compare_file(local, remote)
                 continue
             elif r in ("L", "R", "S"):
                 r = self._resolve_shortcuts[r.lower()]
@@ -932,7 +948,10 @@ class DownloadSynchronizer(BaseSynchronizer):
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
-        print((VT_ERASE_LINE + RED + "CONFLICT in %s:" + R) % local.name)
+        print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})" + R)
+              .format(local.name, _ts(local.get_sync_info("u"))))
+        print("    original modification time: {}, size: {:,} bytes"
+              .format(_ts(local.get_sync_info("m")), local.get_sync_info("s")))
         print("    local:  %s" % local.as_string())
         print("    remote: %s" % (remote.as_string(local) if remote else "n.a."))
 

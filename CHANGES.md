@@ -6,6 +6,10 @@ CHANGES
 ==================
 - Remove lock file on Ctrl-C
 - Dropped support for Python 2.6
+- Modified format of .pyftpsync.meta.json
+
+1.0.4 (unreleased)
+==================
 - Add FTPS (TLS) support on Python 2.7/3.2+
 
 1.0.3 (2015-06-28)
