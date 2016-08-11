@@ -4,19 +4,11 @@ Tests for pyftpsync
 """
 from __future__ import print_function
 
-from ftplib import FTP
-from pprint import pprint
 import platform
-import sys
 
-if sys.version_info < (2, 7):
-    # Python 2.6
-    import unittest2 as unittest
-    from unittest2.case import SkipTest
-else:
-    # Python 2.7+
-    import unittest
-    from unittest.case import SkipTest
+# Python 2.7+
+import unittest
+from unittest.case import SkipTest
 
 on_windows = platform.system() == "Windows"
 

@@ -7,6 +7,7 @@ CHANGES
 - Remove lock file on Ctrl-C
 - Dropped support for Python 2.6
 - Modified format of .pyftpsync.meta.json
+- Split into more modules
 
 1.0.4 (unreleased)
 ==================

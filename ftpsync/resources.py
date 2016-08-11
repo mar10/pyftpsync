@@ -43,9 +43,10 @@ class _Resource(object):
         self.meta = None  # Set by target.get_dir()
 
     def __str__(self):
-        return "{}('{}', size:{:,}, modified:{})".format(self.__class__.__name__,
-                                                   os.path.join(self.rel_path, self.name),
-                                                   self.size, self.dt_modified) #+ " ## %s, %s" % (self.mtime, time.asctime(time.gmtime(self.mtime)))
+        return "{}('{}', size:{}, modified:{})".format(self.__class__.__name__,
+                                                       os.path.join(self.rel_path, self.name),
+                                                       "{:,}".format(self.size) if self.size else self.size,
+                                                       self.dt_modified) #+ " ## %s, %s" % (self.mtime, time.asctime(time.gmtime(self.mtime)))
 
     def as_string(self, other_resource=None):
 #         dt = datetime.fromtimestamp(self.get_adjusted_mtime())

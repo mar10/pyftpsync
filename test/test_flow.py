@@ -6,17 +6,11 @@ from __future__ import print_function
 
 import datetime
 import os
-from pprint import pprint
 import sys
 
-if sys.version_info < (2, 7):
-    # Python 2.6
-    import unittest2 as unittest
-    from unittest2.case import SkipTest
-else:
-    # Python 2.7+
-    import unittest
-    from unittest.case import SkipTest
+# Python 2.7+
+import unittest
+from unittest.case import SkipTest  # @UnusedImport
 
 
 from ftpsync.targets import FsTarget, DirMetadata

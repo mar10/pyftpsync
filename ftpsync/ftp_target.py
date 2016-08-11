@@ -170,8 +170,11 @@ class FtpTarget(_Target):
                 else:
                     print("Could not remove lock file, because CWD != ftp root: {0}".format(self.cur_dir), file=sys.stderr)
                     return
-                
-            self.remove_file(DirMetadata.LOCK_FILE_NAME)
+
+            # direct delete, without updating metadata or checking for target access:                
+            self.ftp.delete(DirMetadata.LOCK_FILE_NAME)
+#             self.remove_file(DirMetadata.LOCK_FILE_NAME)
+
             self.lock_data = None
         except Exception as e:
             print("Could not remove lock file: %s" % e, file=sys.stderr)
