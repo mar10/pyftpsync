@@ -267,7 +267,7 @@ class FtpTarget(_Target):
                         mtime = calendar.timegm(time.strptime(field_value, "%Y%m%d%H%M%S.%f"))
                     else:
                         mtime = calendar.timegm(time.strptime(field_value, "%Y%m%d%H%M%S"))
-#                    print("MLST modify: ", field_value, "mtime", mtime, "ctime", time.ctime(mtime))
+#                    print("MLSD modify: ", field_value, "mtime", mtime, "ctime", time.ctime(mtime))
                 elif field_name == "unique":
                     unique = field_value
 
@@ -287,7 +287,7 @@ class FtpTarget(_Target):
             elif res_type in ("cdir", "pdir"):
                 pass
             else:
-                raise NotImplementedError
+                raise NotImplementedError("MLSD returned unsupported type: {!r}".format(res_type))
 
             if entry:
                 entry_map[name] = entry
