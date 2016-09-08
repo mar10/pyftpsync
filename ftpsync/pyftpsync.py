@@ -11,6 +11,7 @@ Usage examples:
 """
 from __future__ import print_function
 
+import argparse
 from pprint import pprint
 
 from ftpsync import __version__
@@ -28,12 +29,6 @@ from ftpsync.synchronizers import UploadSynchronizer, \
 #    gc.garbage.append(sys.stdout)
 #    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 #disable_stdout_buffering()
-try:
-    import argparse
-except ImportError:
-    print("argparse missing (requires 2.7+, 3.2+ or pip/easy_install)")
-    raise
-
 
 
 
@@ -61,7 +56,7 @@ def run():
     qv_group.add_argument("--quiet", "-q", action="count", default=0,
                         help="decrement verbosity by one")
 
-    parser.add_argument("--version", action="version", version="%s" % __version__)
+    parser.add_argument("-V", "--version", action="version", version="%s" % __version__)
     parser.add_argument("--progress", "-p",
                         action="store_true",
                         default=False,
