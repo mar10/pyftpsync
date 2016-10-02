@@ -14,4 +14,4 @@ PyPI  would be            '1.0.0b1'
 cx_Freeze build need      '1.0.0.0'
 cx_Freeze bdist_msi  need '1.0.0'
 """
-__version__ = "1.1.0b1"
+__version__ = "1.1.0"
