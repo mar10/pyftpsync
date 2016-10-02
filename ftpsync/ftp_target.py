@@ -13,11 +13,13 @@ import sys
 import time
 
 from ftpsync import targets
-from ftpsync.targets import _Target, DirMetadata, prompt_for_password,\
-    save_password, get_credentials_for_url
+from ftpsync.targets import _Target
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftplib import error_perm
 import json
+from ftpsync.util import get_credentials_for_url, prompt_for_password,\
+    save_password
+from ftpsync.metadata import DirMetadata
 
 DEFAULT_BLOCKSIZE = targets.DEFAULT_BLOCKSIZE
 
@@ -25,7 +27,7 @@ DEFAULT_BLOCKSIZE = targets.DEFAULT_BLOCKSIZE
 # FtpTarget
 #===============================================================================
 class FtpTarget(_Target):
-    """Represents a synchronisation target on a FTP server.
+    """Represents a synchronization target on a FTP server.
 
     Attributes:
         path (str): Current working directory on FTP server.
@@ -168,8 +170,11 @@ class FtpTarget(_Target):
                 else:
                     print("Could not remove lock file, because CWD != ftp root: {0}".format(self.cur_dir), file=sys.stderr)
                     return
-                
-            self.remove_file(DirMetadata.LOCK_FILE_NAME)
+
+            # direct delete, without updating metadata or checking for target access:                
+            self.ftp.delete(DirMetadata.LOCK_FILE_NAME)
+#             self.remove_file(DirMetadata.LOCK_FILE_NAME)
+
             self.lock_data = None
         except Exception as e:
             print("Could not remove lock file: %s" % e, file=sys.stderr)
@@ -262,7 +267,7 @@ class FtpTarget(_Target):
                         mtime = calendar.timegm(time.strptime(field_value, "%Y%m%d%H%M%S.%f"))
                     else:
                         mtime = calendar.timegm(time.strptime(field_value, "%Y%m%d%H%M%S"))
-#                    print("MLST modify: ", field_value, "mtime", mtime, "ctime", time.ctime(mtime))
+#                    print("MLSD modify: ", field_value, "mtime", mtime, "ctime", time.ctime(mtime))
                 elif field_name == "unique":
                     unique = field_value
 
@@ -282,7 +287,7 @@ class FtpTarget(_Target):
             elif res_type in ("cdir", "pdir"):
                 pass
             else:
-                raise NotImplementedError
+                raise NotImplementedError("MLSD returned unsupported type: {!r}".format(res_type))
 
             if entry:
                 entry_map[name] = entry

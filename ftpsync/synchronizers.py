@@ -11,12 +11,11 @@ import sys
 import time
 from datetime import datetime
 
-from ftpsync.targets import IS_REDIRECTED, DRY_RUN_PREFIX, DirMetadata,\
-    ansi_code, console_input
+from ftpsync.util import IS_REDIRECTED, DRY_RUN_PREFIX,\
+    ansi_code, console_input, VT_ERASE_LINE, byte_compare
 from ftpsync.resources import FileEntry, DirectoryEntry
+from ftpsync.metadata import DirMetadata
 
-def _ts(timestamp):
-    return "{0} ({1})".format(datetime.fromtimestamp(timestamp), timestamp)
 
 DEFAULT_OMIT = [".DS_Store",
                 ".git",
@@ -25,6 +24,16 @@ DEFAULT_OMIT = [".DS_Store",
                 DirMetadata.META_FILE_NAME,
                 DirMetadata.LOCK_FILE_NAME,
                 ]
+
+
+#===============================================================================
+# Helpers
+#===============================================================================
+
+def _ts(timestamp):
+    """Convert timestamp to verbose string."""
+#     return "{0} ({1})".format(datetime.fromtimestamp(timestamp), timestamp)
+    return "{}".format(datetime.fromtimestamp(timestamp))
 
 
 #===============================================================================
@@ -133,9 +142,34 @@ class BaseSynchronizer(object):
 
         def _add(rate, size, time):
             if stats.get(time) and stats.get(size):
-                stats[rate] = "%0.2f kb/sec" % (.001 * stats[size] / stats[time])
+                stats[rate] = "%0.2f kB/sec" % (.001 * stats[size] / stats[time])
         _add("upload_rate_str", "upload_bytes_written", "upload_write_time")
         _add("download_rate_str", "download_bytes_written", "download_write_time")
+        return res
+
+    def _compare_file(self, local, remote):
+        """Byte compare two files (early out on first difference)."""
+#         print("_compare_file(%s, %s --> %s)... " % (local.target, remote.target, local.name), end="")
+#         sys.stdout.write("Comparing %s/%s entries in %s dirs...\r"
+#             % (prefix,
+#                stats["entries_touched"], stats["entries_seen"],
+#                stats["local_dirs"]))
+        assert isinstance(local, FileEntry) and isinstance(remote, FileEntry) 
+        
+        if not local or not remote:
+            print("    Files cannot be compared (%s != %s)" % (local, remote))
+            return False
+        elif local.size != remote.size:
+            print("    Files are different (size {:,} != {:,})".format(local.size, remote.size))
+            return False
+
+        with local.target.open_readable(local.name) as fp_src, remote.target.open_readable(remote.name) as fp_dest:
+            res, ofs = byte_compare(fp_src, fp_dest)
+
+        if not res:
+            print("    Files are different at offset {:,}".format(ofs))
+        else:
+            print("    Files are equal.")
         return res
 
     def _copy_file(self, src, dest, file_entry):
@@ -341,10 +375,15 @@ class BaseSynchronizer(object):
         """Return True if this is a conflict, i.e. both targets are modified."""
         any_entry = local or remote
         if any_entry.is_dir():
-            # Currently we cnnot detect directory conflicts
+            # Currently we cannot detect directory conflicts
             return False
         if local and remote:
             is_conflict = local.was_modified_since_last_sync() and remote.was_modified_since_last_sync()
+            if is_conflict:
+                info = local.get_sync_info()
+                print("%s was_modified_since_last_sync: delta-t: %s, delta-size: %s" % (local, (local.mtime - info["m"]), (local.size - info["s"])))
+                info = remote.get_sync_info()
+                print("%s was_modified_since_last_sync: delta-t: %s, delta-size: %s" % (remote, (remote.mtime - info["m"]), (remote.size - info["s"])))
         elif local:
             # remote was deleted, but local was modified
             existed = local.get_sync_info()
@@ -562,9 +601,12 @@ class BiDirSynchronizer(BaseSynchronizer):
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
-        print((RED + "CONFLICT in %s:" + R) % local.name)
+        print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})" + R)
+              .format(local.name, _ts(local.get_sync_info("u"))))
+        print("    original modification time: {}, size: {:,} bytes"
+              .format(_ts(local.get_sync_info("m")), local.get_sync_info("s")))
         print("    local:  %s" % local.as_string())
-        print("    remote: %s" % (remote.as_string() if remote else "n.a."))
+        print("    remote: %s" % (remote.as_string(local) if remote else "n.a."))
 
         while True:
             prompt = "Use " + M + "L" + R + "ocal, use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + M + "H" + R + "elp)? "
@@ -716,24 +758,28 @@ class UploadSynchronizer(BaseSynchronizer):
 
     def _interactive_resolve(self, local, remote):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
-        if self.resolve_all:
-            return self.resolve_all
-        resolve = self.options.get("resolve", "skip")
-        assert resolve in ("local", "ask", "skip")
-        if resolve in ("local", "skip"):
-            self.resolve_all = resolve
-            return resolve
-
         RED = ansi_code("Fore.LIGHTRED_EX")
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
-        print((RED + "CONFLICT in %s:" + R) % local.name)
-        print("    local:  %s" % local.as_string())
-        print("    remote: %s" % (remote.as_string() if remote else "n.a."))
+        print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})" + R)
+              .format(local.name, _ts(local.get_sync_info("u"))))
+        print("    original modification time: {}, size: {:,} bytes"
+              .format(_ts(local.get_sync_info("m")), local.get_sync_info("s")))
+        print("    local:  {}".format(local.as_string()))
+        print("    remote: {}".format(remote.as_string(local) if remote else "n.a."))
+
+        if self.resolve_all:
+            return self.resolve_all
+        resolve = self.options.get("resolve", "skip")
+        assert resolve in ("local", "ask", "skip")
+
+        if resolve in ("local", "skip"):
+            self.resolve_all = resolve
+            return resolve
 
         while True:
-            prompt = "Use " + M + "L" + R + "ocal, " + M + "S" + R + "kip, " + M + "H" + R + "elp)? "
+            prompt = "Use " + M + "L" + R + "ocal, " + M + "S" + R + "kip, " + M + "B" + R + "inary compare, " + M + "H" + R + "elp)? "
             r = console_input(prompt).strip()
             if r in ("h", "H", "?"):
                 print("The following keys are supported:")
@@ -741,6 +787,9 @@ class UploadSynchronizer(BaseSynchronizer):
                 print("  's': Skip this file (leave both versions unchanged)")
                 print("Hold Shift (upper case letters) to apply choice for all remaining conflicts.")
                 print("Hit Ctrl+C to abort.")
+                continue
+            elif r in ("B", "b"):
+                self._compare_file(local, remote)
                 continue
             elif r in ("L", "R", "S"):
                 r = self._resolve_shortcuts[r.lower()]
@@ -899,9 +948,12 @@ class DownloadSynchronizer(BaseSynchronizer):
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
-        print((RED + "CONFLICT in %s:" + R) % local.name)
+        print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})" + R)
+              .format(local.name, _ts(local.get_sync_info("u"))))
+        print("    original modification time: {}, size: {:,} bytes"
+              .format(_ts(local.get_sync_info("m")), local.get_sync_info("s")))
         print("    local:  %s" % local.as_string())
-        print("    remote: %s" % (remote.as_string() if remote else "n.a."))
+        print("    remote: %s" % (remote.as_string(local) if remote else "n.a."))
 
         while True:
             prompt = "Use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + M + "H" + R + "elp)? "

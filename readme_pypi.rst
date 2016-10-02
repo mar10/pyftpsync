@@ -11,11 +11,14 @@ Synchronize local directories with FTP server.
   * This is a command line tool...
   * ... and a library for use in your Python projects
   * Upload, download, and bi-directional synch mode
-  * Allows FTP-to-FTP and Filesystem-to-Filesystem synchronisation as well
+  * Allows FTP-to-FTP and Filesystem-to-Filesystem synchronization as well
   * Architecture is open to add other target types.
 
-See https://github.com/mar10/pyftpsync for details
+Requires `Python <http://www.python.org/download/>`_ 2.7+ or 3.3+.
 
-Changes
--------
+See also https://github.com/mar10/pyftpsync for details 
+and `Read the Docs <http://pyftpsync.readthedocs.io/>`_.
+
+Change Log
+----------
 See `CHANGES.md <https://github.com/mar10/pyftpsync/blob/master/CHANGES.md>`_.

@@ -40,17 +40,33 @@ class _Resource(object):
         self.dt_modified = datetime.fromtimestamp(self.mtime)
         self.mtime_org = mtime  # as reported by source server
         self.unique = unique
-        self.meta = None # Set by target.get_dir()
+        self.meta = None  # Set by target.get_dir()
 
     def __str__(self):
-        return "%s('%s', size:%s, modified:%s)" % (self.__class__.__name__,
-                                                   os.path.join(self.rel_path, self.name),
-                                                   self.size, self.dt_modified) #+ " ## %s, %s" % (self.mtime, time.asctime(time.gmtime(self.mtime)))
+        return "{}('{}', size:{}, modified:{})".format(self.__class__.__name__,
+                                                       os.path.join(self.rel_path, self.name),
+                                                       "{:,}".format(self.size) if self.size else self.size,
+                                                       self.dt_modified) #+ " ## %s, %s" % (self.mtime, time.asctime(time.gmtime(self.mtime)))
 
-    def as_string(self):
+    def as_string(self, other_resource=None):
 #         dt = datetime.fromtimestamp(self.get_adjusted_mtime())
         dt = datetime.fromtimestamp(self.mtime)
-        return "%s, %8s bytes" % (dt.strftime("%Y-%m-%d %H:%M:%S"), self.size)
+        res = "{}, {:>8,} bytes".format(dt.strftime("%Y-%m-%d %H:%M:%S"), self.size)
+        if other_resource:
+            comp = []
+            if self.mtime < other_resource.mtime:
+                comp.append("older")
+            elif self.mtime > other_resource.mtime:
+                comp.append("newer")
+            
+            if self.size < other_resource.size:
+                comp.append("smaller")
+            elif self.size > other_resource.size:
+                comp.append("larger")
+
+            if comp:
+                res += " (%s)" % ", ".join(comp)
+        return res
 
     def __eq__(self, other):
         raise NotImplementedError
@@ -68,7 +84,7 @@ class _Resource(object):
     def is_local(self):
         return self.target.is_local()
 
-    def get_sync_info(self):
+    def get_sync_info(self, key=None):
         raise NotImplementedError
 
     def set_sync_info(self, local_file):
@@ -113,9 +129,9 @@ class FileEntry(_Resource):
                 and other.name == self.name
                 and time_greater)
 
-    def get_sync_info(self):
+    def get_sync_info(self, key=None):
         """Get mtime/size when this resource was last synchronized with remote."""
-        return self.target.get_sync_info(self.name)
+        return self.target.get_sync_info(self.name, key)
 
     def was_modified_since_last_sync(self):
         """Return True if this resource was modified since last sync.

@@ -59,7 +59,7 @@ Features
 Known limitations
 -----------------
 
-  * The FTP server must support the `MLST command <http://tools.ietf.org/html/rfc3659>`_.
+  * The FTP server must support the `MLSD command <http://tools.ietf.org/html/rfc3659>`_.
   * pyftpsync uses file size and modification dates to detect file changes. 
     This is efficient, but not as robust as CRC checksums could be.
   * pyftpsync tries to detect conflicts (i.e. simultaneous modifications of 
@@ -80,7 +80,7 @@ Quickstart
 .. todo::
    There will be a MSI installer available for Windows.
 
-*Requirements:* `Python <http://www.python.org/download/ Python>`_ 2.6+ or 3 is required. 
+*Requirements:* `Python <http://www.python.org/download/ Python>`_ 2.7+ or 3 is required. 
 
 Releases are hosted on `PyPI <https://pypi.python.org/pypi/pyftpsync>`_ and can 
 be installed using `pip <http://www.pip-installer.org/>`_ or

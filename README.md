@@ -16,7 +16,7 @@ Synchronize local directories with FTP server.
 
 #### Known limitations 
 
-  * The FTP server must support the [MLST command](http://tools.ietf.org/html/rfc3659).
+  * The FTP server must support the [MLSD command](http://tools.ietf.org/html/rfc3659).
   * pyftpsync uses file size and modification dates to detect file changes. 
     This is efficient, but not as robust as CRC checksums could be.
   * pyftpsync tries to detect conflicts (i.e. simultaneous modifications of 
@@ -30,7 +30,7 @@ version control system. Make sure you have backups.
 
 ## Quickstart 
 
-[Python](http://www.python.org/download/ Python) 2.6+ or 3 is required, 
+[Python](http://www.python.org/download/ Python) 2.7+ or 3.3+ is required, 
 [pip](http://www.pip-installer.org/) or
 [EasyInstall](http://pypi.python.org/pypi/setuptools#using-setuptools-and-easyinstall)
 recommended:
@@ -43,4 +43,4 @@ $ pyftpsync --help
 
 ## Documentation
 
-[Read the Docs](http://pyftpsync.readthedocs.org/en/latest/) for details.
+[Read the Docs](http://pyftpsync.readthedocs.io/) for details.

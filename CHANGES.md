@@ -5,8 +5,21 @@ CHANGES
 1.1.0 (unreleased)
 ==================
 - Remove lock file on Ctrl-C
+- Dropped support for Python 2.6
+- Modified format of .pyftpsync.meta.json
+- Split into more modules
+
+1.0.4 (unreleased)
+==================
+- Add FTPS (TLS) support on Python 2.7/3.2+
 
 1.0.3 (2015-06-28)
+==================
+- Add conflict handling to upload and download commands
+- Move documentation to Read The Docs
+- Use tox for tests
+
+1.0.2 (2015-05-17)
 ==================
 - Bi-directional synchronization
 - Detect conflicts if both targets are modified since last sync.
@@ -19,7 +32,6 @@ CHANGES
 - Interactive mode
 - Renamed _pyftpsync-meta.json to .pyftpsync-meta.json
 - MSI installer for MS Windows
-- FTPS (TLS) support on Python 2.7/3.2+
 
 0.2.1 (2013-05-07)
 ==================

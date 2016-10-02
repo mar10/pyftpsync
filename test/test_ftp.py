@@ -6,16 +6,10 @@ from __future__ import print_function
 
 from ftplib import FTP
 from pprint import pprint
-import sys
 
-if sys.version_info < (2, 7):
-    # Python 2.6
-    import unittest2 as unittest
-    from unittest2.case import SkipTest
-else:
-    # Python 2.7+
-    import unittest
-    from unittest.case import SkipTest
+# Python 2.7+
+import unittest
+from unittest.case import SkipTest  # @UnusedImport
 
 from ftpsync.ftp_target import *  # @UnusedWildImport
 from ftpsync.targets import *  # @UnusedWildImport
@@ -116,7 +110,7 @@ class FtpTargetTest(unittest.TestCase):
 
         self.remote = make_target(ftp_url)
         self.remote.open()
-        # This check is already preformed in the constructor:
+        # This check is already performed in the constructor:
 #        self.assertEqual(self.remote.pwd(), self.PATH)
 
         # Delete all files in remote target folder, except for LOCK file

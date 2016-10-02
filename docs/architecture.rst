@@ -12,12 +12,23 @@ pyftpsync Architecture
 .. comment, because grqphwiz currently doesn't work on my mac
   x
 
-Classes
-=======
+Class Inheritance Diagram
+=========================
+
 .. inheritance-diagram:: ftpsync.targets ftpsync.ftp_target ftpsync.resources ftpsync.synchronizers
    :parts: 1
    :private-bases:
 
+
+Algorithm
+=========
+
+See `pyftpsync-spec.odt <https://raw.githubusercontent.com/mar10/pyftpsync/master/docs/pyftpsync-spec.odt>`_ 
+for some explanations. 
+
+
+Test Case
+=========
 
 .. Testdata2.
 

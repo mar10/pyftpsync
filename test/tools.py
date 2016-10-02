@@ -10,8 +10,10 @@ import os
 from pprint import pprint
 import shutil
 import tempfile
-from ftpsync.targets import to_text, to_str, DirMetadata, FsTarget
+from ftpsync.targets import FsTarget
 from ftpsync.synchronizers import BiDirSynchronizer
+from ftpsync.metadata import DirMetadata
+from ftpsync.util import to_str
 
 
 
