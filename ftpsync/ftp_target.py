@@ -37,7 +37,7 @@ class FtpTarget(_Target):
         username (str):
         password (str):
     """
-    def __init__(self, path, host, port=None, username=None, password=None,
+    def __init__(self, path, host, port=21, username=None, password=None,
                  tls=False, extra_opts=None):
         """Create FTP target with host, initial path, optional credentials and options.
 
@@ -86,10 +86,7 @@ class FtpTarget(_Target):
         no_prompt  = self.get_option("no_prompt", True)
         store_password = self.get_option("store_password", False)
 
-        if self.port:
-            self.ftp.connect(self.host, self.port)
-        else:
-            self.ftp.connect(self.host)
+        self.ftp.connect(self.host, self.port)
 
         if self.username is None or self.password is None:
             creds = get_credentials_for_url(self.host, allow_prompt=not no_prompt)
