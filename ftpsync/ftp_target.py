@@ -38,7 +38,7 @@ class FtpTarget(_Target):
         password (str):
     """
     def __init__(self, path, host, port=21, username=None, password=None,
-                 tls=False, extra_opts=None):
+                 tls=False, timeout=None, extra_opts=None):
         """Create FTP target with host, initial path, optional credentials and options.
 
         Args:
@@ -48,6 +48,7 @@ class FtpTarget(_Target):
             username (str):
             password (str):
             tls (bool): encrypt the connection using TLS (Python 2.7/3.2+)
+            timeout (int): the timeout to set against the ftp socket (seconds)
             extra_opts (dict):
         """
         path = path or "/"
@@ -66,6 +67,7 @@ class FtpTarget(_Target):
         self.username = username
         self.password = password
         self.tls = tls
+        self.timeout = timeout
         self.lock_data = None
         self.is_unix = None
         self.time_zone_ofs = None
@@ -83,10 +85,10 @@ class FtpTarget(_Target):
 
     def open(self):
         assert not self.connected
-        no_prompt  = self.get_option("no_prompt", True)
+        no_prompt = self.get_option("no_prompt", True)
         store_password = self.get_option("store_password", False)
 
-        self.ftp.connect(self.host, self.port)
+        self.ftp.connect(self.host, self.port, self.timeout)
 
         if self.username is None or self.password is None:
             creds = get_credentials_for_url(self.host, allow_prompt=not no_prompt)
