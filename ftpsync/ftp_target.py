@@ -90,7 +90,11 @@ class FtpTarget(_Target):
         no_prompt = self.get_option("no_prompt", True)
         store_password = self.get_option("store_password", False)
 
-        self.ftp.connect(self.host, self.port, self.timeout)
+        if self.timeout:
+            self.ftp.connect(self.host, self.port, self.timeout)
+        else:
+            # Py2.7 uses -999 as default for `timeout`, Py3 uses None
+            self.ftp.connect(self.host, self.port)
 
         self.ftp_socket_connected = True
 
