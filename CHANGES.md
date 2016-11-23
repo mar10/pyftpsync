@@ -8,6 +8,7 @@ CHANGES
 - Dropped support for Python 2.6
 - Modified format of .pyftpsync.meta.json
 - Split into more modules
+- Release as Wheel
 
 1.0.4 (unreleased)
 ==================
