@@ -2,7 +2,7 @@
 CHANGES
 =======
 
-1.1.0 (unreleased)
+2.0.0 (unreleased)
 ==================
 - Remove lock file on Ctrl-C
 - Dropped support for Python 2.6
