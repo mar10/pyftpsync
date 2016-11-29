@@ -33,6 +33,8 @@ DEFAULT_OMIT = [".DS_Store",
 def _ts(timestamp):
     """Convert timestamp to verbose string."""
 #     return "{0} ({1})".format(datetime.fromtimestamp(timestamp), timestamp)
+    if timestamp is None:
+        return "<?>"
     return "{}".format(datetime.fromtimestamp(timestamp))
 
 

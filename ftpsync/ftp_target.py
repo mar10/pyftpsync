@@ -37,7 +37,7 @@ class FtpTarget(_Target):
         username (str):
         password (str):
     """
-    def __init__(self, path, host, port=21, username=None, password=None,
+    def __init__(self, path, host, port=0, username=None, password=None,
                  tls=False, timeout=None, extra_opts=None):
         """Create FTP target with host, initial path, optional credentials and options.
 
@@ -63,7 +63,7 @@ class FtpTarget(_Target):
             self.ftp = ftplib.FTP()
         self.ftp.debug(self.get_option("ftp_debug", 0))
         self.host = host
-        self.port = port
+        self.port = port or 0
         self.username = username
         self.password = password
         self.tls = tls
@@ -153,6 +153,7 @@ class FtpTarget(_Target):
 
         if self.ftp_socket_connected:
             self.ftp.quit()
+            self.ftp_socket_connected = False
 
         self.connected = False
 

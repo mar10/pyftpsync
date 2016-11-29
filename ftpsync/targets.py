@@ -32,7 +32,9 @@ def make_target(url, extra_opts=None):
         tls = scheme == "ftps"
         from ftpsync import ftp_target
         target = ftp_target.FtpTarget(parts.path, parts.hostname, parts.port,
-                                      creds[0], creds[1], tls, extra_opts)
+                                      username=creds[0], password=creds[1],
+                                      tls=tls, timeout=None,
+                                      extra_opts=extra_opts)
     else:
         target = FsTarget(url, extra_opts)
 
