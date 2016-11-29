@@ -73,14 +73,14 @@ def run():
         parser.add_argument("remote",
                             metavar="REMOTE",
                             help="path to remote folder")
-#        upload_parser.add_argument("--dry-run",
-#                                   action="store_true",
-#                                   help="just simulate and log results; don't change anything")
-        parser.add_argument("-x", "--execute",
-                            action="store_false", dest="dry_run", default=True,
-                            help="turn off the dry-run mode (which is ON by default), "
-                            "that would just print status messages but does "
-                            "not change anything")
+        parser.add_argument("--dry-run",
+                            action="store_true",
+                            help="just simulate and log results; don't change anything")
+        # parser.add_argument("-x", "--execute",
+        #                     action="store_false", dest="dry_run", default=True,
+        #                     help="turn off the dry-run mode (which is ON by default), "
+        #                     "that would just print status messages but does "
+        #                     "not change anything")
         parser.add_argument("-f", "--include-files",
                             help="wildcard for file names (default: all, "
                             "separate multiple values with ',')")
