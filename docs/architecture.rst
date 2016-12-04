@@ -23,7 +23,7 @@ Class Inheritance Diagram
 Algorithm
 =========
 
-See `pyftpsync-spec.odt <https://raw.githubusercontent.com/mar10/pyftpsync/master/docs/pyftpsync-spec.odt>`_ 
+See `pyftpsync-spec.pdf <https://raw.githubusercontent.com/mar10/pyftpsync/master/docs/pyftpsync-spec.pdf>`_ 
 for some explanations. 
 
 

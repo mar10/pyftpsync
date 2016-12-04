@@ -74,6 +74,7 @@ class FtpTarget(_Target):
         self.clock_ofs = None
         self.ftp_socket_connected = False
         self.connected = False
+        self.support_set_time = False
 #        if connect:
 #            self.open()
 
@@ -176,10 +177,10 @@ class FtpTarget(_Target):
         try:
             if self.cur_dir != self.root_dir:
                 if closing:
-                    print("Changing to ftp root folder to remove lock file: {0}".format(self.root_dir))
+                    print("Changing to ftp root folder to remove lock file: {}".format(self.root_dir))
                     self.cwd(self.root_dir)
                 else:
-                    print("Could not remove lock file, because CWD != ftp root: {0}".format(self.cur_dir), file=sys.stderr)
+                    print("Could not remove lock file, because CWD != ftp root: {}".format(self.cur_dir), file=sys.stderr)
                     return
 
             # direct delete, without updating metadata or checking for target access:                
@@ -194,7 +195,8 @@ class FtpTarget(_Target):
     def _probe_lock_file(self, reported_mtime):
         """Called by get_dir"""
         delta = reported_mtime - self.lock_data["lock_time"]
-        print("Server time offset: {0:.2f} seconds".format(delta))
+        if self.get_option("verbose", 2) >= 2:
+            print("Server time offset: {0:.2f} seconds".format(delta))
 
     def get_id(self):
         return self.host + self.root_dir
@@ -314,7 +316,8 @@ class FtpTarget(_Target):
             try:
                 self.cur_dir_meta.read()
             except Exception as e:
-                print("Could not read meta info: %s" % e, file=sys.stderr)
+                print("Could not read meta info {}: {}"
+                        .format(self.cur_dir_meta, e), file=sys.stderr)
 
             meta_files = self.cur_dir_meta.list
 
@@ -338,7 +341,7 @@ class FtpTarget(_Target):
                         #      or
                         #   2. the reported files size is different than the
                         #      size we stored in the meta-data
-                        if self.synchronizer.verbose >= 3:
+                        if self.get_option("verbose", 2) >= 3:
                             print(("META: Removing outdated meta entry %s\n" +
                                    "      modified after upload (%s > %s)") %
                                   (n, time.ctime(entry_map[n].mtime), time.ctime(upload_time)))
@@ -380,3 +383,19 @@ class FtpTarget(_Target):
         # meta data in the same directory
         # TODO: try "SITE UTIME", "MDTM (set version)", or "SRFT" command
         self.cur_dir_meta.set_mtime(name, mtime, size)
+
+    def walk(self, pred=None):
+        """Iterate over all target entries recursively."""
+        for entry in self.get_dir():
+            if pred and pred(entry) is False:
+                continue
+
+            yield entry
+
+            if isinstance(entry, DirectoryEntry):
+                self.cwd(entry.name)
+                for e in self.walk(pred):
+                    yield e
+                self.cwd("..")
+
+        return

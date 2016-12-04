@@ -198,8 +198,8 @@ def prepare_fixtures_2():
     # Add some files to ../local/
     dt = "2014-01-01 12:00:00"
     for i in range(1, 9):
-        _write_test_file("local/file{0}.txt".format(i), dt=dt,
-                         content="local{0}".format(i))
+        _write_test_file("local/file{}.txt".format(i), dt=dt,
+                         content="local{}".format(i))
 
     _write_test_file("local/folder1/file1_1.txt", dt=dt, content="local1_1")
     _write_test_file("local/folder2/file2_1.txt", dt=dt, content="local2_1")

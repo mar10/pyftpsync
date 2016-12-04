@@ -32,7 +32,7 @@ DEFAULT_OMIT = [".DS_Store",
 
 def _ts(timestamp):
     """Convert timestamp to verbose string."""
-#     return "{0} ({1})".format(datetime.fromtimestamp(timestamp), timestamp)
+#     return "{} ({})".format(datetime.fromtimestamp(timestamp), timestamp)
     if timestamp is None:
         return "<?>"
     return "{}".format(datetime.fromtimestamp(timestamp))
@@ -131,10 +131,10 @@ class BaseSynchronizer(object):
         start = time.time()
 
         info_strings = self.get_info_strings()
-        print("{0} {1}\n{2:>20} {3}".format(info_strings[0].capitalize(),
-                                            self.local.get_base_name(),
-                                            info_strings[1],
-                                            self.remote.get_base_name()))
+        print("{} {}\n{:>20} {}".format(info_strings[0].capitalize(),
+                                        self.local.get_base_name(),
+                                        info_strings[1],
+                                        self.remote.get_base_name()))
 
         res = self._sync_dir()
 
@@ -338,8 +338,8 @@ class BaseSynchronizer(object):
         if entry.is_dir():
             name = "[%s]" % name
 
-#         print("{0}{1:<16} {2:^3} {3}".format(prefix, tag, symbol, name))
-        print("{0}{1}{2:<16} {3:^3} {4}{5}".format(prefix, color, tag, symbol, name, final))
+#         print("{}{:<16} {:^3} {}".format(prefix, tag, symbol, name))
+        print("{}{}{:<16} {:^3} {}{}".format(prefix, color, tag, symbol, name, final))
 
     def _tick(self):
         """Write progress info and move cursor to beginning of line."""

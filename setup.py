@@ -76,7 +76,7 @@ except ImportError:
 # 'setup.py upload' fails on Vista, because .pypirc is searched on 'HOME' path
 if not "HOME" in os.environ and  "HOMEPATH" in os.environ:
     os.environ.setdefault("HOME", os.environ.get("HOMEPATH", ""))
-    print("Initializing HOME environment variable to '%s'" % os.environ["HOME"])
+    print("Initializing HOME environment variable to '{}'".format(os.environ["HOME"]))
 
 install_requires = ["colorama",
                     "keyring",

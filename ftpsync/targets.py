@@ -60,8 +60,8 @@ class _Target(object):
         self.connected = False
         self.save_mode = True
         self.case_sensitive = None # TODO: don't know yet
-        self.time_ofs = None # TODO: don't know yet
-        self.support_set_time = None # TODO: don't know yet
+        self.time_ofs = None # TODO: see _probe_lock_file()
+        self.support_set_time = None # Derived class knows
         self.cur_dir_meta = DirMetadata(self)
         self.meta_stack = []
 
@@ -74,6 +74,9 @@ class _Target(object):
 
     def is_local(self):
         return self.synchronizer.local is self
+
+    def is_unbund(self):
+        return self.synchronizer is None
 
     def get_option(self, key, default=None):
         """Return option from synchronizer (possibly overridden by target extra_opts)."""
@@ -194,6 +197,7 @@ class FsTarget(_Target):
         if not os.path.isdir(root_dir):
             raise ValueError("%s is not a directory" % root_dir)
         super(FsTarget, self).__init__(root_dir, extra_opts)
+        self.support_set_time = True
         self.open()
 
     def __str__(self):

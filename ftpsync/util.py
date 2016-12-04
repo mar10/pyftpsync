@@ -45,11 +45,11 @@ def prompt_for_password(url, user=None):
     if user is None:
         default_user = getpass.getuser()
         while user is None:
-            user = console_input("Enter username for %s [%s]: " % (url, default_user))
+            user = console_input("Enter username for {} [{}]: ".format(url, default_user))
             if user.strip() == "" and default_user:
                 user = default_user
     if user:
-        pw = getpass.getpass("Enter password for %s@%s: " % (user, url))
+        pw = getpass.getpass("Enter password for {}@{}: ".format(user, url))
         if pw:
             return (user, pw)
     return None
@@ -67,7 +67,8 @@ def get_credentials_for_url(url, allow_prompt):
     home_path = os.path.expanduser("~")
     file_path = os.path.join(home_path, DEFAULT_CREDENTIAL_STORE)
     if os.path.isfile(file_path):
-        raise RuntimeError("Custom password files are no longer supported. Consider deleting {0}.".format(file_path))
+        raise RuntimeError("Custom password files are no longer supported. Consider deleting {}."
+                .format(file_path))
 #         with open(file_path, "rt") as f:
 #             for line in f:
 #                 line = line.strip()
@@ -88,10 +89,11 @@ def get_credentials_for_url(url, allow_prompt):
             if c is not None:
                 creds = c.split(":", 1)
 #                print(creds)
-                print("Using credentials from keyring('pyftpsync', '%s'): %s:***)" % (url, creds[0]))
+                print("Using credentials from keyring('pyftpsync', '{}'): {}:***)"
+                        .format(url, creds[0]))
 #        except keyring.errors.TransientKeyringError:
         except Exception as e:
-            print("Could not get password {0}".format(e))
+            print("Could not get password {}".format(e))
             pass # e.g. user clicked 'no'
 
     # Prompt
@@ -104,19 +106,20 @@ def get_credentials_for_url(url, allow_prompt):
 def save_password(url, username, password):
     if keyring:
         if ":" in username:
-            raise RuntimeError("Unable to store credentials if username contains a ':' (%s)" % username)
+            raise RuntimeError("Unable to store credentials if username contains a ':' ({})"
+                    .formta(username))
 
         try:
             # Note: we pass the url as `username` and username:password as `password`
             if password is None:
                 keyring.delete_password("pyftpsync", url)
-                print("delete_password(%s)" % url)
+                print("delete_password({})".format(url))
             else:
-                keyring.set_password("pyftpsync", url, "%s:%s" % (username, password))
-                print("save_password(%s, %s:***)" % (url, username))
+                keyring.set_password("pyftpsync", url, "{}:{}".format(username, password))
+                print("save_password({}, {}:***)".format(url, username))
 #        except keyring.errors.TransientKeyringError:
         except Exception as e:
-            print("Could not delete/set password {0}".format(e))
+            print("Could not delete/set password {}".format(e))
             pass # e.g. user clicked 'no'
     else:
         print("Could not store password (missing keyring library)")

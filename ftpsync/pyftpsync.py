@@ -15,10 +15,10 @@ import argparse
 from pprint import pprint
 
 from ftpsync import __version__
-from ftpsync.targets import make_target, FsTarget
-
+from ftpsync.scan_command import add_scan_parser
 from ftpsync.synchronizers import UploadSynchronizer, \
     DownloadSynchronizer, BiDirSynchronizer, DEFAULT_OMIT
+from ftpsync.targets import make_target, FsTarget
 
 
 #def disable_stdout_buffering():
@@ -75,7 +75,7 @@ def run():
                             help="path to remote folder")
         parser.add_argument("--dry-run",
                             action="store_true",
-                            help="just simulate and log results; don't change anything")
+                            help="just simulate and log results, but don't change anything")
         # parser.add_argument("-x", "--execute",
         #                     action="store_false", dest="dry_run", default=True,
         #                     help="turn off the dry-run mode (which is ON by default), "
@@ -96,7 +96,8 @@ def run():
                             action="store_true",
                             help="prevent use of ansi terminal color codes")
 
-    # Create the parser for the "upload" command
+    # --- Create the parser for the "upload" command ---------------------------
+
     upload_parser = subparsers.add_parser("upload",
                                           help="copy new and modified files to remote folder")
     __add_common_sub_args(upload_parser)
@@ -118,8 +119,8 @@ def run():
 
     upload_parser.set_defaults(command="upload")
 
+    # --- Create the parser for the "download" command -------------------------
 
-    # Create the parser for the "download" command
     download_parser = subparsers.add_parser("download",
             help="copy new and modified files from remote folder to local target")
     __add_common_sub_args(download_parser)
@@ -141,7 +142,8 @@ def run():
 
     download_parser.set_defaults(command="download")
 
-    # Create the parser for the "sync" command
+    # --- Create the parser for the "sync" command -----------------------------
+
     sync_parser = subparsers.add_parser("sync",
             help="synchronize new and modified files between remote folder and local target")
     __add_common_sub_args(sync_parser)
@@ -153,22 +155,29 @@ def run():
 
     sync_parser.set_defaults(command="synchronize")
 
-    # Parse command line
+    # --- Create the parser for the "scan" command -----------------------------
+
+    scan_parser = add_scan_parser(subparsers)
+
+    # --- Parse command line ---------------------------------------------------
+
     args = parser.parse_args()
 
-    if not hasattr(args, "command"):
-        parser.error("missing command (choose from 'upload', 'download', 'sync')")
-
-    # Post-process and check arguments
     args.verbose -= args.quiet
     del args.quiet
-
-    if hasattr(args, "delete_unmatched") and args.delete_unmatched:
-        args.delete = True
 
     ftp_debug = 0
     if args.verbose >= 5:
         ftp_debug = 1
+
+    if callable(getattr(args, "command", None)):
+        return getattr(args, "command")(args);
+    elif not hasattr(args, "command"):
+        parser.error("missing command (choose from 'upload', 'download', 'sync')")
+
+    # Post-process and check arguments
+    if hasattr(args, "delete_unmatched") and args.delete_unmatched:
+        args.delete = True
 
     args.local_target = make_target(args.local, {"ftp_debug": ftp_debug})
 

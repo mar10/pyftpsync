@@ -4,8 +4,10 @@ CHANGES
 
 2.0.0 (unreleased)
 ==================
-- NOTE:
-  Write mode is now on by default!
+**Note**: the command line options have changed!  
+**Be careful with existing shell scripts after updating from v1.x!** 
+
+- Write mode is now on by default!
   The `-x`, `--execute` option was removed, use the new `--dry-run` option instead.
 - Modified format of .pyftpsync.meta.json
 - Dropped support for Python 2.6

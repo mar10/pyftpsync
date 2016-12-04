@@ -18,7 +18,6 @@ class DirMetadata(object):
     """
     
     """
-
     META_FILE_NAME = ".pyftpsync-meta.json"
     LOCK_FILE_NAME = ".pyftpsync-lock.json"
     DEBUG_META_FILE_NAME = "_pyftpsync-meta.json"
@@ -38,6 +37,12 @@ class DirMetadata(object):
         self.modified_list = False
         self.modified_sync = False
         self.was_read = False
+
+    def __str__(self):
+        return "DirMetadata<{}>".format(self.get_full_path())
+
+    def get_full_path(self):
+        return "/".join((self.path, self.filename))
 
     def set_mtime(self, filename, mtime, size):
         """Store real file mtime in meta data.
@@ -76,7 +81,7 @@ class DirMetadata(object):
                               "u": ut,
                               }
         if self.PRETTY or self.DEBUG:
-            ps[":last_sync_str"] = time.ctime(ut)
+            ps[":last_sync_str"] = time.ctime(ut)  # this is an invalid file name to avoid conflicts
             pse["mtime_str"] = time.ctime(mtime) if mtime else "(directory)"
             pse["uploaded_str"] = time.ctime(ut)
         self.modified_sync = True
@@ -85,10 +90,11 @@ class DirMetadata(object):
         """Remove any data for the given file name."""
         if self.list.pop(filename, None):
             self.modified_list = True
-        if self.target.is_local():
-            remote_target = self.target.peer
-            if remote_target.get_id() in self.dir["peer_sync"]:
-                self.modified_sync = bool(self.dir["peer_sync"][remote_target.get_id()].pop(filename, None))
+        if self.target.peer:  # otherwise `scan` command
+            if self.target.is_local():
+                remote_target = self.target.peer
+                if remote_target.get_id() in self.dir["peer_sync"]:
+                    self.modified_sync = bool(self.dir["peer_sync"][remote_target.get_id()].pop(filename, None))
         return
 
     def read(self):
@@ -96,7 +102,8 @@ class DirMetadata(object):
         assert self.path == self.target.cur_dir
         try:
             s = self.target.read_text(self.filename)
-            self.target.synchronizer._inc_stat("meta_bytes_read", len(s))
+            if self.target.synchronizer:
+                self.target.synchronizer._inc_stat("meta_bytes_read", len(s))
             self.was_read = True # True if exists (even invalid)
             self.dir = json.loads(s)
             if self.dir.get("_file_version", 0) < self.VERSION:
@@ -107,7 +114,8 @@ class DirMetadata(object):
             self.modified_sync = False
 #             print("DirMetadata: read(%s)" % (self.filename, ), self.dir)
         except Exception as e:
-            print("Could not read meta info: %s" % e, file=sys.stderr)
+            print("Could not read meta info {}: {!r}".format(self, e), file=sys.stderr)
+
         return
 
     def flush(self):
@@ -141,7 +149,8 @@ class DirMetadata(object):
                 s = json.dumps(self.dir, sort_keys=True)
 #             print("DirMetadata.flush(%s)" % (self.target, ))#, s)
             self.target.write_text(self.filename, s)
-            self.target.synchronizer._inc_stat("meta_bytes_written", len(s))
+            if self.target.synchronizer:
+                self.target.synchronizer._inc_stat("meta_bytes_written", len(s))
             if self.DEBUG:
                 self.target.write_text(self.DEBUG_META_FILE_NAME, s)
 
