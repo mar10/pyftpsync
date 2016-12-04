@@ -866,7 +866,7 @@ class UploadSynchronizer(BaseSynchronizer):
             return False
         elif self.options.get("force"):
             self._log_action("restore", "older", ">", local_file)
-            self._copy_file(self.local, self.remote, remote_file)
+            self._copy_file(self.local, self.remote, local_file)
         else:
             self._log_action("skip", "older", "?", local_file, 4)
 
