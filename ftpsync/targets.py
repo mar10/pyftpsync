@@ -1,6 +1,6 @@
 # -*- coding: iso-8859-1 -*-
 """
-(c) 2012-2016 Martin Wendt; see https://github.com/mar10/pyftpsync
+(c) 2012-2017 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 """
 
@@ -139,6 +139,21 @@ class _Target(object):
     def get_dir(self):
         """Return a list of _Resource entries."""
         raise NotImplementedError
+
+    def walk(self, pred=None):
+        """Iterate over all target entries recursively."""
+        for entry in self.get_dir():
+            if pred and pred(entry) is False:
+                continue
+
+            yield entry
+
+            if isinstance(entry, DirectoryEntry):
+                self.cwd(entry.name)
+                for e in self.walk(pred):
+                    yield e
+                self.cwd("..")
+        return
 
     def open_readable(self, name):
         """Return file-like object opened in binary mode for cur_dir/name."""

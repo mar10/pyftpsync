@@ -1,4 +1,4 @@
-Copyright (c) 2012-2016 Martin Wendt
+Copyright (c) 2012-2017 Martin Wendt
 
 Status
 ------
