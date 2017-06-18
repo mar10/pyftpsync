@@ -63,6 +63,8 @@ try:
                    targetName= "pyftpsync.exe",
                    # icon= "doc/logo.ico",
                    shortcutName= "pyftpsync",
+                   # copyright="(c) 2012-2016 Martin Wendt",  # requires cx_Freeze PR#94
+                   # trademarks="...",
                    )
          ]
 except ImportError:
