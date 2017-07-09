@@ -6,6 +6,7 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 from __future__ import print_function
 
 import calendar
+from datetime import datetime
 import ftplib
 import io
 from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
@@ -280,7 +281,7 @@ class FtpTarget(_Target):
                         mtime = calendar.timegm(time.strptime(field_value, "%Y%m%d%H%M%S.%f"))
                     else:
                         mtime = calendar.timegm(time.strptime(field_value, "%Y%m%d%H%M%S"))
-#                    print("MLSD modify: ", field_value, "mtime", mtime, "ctime", time.ctime(mtime))
+#                     print("MLSD modify: ", field_value, "mtime", mtime, "ctime", time.ctime(mtime))
                 elif field_name == "unique":
                     unique = field_value
 
@@ -306,8 +307,15 @@ class FtpTarget(_Target):
                 entry_map[name] = entry
                 entry_list.append(entry)
 
-        # raises error_perm, if command is not supported
-        self.ftp.retrlines("MLSD", _addline)
+            try:    
+                self.ftp.retrlines("MLSD", _addline)
+            except error_perm as e:
+                # print("The FTP server responded with {}".format(e), file=sys.stderr)
+                # raises error_perm "500 Unknown command" if command is not supported
+                if "500" in str(e.args):
+                    raise RuntimeError("The FTP server does not support the 'MLSD' command.")
+                raise
+            return
 
         # load stored meta data if present
         self.cur_dir_meta = DirMetadata(self)
@@ -333,6 +341,7 @@ class FtpTarget(_Target):
                         # Use meta-data mtime instead of the one reported by FTP server
                         entry_map[n].meta = meta
                         entry_map[n].mtime = meta["m"]
+                        entry_map[n].dt_modified = datetime.fromtimestamp(meta["m"])
                     else:
                         # Discard stored meta-data if
                         #   1. the the mtime reported by the FTP server is later

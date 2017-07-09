@@ -39,6 +39,7 @@ class _Resource(object):
         self.mtime = mtime  # possibly adjusted using metadata information
         self.dt_modified = datetime.fromtimestamp(self.mtime)
         self.mtime_org = mtime  # as reported by source server
+        self.dt_modified_org = self.mtime_org
         self.unique = unique
         self.meta = None  # Set by target.get_dir()
 
