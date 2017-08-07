@@ -1,0 +1,7 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+
+[packages]
+colorama = "==0.3.9"
+keyring = "==5.3"

@@ -16,6 +16,8 @@ import sys
 import os
 import shlex
 
+from recommonmark.parser import CommonMarkParser
+
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 #import sphinx_bootstrap_theme
@@ -23,7 +25,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-package_root = os.path.abspath('..')
+package_root = os.path.abspath('../..')
 sys.path.insert(0, package_root)
 print "Add package root to sys.path: %r" % package_root
 # for fn in os.listdir(package_root):
@@ -53,10 +55,13 @@ extensions = [
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
+source_parsers = {
+    '.md': CommonMarkParser,
+}
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
-# source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
+# source_suffix = '.rst'
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
@@ -66,7 +71,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'pyftpsync'
-copyright = u'2015, Martin Wendt'
+copyright = u'2015-2017, Martin Wendt'
 author = u'Martin Wendt'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -91,7 +96,7 @@ except pkg_resources.DistributionNotFound:
     # TODO: 2015-09-05: fails since last month: workaround like this:
     # (Maybe a better solution here: https://github.com/google/oauth2client/commit/a39aa25091946e33b17b52cbe19b5b88d79a28b0)
     g_dict = {}
-    exec(open("../ftpsync/__init__.py").read(), g_dict)
+    exec(open("../../ftpsync/__init__.py").read(), g_dict)
     release = g_dict["__version__"]
     del g_dict
     print 'Using workaround (direc read): %s' % release

@@ -1,0 +1,785 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ftpsync package &mdash; pyftpsync 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="pyftpsync 2.0.0 documentation" href="index.html"/>
+        <link rel="up" title="ftpsync" href="modules.html"/>
+        <link rel="next" title="Changes" href="changes.html"/>
+        <link rel="prev" title="ftpsync" href="modules.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pyftpsync
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">pyftpsync Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference_guide.html">Reference Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">pyftpsync Architecture</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">ftpsync</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">ftpsync package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-ftpsync.ftp_target">ftpsync.ftp_target module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-ftpsync.pyftpsync">ftpsync.pyftpsync module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-ftpsync.resources">ftpsync.resources module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-ftpsync.synchronizers">ftpsync.synchronizers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-ftpsync.targets">ftpsync.targets module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-ftpsync">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="changes.html">Changes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changes.html#id1">CHANGES</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyftpsync</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="modules.html">ftpsync</a> &raquo;</li>
+        
+      <li>ftpsync package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/ftpsync.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ftpsync-package">
+<h1>ftpsync package<a class="headerlink" href="#ftpsync-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-ftpsync.ftp_target">
+<span id="ftpsync-ftp-target-module"></span><h2>ftpsync.ftp_target module<a class="headerlink" href="#module-ftpsync.ftp_target" title="Permalink to this headline">¶</a></h2>
+<p>(c) 2012-2017 Martin Wendt; see <a class="reference external" href="https://github.com/mar10/pyftpsync">https://github.com/mar10/pyftpsync</a>
+Licensed under the MIT license: <a class="reference external" href="http://www.opensource.org/licenses/mit-license.php">http://www.opensource.org/licenses/mit-license.php</a></p>
+<dl class="class">
+<dt id="ftpsync.ftp_target.FtpTarget">
+<em class="property">class </em><code class="descclassname">ftpsync.ftp_target.</code><code class="descname">FtpTarget</code><span class="sig-paren">(</span><em>path</em>, <em>host</em>, <em>port=0</em>, <em>username=None</em>, <em>password=None</em>, <em>tls=False</em>, <em>timeout=None</em>, <em>extra_opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/ftp_target.html#FtpTarget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ftpsync.targets._Target</span></code></p>
+<p>Represents a synchronization target on a FTP server.</p>
+<dl class="attribute">
+<dt id="ftpsync.ftp_target.FtpTarget.path">
+<code class="descname">path</code><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.path" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – Current working directory on FTP server.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftpsync.ftp_target.FtpTarget.ftp">
+<code class="descname">ftp</code><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.ftp" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>FTP</em> – Instance of ftplib.FTP.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftpsync.ftp_target.FtpTarget.host">
+<code class="descname">host</code><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.host" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – hostname of FTP server</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftpsync.ftp_target.FtpTarget.port">
+<code class="descname">port</code><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.port" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – FTP port (defaults to 21)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftpsync.ftp_target.FtpTarget.username">
+<code class="descname">username</code><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.username" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ftpsync.ftp_target.FtpTarget.password">
+<code class="descname">password</code><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.password" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.ftp_target.FtpTarget.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/ftp_target.html#FtpTarget.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.ftp_target.FtpTarget.cwd">
+<code class="descname">cwd</code><span class="sig-paren">(</span><em>dir_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/ftp_target.html#FtpTarget.cwd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.cwd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.ftp_target.FtpTarget.get_base_name">
+<code class="descname">get_base_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/ftp_target.html#FtpTarget.get_base_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.get_base_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.ftp_target.FtpTarget.get_dir">
+<code class="descname">get_dir</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/ftp_target.html#FtpTarget.get_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.get_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.ftp_target.FtpTarget.get_id">
+<code class="descname">get_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/ftp_target.html#FtpTarget.get_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.get_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.ftp_target.FtpTarget.mkdir">
+<code class="descname">mkdir</code><span class="sig-paren">(</span><em>dir_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/ftp_target.html#FtpTarget.mkdir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.mkdir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.ftp_target.FtpTarget.open">
+<code class="descname">open</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/ftp_target.html#FtpTarget.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.open" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.ftp_target.FtpTarget.open_readable">
+<code class="descname">open_readable</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/ftp_target.html#FtpTarget.open_readable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.open_readable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open cur_dir/name for reading.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.ftp_target.FtpTarget.pwd">
+<code class="descname">pwd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/ftp_target.html#FtpTarget.pwd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.pwd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.ftp_target.FtpTarget.remove_file">
+<code class="descname">remove_file</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/ftp_target.html#FtpTarget.remove_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.remove_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove cur_dir/name.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.ftp_target.FtpTarget.rmdir">
+<code class="descname">rmdir</code><span class="sig-paren">(</span><em>dir_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/ftp_target.html#FtpTarget.rmdir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.rmdir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.ftp_target.FtpTarget.set_mtime">
+<code class="descname">set_mtime</code><span class="sig-paren">(</span><em>name</em>, <em>mtime</em>, <em>size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/ftp_target.html#FtpTarget.set_mtime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.set_mtime" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.ftp_target.FtpTarget.write_file">
+<code class="descname">write_file</code><span class="sig-paren">(</span><em>name</em>, <em>fp_src</em>, <em>blocksize=8192</em>, <em>callback=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/ftp_target.html#FtpTarget.write_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.ftp_target.FtpTarget.write_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-ftpsync.pyftpsync">
+<span id="ftpsync-pyftpsync-module"></span><h2>ftpsync.pyftpsync module<a class="headerlink" href="#module-ftpsync.pyftpsync" title="Permalink to this headline">¶</a></h2>
+<p>Simple folder synchronization using FTP.</p>
+<p>(c) 2012-2017 Martin Wendt; see <a class="reference external" href="https://github.com/mar10/pyftpsync">https://github.com/mar10/pyftpsync</a>
+Licensed under the MIT license: <a class="reference external" href="http://www.opensource.org/licenses/mit-license.php">http://www.opensource.org/licenses/mit-license.php</a></p>
+<dl class="docutils">
+<dt>Usage examples:</dt>
+<dd>&gt; pyftpsync.py –help
+&gt; pyftpsync.py upload . ftps://example.com/myfolder</dd>
+</dl>
+<dl class="function">
+<dt id="ftpsync.pyftpsync.namespace_to_dict">
+<code class="descclassname">ftpsync.pyftpsync.</code><code class="descname">namespace_to_dict</code><span class="sig-paren">(</span><em>o</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/pyftpsync.html#namespace_to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.pyftpsync.namespace_to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert an argparse namespace object to a dictionary.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ftpsync.pyftpsync.run">
+<code class="descclassname">ftpsync.pyftpsync.</code><code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/pyftpsync.html#run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.pyftpsync.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-ftpsync.resources">
+<span id="ftpsync-resources-module"></span><h2>ftpsync.resources module<a class="headerlink" href="#module-ftpsync.resources" title="Permalink to this headline">¶</a></h2>
+<p>(c) 2012-2017 Martin Wendt; see <a class="reference external" href="https://github.com/mar10/pyftpsync">https://github.com/mar10/pyftpsync</a>
+Licensed under the MIT license: <a class="reference external" href="http://www.opensource.org/licenses/mit-license.php">http://www.opensource.org/licenses/mit-license.php</a></p>
+<dl class="class">
+<dt id="ftpsync.resources.DirectoryEntry">
+<em class="property">class </em><code class="descclassname">ftpsync.resources.</code><code class="descname">DirectoryEntry</code><span class="sig-paren">(</span><em>target</em>, <em>rel_path</em>, <em>name</em>, <em>size</em>, <em>mtime</em>, <em>unique</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/resources.html#DirectoryEntry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.resources.DirectoryEntry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ftpsync.resources._Resource</span></code></p>
+<dl class="method">
+<dt id="ftpsync.resources.DirectoryEntry.is_dir">
+<code class="descname">is_dir</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/resources.html#DirectoryEntry.is_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.resources.DirectoryEntry.is_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="ftpsync.resources.FileEntry">
+<em class="property">class </em><code class="descclassname">ftpsync.resources.</code><code class="descname">FileEntry</code><span class="sig-paren">(</span><em>target</em>, <em>rel_path</em>, <em>name</em>, <em>size</em>, <em>mtime</em>, <em>unique</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/resources.html#FileEntry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.resources.FileEntry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ftpsync.resources._Resource</span></code></p>
+<dl class="attribute">
+<dt id="ftpsync.resources.FileEntry.EPS_TIME">
+<code class="descname">EPS_TIME</code><em class="property"> = 2.01</em><a class="headerlink" href="#ftpsync.resources.FileEntry.EPS_TIME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.resources.FileEntry.get_sync_info">
+<code class="descname">get_sync_info</code><span class="sig-paren">(</span><em>key=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/resources.html#FileEntry.get_sync_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.resources.FileEntry.get_sync_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get mtime/size when this resource was last synchronized with remote.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.resources.FileEntry.is_file">
+<code class="descname">is_file</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/resources.html#FileEntry.is_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.resources.FileEntry.is_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.resources.FileEntry.was_modified_since_last_sync">
+<code class="descname">was_modified_since_last_sync</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/resources.html#FileEntry.was_modified_since_last_sync"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.resources.FileEntry.was_modified_since_last_sync" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if this resource was modified since last sync.</p>
+<p>None is returned if we don’t know (because of missing meta data).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-ftpsync.synchronizers">
+<span id="ftpsync-synchronizers-module"></span><h2>ftpsync.synchronizers module<a class="headerlink" href="#module-ftpsync.synchronizers" title="Permalink to this headline">¶</a></h2>
+<p>(c) 2012-2017 Martin Wendt; see <a class="reference external" href="https://github.com/mar10/pyftpsync">https://github.com/mar10/pyftpsync</a>
+Licensed under the MIT license: <a class="reference external" href="http://www.opensource.org/licenses/mit-license.php">http://www.opensource.org/licenses/mit-license.php</a></p>
+<dl class="class">
+<dt id="ftpsync.synchronizers.BaseSynchronizer">
+<em class="property">class </em><code class="descclassname">ftpsync.synchronizers.</code><code class="descname">BaseSynchronizer</code><span class="sig-paren">(</span><em>local</em>, <em>remote</em>, <em>options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BaseSynchronizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BaseSynchronizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Synchronizes two target instances in dry_run mode (also base class for other synchronizers).</p>
+<dl class="method">
+<dt id="ftpsync.synchronizers.BaseSynchronizer.get_stats">
+<code class="descname">get_stats</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BaseSynchronizer.get_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BaseSynchronizer.get_stats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.BaseSynchronizer.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BaseSynchronizer.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BaseSynchronizer.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.BaseSynchronizer.sync_conflict">
+<code class="descname">sync_conflict</code><span class="sig-paren">(</span><em>local</em>, <em>remote</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BaseSynchronizer.sync_conflict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BaseSynchronizer.sync_conflict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.BaseSynchronizer.sync_equal_dir">
+<code class="descname">sync_equal_dir</code><span class="sig-paren">(</span><em>local_dir</em>, <em>remote_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BaseSynchronizer.sync_equal_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BaseSynchronizer.sync_equal_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return False to prevent visiting of children</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.BaseSynchronizer.sync_equal_file">
+<code class="descname">sync_equal_file</code><span class="sig-paren">(</span><em>local_file</em>, <em>remote_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BaseSynchronizer.sync_equal_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BaseSynchronizer.sync_equal_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.BaseSynchronizer.sync_missing_local_dir">
+<code class="descname">sync_missing_local_dir</code><span class="sig-paren">(</span><em>remote_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BaseSynchronizer.sync_missing_local_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BaseSynchronizer.sync_missing_local_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return False to prevent visiting of children</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.BaseSynchronizer.sync_missing_local_file">
+<code class="descname">sync_missing_local_file</code><span class="sig-paren">(</span><em>remote_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BaseSynchronizer.sync_missing_local_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BaseSynchronizer.sync_missing_local_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.BaseSynchronizer.sync_missing_remote_dir">
+<code class="descname">sync_missing_remote_dir</code><span class="sig-paren">(</span><em>local_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BaseSynchronizer.sync_missing_remote_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BaseSynchronizer.sync_missing_remote_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.BaseSynchronizer.sync_missing_remote_file">
+<code class="descname">sync_missing_remote_file</code><span class="sig-paren">(</span><em>local_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BaseSynchronizer.sync_missing_remote_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BaseSynchronizer.sync_missing_remote_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.BaseSynchronizer.sync_newer_local_file">
+<code class="descname">sync_newer_local_file</code><span class="sig-paren">(</span><em>local_file</em>, <em>remote_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BaseSynchronizer.sync_newer_local_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BaseSynchronizer.sync_newer_local_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.BaseSynchronizer.sync_older_local_file">
+<code class="descname">sync_older_local_file</code><span class="sig-paren">(</span><em>local_file</em>, <em>remote_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BaseSynchronizer.sync_older_local_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BaseSynchronizer.sync_older_local_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="ftpsync.synchronizers.BiDirSynchronizer">
+<em class="property">class </em><code class="descclassname">ftpsync.synchronizers.</code><code class="descname">BiDirSynchronizer</code><span class="sig-paren">(</span><em>local</em>, <em>remote</em>, <em>options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BiDirSynchronizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BiDirSynchronizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ftpsync.synchronizers.BaseSynchronizer" title="ftpsync.synchronizers.BaseSynchronizer"><code class="xref py py-class docutils literal"><span class="pre">ftpsync.synchronizers.BaseSynchronizer</span></code></a></p>
+<p>Synchronizer that performs up- and download operations as required.</p>
+<ul>
+<li><p class="first">Newer files override unmodified older files</p>
+</li>
+<li><p class="first">When both files are newer than last sync -&gt; conflict!
+Conflicts may be resolved by these options:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">resolve</span><span class="o">=</span><span class="n">old</span><span class="p">:</span>         <span class="n">use</span> <span class="n">the</span> <span class="n">older</span> <span class="n">version</span>
+<span class="o">--</span><span class="n">resolve</span><span class="o">=</span><span class="n">new</span><span class="p">:</span>         <span class="n">use</span> <span class="n">the</span> <span class="n">newer</span> <span class="n">version</span>
+<span class="o">--</span><span class="n">resolve</span><span class="o">=</span><span class="n">local</span><span class="p">:</span>       <span class="n">use</span> <span class="n">the</span> <span class="n">local</span> <span class="n">file</span>
+<span class="o">--</span><span class="n">resolve</span><span class="o">=</span><span class="n">remote</span><span class="p">:</span>      <span class="n">use</span> <span class="n">the</span> <span class="n">remote</span> <span class="n">file</span>
+<span class="o">--</span><span class="n">resolve</span><span class="o">=</span><span class="n">ask</span><span class="p">:</span>         <span class="n">prompt</span> <span class="n">mode</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">When a file is missing: check if it existed in the past.
+If so, delete it. Otherwise copy it.</p>
+</li>
+</ul>
+<p>In order to know if a file was modified, deleted, or created since last sync,
+we store a snapshot of the directory in the local directory.</p>
+<dl class="method">
+<dt id="ftpsync.synchronizers.BiDirSynchronizer.get_info_strings">
+<code class="descname">get_info_strings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BiDirSynchronizer.get_info_strings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BiDirSynchronizer.get_info_strings" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.BiDirSynchronizer.sync_conflict">
+<code class="descname">sync_conflict</code><span class="sig-paren">(</span><em>local_entry</em>, <em>remote_entry</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BiDirSynchronizer.sync_conflict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BiDirSynchronizer.sync_conflict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.BiDirSynchronizer.sync_missing_local_dir">
+<code class="descname">sync_missing_local_dir</code><span class="sig-paren">(</span><em>remote_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BiDirSynchronizer.sync_missing_local_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BiDirSynchronizer.sync_missing_local_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.BiDirSynchronizer.sync_missing_local_file">
+<code class="descname">sync_missing_local_file</code><span class="sig-paren">(</span><em>remote_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BiDirSynchronizer.sync_missing_local_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BiDirSynchronizer.sync_missing_local_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.BiDirSynchronizer.sync_missing_remote_dir">
+<code class="descname">sync_missing_remote_dir</code><span class="sig-paren">(</span><em>local_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BiDirSynchronizer.sync_missing_remote_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BiDirSynchronizer.sync_missing_remote_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.BiDirSynchronizer.sync_missing_remote_file">
+<code class="descname">sync_missing_remote_file</code><span class="sig-paren">(</span><em>local_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BiDirSynchronizer.sync_missing_remote_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BiDirSynchronizer.sync_missing_remote_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.BiDirSynchronizer.sync_newer_local_file">
+<code class="descname">sync_newer_local_file</code><span class="sig-paren">(</span><em>local_file</em>, <em>remote_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BiDirSynchronizer.sync_newer_local_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BiDirSynchronizer.sync_newer_local_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.BiDirSynchronizer.sync_older_local_file">
+<code class="descname">sync_older_local_file</code><span class="sig-paren">(</span><em>local_file</em>, <em>remote_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#BiDirSynchronizer.sync_older_local_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.BiDirSynchronizer.sync_older_local_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="ftpsync.synchronizers.DownloadSynchronizer">
+<em class="property">class </em><code class="descclassname">ftpsync.synchronizers.</code><code class="descname">DownloadSynchronizer</code><span class="sig-paren">(</span><em>local</em>, <em>remote</em>, <em>options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#DownloadSynchronizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.DownloadSynchronizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ftpsync.synchronizers.BaseSynchronizer" title="ftpsync.synchronizers.BaseSynchronizer"><code class="xref py py-class docutils literal"><span class="pre">ftpsync.synchronizers.BaseSynchronizer</span></code></a></p>
+<dl class="method">
+<dt id="ftpsync.synchronizers.DownloadSynchronizer.get_info_strings">
+<code class="descname">get_info_strings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#DownloadSynchronizer.get_info_strings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.DownloadSynchronizer.get_info_strings" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.DownloadSynchronizer.sync_conflict">
+<code class="descname">sync_conflict</code><span class="sig-paren">(</span><em>local_entry</em>, <em>remote_entry</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#DownloadSynchronizer.sync_conflict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.DownloadSynchronizer.sync_conflict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Both targets changed; resolve according to strategy, but never modify remote.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.DownloadSynchronizer.sync_equal_dir">
+<code class="descname">sync_equal_dir</code><span class="sig-paren">(</span><em>local_dir</em>, <em>remote_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#DownloadSynchronizer.sync_equal_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.DownloadSynchronizer.sync_equal_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return False to prevent visiting of children</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.DownloadSynchronizer.sync_equal_file">
+<code class="descname">sync_equal_file</code><span class="sig-paren">(</span><em>local_file</em>, <em>remote_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#DownloadSynchronizer.sync_equal_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.DownloadSynchronizer.sync_equal_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.DownloadSynchronizer.sync_missing_local_dir">
+<code class="descname">sync_missing_local_dir</code><span class="sig-paren">(</span><em>remote_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#DownloadSynchronizer.sync_missing_local_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.DownloadSynchronizer.sync_missing_local_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.DownloadSynchronizer.sync_missing_local_file">
+<code class="descname">sync_missing_local_file</code><span class="sig-paren">(</span><em>remote_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#DownloadSynchronizer.sync_missing_local_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.DownloadSynchronizer.sync_missing_local_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.DownloadSynchronizer.sync_missing_remote_dir">
+<code class="descname">sync_missing_remote_dir</code><span class="sig-paren">(</span><em>local_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#DownloadSynchronizer.sync_missing_remote_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.DownloadSynchronizer.sync_missing_remote_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.DownloadSynchronizer.sync_missing_remote_file">
+<code class="descname">sync_missing_remote_file</code><span class="sig-paren">(</span><em>local_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#DownloadSynchronizer.sync_missing_remote_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.DownloadSynchronizer.sync_missing_remote_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.DownloadSynchronizer.sync_newer_local_file">
+<code class="descname">sync_newer_local_file</code><span class="sig-paren">(</span><em>local_file</em>, <em>remote_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#DownloadSynchronizer.sync_newer_local_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.DownloadSynchronizer.sync_newer_local_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.DownloadSynchronizer.sync_older_local_file">
+<code class="descname">sync_older_local_file</code><span class="sig-paren">(</span><em>local_file</em>, <em>remote_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#DownloadSynchronizer.sync_older_local_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.DownloadSynchronizer.sync_older_local_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="ftpsync.synchronizers.UploadSynchronizer">
+<em class="property">class </em><code class="descclassname">ftpsync.synchronizers.</code><code class="descname">UploadSynchronizer</code><span class="sig-paren">(</span><em>local</em>, <em>remote</em>, <em>options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#UploadSynchronizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.UploadSynchronizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ftpsync.synchronizers.BaseSynchronizer" title="ftpsync.synchronizers.BaseSynchronizer"><code class="xref py py-class docutils literal"><span class="pre">ftpsync.synchronizers.BaseSynchronizer</span></code></a></p>
+<dl class="method">
+<dt id="ftpsync.synchronizers.UploadSynchronizer.get_info_strings">
+<code class="descname">get_info_strings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#UploadSynchronizer.get_info_strings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.UploadSynchronizer.get_info_strings" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.UploadSynchronizer.sync_conflict">
+<code class="descname">sync_conflict</code><span class="sig-paren">(</span><em>local_entry</em>, <em>remote_entry</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#UploadSynchronizer.sync_conflict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.UploadSynchronizer.sync_conflict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Both targets changed; resolve according to strategy, but never modify local.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.UploadSynchronizer.sync_equal_dir">
+<code class="descname">sync_equal_dir</code><span class="sig-paren">(</span><em>local_dir</em>, <em>remote_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#UploadSynchronizer.sync_equal_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.UploadSynchronizer.sync_equal_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return False to prevent visiting of children</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.UploadSynchronizer.sync_equal_file">
+<code class="descname">sync_equal_file</code><span class="sig-paren">(</span><em>local_file</em>, <em>remote_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#UploadSynchronizer.sync_equal_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.UploadSynchronizer.sync_equal_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.UploadSynchronizer.sync_missing_local_dir">
+<code class="descname">sync_missing_local_dir</code><span class="sig-paren">(</span><em>remote_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#UploadSynchronizer.sync_missing_local_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.UploadSynchronizer.sync_missing_local_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.UploadSynchronizer.sync_missing_local_file">
+<code class="descname">sync_missing_local_file</code><span class="sig-paren">(</span><em>remote_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#UploadSynchronizer.sync_missing_local_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.UploadSynchronizer.sync_missing_local_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.UploadSynchronizer.sync_missing_remote_dir">
+<code class="descname">sync_missing_remote_dir</code><span class="sig-paren">(</span><em>local_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#UploadSynchronizer.sync_missing_remote_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.UploadSynchronizer.sync_missing_remote_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.UploadSynchronizer.sync_missing_remote_file">
+<code class="descname">sync_missing_remote_file</code><span class="sig-paren">(</span><em>local_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#UploadSynchronizer.sync_missing_remote_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.UploadSynchronizer.sync_missing_remote_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.UploadSynchronizer.sync_newer_local_file">
+<code class="descname">sync_newer_local_file</code><span class="sig-paren">(</span><em>local_file</em>, <em>remote_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#UploadSynchronizer.sync_newer_local_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.UploadSynchronizer.sync_newer_local_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.synchronizers.UploadSynchronizer.sync_older_local_file">
+<code class="descname">sync_older_local_file</code><span class="sig-paren">(</span><em>local_file</em>, <em>remote_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/synchronizers.html#UploadSynchronizer.sync_older_local_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.synchronizers.UploadSynchronizer.sync_older_local_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-ftpsync.targets">
+<span id="ftpsync-targets-module"></span><h2>ftpsync.targets module<a class="headerlink" href="#module-ftpsync.targets" title="Permalink to this headline">¶</a></h2>
+<p>(c) 2012-2017 Martin Wendt; see <a class="reference external" href="https://github.com/mar10/pyftpsync">https://github.com/mar10/pyftpsync</a>
+Licensed under the MIT license: <a class="reference external" href="http://www.opensource.org/licenses/mit-license.php">http://www.opensource.org/licenses/mit-license.php</a></p>
+<dl class="class">
+<dt id="ftpsync.targets.FsTarget">
+<em class="property">class </em><code class="descclassname">ftpsync.targets.</code><code class="descname">FsTarget</code><span class="sig-paren">(</span><em>root_dir</em>, <em>extra_opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/targets.html#FsTarget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.targets.FsTarget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ftpsync.targets._Target</span></code></p>
+<dl class="method">
+<dt id="ftpsync.targets.FsTarget.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/targets.html#FsTarget.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.targets.FsTarget.close" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.targets.FsTarget.cwd">
+<code class="descname">cwd</code><span class="sig-paren">(</span><em>dir_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/targets.html#FsTarget.cwd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.targets.FsTarget.cwd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.targets.FsTarget.flush_meta">
+<code class="descname">flush_meta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/targets.html#FsTarget.flush_meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.targets.FsTarget.flush_meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write additional meta information for current directory.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.targets.FsTarget.get_dir">
+<code class="descname">get_dir</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/targets.html#FsTarget.get_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.targets.FsTarget.get_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.targets.FsTarget.mkdir">
+<code class="descname">mkdir</code><span class="sig-paren">(</span><em>dir_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/targets.html#FsTarget.mkdir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.targets.FsTarget.mkdir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.targets.FsTarget.open">
+<code class="descname">open</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/targets.html#FsTarget.open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.targets.FsTarget.open" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.targets.FsTarget.open_readable">
+<code class="descname">open_readable</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/targets.html#FsTarget.open_readable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.targets.FsTarget.open_readable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.targets.FsTarget.pwd">
+<code class="descname">pwd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/targets.html#FsTarget.pwd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.targets.FsTarget.pwd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.targets.FsTarget.remove_file">
+<code class="descname">remove_file</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/targets.html#FsTarget.remove_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.targets.FsTarget.remove_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove cur_dir/name.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.targets.FsTarget.rmdir">
+<code class="descname">rmdir</code><span class="sig-paren">(</span><em>dir_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/targets.html#FsTarget.rmdir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.targets.FsTarget.rmdir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove cur_dir/name.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.targets.FsTarget.set_mtime">
+<code class="descname">set_mtime</code><span class="sig-paren">(</span><em>name</em>, <em>mtime</em>, <em>size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/targets.html#FsTarget.set_mtime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.targets.FsTarget.set_mtime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set modification time on file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ftpsync.targets.FsTarget.write_file">
+<code class="descname">write_file</code><span class="sig-paren">(</span><em>name</em>, <em>fp_src</em>, <em>blocksize=8192</em>, <em>callback=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/targets.html#FsTarget.write_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.targets.FsTarget.write_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="ftpsync.targets.make_target">
+<code class="descclassname">ftpsync.targets.</code><code class="descname">make_target</code><span class="sig-paren">(</span><em>url</em>, <em>extra_opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ftpsync/targets.html#make_target"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ftpsync.targets.make_target" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factory that creates _Target objects from URLs.</p>
+<p>FTP targets must begin with the scheme <a class="reference external" href="ftp://">ftp://</a> or ftps:// for TLS.
+TLS is only supported on Python 2.7/3.2+.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-ftpsync">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-ftpsync" title="Permalink to this headline">¶</a></h2>
+<p>Package version number.</p>
+<p><a class="reference external" href="http://peak.telecommunity.com/DevCenter/setuptools#specifying-your-project-s-version">http://peak.telecommunity.com/DevCenter/setuptools#specifying-your-project-s-version</a>
+<a class="reference external" href="http://peak.telecommunity.com/DevCenter/setuptools#tagging-and-daily-build-or-snapshot-releases">http://peak.telecommunity.com/DevCenter/setuptools#tagging-and-daily-build-or-snapshot-releases</a></p>
+<p>Imported by ftpsync.__init__, so it can be accessed as ‘ftpsync.__version__’.
+Accessed by setup.py using read().</p>
+<p>semver would be           ‘1.0.0-1’
+PyPI  would be            ‘1.0.0b1’
+cx_Freeze build need      ‘1.0.0.0’
+cx_Freeze bdist_msi  need ‘1.0.0’</p>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="changes.html" class="btn btn-neutral float-right" title="Changes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="modules.html" class="btn btn-neutral" title="ftpsync" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015-2017, Martin Wendt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+    "_meta": {
+        "hash": {
+            "sha256": "8eca7d95cd18ffaf4c6276c973680b2b4fcd8ca497f12239cf0b2722efedb909"
+        },
+        "requires": {},
+        "sources": [
+            {
+                "url": "https://pypi.python.org/simple",
+                "verify_ssl": true
+            }
+        ]
+    },
+    "default": {
+        "colorama": {
+            "version": "==0.3.9"
+        },
+        "keyring": {
+            "version": "==5.3"
+        }
+    },
+    "develop": {}
+}

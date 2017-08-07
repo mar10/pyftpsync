@@ -39,9 +39,9 @@ class SphinxCommand(Command):
 
     def run(self):
         import subprocess
-        sourcedir = os.path.join("doc", "sphinx")
-        outdir = os.path.join("doc", "sphinx-build")
-        res = subprocess.call("sphinx-build -b html doc/sphinx doc/sphinx-build",
+        sourcedir = os.path.join("docs", "sphinx")
+        outdir = os.path.join("docs", "sphinx-build")
+        res = subprocess.call("sphinx-build -b html docs/sphinx docs/sphinx-build",
             shell=True)
         if res:
             print("ERROR: sphinx-build exited with code {}".format(res))
