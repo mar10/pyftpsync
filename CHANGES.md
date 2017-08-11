@@ -1,6 +1,3 @@
-CHANGES
-=======
-
 2.0.0 (unreleased)
 ------------------
 **Note**: the command line options have changed!  

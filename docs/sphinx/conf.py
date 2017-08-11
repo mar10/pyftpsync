@@ -52,6 +52,18 @@ extensions = [
 #    'sphinxcontrib.fulltoc',
 ]
 
+# A string of reStructuredText that will be included at the end of every source file that is read.
+# This is the right place to add substitutions that should be available in every file. An example:
+rst_epilog = """
+.. |br| raw:: html
+
+   <br />
+
+.. |nbsp| unicode:: 0xA0
+   :trim:
+
+"""
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

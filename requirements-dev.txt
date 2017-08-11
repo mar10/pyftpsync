@@ -10,3 +10,4 @@ sphinx~=1.5
 tox~=2.7
 twine
 virtualenv
+wheel
