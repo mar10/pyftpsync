@@ -307,15 +307,14 @@ class FtpTarget(_Target):
                 entry_map[name] = entry
                 entry_list.append(entry)
 
-            try:    
-                self.ftp.retrlines("MLSD", _addline)
-            except error_perm as e:
-                # print("The FTP server responded with {}".format(e), file=sys.stderr)
-                # raises error_perm "500 Unknown command" if command is not supported
-                if "500" in str(e.args):
-                    raise RuntimeError("The FTP server does not support the 'MLSD' command.")
-                raise
-            return
+        try:    
+            self.ftp.retrlines("MLSD", _addline)
+        except error_perm as e:
+            # print("The FTP server responded with {}".format(e), file=sys.stderr)
+            # raises error_perm "500 Unknown command" if command is not supported
+            if "500" in str(e.args):
+                raise RuntimeError("The FTP server does not support the 'MLSD' command.")
+            raise
 
         # load stored meta data if present
         self.cur_dir_meta = DirMetadata(self)
