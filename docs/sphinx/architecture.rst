@@ -10,8 +10,9 @@ Class Inheritance Diagram
 =========================
 
 .. inheritance-diagram:: ftpsync.targets ftpsync.ftp_target ftpsync.resources ftpsync.synchronizers
-   :parts: 1
+   :parts: 2
    :private-bases:
+   :caption: pyftpsync classes
 
 
 Algorithm

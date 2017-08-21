@@ -18,10 +18,17 @@ from ftpsync.metadata import DirMetadata
 # make_target
 #===============================================================================
 def make_target(url, extra_opts=None):
-    """Factory that creates _Target objects from URLs.
+    """Factory that creates `_Target` objects from URLs.
 
-    FTP targets must begin with the scheme ftp:// or ftps:// for TLS.
-    TLS is only supported on Python 2.7/3.2+.
+    FTP targets must begin with the scheme ``ftp://`` or ``ftps://`` for TLS.
+
+    Note:
+        TLS is only supported on Python 2.7/3.2+.
+    Args:
+        url (str):
+        extra_opts (dict, optional): Passed to Target contructor. Default: None.
+    Returns:
+        :class:`_Target`
     """
 #    debug = extra_opts.get("debug", 1)
     parts = urlparse(url, allow_fragments=False)
@@ -45,23 +52,24 @@ def make_target(url, extra_opts=None):
 # _Target
 #===============================================================================
 class _Target(object):
-
+    """Base class for :class:`FsTarget`, :class:`FtpTarget`, etc."""
     def __init__(self, root_dir, extra_opts):
         if root_dir != "/":
             root_dir = root_dir.rstrip("/")
+        #:
         self.root_dir = root_dir
         self.extra_opts = extra_opts or {}
         self.readonly = False
         self.dry_run = False
         self.host = None
-        self.synchronizer = None # Set by BaseSynchronizer.__init__()
+        self.synchronizer = None  # Set by BaseSynchronizer.__init__()
         self.peer = None
         self.cur_dir = None
         self.connected = False
         self.save_mode = True
-        self.case_sensitive = None # TODO: don't know yet
-        self.time_ofs = None # TODO: see _probe_lock_file()
-        self.support_set_time = None # Derived class knows
+        self.case_sensitive = None  # TODO: don't know yet
+        self.time_ofs = None  # TODO: see _probe_lock_file()
+        self.support_set_time = None  # Derived class knows
         self.cur_dir_meta = DirMetadata(self)
         self.meta_stack = []
 
@@ -70,12 +78,12 @@ class _Target(object):
         self.close()
 
     def get_base_name(self):
-        return "%s" % self.root_dir
+        return "{}".format(self.root_dir)
 
     def is_local(self):
         return self.synchronizer.local is self
 
-    def is_unbund(self):
+    def is_unbound(self):
         return self.synchronizer is None
 
     def get_option(self, key, default=None):
@@ -93,7 +101,7 @@ class _Target(object):
     def check_write(self, name):
         """Raise exception if writing cur_dir/name is not allowed."""
         if self.readonly and name not in (DirMetadata.META_FILE_NAME, DirMetadata.LOCK_FILE_NAME):
-            raise RuntimeError("target is read-only: %s + %s / " % (self, name))
+            raise RuntimeError("Target is read-only: {} + {} / ".format(self, name))
 
     def get_id(self):
         return self.root_dir
@@ -115,7 +123,7 @@ class _Target(object):
         raise NotImplementedError
 
     def push_meta(self):
-        self.meta_stack.append( self.cur_dir_meta)
+        self.meta_stack.append(self.cur_dir_meta)
         self.cur_dir_meta = None
 
     def pop_meta(self):
@@ -140,19 +148,30 @@ class _Target(object):
         """Return a list of _Resource entries."""
         raise NotImplementedError
 
-    def walk(self, pred=None):
-        """Iterate over all target entries recursively."""
+    def walk(self, pred=None, recursive=True):
+        """Iterate over all target entries recursively.
+
+        Args:
+            pred (function, optional):
+                Callback(:class:`ftpsync.resources._Resource`) should return `False` to
+                ignore entry. Default: `None`.
+            recursive (bool, optional):
+                Pass `False` to generate top level entries only. Default: `True`.
+        Yields:
+            :class:`ftpsync.resources._Resource`
+        """
         for entry in self.get_dir():
             if pred and pred(entry) is False:
                 continue
 
             yield entry
 
-            if isinstance(entry, DirectoryEntry):
-                self.cwd(entry.name)
-                for e in self.walk(pred):
-                    yield e
-                self.cwd("..")
+            if recursive:
+                if isinstance(entry, DirectoryEntry):
+                    self.cwd(entry.name)
+                    for e in self.walk(pred):
+                        yield e
+                    self.cwd("..")
         return
 
     def open_readable(self, name):
@@ -279,10 +298,10 @@ class FsTarget(_Target):
             elif os.path.isfile(path):
                 if name == DirMetadata.META_FILE_NAME:
                     self.cur_dir_meta.read()
-                elif not name in (DirMetadata.DEBUG_META_FILE_NAME, ):
+                # elif not name in (DirMetadata.DEBUG_META_FILE_NAME, ):
+                else:
                     res.append(FileEntry(self, self.cur_dir, name, stat.st_size,
-                                         mtime,
-                                         str(stat.st_ino)))
+                                         mtime, str(stat.st_ino)))
         return res
 
     def open_readable(self, name):

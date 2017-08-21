@@ -5,28 +5,26 @@
 
 .. _main-index:
 
-########
-Overview
-########
+#########
+Pyftpsync
+#########
 
 *Synchronize local directories with FTP servers.*
-
 
 :Project:   https://github.com/mar10/pyftpsync/
 :Version:   |version|, Date: |today|
 
+|travis_badge| |nbsp| |pypi_badge| |nbsp| |lic_badge| |nbsp| |rtd_badge|
 
 .. toctree::
    :hidden:
 
-   self
+   Overview<self>
    installation
    user_guide.md
    reference_guide
-   development.md
+   development
    changes
-
-|travis_badge| |nbsp| |pypi_badge| |nbsp| |lic_badge| |nbsp| |rtd_badge|
 
 
 .. image:: ../../teaser.png
@@ -76,7 +74,7 @@ be installed using `pip <http://www.pip-installer.org/>`_::
   * :ref:`search`
 
 
-.. |travis_badge| image:: https://travis-ci.org/mar10/pyftpsync.png?branch=master
+.. |travis_badge| image:: https://travis-ci.org/mar10/pyftpsync.svg?branch=master
    :alt: Build Status
    :target: https://travis-ci.org/mar10/pyftpsync
 
@@ -89,5 +87,5 @@ be installed using `pip <http://www.pip-installer.org/>`_::
    :target: https://github.com/mar10/pyftpsync/blob/master/LICENSE.txt
 
 .. |rtd_badge| image:: https://readthedocs.org/projects/pyftpsync/badge/?version=latest
-   :target: http://pyftpsync.readthedocs.org/en/latest/
+   :target: http://pyftpsync.readthedocs.io/
    :alt: Documentation Status

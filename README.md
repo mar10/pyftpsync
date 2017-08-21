@@ -1,8 +1,8 @@
 # pyftpsync
-[![Build Status](https://travis-ci.org/mar10/pyftpsync.png?branch=master)](https://travis-ci.org/mar10/pyftpsync)
+[![Build Status](https://travis-ci.org/mar10/pyftpsync.svg?branch=master)](https://travis-ci.org/mar10/pyftpsync)
 [![Latest Version](https://img.shields.io/pypi/v/pyftpsync.svg)](https://pypi.python.org/pypi/pyftpsync/)
 [![License](https://img.shields.io/pypi/l/pyftpsync.svg)](https://github.com/mar10/pyftpsync/blob/master/LICENSE.txt)
-[![Documentation Status](https://readthedocs.org/projects/fabulist/badge/?version=latest)](http://fabulist.readthedocs.org/en/latest/)
+[![Documentation Status](https://readthedocs.org/projects/pyftpsync/badge/?version=latest)](http://pyftpsync.readthedocs.io/)
 
 > Synchronize local directories with FTP servers.
 

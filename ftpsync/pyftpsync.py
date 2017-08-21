@@ -19,6 +19,7 @@ from ftpsync.scan_command import add_scan_parser
 from ftpsync.synchronizers import UploadSynchronizer, \
     DownloadSynchronizer, BiDirSynchronizer, DEFAULT_OMIT
 from ftpsync.targets import make_target, FsTarget
+from ftpsync import util
 
 
 #def disable_stdout_buffering():
@@ -95,6 +96,10 @@ def run():
         parser.add_argument("--no-color",
                             action="store_true",
                             help="prevent use of ansi terminal color codes")
+        # parser.add_argument("-r", "--recursive",
+        #                     type=util.str_to_bool,
+        #                     default='on',
+        #                     help="traverse sub directories (default: %(default)s)")
 
     # --- Create the parser for the "upload" command ---------------------------
 
@@ -171,7 +176,12 @@ def run():
         ftp_debug = 1
 
     if callable(getattr(args, "command", None)):
-        return getattr(args, "command")(args);
+        try:
+            return getattr(args, "command")(args)
+        except KeyboardInterrupt:
+            print("\nAborted by user.")
+            exit(1)
+
     elif not hasattr(args, "command"):
         parser.error("missing command (choose from 'upload', 'download', 'sync')")
 
@@ -202,9 +212,9 @@ def run():
         s.run()
     except KeyboardInterrupt:
         print("\nAborted by user.")
-        return
+        exit(1)
     finally:
-        # prevent sporadic exceptions in ftplib, when closing in __del__
+        # Prevent sporadic exceptions in ftplib, when closing in __del__
         s.local.close()
         s.remote.close()
 

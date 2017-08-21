@@ -109,7 +109,7 @@ def _get_test_folder(folder_name):
     def __scan(rel_folder_path):
         abs_folder_path = os.path.join(root_folder, rel_folder_path)
         for fn in os.listdir(abs_folder_path):
-            if fn.startswith(".") or fn == DirMetadata.DEBUG_META_FILE_NAME:
+            if fn.startswith("."):  # or fn == DirMetadata.DEBUG_META_FILE_NAME:
                 continue
             abs_file_path = os.path.join(abs_folder_path, fn)
             if os.path.isdir(abs_file_path):
@@ -154,7 +154,10 @@ def prepare_fixtures_1():
     """Create two test folders and some files.
 
     """
-    print("prepare_fixtures", PYFTPSYNC_TEST_FOLDER)
+    print("Prepare_fixtures", PYFTPSYNC_TEST_FOLDER)
+    # print("PYFTPSYNC_TEST_FOLDER", os.environ.get("PYFTPSYNC_TEST_FOLDER"))
+    # print("PYFTPSYNC_TEST_FTP_URL", os.environ.get("PYFTPSYNC_TEST_FTP_URL"))
+
     assert os.path.isdir(PYFTPSYNC_TEST_FOLDER)
     # Reset all
     _empty_folder(PYFTPSYNC_TEST_FOLDER)

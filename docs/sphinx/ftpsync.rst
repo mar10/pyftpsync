@@ -10,7 +10,9 @@ ftpsync.ftp_target module
 .. automodule:: ftpsync.ftp_target
     :members:
     :undoc-members:
+    :private-members:
     :show-inheritance:
+    :inherited-members:
 
 ftpsync.pyftpsync module
 ------------------------
@@ -18,7 +20,9 @@ ftpsync.pyftpsync module
 .. automodule:: ftpsync.pyftpsync
     :members:
     :undoc-members:
+    :private-members:
     :show-inheritance:
+    :inherited-members:
 
 ftpsync.resources module
 ------------------------
@@ -26,7 +30,9 @@ ftpsync.resources module
 .. automodule:: ftpsync.resources
     :members:
     :undoc-members:
+    :private-members:
     :show-inheritance:
+    :inherited-members:
 
 ftpsync.synchronizers module
 ----------------------------
@@ -34,7 +40,9 @@ ftpsync.synchronizers module
 .. automodule:: ftpsync.synchronizers
     :members:
     :undoc-members:
+    :private-members:
     :show-inheritance:
+    :inherited-members:
 
 ftpsync.targets module
 ----------------------
@@ -42,7 +50,9 @@ ftpsync.targets module
 .. automodule:: ftpsync.targets
     :members:
     :undoc-members:
+    :private-members:
     :show-inheritance:
+    :inherited-members:
 
 
 Module contents
@@ -52,3 +62,4 @@ Module contents
     :members:
     :undoc-members:
     :show-inheritance:
+    :inherited-members:

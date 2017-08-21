@@ -44,6 +44,7 @@ class FilesystemTest(unittest.TestCase):
     """Test different synchronizers on file system targets."""
     def setUp(self):
 #         raise SkipTest
+        self.verbose = 4
         prepare_fixtures_1()
 
     def tearDown(self):
@@ -53,7 +54,7 @@ class FilesystemTest(unittest.TestCase):
         # Download files from local to remote (which is empty)
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
         remote = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
-        opts = {"force": False, "delete": False, "dry_run": False}
+        opts = {"force": False, "delete": False, "dry_run": False, "verbose": self.verbose}
         s = DownloadSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
@@ -85,7 +86,7 @@ class FilesystemTest(unittest.TestCase):
     def test_upload_fs_fs(self):
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
         remote = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
-        opts = {"force": False, "delete": False, "dry_run": False}
+        opts = {"force": False, "delete": False, "dry_run": False, "verbose": self.verbose}
         s = UploadSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
@@ -105,7 +106,7 @@ class FilesystemTest(unittest.TestCase):
     def test_sync_fs_fs(self):
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
         remote = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
-        opts = {"dry_run": False, "verbose": 3}
+        opts = {"dry_run": False, "verbose": self.verbose}  # , "resolve": "ask"}
         s = BiDirSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
@@ -120,7 +121,6 @@ class FilesystemTest(unittest.TestCase):
         # file times are preserved
         self.assertEqual(_get_test_file_date("local/file1.txt"), STAMP_20140101_120000)
         self.assertEqual(_get_test_file_date("remote/file1.txt"), STAMP_20140101_120000)
-
 
         # Again: nothing to do
         s = BiDirSynchronizer(local, remote, opts)
@@ -142,7 +142,7 @@ class FilesystemTest(unittest.TestCase):
         _touch_test_file("remote/file2.txt")
         # file3.txt will cause a conflict:
         _touch_test_file("local/file3.txt")
-        dt = datetime.datetime.now() - datetime.timedelta(seconds=10)
+        dt = datetime.datetime.utcnow() - datetime.timedelta(seconds=10)
         _touch_test_file("remote/file3.txt", dt=dt)
 
         s = BiDirSynchronizer(local, remote, opts)
@@ -163,7 +163,7 @@ class FilesystemTest(unittest.TestCase):
     def test_sync_conflicts(self):
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
         remote = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
-        opts = {"dry_run": False, "verbose": 3}
+        opts = {"dry_run": False, "verbose": self.verbose}  # , "resolve": "ask"}
 
         # Copy local -> remote
 
@@ -176,9 +176,9 @@ class FilesystemTest(unittest.TestCase):
         # Modify local and remote
 
         # conflict 1: local is newer
-        dt = datetime.datetime.now()
+        dt = datetime.datetime.utcnow()
         _touch_test_file("local/file1.txt", dt)
-        dt = datetime.datetime.now() - datetime.timedelta(seconds=10)
+        dt = datetime.datetime.utcnow() - datetime.timedelta(seconds=10)
         _touch_test_file("remote/file1.txt", dt=dt)
 #         path = os.path.join(PYFTPSYNC_TEST_FOLDER, "remote/file1.txt")
 #         stamp = time.time() - 10
@@ -186,7 +186,7 @@ class FilesystemTest(unittest.TestCase):
 
         # conflict 2: remote is newer
         _touch_test_file("remote/file2.txt")
-        dt = datetime.datetime.now() - datetime.timedelta(seconds=10)
+        dt = datetime.datetime.utcnow() - datetime.timedelta(seconds=10)
         _touch_test_file("local/file2.txt", dt=dt)
 
 

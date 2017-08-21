@@ -37,6 +37,24 @@ IS_REDIRECTED = (os.fstat(0) != os.fstat(1))
 DEFAULT_BLOCKSIZE = 8 * 1024
 VT_ERASE_LINE = "\x1b[2K"
 
+DEBUG_FLAGS = set()
+
+def init_debug_flags(verbosity):
+    if verbosity >= 3:
+        DEBUG_FLAGS.add("runtime_stats")
+    if verbosity >= 4:
+        DEBUG_FLAGS.add("ftp_commands")
+
+
+def eps_compare(f1, f2, eps):
+    res = f1 - f2
+    if abs(res) <= eps: # '<=',so eps == 0 works as expected
+        return 0
+    elif res < 0:
+        return -1
+    return 1
+
+
 #===============================================================================
 #
 #===============================================================================
@@ -126,6 +144,18 @@ def save_password(url, username, password):
     return
 
 
+def str_to_bool(val):
+    """Return a boolean for '0', 'false', 'on', ...."""
+    val = str(val).lower()
+    if val in ("1", "true", "on", "yes"):
+        return True
+    elif val in ("0", "false", "off", "no"):
+        return False
+    raise ValueError(
+        "Invalid value '{}'"
+        "(expected '1', '0', 'true', 'false', 'on', 'off', 'yes', 'no').".format(val))
+
+
 def ansi_code(name):
     """Return ansi color or style codes or '' if colorama is not available."""
     try:
@@ -184,7 +214,7 @@ except NameError:
 
 def byte_compare(stream_a, stream_b):
     """Byte compare two files (early out on first difference).
-    
+
     @return: (bool, int): offset of first mismatch or 0 if equal
     """
     bufsize = DEFAULT_BLOCKSIZE

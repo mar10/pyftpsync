@@ -16,12 +16,12 @@ from ftpsync import __version__
 #===============================================================================
 class DirMetadata(object):
     """
-    
+
     """
     META_FILE_NAME = ".pyftpsync-meta.json"
     LOCK_FILE_NAME = ".pyftpsync-lock.json"
-    DEBUG_META_FILE_NAME = "_pyftpsync-meta.json"
-    DEBUG = False  # True: write a copy that is not a dot-file
+    # DEBUG_META_FILE_NAME = "_pyftpsync-meta.json"
+    # DEBUG = False  # True: write a copy that is not a dot-file
     PRETTY = True  # False: Reduce meta file size to 35% (3759 -> 1375 bytes)
     VERSION = 2    # Increment if format changes. Old files will be discarded then.
 
@@ -47,7 +47,7 @@ class DirMetadata(object):
     def set_mtime(self, filename, mtime, size):
         """Store real file mtime in meta data.
 
-        This is needed on FTP targets, because FTP servers don't allow to set 
+        This is needed on FTP targets, because FTP servers don't allow to set
         file mtime, but use to the upload time instead.
         We also record size and upload time, so we can detect if the file was
         changed by other means and we have to discard our meta data.
@@ -57,7 +57,7 @@ class DirMetadata(object):
                                "s": size,
                                "u": ut,
                                }
-        if self.PRETTY or self.DEBUG:
+        if self.PRETTY:  # or self.DEBUG:
             self.list[filename].update({
                 "mtime_str": time.ctime(mtime),
                 "uploaded_str": time.ctime(ut),
@@ -80,7 +80,7 @@ class DirMetadata(object):
                               "s": size,
                               "u": ut,
                               }
-        if self.PRETTY or self.DEBUG:
+        if self.PRETTY:  # or self.DEBUG:
             ps[":last_sync_str"] = time.ctime(ut)  # this is an invalid file name to avoid conflicts
             pse["mtime_str"] = time.ctime(mtime) if mtime else "(directory)"
             pse["uploaded_str"] = time.ctime(ut)
@@ -143,7 +143,7 @@ class DirMetadata(object):
             self.dir["_file_version"] = self.VERSION
             self.dir["_version"] = __version__
             self.dir["_time"] = time.mktime(time.gmtime())
-            if self.PRETTY or self.DEBUG:
+            if self.PRETTY:  # or self.DEBUG:
                 s = json.dumps(self.dir, indent=4, sort_keys=True)
             else:
                 s = json.dumps(self.dir, sort_keys=True)
@@ -151,8 +151,8 @@ class DirMetadata(object):
             self.target.write_text(self.filename, s)
             if self.target.synchronizer:
                 self.target.synchronizer._inc_stat("meta_bytes_written", len(s))
-            if self.DEBUG:
-                self.target.write_text(self.DEBUG_META_FILE_NAME, s)
+            # if self.DEBUG:
+            #     self.target.write_text(self.DEBUG_META_FILE_NAME, s)
 
         self.modified_list = False
         self.modified_sync = False

@@ -10,6 +10,7 @@ from datetime import datetime
 import os
 from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
 
+from ftpsync.util import eps_compare
 
 try:
     from urllib.parse import urlparse
@@ -17,37 +18,175 @@ except ImportError:
     # Python 2
     from urlparse import urlparse  # @UnusedImport
 
+ENTRY_CLASSIFICATIONS = frozenset([
+    "existing", "not-existing", "unmodified", "modified", "new", "deleted"
+    ])
+# PAIR_CLASSIFICATIONS = frozenset(
+#     "conflict", "equal", "modified")
+
+operation_map = {
+    # (local, remote) => operation
+    ("missing", "missing"): None,  # Not allowed
+    ("missing", "new"): "copy_remote",
+    ("missing", "unmodified"): "copy_remote",
+    ("missing", "modified"): "copy_remote",
+    ("missing", "deleted"): True,  # Nothing to do (only update metadata)
+
+    ("new", "missing"): "copy_local",
+    ("new", "new"): "need_compare",
+    ("new", "unmodified"): "need_compare",
+    ("new", "modified"): "need_compare",
+    ("new", "deleted"): "conflict",
+
+    ("unmodified", "missing"): "copy_local",
+    ("unmodified", "new"): "need_compare",
+    ("unmodified", "unmodified"): "equal",
+    ("unmodified", "modified"): "copy_remote",
+    ("unmodified", "deleted"): "delete_local",
+
+    ("modified", "missing"): "copy_local",
+    ("modified", "new"): "need_compare",
+    ("modified", "unmodified"): "copy_local",
+    ("modified", "modified"): "conflict",
+    ("modified", "deleted"): "conflict",
+
+    ("deleted", "missing"): True,  # Nothing to do (only update metadata)
+    ("deleted", "new"): "conflict",
+    ("deleted", "unmodified"): "delete_remote",
+    ("deleted", "modified"): "conflict",
+    ("deleted", "deleted"): True,  # Nothing to do (only update metadata)
+    }
+
+#===============================================================================
+# EntryPair
+#===============================================================================
+class EntryPair(object):
+    """"""
+    def __init__(self, local, remote):
+        self.local = local
+        self.remote = remote
+        any_entry = local or remote
+        assert any_entry
+        if local and remote:
+            assert local.name == remote.name
+            assert local.get_rel_path() == remote.get_rel_path()
+            assert local.is_dir() == remote.is_dir()
+        #: str:
+        self.name = any_entry.name
+        #: str:
+        self.rel_path = any_entry.get_rel_path()
+        #: bool:
+        self.is_dir = any_entry.is_dir()
+        #: str:
+        self.local_classification = None
+        #: str:
+        self.remote_classification = None
+        #: str:
+        self.operation = None
+
+    def __str__(self):
+        s = "<EntryPair({})>: {} - {} => {}".format(
+            self.rel_path, self.local_classification, self.remote_classification, self.operation)
+        # s = "{}: [{}]{} - [{}]{} => {}".format(
+        #     self.rel_path, self.local_classification, self.local, self.remote_classification, self.remote, self.operation)
+        return s
+
+    def is_conflict(self):
+        assert self.operation
+        return self.operation == "conflict"
+
+    def classify(self, peer_dir_meta):
+        """Classify entry pair."""
+        assert self.operation is None
+        # print("CLASSIFIY", self, peer_dir_meta)
+        peer_entry_meta = peer_dir_meta.get(self.name) if peer_dir_meta else None
+        # print("=>", self, peer_entry_meta)
+        if self.local:
+            self.local.classify(peer_entry_meta)
+            self.local_classification = self.local.classification
+        else:
+            self.local_classification =  "missing"
+
+        if self.remote:
+            self.remote.classify(peer_entry_meta)
+            self.remote_classification = self.remote.classification
+        else:
+            self.remote_classification =  "missing"
+
+        c_pair = (self.local_classification, self.remote_classification)
+        self.operation = operation_map.get(c_pair)
+        if not self.operation:
+            raise RuntimeError("Undefined operation for classification {}".format(c_pair))
+
+        # print(self)
+        # if self.is_dir():
+        #     # Currently we cannot detect directory conflicts
+        #     return None
+        # print("classify {}".format(self))
+        # if not entry.meta:
+        # assert self.classification in ENTRY_CLASSIFICATIONS
+        return self.operation
+
+
+
 #===============================================================================
 # _Resource
 #===============================================================================
 
 class _Resource(object):
+    """Common base class for files and directories."""
     def __init__(self, target, rel_path, name, size, mtime, unique):
         """
 
-        @param target
-        @param rel_path
-        @param name base name
-        @param size file size in bytes
-        @param mtime modification time as UTC stamp
-        @param uniqe string
+        Args:
+            target:
+            rel_path (str):
+            name (str): base name
+            size (int): file size in bytes
+            mtime (float): modification time as UTC stamp
+            uniqe (str): string
         """
+        #: :class:`_Target`: Parent target object.
         self.target = target
+        #: str: Path relative to :attr:`target`
         self.rel_path = rel_path
+        #: str: File name.
         self.name = name
+        #: int: Current file size
         self.size = size
-        self.mtime = mtime  # possibly adjusted using metadata information
-        self.dt_modified = datetime.fromtimestamp(self.mtime)
-        self.mtime_org = mtime  # as reported by source server
-        self.dt_modified_org = self.mtime_org
+        #: float: Current file modification time stamp
+        #: (for FTP targets adjusted using metadata information).
+        self.mtime = mtime
+        # #: datetime: Converted version of :attr:`mtime`.
+        # self.dt_modified = datetime.fromtimestamp(self.mtime)
+        #: float: Modification time stamp (as reported by source FTP server).
+        self.mtime_org = mtime
+        # #: datetime: Converted version of :attr:`mtime_org`.
+        # self.dt_modified_org = self.mtime_org
+        #: str: Unique id of file/directory.
         self.unique = unique
-        self.meta = None  # Set by target.get_dir()
+        # #: dict: Additional metadata (set by target.get_dir()).
+        # self.meta = None
+        #: int: File size at the time of last sync operation
+        self.ps_size = None
+        #: float: File modification time stamp at the time of last sync operation
+        self.ps_mtime = None
+        #: float: Time stamp of last sync operation
+        self.ps_utime = None
+        #: str: (set by synchronizer._classify_entry()).
+        self.classification = None
 
     def __str__(self):
-        return "{}('{}', size:{}, modified:{})".format(self.__class__.__name__,
-                                                       os.path.join(self.rel_path, self.name),
-                                                       "{:,}".format(self.size) if self.size else self.size,
-                                                       self.dt_modified) #+ " ## %s, %s" % (self.mtime, time.asctime(time.gmtime(self.mtime)))
+        dt_modified = datetime.fromtimestamp(self.mtime)
+        if self.is_dir():
+            return "{}('{}')".format(
+                self.__class__.__name__, os.path.join(self.rel_path, self.name))
+        return "{}('{}', size:{}, modified:{})".format(
+            self.__class__.__name__, os.path.join(self.rel_path, self.name),
+            "{:,}".format(self.size) if self.size is not None else self.size,
+            dt_modified,
+            # + " ## %s, %s" % (self.mtime, time.asctime(time.gmtime(self.mtime)))
+            ) + " => " + self.classification;
 
     def as_string(self, other_resource=None):
 #         dt = datetime.fromtimestamp(self.get_adjusted_mtime())
@@ -59,7 +198,7 @@ class _Resource(object):
                 comp.append("older")
             elif self.mtime > other_resource.mtime:
                 comp.append("newer")
-            
+
             if self.size < other_resource.size:
                 comp.append("smaller")
             elif self.size > other_resource.size:
@@ -91,6 +230,27 @@ class _Resource(object):
     def set_sync_info(self, local_file):
         raise NotImplementedError
 
+    def classify(self, peer_entry_meta):
+        assert self.classification is None
+
+        if self.is_dir():
+            # print("DIR", self, peer_entry_meta)
+            self.classification = "unmodified"
+        elif peer_entry_meta:
+            self.ps_size = peer_entry_meta.get("s")
+            self.ps_mtime = peer_entry_meta.get("m")
+            self.ps_utime = peer_entry_meta.get("u")
+            if self.size == self.ps_size and FileEntry._eps_compare(self.mtime, self.ps_mtime) == 0:
+                self.classification = "unmodified"
+            else:
+                self.classification = "modified"
+        else:
+            self.classification = "new"
+
+        # print("classify {}".format(self), peer_entry_meta)
+        # assert self.classification in ENTRY_CLASSIFICATIONS
+        return self.classification
+
 
 #===============================================================================
 # FileEntry
@@ -107,13 +267,7 @@ class FileEntry(_Resource):
 
     @staticmethod
     def _eps_compare(date_1, date_2):
-        res = date_1 - date_2
-        if abs(res) <= FileEntry.EPS_TIME: # '<=',so eps == 0 works as expected
-#             print("DTC: %s, %s => %s" % (date_1, date_2, res))
-            return 0
-        elif res < 0:
-            return -1
-        return 1
+        return eps_compare(date_1, date_2, FileEntry.EPS_TIME)
 
     def is_file(self):
         return True

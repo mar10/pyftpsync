@@ -184,7 +184,7 @@ class FtpTarget(_Target):
                     print("Could not remove lock file, because CWD != ftp root: {}".format(self.cur_dir), file=sys.stderr)
                     return
 
-            # direct delete, without updating metadata or checking for target access:                
+            # direct delete, without updating metadata or checking for target access:
             self.ftp.delete(DirMetadata.LOCK_FILE_NAME)
 #             self.remove_file(DirMetadata.LOCK_FILE_NAME)
 
@@ -296,7 +296,7 @@ class FtpTarget(_Target):
                     # this is the root lock file. compare reported mtime with
                     # local upload time
                     self._probe_lock_file(mtime)
-                elif not name in (DirMetadata.DEBUG_META_FILE_NAME, ):
+                else:
                     entry = FileEntry(self, self.cur_dir, name, size, mtime, unique)
             elif res_type in ("cdir", "pdir"):
                 pass
@@ -307,7 +307,7 @@ class FtpTarget(_Target):
                 entry_map[name] = entry
                 entry_list.append(entry)
 
-        try:    
+        try:
             self.ftp.retrlines("MLSD", _addline)
         except error_perm as e:
             # print("The FTP server responded with {}".format(e), file=sys.stderr)
@@ -340,7 +340,7 @@ class FtpTarget(_Target):
                         # Use meta-data mtime instead of the one reported by FTP server
                         entry_map[n].meta = meta
                         entry_map[n].mtime = meta["m"]
-                        entry_map[n].dt_modified = datetime.fromtimestamp(meta["m"])
+                        # entry_map[n].dt_modified = datetime.fromtimestamp(meta["m"])
                     else:
                         # Discard stored meta-data if
                         #   1. the the mtime reported by the FTP server is later

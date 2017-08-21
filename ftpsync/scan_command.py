@@ -40,12 +40,15 @@ def add_scan_parser(subparsers):
     scan_parser.add_argument("--list",
             action="store_true",
             help="print target files")
+    scan_parser.add_argument("-r", "--recursive",
+            action="store_true",
+            help="visit sub folders")
     scan_parser.add_argument("--remove-meta",
             action="store_true",
             help="delete all {} files".format(DirMetadata.META_FILE_NAME))
-    scan_parser.add_argument("--remove-debug",
-            action="store_true",
-            help="delete all {} files".format(DirMetadata.DEBUG_META_FILE_NAME))
+    # scan_parser.add_argument("--remove-debug",
+    #         action="store_true",
+    #         help="delete all {} files".format(DirMetadata.DEBUG_META_FILE_NAME))
     scan_parser.add_argument("--remove-locks",
             action="store_true",
             help="delete all {} files".format(DirMetadata.LOCK_FILE_NAME))
@@ -57,7 +60,7 @@ def add_scan_parser(subparsers):
 
 def scan_handler(args):
     """Implement `cleanup` sub-command."""
-    target = make_target(args.target, {"ftp_debug": args.verbose > 5})
+    target = make_target(args.target, {"ftp_debug": args.verbose >= 5})
     target.readonly = True
     root_depth = target.root_dir.count("/")
     start = time.time()
@@ -67,7 +70,7 @@ def scan_handler(args):
 
     try:
         target.open()
-        for e in target.walk():
+        for e in target.walk(recursive=args.recursive):
             is_dir = isinstance(e, DirectoryEntry)
             indent = "    " * (target.cur_dir.count("/") - root_depth)
 
@@ -81,12 +84,13 @@ def scan_handler(args):
                     print(indent, "[{e.name}]".format(e=e))
                 else:
                     delta = e.mtime_org - e.mtime
+                    dt_modified = datetime.fromtimestamp(e.mtime)
                     if delta:
                         prefix = "+" if delta > 0 else ""
-                        print(indent, "{e.name:<40} {e.dt_modified} (system: {prefix}{delta})"
+                        print(indent, "{e.name:<40} {dt_modified} (system: {prefix}{delta})"
                             .format(e=e, prefix=prefix, delta=timedelta(seconds=delta)))
                     else:
-                        print(indent, "{e.name:<40} {e.dt_modified}".format(e=e))
+                        print(indent, "{e.name:<40} {dt_modified}".format(e=e))
 
             if args.remove_meta and target.cur_dir_meta and target.cur_dir_meta.was_read:
                 fspec = target.cur_dir_meta.get_full_path()

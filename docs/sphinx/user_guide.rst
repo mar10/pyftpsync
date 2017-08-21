@@ -87,7 +87,7 @@ Add the ``-x`` option to switch from DRY-RUN mode to real execution::
 
   $ pyftpsync upload ~/temp ftp://example.com/target/folder --delete -x
 
-Replace ``ftp://`` with ``ftps://`` to enable TLS encryption.
+.. note:: Replace ``ftp://`` with ``ftps://`` to enable TLS encryption.
 
 
 Synchronize files syntax
