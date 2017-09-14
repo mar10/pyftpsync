@@ -44,7 +44,7 @@ class FilesystemTest(unittest.TestCase):
     """Test different synchronizers on file system targets."""
     def setUp(self):
 #         raise SkipTest
-        self.verbose = 4
+        self.verbose = 3  # 4
         prepare_fixtures_1()
 
     def tearDown(self):

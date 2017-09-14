@@ -18,11 +18,20 @@ except ImportError:
     # Python 2
     from urlparse import urlparse  # @UnusedImport
 
+PRINT_CLASSIFICATIONS = False
+
 ENTRY_CLASSIFICATIONS = frozenset([
-    "existing", "not-existing", "unmodified", "modified", "new", "deleted"
+    "existing", "unmodified", "modified", "new", "deleted"
     ])
-# PAIR_CLASSIFICATIONS = frozenset(
-#     "conflict", "equal", "modified")
+
+# PAIR_CLASSIFICATIONS = frozenset([
+#     "conflict", "equal", "other"
+#     ])
+
+PAIR_OPERATIONS = frozenset([
+    "conflict", "copy_local", "copy_remote", "delete_local", 
+    "delete_remote", "equal", "need_compare"
+    ])
 
 operation_map = {
     # (local, remote) => operation
@@ -85,8 +94,10 @@ class EntryPair(object):
         self.operation = None
 
     def __str__(self):
-        s = "<EntryPair({})>: {} - {} => {}".format(
-            self.rel_path, self.local_classification, self.remote_classification, self.operation)
+        s = "<EntryPair({})>: ({}, {}) => {}".format(
+            "[{}]".format(self.rel_path) if self.is_dir else self.rel_path, 
+            self.local_classification, self.remote_classification, 
+            self.operation)
         # s = "{}: [{}]{} - [{}]{} => {}".format(
         #     self.rel_path, self.local_classification, self.local, self.remote_classification, self.remote, self.operation)
         return s
@@ -99,32 +110,55 @@ class EntryPair(object):
         """Classify entry pair."""
         assert self.operation is None
         # print("CLASSIFIY", self, peer_dir_meta)
-        peer_entry_meta = peer_dir_meta.get(self.name) if peer_dir_meta else None
+        # Note: We pass False if the entry is not listed in the metadata.
+        #       We pass None if we don't have metadata all.
+        peer_entry_meta = peer_dir_meta.get(self.name, False) if peer_dir_meta else None
         # print("=>", self, peer_entry_meta)
         if self.local:
-            self.local.classify(peer_entry_meta)
+            self.local.classify(peer_dir_meta)
             self.local_classification = self.local.classification
+        elif peer_entry_meta:
+            self.local_classification =  "deleted"
         else:
             self.local_classification =  "missing"
 
         if self.remote:
-            self.remote.classify(peer_entry_meta)
+            self.remote.classify(peer_dir_meta)
             self.remote_classification = self.remote.classification
+        elif peer_entry_meta:
+            self.remote_classification =  "deleted"
         else:
             self.remote_classification =  "missing"
 
+#         if peer_dir_meta is None:
+#             # 
+#             self.local_classification = self.local.classification = "unknown"
         c_pair = (self.local_classification, self.remote_classification)
+        
+        # If no metadata is available, we could only classify file entries as
+        # 'existing'. 
+        # Now we use peer information to improve classification. 
+        if c_pair == ("missing", "existing"):
+            # Treat unmatched entry as unmodified, so it get's copied
+            c_pair = ("missing", "unmodified")
+        elif c_pair == ("existing", "missing"):
+            # Treat unmatched entry as unmodified, so it get's copied
+            c_pair = ("unmodified", "missing")
+        elif c_pair == ("existing", "existing"):
+            raise NotImplementedError
+
+        self.local_classification = c_pair[0]
+        self.remote_classification = c_pair[1]
+        
         self.operation = operation_map.get(c_pair)
         if not self.operation:
-            raise RuntimeError("Undefined operation for classification {}".format(c_pair))
+            raise RuntimeError("Undefined operation for pair classification {}".format(c_pair))
 
-        # print(self)
-        # if self.is_dir():
-        #     # Currently we cannot detect directory conflicts
-        #     return None
-        # print("classify {}".format(self))
+        if PRINT_CLASSIFICATIONS:
+            print("classify {}".format(self))
         # if not entry.meta:
-        # assert self.classification in ENTRY_CLASSIFICATIONS
+#         assert self.classification in PAIR_CLASSIFICATIONS
+        assert self.operation in PAIR_OPERATIONS
         return self.operation
 
 
@@ -178,15 +212,18 @@ class _Resource(object):
 
     def __str__(self):
         dt_modified = datetime.fromtimestamp(self.mtime)
+        path = os.path.join(self.rel_path, self.name)
         if self.is_dir():
-            return "{}('{}')".format(
-                self.__class__.__name__, os.path.join(self.rel_path, self.name))
-        return "{}('{}', size:{}, modified:{})".format(
-            self.__class__.__name__, os.path.join(self.rel_path, self.name),
-            "{:,}".format(self.size) if self.size is not None else self.size,
-            dt_modified,
+            res = "{}([{}])".format(self.__class__.__name__, path)
+        else:
+            res = "{}('{}', size:{}, modified:{})".format(
+                self.__class__.__name__, path,
+                "{:,}".format(self.size) if self.size is not None else self.size,
+                dt_modified)
             # + " ## %s, %s" % (self.mtime, time.asctime(time.gmtime(self.mtime)))
-            ) + " => " + self.classification;
+        if self.classification:
+            res += " => {}".format(self.classification)
+        return res
 
     def as_string(self, other_resource=None):
 #         dt = datetime.fromtimestamp(self.get_adjusted_mtime())
@@ -230,25 +267,46 @@ class _Resource(object):
     def set_sync_info(self, local_file):
         raise NotImplementedError
 
-    def classify(self, peer_entry_meta):
+    def classify(self, peer_dir_meta):
+        """Classify this entry as 'new', 'unmodified', or 'modified'."""
         assert self.classification is None
+        peer_entry_meta = None
+        if peer_dir_meta:
+            # Metadata is generally available, so we can detect 'new' or 'modified'
+            peer_entry_meta = peer_dir_meta.get(self.name, False)
 
-        if self.is_dir():
-            # print("DIR", self, peer_entry_meta)
-            self.classification = "unmodified"
-        elif peer_entry_meta:
-            self.ps_size = peer_entry_meta.get("s")
-            self.ps_mtime = peer_entry_meta.get("m")
-            self.ps_utime = peer_entry_meta.get("u")
-            if self.size == self.ps_size and FileEntry._eps_compare(self.mtime, self.ps_mtime) == 0:
+            if self.is_dir():
+                # Directories are considered 'unmodified' (would require deep traversal
+                # to check otherwise)
+                if peer_entry_meta: 
+                    self.classification = "unmodified"
+                else:
+                    self.classification = "new"
+            elif peer_entry_meta:
+                # File entries can be classified as modified/unmodified
+                self.ps_size = peer_entry_meta.get("s")
+                self.ps_mtime = peer_entry_meta.get("m")
+                self.ps_utime = peer_entry_meta.get("u")
+                if self.size == self.ps_size and FileEntry._eps_compare(self.mtime, self.ps_mtime) == 0:
+                    self.classification = "unmodified"
+                else:
+                    self.classification = "modified"
+            else:
+                # A new file entry
+                self.classification = "new"
+        else:
+            # No metadata available: 
+            if self.is_dir():
+                # Directories are considered 'unmodified' (would require deep traversal
+                # to check otherwise)
                 self.classification = "unmodified"
             else:
-                self.classification = "modified"
-        else:
-            self.classification = "new"
-
-        # print("classify {}".format(self), peer_entry_meta)
-        # assert self.classification in ENTRY_CLASSIFICATIONS
+                # That's all we know, but EntryPair.classify() may adjust this
+                self.classification = "existing"
+        
+        if PRINT_CLASSIFICATIONS:
+            print("classify {}".format(self))
+        assert self.classification in ENTRY_CLASSIFICATIONS
         return self.classification
 
 

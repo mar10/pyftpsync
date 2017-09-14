@@ -20,10 +20,8 @@ class DirMetadata(object):
     """
     META_FILE_NAME = ".pyftpsync-meta.json"
     LOCK_FILE_NAME = ".pyftpsync-lock.json"
-    # DEBUG_META_FILE_NAME = "_pyftpsync-meta.json"
-    # DEBUG = False  # True: write a copy that is not a dot-file
-    PRETTY = True  # False: Reduce meta file size to 35% (3759 -> 1375 bytes)
-    VERSION = 2    # Increment if format changes. Old files will be discarded then.
+    PRETTY = True  # False: Reduce meta file size to 35% (like 3759 -> 1375 bytes)
+    VERSION = 2    # Increment if format changes. Old files will be discarded then!
 
     def __init__(self, target):
         self.target = target
@@ -57,7 +55,7 @@ class DirMetadata(object):
                                "s": size,
                                "u": ut,
                                }
-        if self.PRETTY:  # or self.DEBUG:
+        if self.PRETTY:
             self.list[filename].update({
                 "mtime_str": time.ctime(mtime),
                 "uploaded_str": time.ctime(ut),
@@ -80,7 +78,7 @@ class DirMetadata(object):
                               "s": size,
                               "u": ut,
                               }
-        if self.PRETTY:  # or self.DEBUG:
+        if self.PRETTY:
             ps[":last_sync_str"] = time.ctime(ut)  # this is an invalid file name to avoid conflicts
             pse["mtime_str"] = time.ctime(mtime) if mtime else "(directory)"
             pse["uploaded_str"] = time.ctime(ut)

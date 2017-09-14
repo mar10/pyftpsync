@@ -630,7 +630,8 @@ class BiDirSynchronizer(BaseSynchronizer):
     def on_copy_local(self, pair):
         local_entry = pair.local
         if self._test_match_or_print(local_entry):
-            self._log_action("copy", pair.local_classification, ">", local_entry)
+            self._log_action("copy", "new", ">", local_entry)
+            # self._log_action("copy", pair.local_classification, ">", local_entry)
             if pair.is_dir:
                 self._copy_recursive(self.local, self.remote, local_entry)
             else:
@@ -639,7 +640,8 @@ class BiDirSynchronizer(BaseSynchronizer):
     def on_copy_remote(self, pair):
         remote_entry = pair.remote
         if self._test_match_or_print(remote_entry):
-            self._log_action("copy", pair.remote_classification, "<", remote_entry)
+            # self._log_action("copy", pair.remote_classification, "<", remote_entry)
+            self._log_action("copy", "missing", "<", remote_entry)
             if pair.is_dir:
                 self._copy_recursive(self.remote, self.local, remote_entry)
             else:
@@ -647,11 +649,17 @@ class BiDirSynchronizer(BaseSynchronizer):
 
     def on_delete_local(self, pair):
         self._log_action("delete", "missing", "X< ", pair.local)
-        self._remove_file(remote_entry)
+        if pair.is_dir:
+            self._remove_dir(pair.local)
+        else:
+            self._remove_file(pair.local)
 
     def on_delete_remote(self, pair):
         self._log_action("delete", "missing", " >X", pair.remote)
-        self._remove_file(remote_entry)
+        if pair.is_dir:
+            self._remove_dir(pair.remote)
+        else:
+            self._remove_file(pair.remote)
 
     def on_need_compare(self, pair):
         self._log_action("", "different", "?", pair.local, min_level=2)
@@ -1007,7 +1015,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
         remote.readonly = True
 
     def get_info_strings(self):
-        return ("download", "from")
+        return ("download to", "from")
 
     # def _check_del_unmatched(self, local_entry):
     #     """Return True if entry is NOT matched (i.e. excluded by filter).
