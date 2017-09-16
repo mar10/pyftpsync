@@ -20,7 +20,8 @@ from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer, \
 from test.tools import prepare_fixtures_1, PYFTPSYNC_TEST_FOLDER, \
     _get_test_file_date, STAMP_20140101_120000, _touch_test_file, \
     _write_test_file, _remove_test_file, _is_test_file, _get_test_folder,\
-    _remove_test_folder, prepare_fixtures_2, _sync_test_folders
+    _remove_test_folder, prepare_fixtures_2, _sync_test_folders, _delete_metadata
+from pprint import pprint
 
 
 #===============================================================================
@@ -216,154 +217,295 @@ class BidirResolveTest(unittest.TestCase):
     def _do_run_suite(self, opts):
         """Modify both folders and run sync with specific options.
 
+        1. The setUp() code initializes local & remote with 12 files in 5 folders:
+
                                   Local           Remote
-          file1.txt               13:00           12:00
-          file2.txt                 x             12:00
-          file3.txt               12:00           13:00
-          file4.txt               12:00             x
-          file5.txt               13:00           13:00:05     CONFLICT!
-          file6.txt               13:00:05        13:00        CONFLICT!
-          file7.txt                 x             13:00        CONFLICT!
-          file8.txt               13:00             x          CONFLICT!
-          folder1/file1_1.txt     13.00
-          folder2/file2_1.txt       x             12:00        CONFLICT (folder deleted)
-          folder3/file3_1.txt     12:00           13:00        CONFLICT
-          folder4/file4_1.txt     12:00             x          CONFLICT (folder deleted)
+          file?.txt               12:00           12:00
+          ...
+
+        2. Metadata was also created accordingly.
+
+        3. Now we simulate user modifications on both targets:
+
+                                  Local           Remote
+          ------------------------------------------------------------------------------
+          file1.txt               12:00           12:00        (unmodified)
+          file2.txt               13:00           12:00
+          file3.txt                 x             12:00
+          file4.txt               12:00           13:00
+          file5.txt               12:00             x
+          file6.txt               13:00           13:00:05     CONFLICT!
+          file7.txt               13:00:05        13:00        CONFLICT!
+          file8.txt                 x             13:00        CONFLICT!
+          file9.txt               13:00             x          CONFLICT!
+
+          folder1/file1_1.txt     12.00           12:00        (unmodified)
+          folder2/file2_1.txt     13.00           12:00
+          folder3/file3_1.txt       x             12:00        (folder deleted)
+          folder4/file4_1.txt       x             13:00        (*) CONFLICT!
+          folder5/file5_1.txt     12:00           13:00
+          folder6/file6_1.txt     12:00             x          (folder deleted)
+          folder7/file7_1.txt     13:00             x          (*) CONFLICT!
+
           new_file1.txt           13:00             -
           new_file2.txt             -             13:00
+          new_file3.txt           13:00           13:00        (same size)
+          new_file4.txt           13:00           13:00        CONFLICT! (different size)
+          new_file5.txt           13:00           13:00:05     CONFLICT!
+          new_file6.txt           13:00:05        13:00        CONFLICT!
+
+          NOTE: (*) currently conflicts are NOT detected, when a file is edited on one
+                    target and the parent folder is removed on the peer target.
+                    The folder will be removed on sync!
+
+        4. Finally we call bi-dir sync with the custom options and return runtime stats.
         """
         # Change, remove, and add local only
-        _write_test_file("local/file1.txt", dt="2014-01-01 13:00:00", content="local 13:00")
-        _remove_test_file("local/file2.txt")
-        _write_test_file("local/new_file1.txt", dt="2014-01-01 13:00:00", content="local 13:00")
-        _write_test_file("local/folder1/file1_1.txt", dt="2014-01-01 13:00:00", content="local 13:00")
-        _remove_test_folder("local/folder2")
-        # Change, remove, and add remote only
-        _write_test_file("remote/file3.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
-        _remove_test_file("remote/file4.txt")
-        _write_test_file("remote/new_file2.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
-        _write_test_file("remote/folder3/file3_1.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
-        _remove_test_folder("remote/folder4")
+        _write_test_file("local/file2.txt", dt="2014-01-01 13:00:00", content="local 13:00")
+        _remove_test_file("local/file3.txt")
+        _write_test_file("remote/file4.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
+        _remove_test_file("remote/file5.txt")
         # Conflict: changed local and remote, remote is newer
-        _write_test_file("local/file5.txt", dt="2014-01-01 13:00:00", content="local 13:00")
-        _write_test_file("remote/file5.txt", dt="2014-01-01 13:00:05", content="remote 13:00:05")
+        _write_test_file("local/file6.txt", dt="2014-01-01 13:00:00", content="local 13:00")
+        _write_test_file("remote/file6.txt", dt="2014-01-01 13:00:05", content="remote 13:00:05")
         # Conflict: changed local and remote, local is newer
-        _write_test_file("local/file6.txt", dt="2014-01-01 13:00:05", content="local 13:00:05")
-        _write_test_file("remote/file6.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
-        # Conflict: removed local, but modified remote
-        _remove_test_file("local/file7.txt")
+        _write_test_file("local/file7.txt", dt="2014-01-01 13:00:05", content="local 13:00:05")
         _write_test_file("remote/file7.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
+        # Conflict: removed local, but modified remote
+        _remove_test_file("local/file8.txt")
+        _write_test_file("remote/file8.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
         # Conflict: removed remote, but modified local
-        _write_test_file("local/file8.txt", dt="2014-01-01 13:00:00", content="local 13:00")
-        _remove_test_file("remote/file8.txt")
+        _write_test_file("local/file9.txt", dt="2014-01-01 13:00:00", content="local 13:00")
+        _remove_test_file("remote/file9.txt")
+
+        _write_test_file("local/folder2/file2_1.txt", dt="2014-01-01 13:00:00", content="local 13:00")
+        _remove_test_folder("local/folder3")
+        # Conflict: Modify sub-folder item on remote, but remove parent folder on local
+        _remove_test_folder("local/folder4")
+        _write_test_file("remote/folder4/file4_1.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
+
+        _write_test_file("remote/folder5/file5_1.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
+        _remove_test_folder("remote/folder6")
+        # Conflict: Modify sub-folder item on local, but remove parent folder on remote
+        _write_test_file("local/folder7/file7_1.txt", dt="2014-01-01 13:00:00", content="local 13:00")
+        _remove_test_folder("remote/folder7")
+
+        _write_test_file("local/new_file1.txt", dt="2014-01-01 13:00:00", content="local 13:00")
+        _write_test_file("remote/new_file2.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
+        # Identical files on both sides (same time and size):
+        _write_test_file("local/new_file3.txt", dt="2014-01-01 13:00:00", content="local 13:00")
+        _write_test_file("remote/new_file3.txt", dt="2014-01-01 13:00:00", content="local 13:00")
+        # Identical files on both sides (same time but different size):
+        _write_test_file("local/new_file4.txt", dt="2014-01-01 13:00:00", content="local 13:00")
+        _write_test_file("remote/new_file4.txt", dt="2014-01-01 13:00:00", content="remote 13:00 with other content")
+        # Two new files on both sides with same name but different time
+        _write_test_file("local/new_file5.txt", dt="2014-01-01 13:00:00", content="local 13:00")
+        _write_test_file("remote/new_file5.txt", dt="2014-01-01 13:00:05", content="remote 13:00:05")
+        # Two new files on both sides with same name but different time
+        _write_test_file("local/new_file6.txt", dt="2014-01-01 13:00:05", content="local 13:00:05")
+        _write_test_file("remote/new_file6.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
 
         # Synchronize folders
-#         stats = self._do_sync(opts)
         stats = _sync_test_folders(opts)
         return stats
 
     def test_setUp(self):
         # Test that setUp code worked
-#         raise SkipTest
         # Set should have created a copy of /local in /remote...
         self.assertTrue(_is_test_file("local/" + DirMetadata.META_FILE_NAME))
         self.assertTrue(not _is_test_file("remote/" + DirMetadata.META_FILE_NAME))
 #         self.assertEqual(stats["files_written"], 8)
         self.assertDictEqual(_get_test_folder("local"), _get_test_folder("remote"))
 
+    def _dump_de_facto_results(self, stats):
+        print("*** stats:")
+        pprint(stats)
+        print("*** local:")
+        pprint(_get_test_folder("local"), width=128)
+        print("*** remote:")
+        pprint(_get_test_folder("remote"), width=128)
+
     def test_default(self):
-#         raise SkipTest
-        opts = {} # default options, i.e. 'skip' conflicts
+        opts = {"verbose": 4} # default options, i.e. 'skip' conflicts
         # Default options: expect 4 unresolved conflicts
         stats = self._do_run_suite(opts)
-#         pprint(stats)
-#         pprint(_get_test_folder("local"))
-#         pprint(_get_test_folder("remote"))
+#         self._dump_de_facto_results(stats)
+
+        # We expect 7 conflicts, and leave them unresolved (i.e. skip them all)
 
         self.assertEqual(stats["files_written"], 6)
         self.assertEqual(stats["download_files_written"], 3)
         self.assertEqual(stats["upload_files_written"], 3)
         self.assertEqual(stats["files_deleted"], 2)
-        self.assertEqual(stats["dirs_deleted"], 2)
-        self.assertEqual(stats["conflict_files"], 4)
+        self.assertEqual(stats["dirs_deleted"], 4)
+        self.assertEqual(stats["conflict_files"], 7)
 
         expect_local = {
-            'file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'file3.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'file5.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'}, # unresolved conflict
-            'file6.txt': {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'}, # unresolved conflict
-            'file8.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'}, # unresolved conflict
-            'folder1/file1_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'folder3/file3_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
+            'file2.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'file4.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'file6.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'file7.txt': {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'},
+            'file9.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
+            'folder2/file2_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'folder5/file5_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
             'new_file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
             'new_file2.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file3.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file4.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file5.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file6.txt': {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'}
             }
         expect_remote = {
-            'file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'file3.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'file5.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'}, # unresolved conflict
-            'file6.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'}, # unresolved conflict
-            'file7.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'}, # unresolved conflict
-            'folder1/file1_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'folder3/file3_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
+            'file2.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'file4.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'file6.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
+            'file7.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'file8.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
+            'folder2/file2_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'folder5/file5_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
             'new_file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
             'new_file2.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file3.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file4.txt': {'content': 'remote 13:00 with other content', 'date': '2014-01-01 13:00:00'},
+            'new_file5.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
+            'new_file6.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'}
             }
         self.assertDictEqual(_get_test_folder("local"), expect_local)
         self.assertDictEqual(_get_test_folder("remote"), expect_remote)
 
 
     def test_resolve_local(self):
-#         raise SkipTest
-        opts = {"resolve": "local"}
-        stats = self._do_run_suite(opts)
+        opts = {"resolve": "local", "verbose": 4}
 
-        self.assertEqual(stats["files_written"], 9)
+        stats = self._do_run_suite(opts)
+        # self._dump_de_facto_results(stats)
+
+        # We resolve all conflicts by using the local version.
+
+        self.assertEqual(stats["files_written"], 12)
         self.assertEqual(stats["download_files_written"], 3)
-        self.assertEqual(stats["upload_files_written"], 6)
+        self.assertEqual(stats["upload_files_written"], 9)
         self.assertEqual(stats["files_deleted"], 3)
-        self.assertEqual(stats["dirs_deleted"], 2)
-        self.assertEqual(stats["conflict_files"], 4)
+        self.assertEqual(stats["dirs_deleted"], 4)
+        self.assertEqual(stats["conflict_files"], 7)
 
         expect_local = {
-            'file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'file3.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'file5.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'}, # resolved conflict
-            'file6.txt': {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'}, # resolved conflict
-            'file8.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'}, # resolved conflict
-            'folder1/file1_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'folder3/file3_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
+            'file2.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'file4.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'file6.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'file7.txt': {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'},
+            'file9.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
+            'folder2/file2_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'folder5/file5_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
             'new_file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
             'new_file2.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file3.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file4.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file5.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file6.txt': {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'},
             }
         self.assertDictEqual(_get_test_folder("local"), expect_local)
         self.assertDictEqual(_get_test_folder("remote"), expect_local)
-
 
     def test_resolve_remote(self):
-#         raise SkipTest
-        opts = {"resolve": "remote"}
+
+        opts = {"resolve": "remote", "verbose": 4}
+
         stats = self._do_run_suite(opts)
-        self.assertEqual(stats["files_written"], 9)
-        self.assertEqual(stats["download_files_written"], 6)
+        # self._dump_de_facto_results(stats)
+
+        # We resolve all conflicts by using the remote version.
+
+        self.assertEqual(stats["files_written"], 12)
+        self.assertEqual(stats["download_files_written"], 9)
         self.assertEqual(stats["upload_files_written"], 3)
         self.assertEqual(stats["files_deleted"], 3)
-        self.assertEqual(stats["dirs_deleted"], 2)
-        self.assertEqual(stats["conflict_files"], 4)
+        self.assertEqual(stats["dirs_deleted"], 4)
+        self.assertEqual(stats["conflict_files"], 7)
 
         expect_local = {
-            'file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'file3.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'file5.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'}, # resolved conflict
-            'file6.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'}, # resolved conflict
-            'file7.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'}, # resolved conflict
-            'folder1/file1_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'folder3/file3_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
+            'file2.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'file4.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'file6.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
+            'file7.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'file8.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
+            'folder2/file2_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'folder5/file5_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
             'new_file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
             'new_file2.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file3.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file4.txt': {'content': 'remote 13:00 with other content', 'date': '2014-01-01 13:00:00'},
+            'new_file5.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
+            'new_file6.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
             }
         self.assertDictEqual(_get_test_folder("local"), expect_local)
         self.assertDictEqual(_get_test_folder("remote"), expect_local)
+
+    def test_no_metadata(self):
+        """Synchronize with absent .pyftpsync-meta.json."""
+        opts = {"verbose": 4}
+
+        # setUp already sync'd with remote. We want to check the results when metadata
+        # is absent:
+        _delete_metadata(PYFTPSYNC_TEST_FOLDER)
+
+        stats = self._do_run_suite(opts)
+#         self._dump_de_facto_results(stats)
+
+        # NOTE:
+        # Since we don't have meta data, the synchronizer treats missing files on
+        # either side as 'new'.
+        # Also modifications on both sides are not recognized as conflict. Instead the
+        # newer file wins. (Only exception is new_file4.txt` which has identical time
+        # but different size)
+        # => So we basically get a union of both targets.
+
+        self.assertEqual(stats["files_written"], 18)
+        self.assertEqual(stats["download_files_written"], 9)
+        self.assertEqual(stats["upload_files_written"], 9)
+        self.assertEqual(stats["files_deleted"], 0)
+        self.assertEqual(stats["dirs_deleted"], 0)
+        self.assertEqual(stats["conflict_files"], 1)
+
+        expect_local = {
+            'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
+            'file2.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'file3.txt': {'content': 'local3', 'date': '2014-01-01 12:00:00'},
+            'file4.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'file5.txt': {'content': 'local5', 'date': '2014-01-01 12:00:00'},
+            'file6.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
+            'file7.txt': {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'},
+            'file8.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'file9.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
+            'folder2/file2_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'folder3/file3_1.txt': {'content': 'local3_1', 'date': '2014-01-01 12:00:00'},
+            'folder4/file4_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'folder5/file5_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'folder6/file6_1.txt': {'content': 'local6_1', 'date': '2014-01-01 12:00:00'},
+            'folder7/file7_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file2.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file3.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file4.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file5.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
+            'new_file6.txt': {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'}
+            }
+        expect_remote = expect_local.copy()
+        expect_remote.update({
+            'new_file4.txt': {'content': 'remote 13:00 with other content', 'date': '2014-01-01 13:00:00'},
+            })
+        self.assertDictEqual(_get_test_folder("local"), expect_local)
+        self.assertDictEqual(_get_test_folder("remote"), expect_remote)
+
 
 #===============================================================================
 # BidirSpecialTest
@@ -379,20 +521,25 @@ class BidirSpecialTest(unittest.TestCase):
 
     def test_folder_conflict(self):
         # delete a folder on one side, but change content on other side
-        # Note: currently
-#         raise SkipTest
+
+        # Note: currently we do NOT detect this kind of conflicts!!!
+
+        raise SkipTest("Currently we do NOT detect this kind of conflicts.")
+
         _write_test_file("local/folder1/file1_1.txt", dt="2014-01-01 13:00:00", content="local 13:00")
         _remove_test_folder("remote/folder1")
 
         opts = {}
         stats = _sync_test_folders(opts)
-#         pprint(stats)
+
         self.assertEqual(stats["files_written"], 0)
         self.assertEqual(stats["download_files_written"], 0)
         self.assertEqual(stats["upload_files_written"], 0)
         self.assertEqual(stats["files_deleted"], 0)
-        self.assertEqual(stats["dirs_deleted"], 1)
-        self.assertEqual(stats["conflict_files"], 0)
+        # self.assertEqual(stats["dirs_deleted"], 1)
+        # self.assertEqual(stats["conflict_files"], 0)
+        self.assertEqual(stats["dirs_deleted"], 0)
+        self.assertEqual(stats["conflict_files"], 1)
 
         expect_local = {
             'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
@@ -403,10 +550,13 @@ class BidirSpecialTest(unittest.TestCase):
             'file6.txt': {'content': 'local6', 'date': '2014-01-01 12:00:00'},
             'file7.txt': {'content': 'local7', 'date': '2014-01-01 12:00:00'},
             'file8.txt': {'content': 'local8', 'date': '2014-01-01 12:00:00'},
-#             'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
+            'file9.txt': {'content': 'local9', 'date': '2014-01-01 12:00:00'},
             'folder2/file2_1.txt': {'content': 'local2_1', 'date': '2014-01-01 12:00:00'},
             'folder3/file3_1.txt': {'content': 'local3_1', 'date': '2014-01-01 12:00:00'},
             'folder4/file4_1.txt': {'content': 'local4_1', 'date': '2014-01-01 12:00:00'},
+            'folder5/file5_1.txt': {'content': 'local5_1', 'date': '2014-01-01 12:00:00'},
+            'folder6/file6_1.txt': {'content': 'local6_1', 'date': '2014-01-01 12:00:00'},
+            'folder7/file7_1.txt': {'content': 'local7_1', 'date': '2014-01-01 12:00:00'},
             }
         self.assertDictEqual(_get_test_folder("local"), expect_local)
         self.assertDictEqual(_get_test_folder("remote"), expect_local)

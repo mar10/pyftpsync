@@ -31,15 +31,33 @@ Pyftpsync
   :target: https://github.com/mar10/pyftpsync
   :name: Live demo
 
+
+.. note::
+  Currently version 2.0 is under development.
+  Have a look at 1.x for a more stable version.
+
 Features
 ========
 
   * This is a command line tool...
-  * ... and a library for use in your Python projects.
-  * Upload, download, and bi-directional synch mode.
-  * FTPS (TLS) support on Python 2.7/3.2+.
-  * Allows FTP-to-FTP and Filesystem-to-Filesystem synchronization as well.
+  * ... and a library for use in custom Python projects.
+  * Recursive synchronisation of folders on file system and/or FTP targets.
+  * Upload, download, and bi-directional synchronization mode.
+  * Configurable conflict resolution strategies.
+  * Unlike naive implementations, pyftpsync maintains additional meta data to detect
+    conflicts and decide wether to replicate deletions or additions.
+  * Unlike more complex implementations, pyftpsync does not require a database or
+    a service running on the targets.
+  * Optional FTPS (TLS) support.
   * Architecture is open to add other target types.
+
+**The command line tool adds:**
+
+  * Runs on Linux, OS X, and Windows.
+  * Remember passwords in system keyring.
+  * Interactive conflict resolution mode.
+  * Dry-run mode.
+
 
 .. note:: Known Limitations
 
@@ -50,9 +68,10 @@ Features
     local and remote targets) by storing last sync time and size in a separate
     meta data file inside the local folders. This is not bullet proof and may
     fail under some conditions.
+  * Currently conflicts are *not* detected, when a file is edited on one target and the parent
+    folder is removed on the peer target: The folder will be removed on sync.
 
-  In short: pyftpsync is not (nor tries to be a replacement for) a distributed
-  version control system. Make sure you have backups.
+  In short: Make sure you have backups.
 
 
 Quickstart

@@ -12,8 +12,8 @@ import time
 from datetime import datetime
 
 from ftpsync.util import IS_REDIRECTED, DRY_RUN_PREFIX,\
-    ansi_code, console_input, VT_ERASE_LINE, byte_compare
-from ftpsync.resources import FileEntry, DirectoryEntry, EntryPair
+    ansi_code, console_input, VT_ERASE_LINE, byte_compare, eps_compare
+from ftpsync.resources import FileEntry, DirectoryEntry, EntryPair, operation_map
 from ftpsync.metadata import DirMetadata
 
 
@@ -460,15 +460,16 @@ class BaseSynchronizer(object):
         # 4. Perform (or schedule) resulting file operations
         for pair in entry_pair_list:
             # print(pair)
-            if pair.is_conflict():
-                self._inc_stat("conflict_files")
-
             handler = getattr(self, "on_" + pair.operation, None)
             # print(handler)
             if handler:
                 res = handler(pair)
             else:
                 print("NO HANDLER")
+
+            if pair.is_conflict():
+                self._inc_stat("conflict_files")
+
 
         # 5. Let the target provider write its meta data for the files in the
         #    current directory.
@@ -630,8 +631,7 @@ class BiDirSynchronizer(BaseSynchronizer):
     def on_copy_local(self, pair):
         local_entry = pair.local
         if self._test_match_or_print(local_entry):
-            self._log_action("copy", "new", ">", local_entry)
-            # self._log_action("copy", pair.local_classification, ">", local_entry)
+            self._log_action("copy", pair.local_classification, ">", local_entry)
             if pair.is_dir:
                 self._copy_recursive(self.local, self.remote, local_entry)
             else:
@@ -640,8 +640,7 @@ class BiDirSynchronizer(BaseSynchronizer):
     def on_copy_remote(self, pair):
         remote_entry = pair.remote
         if self._test_match_or_print(remote_entry):
-            # self._log_action("copy", pair.remote_classification, "<", remote_entry)
-            self._log_action("copy", "missing", "<", remote_entry)
+            self._log_action("copy", pair.remote_classification, "<", remote_entry)
             if pair.is_dir:
                 self._copy_recursive(self.remote, self.local, remote_entry)
             else:
@@ -649,6 +648,7 @@ class BiDirSynchronizer(BaseSynchronizer):
 
     def on_delete_local(self, pair):
         self._log_action("delete", "missing", "X< ", pair.local)
+#         self._log_action("delete", pair.local_classification, "X< ", pair.local)
         if pair.is_dir:
             self._remove_dir(pair.local)
         else:
@@ -656,13 +656,56 @@ class BiDirSynchronizer(BaseSynchronizer):
 
     def on_delete_remote(self, pair):
         self._log_action("delete", "missing", " >X", pair.remote)
+#         self._log_action("delete", pair.remote_classification, " >X", pair.remote)
         if pair.is_dir:
             self._remove_dir(pair.remote)
         else:
             self._remove_file(pair.remote)
 
     def on_need_compare(self, pair):
-        self._log_action("", "different", "?", pair.local, min_level=2)
+        """Re-classify pair based on file attributes and options."""
+#         print("on_need_compare", pair)
+        # If no metadata is available, we could only classify file entries as
+        # 'existing'.
+        # Now we use peer information to improve this classification.
+        c_pair = (pair.local_classification, pair.remote_classification)
+
+        org_pair = c_pair
+        org_operation = pair.operation
+
+        if c_pair == ("existing", "existing"):
+            # Naive classification derived from file time and size
+            time_cmp = eps_compare(pair.local.mtime, pair.remote.mtime, FileEntry.EPS_TIME)
+            if time_cmp < 0:
+                c_pair = ("unmodified", "modified")  # remote is newer
+            elif time_cmp > 0:
+                c_pair = ("modified", "unmodified")  # local is newer
+            elif pair.local.size == pair.remote.size:
+                c_pair = ("unmodified", "unmodified")  # equal
+            else:
+                c_pair = ("modified", "modified")  # conflict!
+        elif c_pair == ("new", "new"):
+            # Naive classification derived from file time and size
+            time_cmp = eps_compare(pair.local.mtime, pair.remote.mtime, FileEntry.EPS_TIME)
+            if time_cmp == 0 and pair.local.size == pair.remote.size:
+                c_pair = ("unmodified", "unmodified")  # equal
+            else:
+                c_pair = ("modified", "modified")  # conflict!
+
+        pair.local_classification = c_pair[0]
+        pair.remote_classification = c_pair[1]
+
+        pair.operation = operation_map.get(c_pair)
+        # print("on_need_compare {} => {}".format(org_pair, pair))
+        if not pair.operation:
+            raise RuntimeError("Undefined operation for pair classification {}".format(c_pair))
+        elif pair.operation == org_operation:
+            raise RuntimeError("Could not re-classify  {}".format(org_pair))
+
+        handler = getattr(self, "on_" + pair.operation, None)
+        res = handler(pair)
+#         self._log_action("", "different", "?", pair.local, min_level=2)
+        return res
 
     def on_conflict(self, pair):
         """Return False to prevent visiting of children"""

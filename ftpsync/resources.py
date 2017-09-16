@@ -64,6 +64,11 @@ operation_map = {
     ("deleted", "unmodified"): "delete_remote",
     ("deleted", "modified"): "conflict",
     ("deleted", "deleted"): True,  # Nothing to do (only update metadata)
+    
+    # No meta data available: treat as 'unmodified' in general:
+    ("existing", "missing"): "copy_local",
+    ("missing", "existing"): "copy_remote",
+    ("existing", "existing"): "need_compare",
     }
 
 #===============================================================================
@@ -135,20 +140,29 @@ class EntryPair(object):
 #             self.local_classification = self.local.classification = "unknown"
         c_pair = (self.local_classification, self.remote_classification)
         
-        # If no metadata is available, we could only classify file entries as
-        # 'existing'. 
-        # Now we use peer information to improve classification. 
-        if c_pair == ("missing", "existing"):
-            # Treat unmatched entry as unmodified, so it get's copied
-            c_pair = ("missing", "unmodified")
-        elif c_pair == ("existing", "missing"):
-            # Treat unmatched entry as unmodified, so it get's copied
-            c_pair = ("unmodified", "missing")
-        elif c_pair == ("existing", "existing"):
-            raise NotImplementedError
-
-        self.local_classification = c_pair[0]
-        self.remote_classification = c_pair[1]
+#         # If no metadata is available, we could only classify file entries as
+#         # 'existing'. 
+#         # Now we use peer information to improve this classification. 
+#         if c_pair == ("missing", "existing"):
+#             # Treat unmatched entry as unmodified, so it get's copied
+#             c_pair = ("missing", "unmodified")
+#         elif c_pair == ("existing", "missing"):
+#             # Treat unmatched entry as unmodified, so it get's copied
+#             c_pair = ("unmodified", "missing")
+#         elif c_pair == ("existing", "existing"):
+#             # Naive classification derived from file time and size
+#             time_cmp = eps_compare(self.local.mtime, self.remote.mtime, FileEntry.EPS_TIME)
+#             if time_cmp < 0:
+#                 c_pair = ("unmodified", "modified")  # remote is newer
+#             elif time_cmp > 0:
+#                 c_pair = ("modified", "unmodified")  # local is newer
+#             elif self.local.size == self.remote.size:
+#                 c_pair = ("unmodified", "unmodified")  # equal
+#             else:
+#                 c_pair = ("modified", "modified")  # conflict!
+# 
+#         self.local_classification = c_pair[0]
+#         self.remote_classification = c_pair[1]
         
         self.operation = operation_map.get(c_pair)
         if not self.operation:

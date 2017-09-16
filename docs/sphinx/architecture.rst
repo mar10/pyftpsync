@@ -18,8 +18,13 @@ Class Inheritance Diagram
 Algorithm
 =========
 
-See `pyftpsync-spec.pdf <https://raw.githubusercontent.com/mar10/pyftpsync/master/docs/pyftpsync-spec.pdf>`_
-for some explanations.
+..
+    See `pyftpsync-spec.pdf <https://raw.githubusercontent.com/mar10/pyftpsync/master/docs/pyftpsync-spec.pdf>`_
+    for some explanations.
+
+.. seealso::
+   See also the :download:`Pyftpsync specification <pyftpsync-spec.pdf>` for details about the
+   algorithm and implementation.
 
 
 .. Test Case

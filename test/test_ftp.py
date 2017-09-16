@@ -46,7 +46,11 @@ class FtpTest(unittest.TestCase):
 
         parts = urlparse(ftp_url, allow_fragments=False)
         self.assertIn(parts.scheme.lower(), ["ftp", "ftps"])
-        host = parts.netloc.split("@", 1)[1]
+        print(ftp_url, parts)
+        if "@" in parts.netloc:
+            host = parts.netloc.split("@", 1)[1]
+        else:
+            host = parts.netloc
         self.PATH = parts.path
         self.ftp = FTP()
 #        self.ftp.debug(1)

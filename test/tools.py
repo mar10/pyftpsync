@@ -101,6 +101,17 @@ def _empty_folder(folder_path):
         else:
             shutil.rmtree(file_object_path)
 
+def _delete_metadata(folder_path, recursive=True):
+    """Remove all .pyftpsync-meta.json files."""
+    for file_object in os.listdir(folder_path):
+        file_object_path = os.path.join(folder_path, file_object)
+        if file_object == DirMetadata.META_FILE_NAME:
+            print("Remove {}".format(file_object_path))
+            os.unlink(file_object_path)
+        elif recursive and os.path.isdir(file_object_path):
+            _delete_metadata(file_object_path, recursive)
+    return
+
 def _get_test_folder(folder_name):
     """"Convert test folder content to dict for comparisons."""
 #     root_path = os.path.join(PYFTPSYNC_TEST_FOLDER, folder_name.replace("/", os.sep))
@@ -137,7 +148,7 @@ def _sync_test_folders(options):
     """Run bi-dir sync with fresh objects."""
     local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
     remote = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
-    opts = {"dry_run": False, "verbose": 3}
+    opts = {"dry_run": False, "verbose": 1}
     if options:
         opts.update(options)
 
@@ -179,7 +190,7 @@ def prepare_fixtures_1():
 
 def prepare_fixtures_2():
     """
-    Create two folders that have already been synched (so meta data is available).
+    Create two folders that have already been sync'ed (so meta data is available).
 
                               Local           Remote
       file1.txt               12:00           12:00
@@ -190,17 +201,21 @@ def prepare_fixtures_2():
       file6.txt               12:00           12:00
       file7.txt               12:00           12:00
       file8.txt               12:00           12:00
+      file9.txt               12:00           12:00
       folder1/file1_1.txt     12.00           12:00
       folder2/file2_1.txt     12:00           12:00
       folder3/file3_1.txt     12:00           12:00
       folder4/file4_1.txt     12:00           12:00
+      folder5/file5_1.txt     12:00           12:00
+      folder6/file6_1.txt     12:00           12:00
+      folder7/file7_1.txt     12:00           12:00
     """
     assert os.path.isdir(PYFTPSYNC_TEST_FOLDER), "Invalid folder: {}".format(PYFTPSYNC_TEST_FOLDER)
     # Reset all
     _empty_folder(PYFTPSYNC_TEST_FOLDER)
     # Add some files to ../local/
     dt = "2014-01-01 12:00:00"
-    for i in range(1, 9):
+    for i in range(1, 10):
         _write_test_file("local/file{}.txt".format(i), dt=dt,
                          content="local{}".format(i))
 
@@ -208,6 +223,9 @@ def prepare_fixtures_2():
     _write_test_file("local/folder2/file2_1.txt", dt=dt, content="local2_1")
     _write_test_file("local/folder3/file3_1.txt", dt=dt, content="local3_1")
     _write_test_file("local/folder4/file4_1.txt", dt=dt, content="local4_1")
+    _write_test_file("local/folder5/file5_1.txt", dt=dt, content="local5_1")
+    _write_test_file("local/folder6/file6_1.txt", dt=dt, content="local6_1")
+    _write_test_file("local/folder7/file7_1.txt", dt=dt, content="local7_1")
 
     # Create empty ../remote/
     os.mkdir(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
@@ -215,5 +233,5 @@ def prepare_fixtures_2():
     # Synchronize folders
     opts = {"dry_run": False, "verbose": 0}
     stats = _sync_test_folders(opts)
-    assert stats["files_written"] == 12
-    assert stats["dirs_created"] == 4
+    assert stats["files_written"] == 16
+    assert stats["dirs_created"] == 7

@@ -1,6 +1,10 @@
 Reference Guide
 ===============
 
+.. seealso::
+   See also the :download:`Pyftpsync specification <pyftpsync-spec.pdf>` for details about the
+   algorithm and implementation.
+
 .. toctree::
    :maxdepth: 4
 
