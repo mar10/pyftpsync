@@ -16,7 +16,8 @@ from ftpsync.targets import *  # @UnusedWildImport
 
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer, \
     BiDirSynchronizer
-from test.tools import PYFTPSYNC_TEST_FTP_URL, prepare_fixtures_1, \
+from test.test_1x import prepare_fixtures_1
+from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL, \
     PYFTPSYNC_TEST_FOLDER, _get_test_file_date, STAMP_20140101_120000, \
     _empty_folder, _write_test_file, _touch_test_file
 
@@ -42,7 +43,7 @@ class FtpTest(unittest.TestCase):
         # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"
         ftp_url = PYFTPSYNC_TEST_FTP_URL
         if not ftp_url:
-            self.skipTest("Must configure a FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
+            self.skipTest("Must configure an FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
 
         parts = urlparse(ftp_url, allow_fragments=False)
         self.assertIn(parts.scheme.lower(), ["ftp", "ftps"])
@@ -96,7 +97,7 @@ class FtpTargetTest(unittest.TestCase):
         # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"
         ftp_url = PYFTPSYNC_TEST_FTP_URL
         if not ftp_url:
-            self.skipTest("Must configure a FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
+            self.skipTest("Must configure an FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
         self.assertTrue("/test" in ftp_url or "/temp" in ftp_url, "FTP target path must include '/test' or '/temp'")
 
         # Create temp/local folder with files and empty temp/remote folder
@@ -300,7 +301,7 @@ class BenchmarkTest(unittest.TestCase):
         # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"
         ftp_url = PYFTPSYNC_TEST_FTP_URL
         if not ftp_url:
-            self.skipTest("Must configure a FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
+            self.skipTest("Must configure an FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
         self.assertTrue("/test" in ftp_url or "/temp" in ftp_url, "FTP target path must include '/test' or '/temp'")
 
         # Create temp/local folder with files and empty temp/remote folder

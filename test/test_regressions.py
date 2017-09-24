@@ -17,7 +17,7 @@ from ftpsync.targets import *  # @UnusedWildImport
 
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer, \
     BiDirSynchronizer
-from test.tools import PYFTPSYNC_TEST_FTP_URL, prepare_fixtures_1, \
+from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL, \
     PYFTPSYNC_TEST_FOLDER, _get_test_file_date, STAMP_20140101_120000, \
     _empty_folder, _write_test_file, _touch_test_file
 
@@ -43,7 +43,7 @@ class RegressionTest(unittest.TestCase):
         # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"
         ftp_url = PYFTPSYNC_TEST_FTP_URL
         if not ftp_url:
-            self.skipTest("Must configure a FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
+            self.skipTest("Must configure an FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
 
         parts = urlparse(ftp_url, allow_fragments=False)
         # self.assertIn(parts.scheme.lower(), ["ftp", "ftps"])

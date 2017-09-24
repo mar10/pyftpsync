@@ -3,12 +3,13 @@
 **Note**: the command line options have changed!  
 **Be careful with existing shell scripts after updating from v1.x!**
 
-- Write mode is now on by default!
-  The `-x`, `--execute` option was removed, use the new `--dry-run` option instead.
+- Write mode is now on by default.<br>
+  The `-x`, `--execute` option was removed, use `--dry-run` instead.
 - Modified format of .pyftpsync.meta.json
 - Dropped support for Python 2.6
+- New `scan` command to list, purge, etc remote targets.
 - Remove lock file on Ctrl-C
-- Add FTPS (TLS) support on Python 2.7/3.2+
+- Add FTPS (TLS) support
 - Split into more modules
 - Release as Wheel
 

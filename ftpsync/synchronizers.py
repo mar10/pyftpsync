@@ -86,6 +86,7 @@ class BaseSynchronizer(object):
                        "elap_str": None,
                        "entries_seen": 0,
                        "entries_touched": 0,
+                       "error_code": None,
                        "files_created": 0,
                        "files_deleted": 0,
                        "files_written": 0,
@@ -183,14 +184,14 @@ class BaseSynchronizer(object):
             print("    Files cannot be compared ({} != {}).".format(local, remote))
             return False
         elif local.size != remote.size:
-            print("    Files are different (size {:,} != {:,}).".format(local.size, remote.size))
+            print("    Files are different (size {:,d} != {:,d}).".format(local.size, remote.size))
             return False
 
         with local.target.open_readable(local.name) as fp_src, remote.target.open_readable(remote.name) as fp_dest:
             res, ofs = byte_compare(fp_src, fp_dest)
 
         if not res:
-            print("    Files are different at offset {:,}.".format(ofs))
+            print("    Files are different at offset {:,d}.".format(ofs))
         else:
             print("    Files are equal.")
         return res
@@ -584,6 +585,25 @@ class BiDirSynchronizer(BaseSynchronizer):
 # #         print("    last sync: %s" % _ts(self.local.cur_dir_meta.get_last_sync()))
 #         pass
 
+    def _print_pair_diff(self, local, remote):
+        RED = ansi_code("Fore.LIGHTRED_EX")
+        M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
+        R = ansi_code("Style.RESET_ALL")
+
+        # print("_print_pair_diff", local, remote)
+        any_entry = local or remote
+        has_meta = any_entry.get_sync_info("m") is not None
+
+        print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})" + R)
+              .format(any_entry.name, _ts(any_entry .get_sync_info("u"))))
+        if has_meta:
+            print("    original modification time: {}, size: {:,d} bytes"
+                  .format(_ts(any_entry.get_sync_info("m")), any_entry.get_sync_info("s")))
+        else:
+            print("    (No meta data available.)")
+        print("    local:  {}".format(local.as_string() if local else "n.a."))
+        print("    remote: {}".format(remote.as_string(local) if remote else "n.a."))
+
     def _interactive_resolve(self, local, remote):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
         if self.resolve_all:
@@ -593,16 +613,17 @@ class BiDirSynchronizer(BaseSynchronizer):
             self.resolve_all = resolve
             return resolve
 
-        RED = ansi_code("Fore.LIGHTRED_EX")
-        M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
-        R = ansi_code("Style.RESET_ALL")
-
-        print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})" + R)
-              .format(local.name, _ts(local.get_sync_info("u"))))
-        print("    original modification time: {}, size: {:,} bytes"
-              .format(_ts(local.get_sync_info("m")), local.get_sync_info("s")))
-        print("    local:  %s" % local.as_string())
-        print("    remote: %s" % (remote.as_string(local) if remote else "n.a."))
+        self._print_pair_diff(local, remote)
+        # RED = ansi_code("Fore.LIGHTRED_EX")
+        # M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
+        # R = ansi_code("Style.RESET_ALL")
+        #
+        # print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})" + R)
+        #       .format(local.name, _ts(local.get_sync_info("u"))))
+        # print("    original modification time: {}, size: {:,d} bytes"
+        #       .format(_ts(local.get_sync_info("m")), local.get_sync_info("s")))
+        # print("    local:  %s" % local.as_string())
+        # print("    remote: %s" % (remote.as_string(local) if remote else "n.a."))
 
         while True:
             prompt = "Use " + M + "L" + R + "ocal, use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + M + "H" + R + "elp)? "
@@ -710,6 +731,7 @@ class BiDirSynchronizer(BaseSynchronizer):
     def on_conflict(self, pair):
         """Return False to prevent visiting of children"""
         # self._log_action("skip", "conflict", "!", pair.local, min_level=2)
+        # print("on_conflict", pair)
         any_entry = pair.local or pair.remote
         if not self._test_match_or_print(any_entry):
             return
@@ -885,12 +907,7 @@ class UploadSynchronizer(BiDirSynchronizer):
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
-        print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})" + R)
-              .format(local.name, _ts(local.get_sync_info("u"))))
-        print("    original modification time: {}, size: {:,} bytes"
-              .format(_ts(local.get_sync_info("m")), local.get_sync_info("s")))
-        print("    local:  {}".format(local.as_string()))
-        print("    remote: {}".format(remote.as_string(local) if remote else "n.a."))
+        self._print_pair_diff(local, remote)
 
         if self.resolve_all:
             return self.resolve_all
@@ -924,9 +941,9 @@ class UploadSynchronizer(BiDirSynchronizer):
 
         return r
 
-    def on_equal(self, pair):
-        self._log_action("", "equal", "=", local_file, min_level=4)
-        self._check_del_unmatched(local_file)
+    # def on_equal(self, pair):
+    #     self._log_action("", "equal", "=", local_file, min_level=4)
+    #     self._check_del_unmatched(local_file)
 
     def on_copy_remote(self, pair):
         # Uploads does not modify local target
@@ -937,12 +954,12 @@ class UploadSynchronizer(BiDirSynchronizer):
         # Uploads does not modify local target
         self._log_action("skip", "missing", "X< ", pair.local)
 
-    def on_need_compare(self, pair):
-        self._log_action("", "different", "?", pair.local, min_level=2)
+    # def on_need_compare(self, pair):
+    #     self._log_action("", "different", "?", pair.local, min_level=2)
 
-    def on_conflict(self, pair):
-        """Return False to prevent visiting of children"""
-        self._log_action("skip", "conflict", "!", pair.local, min_level=2)
+    # def on_conflict(self, pair):
+    #     """Return False to prevent visiting of children"""
+    #     self._log_action("skip", "conflict", "!", pair.local, min_level=2)
 
 #     def sync_conflict(self, local_entry, remote_entry):
 #         """Both targets changed; resolve according to strategy, but never modify local."""
@@ -1091,12 +1108,14 @@ class DownloadSynchronizer(BiDirSynchronizer):
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
-        print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})" + R)
-              .format(local.name, _ts(local.get_sync_info("u"))))
-        print("    original modification time: {}, size: {:,} bytes"
-              .format(_ts(local.get_sync_info("m")), local.get_sync_info("s")))
-        print("    local:  %s" % local.as_string())
-        print("    remote: %s" % (remote.as_string(local) if remote else "n.a."))
+        self._print_pair_diff(local, remote)
+
+        # print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})" + R)
+        #       .format(local.name, _ts(local.get_sync_info("u"))))
+        # print("    original modification time: {}, size: {:,d} bytes"
+        #       .format(_ts(local.get_sync_info("m")), local.get_sync_info("s")))
+        # print("    local:  %s" % local.as_string())
+        # print("    remote: %s" % (remote.as_string(local) if remote else "n.a."))
 
         while True:
             prompt = "Use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + M + "H" + R + "elp)? "

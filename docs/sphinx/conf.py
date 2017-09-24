@@ -111,7 +111,7 @@ except pkg_resources.DistributionNotFound:
     exec(open("../../ftpsync/__init__.py").read(), g_dict)
     release = g_dict["__version__"]
     del g_dict
-    print 'Using workaround (direc read): %s' % release
+    print 'Using workaround (direct read): %s' % release
 
 version = '.'.join(release.split('.')[:2])
 
