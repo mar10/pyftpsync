@@ -29,7 +29,7 @@ ENTRY_CLASSIFICATIONS = frozenset([
 #     ])
 
 PAIR_OPERATIONS = frozenset([
-    "conflict", "copy_local", "copy_remote", "delete_local", 
+    "conflict", "copy_local", "copy_remote", "delete_local",
     "delete_remote", "equal", "need_compare"
     ])
 
@@ -64,7 +64,7 @@ operation_map = {
     ("deleted", "unmodified"): "delete_remote",
     ("deleted", "modified"): "conflict",
     ("deleted", "deleted"): True,  # Nothing to do (only update metadata)
-    
+
     # No meta data available: treat as 'unmodified' in general:
     ("existing", "missing"): "copy_local",
     ("missing", "existing"): "copy_remote",
@@ -97,11 +97,13 @@ class EntryPair(object):
         self.remote_classification = None
         #: str:
         self.operation = None
+        # #: bool:
+        # self.was_skipped = None
 
     def __str__(self):
         s = "<EntryPair({})>: ({}, {}) => {}".format(
-            "[{}]".format(self.rel_path) if self.is_dir else self.rel_path, 
-            self.local_classification, self.remote_classification, 
+            "[{}]".format(self.rel_path) if self.is_dir else self.rel_path,
+            self.local_classification, self.remote_classification,
             self.operation)
         # s = "{}: [{}]{} - [{}]{} => {}".format(
         #     self.rel_path, self.local_classification, self.local, self.remote_classification, self.remote, self.operation)
@@ -136,13 +138,13 @@ class EntryPair(object):
             self.remote_classification =  "missing"
 
 #         if peer_dir_meta is None:
-#             # 
+#             #
 #             self.local_classification = self.local.classification = "unknown"
         c_pair = (self.local_classification, self.remote_classification)
-        
+
 #         # If no metadata is available, we could only classify file entries as
-#         # 'existing'. 
-#         # Now we use peer information to improve this classification. 
+#         # 'existing'.
+#         # Now we use peer information to improve this classification.
 #         if c_pair == ("missing", "existing"):
 #             # Treat unmatched entry as unmodified, so it get's copied
 #             c_pair = ("missing", "unmodified")
@@ -160,10 +162,10 @@ class EntryPair(object):
 #                 c_pair = ("unmodified", "unmodified")  # equal
 #             else:
 #                 c_pair = ("modified", "modified")  # conflict!
-# 
+#
 #         self.local_classification = c_pair[0]
 #         self.remote_classification = c_pair[1]
-        
+
         self.operation = operation_map.get(c_pair)
         if not self.operation:
             raise RuntimeError("Undefined operation for pair classification {}".format(c_pair))
@@ -292,7 +294,7 @@ class _Resource(object):
             if self.is_dir():
                 # Directories are considered 'unmodified' (would require deep traversal
                 # to check otherwise)
-                if peer_entry_meta: 
+                if peer_entry_meta:
                     self.classification = "unmodified"
                 else:
                     self.classification = "new"
@@ -309,7 +311,7 @@ class _Resource(object):
                 # A new file entry
                 self.classification = "new"
         else:
-            # No metadata available: 
+            # No metadata available:
             if self.is_dir():
                 # Directories are considered 'unmodified' (would require deep traversal
                 # to check otherwise)
@@ -317,7 +319,7 @@ class _Resource(object):
             else:
                 # That's all we know, but EntryPair.classify() may adjust this
                 self.classification = "existing"
-        
+
         if PRINT_CLASSIFICATIONS:
             print("classify {}".format(self))
         assert self.classification in ENTRY_CLASSIFICATIONS

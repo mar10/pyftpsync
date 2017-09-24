@@ -33,7 +33,7 @@ Pyftpsync
 
 
 .. note::
-  Currently version 2.0 is under development.
+  Currently version 2.0 is under development with *breaking changes*.
   Have a look at 1.x for a more stable version.
 
 Features

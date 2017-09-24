@@ -38,7 +38,7 @@ class BidirResolveTest(_SyncTestBase):
         super(BidirResolveTest, self).tearDown()
 
     def test_default(self):
-        opts = {"verbose": 4} # default options, i.e. 'skip' conflicts
+        opts = {"verbose": self.verbose} # default options, i.e. 'skip' conflicts
         # Default options: expect 4 unresolved conflicts
         stats = self._do_run_suite(BiDirSynchronizer, opts)
 #         self._dump_de_facto_results(stats)
@@ -91,7 +91,7 @@ class BidirResolveTest(_SyncTestBase):
 
 
     def test_resolve_local(self):
-        opts = {"resolve": "local", "verbose": 4}
+        opts = {"resolve": "local", "verbose": self.verbose}
 
         stats = self._do_run_suite(BiDirSynchronizer, opts)
         # self._dump_de_facto_results(stats)
@@ -127,7 +127,7 @@ class BidirResolveTest(_SyncTestBase):
 
     def test_resolve_remote(self):
 
-        opts = {"resolve": "remote", "verbose": 4}
+        opts = {"resolve": "remote", "verbose": self.verbose}
 
         stats = self._do_run_suite(BiDirSynchronizer, opts)
         # self._dump_de_facto_results(stats)
@@ -163,7 +163,7 @@ class BidirResolveTest(_SyncTestBase):
 
     def test_no_metadata(self):
         """Synchronize with absent .pyftpsync-meta.json."""
-        opts = {"verbose": 4}
+        opts = {"verbose": self.verbose}
 
         # setUp already sync'd with remote. We want to check the results when metadata
         # is absent:
@@ -237,7 +237,7 @@ class BidirSpecialTest(_SyncTestBase):
         _write_test_file("local/folder1/file1_1.txt", dt="2014-01-01 13:00:00", content="local 13:00")
         _remove_test_folder("remote/folder1")
 
-        opts = {}
+        opts = {"verbose": self.verbose}
         stats = _sync_test_folders(BiDirSynchronizer, opts)
 
         # Note: currently we do NOT detect this kind of conflicts!
@@ -279,5 +279,4 @@ class BidirSpecialTest(_SyncTestBase):
 # Main
 #===============================================================================
 if __name__ == "__main__":
-    print(sys.version)
     unittest.main()

@@ -39,7 +39,7 @@ class UploadResolveTest(_SyncTestBase):
         super(UploadResolveTest, self).tearDown()
 
     def test_default(self):
-        opts = {"verbose": 4} # default options, i.e. 'skip' conflicts
+        opts = {"verbose": self.verbose} # default options, i.e. 'skip' conflicts
         # Default options: expect 4 unresolved conflicts
         stats = self._do_run_suite(UploadSynchronizer, opts)
         # self._dump_de_facto_results(stats)
@@ -52,6 +52,7 @@ class UploadResolveTest(_SyncTestBase):
         self.assertEqual(stats["files_deleted"], 1)
         self.assertEqual(stats["dirs_deleted"], 2)
         self.assertEqual(stats["conflict_files"], 7)
+        self.assertEqual(stats["conflict_files_skipped"], 7)
 
         # We expect that local remains unmodified
         self.assertDictEqual(_get_test_folder("local"), _SyncTestBase.local_fixture_modified)
@@ -74,6 +75,50 @@ class UploadResolveTest(_SyncTestBase):
             'new_file6.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
             }
         self.assertDictEqual(_get_test_folder("remote"), expect_remote)
+
+    def test_mirror(self):
+        opts = {
+            "verbose": self.verbose,
+            "resolve": "local",
+            "force": True,
+            }
+
+        stats = self._do_run_suite(UploadSynchronizer, opts)
+        # self._dump_de_facto_results(stats)
+
+        # We expect 7 conflicts, and leave them unresolved (i.e. skip them all)
+
+        # self.assertEqual(stats["files_written"], 3)
+        # self.assertEqual(stats["download_files_written"], 0)
+        # self.assertEqual(stats["upload_files_written"], 3)
+        # self.assertEqual(stats["files_deleted"], 1)
+        # self.assertEqual(stats["dirs_deleted"], 2)
+        # self.assertEqual(stats["conflict_files"], 7)
+        # self.assertEqual(stats["conflict_files_skipped"], 7)
+
+        # We expect that local is mirrored 1:1 to remote
+        self.assertDictEqual(_get_test_folder("local"), _SyncTestBase.local_fixture_modified)
+        self.assertDictEqual(_get_test_folder("remote"), _SyncTestBase.remote_fixture_modified)
+
+        # We expect that local remains unmodified
+        # expect_remote = {
+        #     'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
+        #     'file2.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+        #     'file4.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+        #     'file6.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
+        #     'file7.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+        #     'file8.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+        #     'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
+        #     'folder2/file2_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+        #     'folder5/file5_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+        #     'new_file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+        #     'new_file2.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+        #     'new_file3.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+        #     'new_file4.txt': {'content': 'remote 13:00 with other content', 'date': '2014-01-01 13:00:00'},
+        #     'new_file5.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
+        #     'new_file6.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+        #     }
+        # self.assertDictEqual(_get_test_folder("remote"), expect_remote)
 
 
 #===============================================================================

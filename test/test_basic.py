@@ -53,7 +53,6 @@ class FixtureTest(_SyncTestBase):
         #
         self._prepare_modified_fixture()
 
-        self._dump_de_facto_results({})
         self.assertDictEqual(_get_test_folder("local"), _SyncTestBase.local_fixture_modified)
 
         self.assertDictEqual(_get_test_folder("remote"), _SyncTestBase.remote_fixture_modified)

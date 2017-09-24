@@ -164,17 +164,17 @@ def _sync_test_folders(synchronizer_class, options):
 
 class _SyncTestBase(unittest.TestCase):
     """Test BiDirSynchronizer on file system targets with different resolve modes."""
-    
+
     local_fixture_unmodified = {
-        'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
-        'file2.txt': {'content': 'local2', 'date': '2014-01-01 12:00:00'},
-        'file3.txt': {'content': 'local3', 'date': '2014-01-01 12:00:00'},
-        'file4.txt': {'content': 'local4', 'date': '2014-01-01 12:00:00'},
-        'file5.txt': {'content': 'local5', 'date': '2014-01-01 12:00:00'},
-        'file6.txt': {'content': 'local6', 'date': '2014-01-01 12:00:00'},
-        'file7.txt': {'content': 'local7', 'date': '2014-01-01 12:00:00'},
-        'file8.txt': {'content': 'local8', 'date': '2014-01-01 12:00:00'},
-        'file9.txt': {'content': 'local9', 'date': '2014-01-01 12:00:00'},
+        'file1.txt':           {'content': 'local1',   'date': '2014-01-01 12:00:00'},
+        'file2.txt':           {'content': 'local2',   'date': '2014-01-01 12:00:00'},
+        'file3.txt':           {'content': 'local3',   'date': '2014-01-01 12:00:00'},
+        'file4.txt':           {'content': 'local4',   'date': '2014-01-01 12:00:00'},
+        'file5.txt':           {'content': 'local5',   'date': '2014-01-01 12:00:00'},
+        'file6.txt':           {'content': 'local6',   'date': '2014-01-01 12:00:00'},
+        'file7.txt':           {'content': 'local7',   'date': '2014-01-01 12:00:00'},
+        'file8.txt':           {'content': 'local8',   'date': '2014-01-01 12:00:00'},
+        'file9.txt':           {'content': 'local9',   'date': '2014-01-01 12:00:00'},
         'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
         'folder2/file2_1.txt': {'content': 'local2_1', 'date': '2014-01-01 12:00:00'},
         'folder3/file3_1.txt': {'content': 'local3_1', 'date': '2014-01-01 12:00:00'},
@@ -185,48 +185,50 @@ class _SyncTestBase(unittest.TestCase):
         }
 
     local_fixture_modified = {
-        'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
-        'file2.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-        'file4.txt': {'content': 'local4', 'date': '2014-01-01 12:00:00'},
-        'file5.txt': {'content': 'local5', 'date': '2014-01-01 12:00:00'},
-        'file6.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-        'file7.txt': {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'},
-        'file9.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-        'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
-        'folder2/file2_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-        'folder5/file5_1.txt': {'content': 'local5_1', 'date': '2014-01-01 12:00:00'},
-        'folder6/file6_1.txt': {'content': 'local6_1', 'date': '2014-01-01 12:00:00'},
-        'folder7/file7_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-        'new_file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-        'new_file3.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-        'new_file4.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-        'new_file5.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-        'new_file6.txt': {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'},
+        'file1.txt':           {'content': 'local1',         'date': '2014-01-01 12:00:00'},
+        'file2.txt':           {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
+        'file4.txt':           {'content': 'local4',         'date': '2014-01-01 12:00:00'},
+        'file5.txt':           {'content': 'local5',         'date': '2014-01-01 12:00:00'},
+        'file6.txt':           {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
+        'file7.txt':           {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'},
+        'file9.txt':           {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
+        'folder1/file1_1.txt': {'content': 'local1_1',       'date': '2014-01-01 12:00:00'},
+        'folder2/file2_1.txt': {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
+        'folder5/file5_1.txt': {'content': 'local5_1',       'date': '2014-01-01 12:00:00'},
+        'folder6/file6_1.txt': {'content': 'local6_1',       'date': '2014-01-01 12:00:00'},
+        'folder7/file7_1.txt': {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
+        'new_file1.txt':       {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
+        'new_file3.txt':       {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
+        'new_file4.txt':       {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
+        'new_file5.txt':       {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
+        'new_file6.txt':       {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'},
         }
 
     remote_fixture_modified = {
-        'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
-        'file2.txt': {'content': 'local2', 'date': '2014-01-01 12:00:00'},
-        'file3.txt': {'content': 'local3', 'date': '2014-01-01 12:00:00'},
-        'file4.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-        'file6.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
-        'file7.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-        'file8.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-        'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
-        'folder2/file2_1.txt': {'content': 'local2_1', 'date': '2014-01-01 12:00:00'},
-        'folder3/file3_1.txt': {'content': 'local3_1', 'date': '2014-01-01 12:00:00'},
-        'folder4/file4_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-        'folder5/file5_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-        'new_file2.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-        'new_file3.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-        'new_file4.txt': {'content': 'remote 13:00 with other content', 'date': '2014-01-01 13:00:00'},
-        'new_file5.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
-        'new_file6.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
+        'file1.txt':           {'content': 'local1',          'date': '2014-01-01 12:00:00'},
+        'file2.txt':           {'content': 'local2',          'date': '2014-01-01 12:00:00'},
+        'file3.txt':           {'content': 'local3',          'date': '2014-01-01 12:00:00'},
+        'file4.txt':           {'content': 'remote 13:00',    'date': '2014-01-01 13:00:00'},
+        'file6.txt':           {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
+        'file7.txt':           {'content': 'remote 13:00',    'date': '2014-01-01 13:00:00'},
+        'file8.txt':           {'content': 'remote 13:00',    'date': '2014-01-01 13:00:00'},
+        'folder1/file1_1.txt': {'content': 'local1_1',        'date': '2014-01-01 12:00:00'},
+        'folder2/file2_1.txt': {'content': 'local2_1',        'date': '2014-01-01 12:00:00'},
+        'folder3/file3_1.txt': {'content': 'local3_1',        'date': '2014-01-01 12:00:00'},
+        'folder4/file4_1.txt': {'content': 'remote 13:00',    'date': '2014-01-01 13:00:00'},
+        'folder5/file5_1.txt': {'content': 'remote 13:00',    'date': '2014-01-01 13:00:00'},
+        'new_file2.txt':       {'content': 'remote 13:00',    'date': '2014-01-01 13:00:00'},
+        'new_file3.txt':       {'content': 'local 13:00',     'date': '2014-01-01 13:00:00'},
+        'new_file4.txt':       {'content': 'remote 13:00 with other content',
+                                                              'date': '2014-01-01 13:00:00'},
+        'new_file5.txt':       {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
+        'new_file6.txt':       {'content': 'remote 13:00',    'date': '2014-01-01 13:00:00'},
         }
 
     def setUp(self):
         self._prepare_initial_synced_fixture()
-        self.maxDiff = None # do not trunkate Dict diffs
+        self.maxDiff = None  # Do not trunkate Dict diffs
+        self.verbose = 4  # Default option for synchronizers
 
     def tearDown(self):
         pass

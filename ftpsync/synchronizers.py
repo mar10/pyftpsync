@@ -78,6 +78,7 @@ class BaseSynchronizer(object):
 
         self._stats = {"bytes_written": 0,
                        "conflict_files": 0,
+                       "conflict_files_skipped": 0,
                        "dirs_created": 0,
                        "dirs_deleted": 0,
                        "download_bytes_written": 0,
@@ -86,7 +87,6 @@ class BaseSynchronizer(object):
                        "elap_str": None,
                        "entries_seen": 0,
                        "entries_touched": 0,
-                       "error_code": None,
                        "files_created": 0,
                        "files_deleted": 0,
                        "files_written": 0,
@@ -96,6 +96,7 @@ class BaseSynchronizer(object):
                        "meta_bytes_written": 0,
                        "remote_dirs": 0,
                        "remote_files": 0,
+                       "result_code": None,
                        "upload_bytes_written": 0,
                        "upload_files_written": 0,
                        }
@@ -461,16 +462,18 @@ class BaseSynchronizer(object):
         # 4. Perform (or schedule) resulting file operations
         for pair in entry_pair_list:
             # print(pair)
-            handler = getattr(self, "on_" + pair.operation, None)
-            # print(handler)
-            if handler:
-                res = handler(pair)
-            else:
-                print("NO HANDLER")
+            hook_result = self.re_classify_pair(pair)
+
+            if hook_result is not False:
+                handler = getattr(self, "on_" + pair.operation, None)
+                # print(handler)
+                if handler:
+                    res = handler(pair)
+                else:
+                    print("NO HANDLER")
 
             if pair.is_conflict():
                 self._inc_stat("conflict_files")
-
 
         # 5. Let the target provider write its meta data for the files in the
         #    current directory.
@@ -501,28 +504,46 @@ class BaseSynchronizer(object):
 
         return
 
+    def re_classify_pair(self, pair):
+        """Allow derrived classes to override default classification and operation.
+
+        Returns:
+            False to prevent default operation.
+        """
+        pass
+
     def on_equal(self, pair):
+        """Called for (unmodified, unmodified) pairs."""
         self._log_action("", "equal", "=", pair.local, min_level=4)
 
     def on_copy_local(self, pair):
+        """Called when the local resource should be copied to remote."""
         status = pair.remote_classification
         self._log_action("copy", status, ">", pair.local)
 
     def on_copy_remote(self, pair):
+        """Called when the remote resource should be copied to local."""
         status = pair.local_classification
         self._log_action("copy", status, "<", pair.remote)
 
     def on_delete_local(self, pair):
+        """Called when the local resource should be deleted."""
         self._log_action("", "modified", "X< ", pair.local)
 
     def on_delete_remote(self, pair):
+        """Called when the remote resource should be deleted."""
         self._log_action("", "modified", " >X", pair.remote)
 
     def on_need_compare(self, pair):
+        """Called when the remote resource should be deleted."""
         self._log_action("", "different", "?", pair.local, min_level=2)
 
     def on_conflict(self, pair):
-        """Return False to prevent visiting of children"""
+        """Called when resources have been modified on local *and* remote.
+
+        Returns:
+            False to prevent visiting of children (if pair is a directory)
+        """
         self._log_action("skip", "conflict", "!", pair.local, min_level=2)
 
 
@@ -614,16 +635,10 @@ class BiDirSynchronizer(BaseSynchronizer):
             return resolve
 
         self._print_pair_diff(local, remote)
-        # RED = ansi_code("Fore.LIGHTRED_EX")
-        # M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
-        # R = ansi_code("Style.RESET_ALL")
-        #
-        # print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})" + R)
-        #       .format(local.name, _ts(local.get_sync_info("u"))))
-        # print("    original modification time: {}, size: {:,d} bytes"
-        #       .format(_ts(local.get_sync_info("m")), local.get_sync_info("s")))
-        # print("    local:  %s" % local.as_string())
-        # print("    remote: %s" % (remote.as_string(local) if remote else "n.a."))
+
+        RED = ansi_code("Fore.LIGHTRED_EX")
+        M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
+        R = ansi_code("Style.RESET_ALL")
 
         while True:
             prompt = "Use " + M + "L" + R + "ocal, use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + M + "H" + R + "elp)? "
@@ -738,6 +753,7 @@ class BiDirSynchronizer(BaseSynchronizer):
         resolve = self._interactive_resolve(pair.local, pair.remote)
         if resolve == "skip":
             self._log_action("skip", "conflict", "*?*", any_entry)
+            self._inc_stat("conflict_files_skipped")
             return
         if pair.local and pair.remote:
             assert pair.local.is_file()
@@ -771,8 +787,6 @@ class BiDirSynchronizer(BaseSynchronizer):
             else:
                 raise NotImplementedError
         return
-
-
 
     # def sync_conflict(self, local_entry, remote_entry):
     #     if not self._test_match_or_print(local_entry or remote_entry):
@@ -890,7 +904,7 @@ class UploadSynchronizer(BiDirSynchronizer):
     #     If --delete-unmatched is on, remove the remote resource.
     #     """
     #     if not self._match(remote_entry):
-    #         if self.options.get("delete_unmatched"):
+    #         if self.options.get("delete_unma tched"):
     #             self._log_action("delete", "unmatched", ">", remote_entry)
     #             if remote_entry.is_dir():
     #                 self._remove_dir(remote_entry)
@@ -900,6 +914,24 @@ class UploadSynchronizer(BiDirSynchronizer):
     #             self._log_action("skip", "unmatched", "-", remote_entry, min_level=4)
     #         return True
     #     return False
+
+    def re_classify_pair(self, pair):
+        force = self.options.get("force")
+        delete = self.options.get("delete")
+
+        if pair.operation == "delete_remote" and not pair.local:
+            return
+
+        if force and pair.operation == "copy_remote" and pair.local:
+            print("force: Re-classify copy_remote => copy_local")
+            pair.operation = "copy_local"
+            return
+        
+        if delete and pair.operation == "copy_remote" and not pair.local:
+            print("delete: Re-classify copy_remote => delete_remote")
+            pair.operation = "delete_remote"
+            return
+        return
 
     def _interactive_resolve(self, local, remote):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
@@ -1110,13 +1142,6 @@ class DownloadSynchronizer(BiDirSynchronizer):
 
         self._print_pair_diff(local, remote)
 
-        # print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})" + R)
-        #       .format(local.name, _ts(local.get_sync_info("u"))))
-        # print("    original modification time: {}, size: {:,d} bytes"
-        #       .format(_ts(local.get_sync_info("m")), local.get_sync_info("s")))
-        # print("    local:  %s" % local.as_string())
-        # print("    remote: %s" % (remote.as_string(local) if remote else "n.a."))
-
         while True:
             prompt = "Use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + M + "H" + R + "elp)? "
             r = console_input(prompt).strip()
@@ -1137,9 +1162,9 @@ class DownloadSynchronizer(BiDirSynchronizer):
 
         return r
 
-    def on_equal(self, pair):
-        self._log_action("", "equal", "=", pair.local, min_level=4)
-        # self._check_del_unmatched(local_file)
+    # def on_equal(self, pair):
+    #     self._log_action("", "equal", "=", pair.local, min_level=4)
+    #     # self._check_del_unmatched(local_file)
 
     def on_copy_local(self, pair):
         # Download does not modify remote target
@@ -1150,14 +1175,13 @@ class DownloadSynchronizer(BiDirSynchronizer):
         # Download does not modify remote target
         self._log_action("", "modified", " >X", pair.remote)
 
-    def on_need_compare(self, pair):
-        self._log_action("", "different", "?", pair.local, min_level=2)
-
-    def on_conflict(self, pair):
-        """Return False to prevent visiting of children"""
-        self._log_action("skip", "conflict", "!", pair.local, min_level=2)
-
-
+    # def on_need_compare(self, pair):
+    #     self._log_action("", "different", "?", pair.local, min_level=2)
+    #
+    # def on_conflict(self, pair):
+    #     """Return False to prevent visiting of children"""
+    #     self._log_action("skip", "conflict", "!", pair.local, min_level=2)
+    #
 #     def sync_conflict(self, local_entry, remote_entry):
 #         """Both targets changed; resolve according to strategy, but never modify remote."""
 #         if not self._test_match_or_print(local_entry or remote_entry):

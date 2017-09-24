@@ -18,6 +18,9 @@ Synchronize local directories with FTP server.
   * Allows FTP-to-FTP and Filesystem-to-Filesystem synchronization as well
   * Architecture is open to add other target types.
 
+**Note:**   Currently version 2.0 is under development with *breaking changes*.
+Have a look at 1.x for a more stable version.
+
 
 ## Quickstart
 
