@@ -97,6 +97,8 @@ class EntryPair(object):
         self.remote_classification = None
         #: str:
         self.operation = None
+        #: str:
+        self.re_class_reason = None
         # #: bool:
         # self.was_skipped = None
 
@@ -112,6 +114,16 @@ class EntryPair(object):
     def is_conflict(self):
         assert self.operation
         return self.operation == "conflict"
+
+    def override_operation(self, operation, reason):
+        """Re-Classify entry pair."""
+        prev = (self.local_classification, self.remote_classification)
+        prev_op = self.operation
+        assert operation != prev_op
+        assert operation in PAIR_OPERATIONS
+        print("override_operation({}, {}) -> {} ({})".format(prev, prev_op, operation, reason))
+        self.operation = operation
+        self.re_class_reason = reason
 
     def classify(self, peer_dir_meta):
         """Classify entry pair."""

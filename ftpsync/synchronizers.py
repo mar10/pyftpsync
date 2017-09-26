@@ -919,18 +919,29 @@ class UploadSynchronizer(BiDirSynchronizer):
         force = self.options.get("force")
         delete = self.options.get("delete")
 
-        if pair.operation == "delete_remote" and not pair.local:
-            return
+        classification = (pair.local_classification, pair.remote_classification)
 
-        if force and pair.operation == "copy_remote" and pair.local:
-            print("force: Re-classify copy_remote => copy_local")
-            pair.operation = "copy_local"
-            return
-        
-        if delete and pair.operation == "copy_remote" and not pair.local:
-            print("delete: Re-classify copy_remote => delete_remote")
-            pair.operation = "delete_remote"
-            return
+        print("re_classify_pair", pair)
+        if delete:
+            if classification == ("missing", "new"):
+                assert pair.operation == "copy_remote"
+                pair.override_operation("delete_remote", "restore")
+                # return
+
+        if force:
+            if classification == ("new", "new"):
+                pair.override_operation("copy_local", "forced")
+            elif classification == ("unmodified", "deleted"):
+                pair.override_operation("copy_local", "restore")
+            elif classification == ("modified", "modified"):
+                pair.override_operation("copy_local", "force")
+            elif classification == ("unmodified", "modified"):
+                pair.override_operation("copy_local", "restore")
+            
+        # if delete and pair.operation == "copy_remote" and not pair.local:
+        #     print("delete: Re-classify copy_remote => delete_remote")
+        #     pair.operation = "delete_remote"
+        #     return
         return
 
     def _interactive_resolve(self, local, remote):

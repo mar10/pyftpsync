@@ -79,7 +79,9 @@ class UploadResolveTest(_SyncTestBase):
     def test_mirror(self):
         opts = {
             "verbose": self.verbose,
+            # "resolve": "ask",
             "resolve": "local",
+            "delete": True,
             "force": True,
             }
 
@@ -98,27 +100,7 @@ class UploadResolveTest(_SyncTestBase):
 
         # We expect that local is mirrored 1:1 to remote
         self.assertDictEqual(_get_test_folder("local"), _SyncTestBase.local_fixture_modified)
-        self.assertDictEqual(_get_test_folder("remote"), _SyncTestBase.remote_fixture_modified)
-
-        # We expect that local remains unmodified
-        # expect_remote = {
-        #     'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
-        #     'file2.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-        #     'file4.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-        #     'file6.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
-        #     'file7.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-        #     'file8.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-        #     'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
-        #     'folder2/file2_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-        #     'folder5/file5_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-        #     'new_file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-        #     'new_file2.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-        #     'new_file3.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-        #     'new_file4.txt': {'content': 'remote 13:00 with other content', 'date': '2014-01-01 13:00:00'},
-        #     'new_file5.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
-        #     'new_file6.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-        #     }
-        # self.assertDictEqual(_get_test_folder("remote"), expect_remote)
+        self.assertDictEqual(_get_test_folder("remote"), _SyncTestBase.local_fixture_modified)
 
 
 #===============================================================================

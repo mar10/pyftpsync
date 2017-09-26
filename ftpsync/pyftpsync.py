@@ -88,8 +88,8 @@ def run():
         parser.add_argument("-o", "--omit",
                             help="wildcard of files and directories to exclude (applied after --include)")
         parser.add_argument("--store-password",
-                                 action="store_true",
-                                 help="save password to keyring if login succeeds")
+                            action="store_true",
+                            help="save password to keyring if login succeeds")
         parser.add_argument("--no-prompt",
                             action="store_true",
                             help="prevent prompting for missing credentials")
