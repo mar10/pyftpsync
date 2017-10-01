@@ -82,11 +82,17 @@ def run():
         #                     help="turn off the dry-run mode (which is ON by default), "
         #                     "that would just print status messages but does "
         #                     "not change anything")
-        parser.add_argument("-f", "--include-files",
+        parser.add_argument("-m", "--match",
                             help="wildcard for file names (default: all, "
                             "separate multiple values with ',')")
-        parser.add_argument("-o", "--omit",
-                            help="wildcard of files and directories to exclude (applied after --include)")
+        # parser.add_argument("-f", "--include-files",
+        #                     help="wildcard for file names (default: all, "
+        #                     "separate multiple values with ',')")
+        parser.add_argument("-x", "--exclude",
+                            help="wildcard of files and directories to exclude (applied after --match, "
+                            "default: .DS_Store,.git,.hg,.svn")
+        # parser.add_argument("-o", "--omit",
+        #                     help="wildcard of files and directories to exclude (applied after --include)")
         parser.add_argument("--store-password",
                             action="store_true",
                             help="save password to keyring if login succeeds")
@@ -109,7 +115,8 @@ def run():
 
     upload_parser.add_argument("--force",
                                action="store_true",
-                               help="overwrite remote files, even if the target is newer (but no conflict was detected)")
+                               help="overwrite remote files, even if the target is newer "
+                               "(but no conflict was detected)")
     upload_parser.add_argument("--resolve",
                                default="skip",
                                choices=["local", "skip", "ask"],
@@ -132,7 +139,8 @@ def run():
 
     download_parser.add_argument("--force",
                                  action="store_true",
-                                 help="overwrite local files, even if the target is newer (but no conflict was detected)")
+                                 help="overwrite local files, even if the target is newer "
+                                 "(but no conflict was detected)")
     download_parser.add_argument("--resolve",
                                  default="skip",
                                  choices=["remote", "skip", "ask"],

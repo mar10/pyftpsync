@@ -56,13 +56,13 @@ class BaseSynchronizer(object):
         self.verbose = self.options.get("verbose", 3)
         self.dry_run = self.options.get("dry_run", True)
 
-        self.include_files = self.options.get("include_files")
-        if self.include_files:
-            self.include_files = [ pat.strip() for pat in self.include_files.split(",") ]
+        self.match = self.options.get("match")
+        if self.match:
+            self.match = [ pat.strip() for pat in self.match.split(",") ]
 
-        self.omit = self.options.get("omit")
-        if self.omit:
-            self.omit = [ pat.strip() for pat in self.omit.split(",") ]
+        self.exclude = self.options.get("exclude")
+        if self.exclude:
+            self.exclude = [ pat.strip() for pat in self.exclude.split(",") ]
 
         self.local.synchronizer = self
         self.local.peer = remote
@@ -119,14 +119,14 @@ class BaseSynchronizer(object):
 #        if name in self.DEFAULT_OMIT:
 #            return False
         ok = True
-        if entry.is_file() and self.include_files:
+        if entry.is_file() and self.match:
             ok = False
-            for pat in self.include_files:
+            for pat in self.match:
                 if fnmatch.fnmatch(name, pat):
                     ok = True
                     break
-        if ok and self.omit:
-            for pat in self.omit:
+        if ok and self.exclude:
+            for pat in self.exclude:
                 if fnmatch.fnmatch(name, pat):
                     ok = False
                     break
@@ -154,23 +154,23 @@ class BaseSynchronizer(object):
         _add("download_rate_str", "download_bytes_written", "download_write_time")
         return res
 
-    def _check_del_unmatched(self, entry):
-        """Return True if entry is NOT matched (i.e. excluded by filter).
-
-        If --delete-unmatched is on, remove the remote resource.
-        """
-        if not self._match(entry):
-            if self.options.get("delete_unmatched"):
-                symbol = "<" if entry.is_local() else ">"
-                self._log_action("delete", "unmatched", symbol, entry)
-                if entry.is_dir():
-                    self._remove_dir(entry)
-                else:
-                    self._remove_file(entry)
-            else:
-                self._log_action("skip", "unmatched", "-", entry, min_level=4)
-            return True
-        return False
+    # def _check_del_unmatched(self, entry):
+    #     """Return True if entry is NOT matched (i.e. excluded by filter).
+    #
+    #     If --delete-unmatched is on, remove the remote resource.
+    #     """
+    #     if not self._match(entry):
+    #         if self.options.get("delete_unmatched"):
+    #             symbol = "<" if entry.is_local() else ">"
+    #             self._log_action("delete", "unmatched", symbol, entry)
+    #             if entry.is_dir():
+    #                 self._remove_dir(entry)
+    #             else:
+    #                 self._remove_file(entry)
+    #         else:
+    #             self._log_action("skip", "unmatched", "-", entry, min_level=4)
+    #         return True
+    #     return False
 
     def _compare_file(self, local, remote):
         """Byte compare two files (early out on first difference)."""
@@ -452,7 +452,7 @@ class BaseSynchronizer(object):
                 entry_pair = EntryPair(None, remote_entry)
                 entry_pair_list.append(entry_pair)
 
-        # 3. Classify all entries and pairs
+        # 3. Classify all entries and pairs.
         #    We pass the additional meta data here
         peer_dir_meta = self.local.cur_dir_meta.peer_sync.get(self.remote.get_id())
 
@@ -461,10 +461,17 @@ class BaseSynchronizer(object):
 
         # 4. Perform (or schedule) resulting file operations
         for pair in entry_pair_list:
+
             # print(pair)
+
+            # Let synchronizer modify the default operation (e.g. apply `--force` option)
             hook_result = self.re_classify_pair(pair)
 
-            if hook_result is not False:
+            # Let synchronizer implement special handling of unmatched entries (e.g. `--delete_unmatched`)
+            if not self._match(pair.any_entry):
+                self.on_mismatch(pair)
+                # ... do not call opertaion handler...
+            elif hook_result is not False:
                 handler = getattr(self, "on_" + pair.operation, None)
                 # print(handler)
                 if handler:
@@ -511,6 +518,10 @@ class BaseSynchronizer(object):
             False to prevent default operation.
         """
         pass
+
+    def on_mismatch(self, pair):
+        """Called for pairs that don't match `match` and `exclude` filters."""
+        self._log_action("skip", "mismatch", "?", pair.any_entry, min_level=4)
 
     def on_equal(self, pair):
         """Called for (unmodified, unmodified) pairs."""
@@ -576,23 +587,23 @@ class BiDirSynchronizer(BaseSynchronizer):
     def get_info_strings(self):
         return ("synchronize", "with")
 
-    def _check_del_unmatched(self, entry):
-        """Return True if entry is NOT matched (i.e. excluded by filter).
-
-        If --delete-unmatched is on, remove the remote resource.
-        """
-
-        if not self._match(remote_entry):
-            if self.options.get("delete_unmatched"):
-                self._log_action("delete", "unmatched", ">", remote_entry)
-                if remote_entry.is_dir():
-                    self._remove_dir(remote_entry)
-                else:
-                    self._remove_file(remote_entry)
-            else:
-                self._log_action("skip", "unmatched", "-", remote_entry, min_level=4)
-            return True
-        return False
+    # def _check_del_unmatched(self, entry):
+    #     """Return True if entry is NOT matched (i.e. excluded by filter).
+    #
+    #     If --delete-unmatched is on, remove the remote resource.
+    #     """
+    #
+    #     if not self._match(remote_entry):
+    #         if self.options.get("delete_unmatched"):
+    #             self._log_action("delete", "unmatched", ">", remote_entry)
+    #             if remote_entry.is_dir():
+    #                 self._remove_dir(remote_entry)
+    #             else:
+    #                 self._remove_file(remote_entry)
+    #         else:
+    #             self._log_action("skip", "unmatched", "-", remote_entry, min_level=4)
+    #         return True
+    #     return False
 
 #     def _diff(self, local_file, remote_file):
 #         print("    Local : %s: %s (native: %s)" % (local_file, local_file.get_adjusted_mtime(),
@@ -660,6 +671,10 @@ class BiDirSynchronizer(BaseSynchronizer):
                 break
 
         return r
+
+    def on_mismatch(self, pair):
+        """Called for pairs that don't match `match` and `exclude` filters."""
+        self._log_action("skip", "mismatch", "?", pair.any_entry, min_level=4)
 
     def on_equal(self, pair):
         self._log_action("", "equal", "=", pair.local, min_level=4)
@@ -898,23 +913,6 @@ class UploadSynchronizer(BiDirSynchronizer):
     def get_info_strings(self):
         return ("upload", "to")
 
-    # def _check_del_unmatched(self, remote_entry):
-    #     """Return True if entry is NOT matched (i.e. excluded by filter).
-    #
-    #     If --delete-unmatched is on, remove the remote resource.
-    #     """
-    #     if not self._match(remote_entry):
-    #         if self.options.get("delete_unma tched"):
-    #             self._log_action("delete", "unmatched", ">", remote_entry)
-    #             if remote_entry.is_dir():
-    #                 self._remove_dir(remote_entry)
-    #             else:
-    #                 self._remove_file(remote_entry)
-    #         else:
-    #             self._log_action("skip", "unmatched", "-", remote_entry, min_level=4)
-    #         return True
-    #     return False
-
     def re_classify_pair(self, pair):
         force = self.options.get("force")
         delete = self.options.get("delete")
@@ -937,7 +935,7 @@ class UploadSynchronizer(BiDirSynchronizer):
                 pair.override_operation("copy_local", "force")
             elif classification == ("unmodified", "modified"):
                 pair.override_operation("copy_local", "restore")
-            
+
         # if delete and pair.operation == "copy_remote" and not pair.local:
         #     print("delete: Re-classify copy_remote => delete_remote")
         #     pair.operation = "delete_remote"
@@ -984,9 +982,23 @@ class UploadSynchronizer(BiDirSynchronizer):
 
         return r
 
+    def on_mismatch(self, pair):
+        """Called for pairs that don't match `match` and `exclude` filters.
+
+        If --delete-unmatched is on, remove the remote resource.
+        """
+        remote_entry = pair.remote
+        if self.options.get("delete_unmatched") and remote_entry:
+            self._log_action("delete", "unmatched", ">", remote_entry)
+            if remote_entry.is_dir():
+                self._remove_dir(remote_entry)
+            else:
+                self._remove_file(remote_entry)
+        else:
+            self._log_action("skip", "unmatched", "-", pair.any_entry, min_level=4)
+
     # def on_equal(self, pair):
-    #     self._log_action("", "equal", "=", local_file, min_level=4)
-    #     self._check_del_unmatched(local_file)
+    #     self._log_action("", "equal", "=", pair.local, min_level=4)
 
     def on_copy_remote(self, pair):
         # Uploads does not modify local target

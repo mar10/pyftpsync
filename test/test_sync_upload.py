@@ -79,14 +79,29 @@ class UploadResolveTest(_SyncTestBase):
     def test_mirror(self):
         opts = {
             "verbose": self.verbose,
-            # "resolve": "ask",
             "resolve": "local",
             "delete": True,
             "force": True,
             }
 
         stats = self._do_run_suite(UploadSynchronizer, opts)
-        # self._dump_de_facto_results(stats)
+
+        # We expect that local is mirrored 1:1 to remote
+        self.assertDictEqual(_get_test_folder("local"), _SyncTestBase.local_fixture_modified)
+        self.assertDictEqual(_get_test_folder("remote"), _SyncTestBase.local_fixture_modified)
+
+    def test_delete_unmatched(self):
+        opts = {
+            "verbose": self.verbose,
+            "resolve": "local",
+            "delete": True,
+            "delete_unmatched": True,
+            "force": True,
+            "match": "*1.txt",
+            }
+
+        stats = self._do_run_suite(UploadSynchronizer, opts)
+        self._dump_de_facto_results(stats)
 
         # We expect 7 conflicts, and leave them unresolved (i.e. skip them all)
 
@@ -98,10 +113,19 @@ class UploadResolveTest(_SyncTestBase):
         # self.assertEqual(stats["conflict_files"], 7)
         # self.assertEqual(stats["conflict_files_skipped"], 7)
 
-        # We expect that local is mirrored 1:1 to remote
         self.assertDictEqual(_get_test_folder("local"), _SyncTestBase.local_fixture_modified)
-        self.assertDictEqual(_get_test_folder("remote"), _SyncTestBase.local_fixture_modified)
 
+        # We expect that remote only contains files that do NOT match in '*1.txt'
+        expect_remote = {
+            'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
+            'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
+            'folder2/file2_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'folder5/file5_1.txt': {'content': 'local5_1', 'date': '2014-01-01 12:00:00'},
+            'folder6/file6_1.txt': {'content': 'local6_1', 'date': '2014-01-01 12:00:00'},
+            'folder7/file7_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            'new_file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
+            }
+        self.assertDictEqual(_get_test_folder("remote"), expect_remote)
 
 #===============================================================================
 # Main

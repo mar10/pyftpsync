@@ -5,6 +5,8 @@
 
 - Write mode is now on by default.<br>
   The `-x`, `--execute` option was removed, use `--dry-run` instead.
+- `-f`, `--include-files` option was renamed to `-m`, `--match`.
+- `-o`, `--omit` option was renamed to `-x`, `--exclude`.
 - Modified format of .pyftpsync.meta.json
 - Dropped support for Python 2.6
 - New `scan` command to list, purge, etc remote targets.

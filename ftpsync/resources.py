@@ -111,6 +111,11 @@ class EntryPair(object):
         #     self.rel_path, self.local_classification, self.local, self.remote_classification, self.remote, self.operation)
         return s
 
+    @property
+    def any_entry(self):
+        """Return the local entry (or the remote entry if it is None)."""
+        return self.local or self.remote
+
     def is_conflict(self):
         assert self.operation
         return self.operation == "conflict"
