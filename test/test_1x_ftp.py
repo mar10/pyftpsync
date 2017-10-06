@@ -5,24 +5,23 @@ Tests for pyftpsync
 from __future__ import print_function
 
 from ftplib import FTP
+import io
+import json
+import os
 from pprint import pprint
-
-# Python 2.7+
+import sys
 import unittest
 from unittest.case import SkipTest  # @UnusedImport
 
-from ftpsync.ftp_target import *  # @UnusedWildImport
-from ftpsync.targets import *  # @UnusedWildImport
-
+from ftpsync.metadata import DirMetadata
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer, \
     BiDirSynchronizer
+from ftpsync.targets import make_target, FsTarget
+from ftpsync.util import urlparse
 from test.test_1x import prepare_fixtures_1
 from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL, \
-    PYFTPSYNC_TEST_FOLDER, _get_test_file_date, STAMP_20140101_120000, \
-    _empty_folder, _write_test_file, _touch_test_file
+    PYFTPSYNC_TEST_FOLDER, get_test_file_date, STAMP_20140101_120000, touch_test_file
 
-
-DO_BENCHMARKS = False #True
 
 #===============================================================================
 # Module setUp / tearDown
@@ -40,10 +39,12 @@ def tearDownModule():
 class FtpTest(unittest.TestCase):
     """Test basic ftplib.FTP functionality."""
     def setUp(self):
+        # TODO: some of those tests are still relevant
+        self.skipTest("Not yet implemented.")
         # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"
         ftp_url = PYFTPSYNC_TEST_FTP_URL
         if not ftp_url:
-            self.skipTest("Must configure an FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
+            self.skipTest("Must configure an FTP target (environment variable PYFTPSYNC_TEST_FTP_URL).")
 
         parts = urlparse(ftp_url, allow_fragments=False)
         self.assertIn(parts.scheme.lower(), ["ftp", "ftps"])
@@ -95,10 +96,15 @@ class FtpTargetTest(unittest.TestCase):
     """Test ftp_target.FtpTarget functionality."""
     def setUp(self):
         # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"
+
+        # TODO: some of those tests are still relevant
+        self.skipTest("Not yet implemented.")
+
         ftp_url = PYFTPSYNC_TEST_FTP_URL
         if not ftp_url:
             self.skipTest("Must configure an FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
-        self.assertTrue("/test" in ftp_url or "/temp" in ftp_url, "FTP target path must include '/test' or '/temp'")
+        self.assertTrue("/test" in ftp_url or "/temp" in ftp_url,
+                        "FTP target path must include '/test' or '/temp'")
 
         # Create temp/local folder with files and empty temp/remote folder
         prepare_fixtures_1()
@@ -214,7 +220,7 @@ class FtpTargetTest(unittest.TestCase):
 
         # Change one file and upload again
 
-        _touch_test_file("local/file1.txt")
+        touch_test_file("local/file1.txt")
 
         opts = {"force": False, "delete": True, "verbose": 3, "dry_run": False}
         s = UploadSynchronizer(local, remote, opts)
@@ -257,11 +263,11 @@ class FtpTargetTest(unittest.TestCase):
 
         # Original file times are preserved, even when retrieved from FTP
 
-        self.assertNotEqual(_get_test_file_date("local/file1.txt"), STAMP_20140101_120000)
-        self.assertEqual(_get_test_file_date("local/file1.txt"), _get_test_file_date("local//file1.txt"))
+        self.assertNotEqual(get_test_file_date("local/file1.txt"), STAMP_20140101_120000)
+        self.assertEqual(get_test_file_date("local/file1.txt"), get_test_file_date("local//file1.txt"))
 
-        self.assertEqual(_get_test_file_date("local/file2.txt"), STAMP_20140101_120000)
-        self.assertEqual(_get_test_file_date("remote//file2.txt"), STAMP_20140101_120000)
+        self.assertEqual(get_test_file_date("local/file2.txt"), STAMP_20140101_120000)
+        self.assertEqual(get_test_file_date("remote//file2.txt"), STAMP_20140101_120000)
 
         # Synchronize temp/local <=> remote : nothing to do
 
@@ -291,147 +297,7 @@ class FtpTargetTest(unittest.TestCase):
 
 
 #===============================================================================
-# BenchmarkTest
-#===============================================================================
-class BenchmarkTest(unittest.TestCase):
-    """Test ftp_target.FtpTarget functionality."""
-    def setUp(self):
-        if not DO_BENCHMARKS:
-            self.skipTest("DO_BENCHMARKS is not set")
-        # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"
-        ftp_url = PYFTPSYNC_TEST_FTP_URL
-        if not ftp_url:
-            self.skipTest("Must configure an FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
-        self.assertTrue("/test" in ftp_url or "/temp" in ftp_url, "FTP target path must include '/test' or '/temp'")
-
-        # Create temp/local folder with files and empty temp/remote folder
-        prepare_fixtures_1()
-
-        self.remote = make_target(ftp_url)
-        self.remote.open()
-        # Delete all files in remote target folder
-        self.remote._rmdir_impl(".", keep_root=True)
-
-    def tearDown(self):
-        self.remote.close()
-        del self.remote
-
-    def _transfer_files(self, count, size):
-        temp1_path = os.path.join(PYFTPSYNC_TEST_FOLDER, "local")
-        _empty_folder(temp1_path) # remove standard test files
-
-        local = FsTarget(temp1_path)
-        remote = self.remote
-
-        for i in range(count):
-            _write_test_file("local/file_%s.txt" % i, size=size)
-
-        # Upload all of temp/local to remote
-
-        opts = {"force": False, "delete": False, "verbose": 3, "dry_run": False}
-        s = UploadSynchronizer(local, remote, opts)
-        s.run()
-        stats = s.get_stats()
-#        pprint(stats)
-
-        self.assertEqual(stats["files_written"], count)
-        self.assertEqual(stats["bytes_written"], count * size)
-#        pprint(stats)
-        print("Upload %s x %s bytes took %s: %s" % (count, size, stats["upload_write_time"], stats["upload_rate_str"]), file=sys.stderr)
-
-        # Download all of remote to temp/remote
-
-        local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
-
-        opts = {"force": False, "delete": True, "verbose": 3, "dry_run": False}
-        s = DownloadSynchronizer(local, remote, opts)
-        s.run()
-        stats = s.get_stats()
-#        pprint(stats)
-
-        self.assertEqual(stats["files_written"], count)
-        self.assertEqual(stats["bytes_written"], count * size)
-
-#        pprint(stats)
-        print("Download %s x %s bytes took %s: %s" % (count, size, stats["download_write_time"], stats["download_rate_str"]), file=sys.stderr)
-
-    def test_transfer_small_files(self):
-        """Transfer 20 KiB in many small files."""
-        self._transfer_files(count=10, size=2*1024)
-
-    def test_transfer_large_files(self):
-        """Transfer 20 KiB in one large file."""
-        self._transfer_files(count=1, size=20*1024)
-
-#===============================================================================
-# PlainTest
-#===============================================================================
-class PlainTest(unittest.TestCase):
-    """Tests that don't connect."""
-    def setUp(self):
-#        user, passwd = get_stored_credentials("pyftpsync.pw", self.HOST)
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_make_target(self):
-        for scheme in ['ftp', 'ftps']:
-            tls = True if scheme == 'ftps' else False
-
-            t = make_target(scheme + "://ftp.example.com/target/folder")
-            self.assertTrue(isinstance(t, FtpTarget))
-            self.assertEqual(t.host, "ftp.example.com")
-            self.assertEqual(t.root_dir, "/target/folder")
-            self.assertEqual(t.username, None)
-            self.assertEqual(t.tls, tls)
-
-            # scheme is case-insensitive
-            t = make_target(scheme.upper() + "://ftp.example.com/target/folder")
-            self.assertTrue(isinstance(t, FtpTarget))
-            self.assertEqual(t.host, "ftp.example.com")
-            self.assertEqual(t.root_dir, "/target/folder")
-            self.assertEqual(t.username, None)
-            self.assertEqual(t.tls, tls)
-
-            # pass credentials with URL
-            url = 'user:secret@ftp.example.com/target/folder'
-            t = make_target(scheme + "://" + url)
-            self.assertTrue(isinstance(t, FtpTarget))
-            self.assertEqual(t.host, "ftp.example.com")
-            self.assertEqual(t.username, "user")
-            self.assertEqual(t.password, "secret")
-            self.assertEqual(t.root_dir, "/target/folder")
-            self.assertEqual(t.tls, tls)
-
-            url = 'user@example.com:secret@ftp.example.com/target/folder'
-            t = make_target(scheme + "://" + url)
-            self.assertTrue(isinstance(t, FtpTarget))
-            self.assertEqual(t.host, "ftp.example.com")
-            self.assertEqual(t.username, "user@example.com")
-            self.assertEqual(t.password, "secret")
-            self.assertEqual(t.root_dir, "/target/folder")
-            self.assertEqual(t.tls, tls)
-
-        # unsupported schemes
-        self.assertRaises(ValueError, make_target, "ftpa://ftp.example.com/test")
-        self.assertRaises(ValueError, make_target, "http://example.com/test")
-        self.assertRaises(ValueError, make_target, "https://example.com/test")
-
-
-#===============================================================================
 # Main
 #===============================================================================
 if __name__ == "__main__":
     unittest.main()
-
-#     print(sys.version)
-#     suite = unittest.TestSuite()
-# #    suite.addTest(FtpTest("test_upload_fs_fs"))
-# #    suite.addTest(FtpTest("test_download_fs_fs"))
-#     suite.addTest(FtpTest("test_upload_fs_ftp"))
-#     suite.addTest(FtpTest("test_download_fs_ftp"))
-# #    suite.addTest(PlainTest("test_json"))
-# #    suite.addTest(PlainTest("test_make_target"))
-# #    suite.addTest(FtpTest("test_readwrite"))
-#     unittest.TextTestRunner(verbosity=1).run(suite)

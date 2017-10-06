@@ -18,8 +18,8 @@ from ftpsync.targets import *  # @UnusedWildImport
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer, \
     BiDirSynchronizer
 from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL, \
-    PYFTPSYNC_TEST_FOLDER, _get_test_file_date, STAMP_20140101_120000, \
-    _empty_folder, _write_test_file, _touch_test_file
+    PYFTPSYNC_TEST_FOLDER, get_test_file_date, STAMP_20140101_120000, \
+    empty_folder, write_test_file, touch_test_file
 
 
 DO_BENCHMARKS = False #True
@@ -61,9 +61,9 @@ class RegressionTest(unittest.TestCase):
     def test_issue_5(self):
         """issue #5: Unable to navigate to working directory '' (Windows)"""
         if not on_windows:
-            raise SkipTest("Windows only")
+            raise SkipTest("Windows only.")
         local = targets.FsTarget("c:/temp")
-        remote = FtpTarget("/", "www.wwwendt.de", None, self.username, self.password)
+        remote = FtpTarget("/", "www.example.com", None, self.username, self.password)
         opts = {
             "resolve": "remote",
             "verbose": 3,

@@ -106,6 +106,15 @@ class BaseSynchronizer(object):
         if not remote.connected:
             remote.open()
 
+    def __del__(self):
+        self.close()
+
+    def close(self):
+        if self.local.connected:
+            self.local.close()
+        if self.remote.connected:
+            self.remote.close()
+
     def get_stats(self):
         return self._stats
 

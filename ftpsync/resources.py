@@ -12,12 +12,6 @@ from posixpath import join as join_url, normpath as normpath_url, relpath as rel
 
 from ftpsync.util import eps_compare
 
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    # Python 2
-    from urlparse import urlparse  # @UnusedImport
-
 PRINT_CLASSIFICATIONS = False
 
 ENTRY_CLASSIFICATIONS = frozenset([

@@ -6,9 +6,9 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 from __future__ import print_function
 
 import calendar
-from datetime import datetime
 import ftplib
 import io
+import os
 from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
 import sys
 import time
@@ -69,6 +69,8 @@ class FtpTarget(_Target):
         self.password = password
         self.tls = tls
         self.timeout = timeout
+        #: dict: written to ftp target root folder before synchronization starts.
+        #: set to False, if write failed. Default: None
         self.lock_data = None
         self.is_unix = None
         self.time_zone_ofs = None
@@ -161,6 +163,7 @@ class FtpTarget(_Target):
 
     def _lock(self, break_existing=False):
         """Write a special file to the target root folder."""
+        print("_lock")
         data = {"lock_time": time.time(),
                 "lock_holder": None}
 
@@ -170,11 +173,14 @@ class FtpTarget(_Target):
             self.lock_data = data
         except Exception as e:
             print("Could not write lock file: %s" % e, file=sys.stderr)
+            # Set to False, so we don't try to remove later
+            self.lock_data = False
 
     def _unlock(self, closing=False):
         """Remove lock file to the target root folder.
 
         """
+        print("_unlock", closing)
         try:
             if self.cur_dir != self.root_dir:
                 if closing:
@@ -184,9 +190,12 @@ class FtpTarget(_Target):
                     print("Could not remove lock file, because CWD != ftp root: {}".format(self.cur_dir), file=sys.stderr)
                     return
 
-            # direct delete, without updating metadata or checking for target access:
-            self.ftp.delete(DirMetadata.LOCK_FILE_NAME)
-#             self.remove_file(DirMetadata.LOCK_FILE_NAME)
+            if self.lock_data is False:
+                print("Skip remove lock file (was not written)", file=sys.stderr)
+            else:
+                # direct delete, without updating metadata or checking for target access:
+                self.ftp.delete(DirMetadata.LOCK_FILE_NAME)
+                # self.remove_file(DirMetadata.LOCK_FILE_NAME)
 
             self.lock_data = None
         except Exception as e:
@@ -224,12 +233,22 @@ class FtpTarget(_Target):
         # FTP does not support deletion of non-empty directories.
 #        print("rmdir(%s)" % dir_name)
         self.check_write(dir_name)
-        names = self.ftp.nlst(dir_name)
-#        print("rmdir(%s): %s" % (dir_name, names))
+        names = []
+        nlst_res = self.ftp.nlst(dir_name)
+        print("rmdir(%s): %s" % (dir_name, nlst_res))
+        for name in nlst_res:
+            if "/" in name:
+                print("_rmdir_impl({}): convert {} to {}".format(dir_name, name, os.path.basename(name)))
+                name = os.path.basename(name)
+            if name in (".", ".."):
+                continue
+            if predicate and not predicate(name):
+                continue
+            names.append(name)
         # Skip ftp.cwd(), if dir is empty
-        names = [ n for n in names if n not in (".", "..") ]
-        if predicate:
-            names = [ n for n in names if predicate(n) ]
+        # names = [ n for n in names if n not in (".", "..") ]
+        # if predicate:
+        #     names = [ n for n in names if predicate(n) ]
 
         if len(names) > 0:
             self.ftp.cwd(dir_name)
@@ -239,9 +258,9 @@ class FtpTarget(_Target):
                         # try to delete this as a file
                         self.ftp.delete(name)
                     except ftplib.all_errors as _e:
-#                        print("    ftp.delete(%s) failed: %s, trying rmdir()..." % (name, _e))
-                        # assume <name> is a folder
-                        self.rmdir(name)
+                       print("    ftp.delete(%s) failed: %s, trying rmdir()..." % (name, _e))
+                       # assume <name> is a folder
+                       self.rmdir(name)
             finally:
                 if dir_name != ".":
                     self.ftp.cwd("..")
@@ -250,10 +269,8 @@ class FtpTarget(_Target):
             self.ftp.rmd(dir_name)
         return
 
-
     def rmdir(self, dir_name):
         return self._rmdir_impl(dir_name)
-
 
     def get_dir(self):
         entry_list = []
@@ -351,8 +368,10 @@ class FtpTarget(_Target):
                         #      size we stored in the meta-data
                         if self.get_option("verbose", 2) >= 3:
                             print(("META: Removing outdated meta entry %s\n" +
-                                   "      modified after upload (%s > %s)") %
-                                  (n, time.ctime(entry_map[n].mtime), time.ctime(upload_time)))
+                                   "      modified after upload (%s > %s), or\n"
+                                   "      cur. size (%s) != meta size (%s)") %
+                                  (n, time.ctime(entry_map[n].mtime), time.ctime(upload_time),
+                                   entry_map[n].size, meta.get("s")))
                         missing.append(n)
                 else:
                     # File is stored in meta-data, but no longer exists on FTP server

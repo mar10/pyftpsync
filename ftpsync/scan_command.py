@@ -7,10 +7,10 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 from __future__ import print_function
 
 import time
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from ftpsync.metadata import DirMetadata
-from ftpsync.resources import FileEntry, DirectoryEntry
+from ftpsync.resources import DirectoryEntry
 from ftpsync.targets import make_target
 
 
@@ -88,9 +88,11 @@ def scan_handler(args):
                     if delta:
                         prefix = "+" if delta > 0 else ""
                         print(indent, "{e.name:<40} {dt_modified} (system: {prefix}{delta})"
-                            .format(e=e, prefix=prefix, delta=timedelta(seconds=delta)))
+                            .format(e=e, prefix=prefix, delta=timedelta(seconds=delta),
+                                    dt_modified=dt_modified))
                     else:
-                        print(indent, "{e.name:<40} {dt_modified}".format(e=e))
+                        print(indent, "{e.name:<40} {dt_modified}"
+                            .format(e=e, dt_modified=dt_modified))
 
             if args.remove_meta and target.cur_dir_meta and target.cur_dir_meta.was_read:
                 fspec = target.cur_dir_meta.get_full_path()

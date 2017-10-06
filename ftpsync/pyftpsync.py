@@ -17,9 +17,8 @@ from pprint import pprint
 from ftpsync import __version__
 from ftpsync.scan_command import add_scan_parser
 from ftpsync.synchronizers import UploadSynchronizer, \
-    DownloadSynchronizer, BiDirSynchronizer, DEFAULT_OMIT
+    DownloadSynchronizer, BiDirSynchronizer
 from ftpsync.targets import make_target, FsTarget
-from ftpsync import util
 
 
 #def disable_stdout_buffering():
@@ -188,7 +187,7 @@ def run():
             return getattr(args, "command")(args)
         except KeyboardInterrupt:
             print("\nAborted by user.")
-            exit(1)
+            exit(2)
 
     elif not hasattr(args, "command"):
         parser.error("missing command (choose from 'upload', 'download', 'sync')")
@@ -220,7 +219,7 @@ def run():
         s.run()
     except KeyboardInterrupt:
         print("\nAborted by user.")
-        exit(1)
+        exit(2)
     finally:
         # Prevent sporadic exceptions in ftplib, when closing in __del__
         s.local.close()

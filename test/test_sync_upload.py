@@ -4,24 +4,11 @@ Tests for pyftpsync
 """
 from __future__ import print_function
 
-import datetime
-import os
-import sys
-
-# Python 2.7+
 import unittest
-from unittest.case import SkipTest  # @UnusedImport
-
-
-from ftpsync.targets import FsTarget, DirMetadata
+# from unittest.case import SkipTest
 
 from ftpsync.synchronizers import UploadSynchronizer
-from test.fixture_tools import PYFTPSYNC_TEST_FOLDER, \
-    _get_test_file_date, STAMP_20140101_120000, _touch_test_file, \
-    _write_test_file, _remove_test_file, _is_test_file, _get_test_folder,\
-    _remove_test_folder, _sync_test_folders, _delete_metadata, \
-    _SyncTestBase
-from pprint import pprint
+from test.fixture_tools import get_test_folder, _SyncTestBase
 
 
 #===============================================================================
@@ -41,7 +28,7 @@ class UploadResolveTest(_SyncTestBase):
     def test_default(self):
         opts = {"verbose": self.verbose} # default options, i.e. 'skip' conflicts
         # Default options: expect 4 unresolved conflicts
-        stats = self._do_run_suite(UploadSynchronizer, opts)
+        stats = self.do_run_suite(UploadSynchronizer, opts)
         # self._dump_de_facto_results(stats)
 
         # We expect 7 conflicts, and leave them unresolved (i.e. skip them all)
@@ -55,7 +42,7 @@ class UploadResolveTest(_SyncTestBase):
         self.assertEqual(stats["conflict_files_skipped"], 7)
 
         # We expect that local remains unmodified
-        self.assertDictEqual(_get_test_folder("local"), _SyncTestBase.local_fixture_modified)
+        self.assertDictEqual(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
 
         expect_remote = {
             'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
@@ -74,7 +61,7 @@ class UploadResolveTest(_SyncTestBase):
             'new_file5.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
             'new_file6.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
             }
-        self.assertDictEqual(_get_test_folder("remote"), expect_remote)
+        self.assertDictEqual(get_test_folder("remote"), expect_remote)
 
     def test_mirror(self):
         opts = {
@@ -84,11 +71,11 @@ class UploadResolveTest(_SyncTestBase):
             "force": True,
             }
 
-        stats = self._do_run_suite(UploadSynchronizer, opts)
+        _stats = self.do_run_suite(UploadSynchronizer, opts)
 
         # We expect that local is mirrored 1:1 to remote
-        self.assertDictEqual(_get_test_folder("local"), _SyncTestBase.local_fixture_modified)
-        self.assertDictEqual(_get_test_folder("remote"), _SyncTestBase.local_fixture_modified)
+        self.assertDictEqual(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
+        self.assertDictEqual(get_test_folder("remote"), _SyncTestBase.local_fixture_modified)
 
     def test_delete_unmatched(self):
         opts = {
@@ -100,7 +87,7 @@ class UploadResolveTest(_SyncTestBase):
             "match": "*1.txt",
             }
 
-        stats = self._do_run_suite(UploadSynchronizer, opts)
+        stats = self.do_run_suite(UploadSynchronizer, opts)
         self._dump_de_facto_results(stats)
 
         # We expect 7 conflicts, and leave them unresolved (i.e. skip them all)
@@ -113,7 +100,7 @@ class UploadResolveTest(_SyncTestBase):
         # self.assertEqual(stats["conflict_files"], 7)
         # self.assertEqual(stats["conflict_files_skipped"], 7)
 
-        self.assertDictEqual(_get_test_folder("local"), _SyncTestBase.local_fixture_modified)
+        self.assertDictEqual(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
 
         # We expect that remote only contains files that do NOT match in '*1.txt'
         expect_remote = {
@@ -125,7 +112,7 @@ class UploadResolveTest(_SyncTestBase):
             'folder7/file7_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
             'new_file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
             }
-        self.assertDictEqual(_get_test_folder("remote"), expect_remote)
+        self.assertDictEqual(get_test_folder("remote"), expect_remote)
 
 #===============================================================================
 # Main
