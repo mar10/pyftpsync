@@ -16,7 +16,7 @@ from test.fixture_tools import get_test_folder, _SyncTestBase
 #===============================================================================
 
 class UploadResolveTest(_SyncTestBase):
-    """Test BiDirSynchronizer on file system targets with different resolve modes."""
+    """Test UploadSynchronizer on file system targets with different resolve modes."""
 
     def setUp(self):
         # Call self._prepare_initial_synced_fixture():
@@ -87,10 +87,10 @@ class UploadResolveTest(_SyncTestBase):
             }
 
         stats = self.do_run_suite(UploadSynchronizer, opts)
-        
+
         # DRY-RUN: We expect no changes
         self.assertEqual(stats["bytes_written"], 0)
-        
+
         self.assert_test_folder_equal(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
         self.assert_test_folder_equal(get_test_folder("remote"), _SyncTestBase.remote_fixture_modified)
 
@@ -119,7 +119,7 @@ class UploadResolveTest(_SyncTestBase):
 
         self.assert_test_folder_equal(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
 
-        # We expect that remote only contains files that do NOT match in '*1.txt'
+        # We expect that remote only contains files that match '*1.txt'
         expect_remote = {
             'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
             'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},

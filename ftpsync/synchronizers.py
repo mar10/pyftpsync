@@ -163,24 +163,6 @@ class BaseSynchronizer(object):
         _add("download_rate_str", "download_bytes_written", "download_write_time")
         return res
 
-    # def _check_del_unmatched(self, entry):
-    #     """Return True if entry is NOT matched (i.e. excluded by filter).
-    #
-    #     If --delete-unmatched is on, remove the remote resource.
-    #     """
-    #     if not self._match(entry):
-    #         if self.options.get("delete_unmatched"):
-    #             symbol = "<" if entry.is_local() else ">"
-    #             self._log_action("delete", "unmatched", symbol, entry)
-    #             if entry.is_dir():
-    #                 self._remove_dir(entry)
-    #             else:
-    #                 self._remove_file(entry)
-    #         else:
-    #             self._log_action("skip", "unmatched", "-", entry, min_level=4)
-    #         return True
-    #     return False
-
     def _compare_file(self, local, remote):
         """Byte compare two files (early out on first difference)."""
 #         print("_compare_file(%s, %s --> %s)... " % (local.target, remote.target, local.name), end="")
@@ -596,36 +578,6 @@ class BiDirSynchronizer(BaseSynchronizer):
     def get_info_strings(self):
         return ("synchronize", "with")
 
-    # def _check_del_unmatched(self, entry):
-    #     """Return True if entry is NOT matched (i.e. excluded by filter).
-    #
-    #     If --delete-unmatched is on, remove the remote resource.
-    #     """
-    #
-    #     if not self._match(remote_entry):
-    #         if self.options.get("delete_unmatched"):
-    #             self._log_action("delete", "unmatched", ">", remote_entry)
-    #             if remote_entry.is_dir():
-    #                 self._remove_dir(remote_entry)
-    #             else:
-    #                 self._remove_file(remote_entry)
-    #         else:
-    #             self._log_action("skip", "unmatched", "-", remote_entry, min_level=4)
-    #         return True
-    #     return False
-
-#     def _diff(self, local_file, remote_file):
-#         print("    Local : %s: %s (native: %s)" % (local_file, local_file.get_adjusted_mtime(),
-#             _ts(local_file.mtime)))
-#         print("          : last sync %s"
-#               % (local_file.get_sync_info()))
-#         print("    Remote: %s: %s (native: %s)" % (remote_file, remote_file.get_adjusted_mtime(),
-#             _ts(remote_file.mtime)))
-#         print("          : last sync %s"
-#               % (remote_file.get_sync_info()))
-# #         print("    last sync: %s" % _ts(self.local.cur_dir_meta.get_last_sync()))
-#         pass
-
     def _print_pair_diff(self, local, remote):
         RED = ansi_code("Fore.LIGHTRED_EX")
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
@@ -812,102 +764,6 @@ class BiDirSynchronizer(BaseSynchronizer):
                 raise NotImplementedError
         return
 
-    # def sync_conflict(self, local_entry, remote_entry):
-    #     if not self._test_match_or_print(local_entry or remote_entry):
-    #         return
-    #     resolve = self._interactive_resolve(local_entry, remote_entry)
-    #     if resolve == "skip":
-    #         self._log_action("skip", "conflict", "*?*", local_entry or remote_entry)
-    #         return
-    #     if local_entry and remote_entry:
-    #         assert local_entry.is_file()
-    #         is_newer = local_entry > remote_entry
-    #         if resolve == "local" or (is_newer and resolve == "newer") or (not is_newer and resolve == "older"):
-    #             self._log_action("copy", "conflict", "*>*", local_entry)
-    #             self._copy_file(self.local, self.remote, local_entry)
-    #         elif resolve == "remote" or (is_newer and resolve == "older") or (not is_newer and resolve == "newer"):
-    #             self._log_action("copy", "conflict", "*<*", local_entry)
-    #             self._copy_file(self.remote, self.local, remote_entry)
-    #         else:
-    #             raise NotImplementedError
-    #     elif local_entry:
-    #         assert local_entry.is_file()
-    #         if resolve == "local":
-    #             self._log_action("restore", "conflict", "*>x", local_entry)
-    #             self._copy_file(self.local, self.remote, local_entry)
-    #         elif resolve == "remote":
-    #             self._log_action("delete", "conflict", "*<x", local_entry)
-    #             self._remove_file(local_entry)
-    #         else:
-    #             raise NotImplementedError
-    #     else:
-    #         assert remote_entry.is_file()
-    #         if resolve == "local":
-    #             self._log_action("delete", "conflict", "x>*", remote_entry)
-    #             self._remove_file(remote_entry)
-    #         elif resolve == "remote":
-    #             self._log_action("restore", "conflict", "x<*", remote_entry)
-    #             self._copy_file(self.remote, self.local, remote_entry)
-    #         else:
-    #             raise NotImplementedError
-    #     return
-    #
-    # def sync_newer_local_file(self, local_file, remote_file):
-    #     if not self._test_match_or_print(local_file):
-    #         return
-    #     self._log_action("copy", "modified", "*>.", local_file)
-    #     self._copy_file(self.local, self.remote, local_file)
-    #
-    # def sync_older_local_file(self, local_file, remote_file):
-    #     if not self._test_match_or_print(local_file):
-    #         return
-    #     self._log_action("copy", "modified", ".<*", remote_file)
-    #     self._copy_file(self.remote, self.local, remote_file)
-    #
-    # def sync_missing_local_file(self, remote_file):
-    #     if not self._test_match_or_print(remote_file):
-    #         return
-    #     existed = self.local.get_sync_info(remote_file.name)
-    #     if existed:
-    #         self._log_action("delete", "removed", "x>.", remote_file)
-    #         self._remove_file(remote_file)
-    #         return
-    #     self._log_action("copy", "new", "-<+", remote_file)
-    #     self._copy_file(self.remote, self.local, remote_file)
-    #
-    # def sync_missing_local_dir(self, remote_dir):
-    #     if not self._test_match_or_print(remote_dir):
-    #         return
-    #     existed = self.local.get_sync_info(remote_dir.name)
-    #     if existed:
-    #         self._log_action("delete", "removed", ".<x", remote_dir)
-    #         self._remove_dir(remote_dir)
-    #         return
-    #     self._log_action("copy", "new", "-<+", remote_dir)
-    #     self._copy_recursive(self.remote, self.local, remote_dir)
-    #
-    # def sync_missing_remote_file(self, local_file):
-    #     if not self._test_match_or_print(local_file):
-    #         return
-    #     existed = local_file.get_sync_info()
-    #     if existed:
-    #         self._log_action("delete", "removed", ".<x", local_file)
-    #         self._remove_file(local_file)
-    #         return
-    #     self._log_action("copy", "new", "+>-", local_file)
-    #     self._copy_file(self.local, self.remote, local_file)
-    #
-    # def sync_missing_remote_dir(self, local_dir):
-    #     if not self._test_match_or_print(local_dir):
-    #         return
-    #     existed = self.local.get_sync_info(local_dir.name)
-    #     if existed:
-    #         self._log_action("delete", "removed", ".<x", local_dir)
-    #         self._remove_dir(local_dir)
-    #         return
-    #     self._log_action("copy", "new", "+>-", local_dir)
-    #     self._copy_recursive(self.local, self.remote, local_dir)
-
 
 #===============================================================================
 # UploadSynchronizer
@@ -1025,107 +881,6 @@ class UploadSynchronizer(BiDirSynchronizer):
     #     """Return False to prevent visiting of children"""
     #     self._log_action("skip", "conflict", "!", pair.local, min_level=2)
 
-#     def sync_conflict(self, local_entry, remote_entry):
-#         """Both targets changed; resolve according to strategy, but never modify local."""
-#         if not self._test_match_or_print(local_entry or remote_entry):
-#             return
-#         resolve = self._interactive_resolve(local_entry, remote_entry)
-#         if resolve == "skip":
-#             self._log_action("skip", "conflict", "*?*", local_entry or remote_entry)
-#             return
-#         if local_entry and remote_entry:
-#             assert local_entry.is_file()
-#             is_newer = local_entry > remote_entry
-#             if resolve == "local" or (is_newer and resolve == "newer") or (not is_newer and resolve == "older"):
-#                 self._log_action("copy", "conflict", "*>*", local_entry)
-#                 self._copy_file(self.local, self.remote, local_entry)
-# #             elif resolve == "remote" or (is_newer and resolve == "older") or (not is_newer and resolve == "newer"):
-# #                 self._log_action("copy", "conflict", "*<*", local_entry)
-# #                 self._copy_file(self.remote, self.local, remote_entry)
-#             else:
-#                 raise NotImplementedError
-#         elif local_entry:
-#             assert local_entry.is_file()
-#             if resolve == "local":
-#                 self._log_action("restore", "conflict", "*>x", local_entry)
-#                 self._copy_file(self.local, self.remote, local_entry)
-# #             elif resolve == "remote":
-# #                 self._log_action("delete", "conflict", "*<x", local_entry)
-# #                 self._remove_file(local_entry)
-#             else:
-#                 raise NotImplementedError
-#         else:
-#             assert remote_entry.is_file()
-#             if resolve == "local":
-#                 self._log_action("delete", "conflict", "x>*", remote_entry)
-#                 self._remove_file(remote_entry)
-# #             elif resolve == "remote":
-# #                 self._log_action("restore", "conflict", "x<*", remote_entry)
-# #                 self._copy_file(self.remote, self.local, remote_entry)
-#             else:
-#                 raise NotImplementedError
-#         return
-#
-#     def sync_equal_file(self, local_file, remote_file):
-#         self._log_action("", "equal", "=", local_file, min_level=4)
-#         self._check_del_unmatched(remote_file)
-#
-#     def sync_equal_dir(self, local_dir, remote_dir):
-#         """Return False to prevent visiting of children"""
-#         if self._check_del_unmatched(remote_dir):
-#             return False
-#         self._log_action("", "equal", "=", local_dir, min_level=4)
-#         return True
-#
-#     def sync_newer_local_file(self, local_file, remote_file):
-#         if self._check_del_unmatched(remote_file):
-#             return False
-#         self._log_action("copy", "modified", ">", local_file)
-#         self._copy_file(self.local, self.remote, local_file)
-#
-#     def sync_older_local_file(self, local_file, remote_file):
-#         if self._check_del_unmatched(remote_file):
-#             return False
-#         elif self.options.get("force"):
-#             self._log_action("restore", "older", ">", local_file)
-#             self._copy_file(self.local, self.remote, local_file)
-#         else:
-#             self._log_action("skip", "older", "?", local_file, 4)
-#
-#     def sync_missing_local_file(self, remote_file):
-#         # If a file exists locally, but does not match the filter, this will be
-#         # handled by sync_newer_file()/sync_older_file()
-#         if self._check_del_unmatched(remote_file):
-#             return False
-#         elif not self._test_match_or_print(remote_file):
-#             return
-#         elif self.options.get("delete"):
-#             self._log_action("delete", "missing", ">", remote_file)
-#             self._remove_file(remote_file)
-#         else:
-#             self._log_action("skip", "missing", "?", remote_file, 4)
-#
-#     def sync_missing_local_dir(self, remote_dir):
-#         if self._check_del_unmatched(remote_dir):
-#             return False
-#         elif not self._test_match_or_print(remote_dir):
-#             return False
-#         elif self.options.get("delete"):
-#             self._log_action("delete", "missing", ">", remote_dir)
-#             self._remove_dir(remote_dir)
-#         else:
-#             self._log_action("skip", "missing", "?", remote_dir, 4)
-#
-#     def sync_missing_remote_file(self, local_file):
-#         if self._test_match_or_print(local_file):
-#             self._log_action("copy", "new", ">", local_file)
-#             self._copy_file(self.local, self.remote, local_file)
-#
-#     def sync_missing_remote_dir(self, local_dir):
-#         if self._test_match_or_print(local_dir):
-#             self._log_action("copy", "new", ">", local_dir)
-#             self._copy_recursive(self.local, self.remote, local_dir)
-
 
 #===============================================================================
 # DownloadSynchronizer
@@ -1141,22 +896,34 @@ class DownloadSynchronizer(BiDirSynchronizer):
     def get_info_strings(self):
         return ("download to", "from")
 
-    # def _check_del_unmatched(self, local_entry):
-    #     """Return True if entry is NOT matched (i.e. excluded by filter).
-    #
-    #     If --delete-unmatched is on, remove the local resource.
-    #     """
-    #     if not self._match(local_entry):
-    #         if self.options.get("delete_unmatched"):
-    #             self._log_action("delete", "unmatched", "<", local_entry)
-    #             if local_entry.is_dir():
-    #                 self._remove_dir(local_entry)
-    #             else:
-    #                 self._remove_file(local_entry)
-    #         else:
-    #             self._log_action("skip", "unmatched", "-", local_entry, min_level=4)
-    #         return True
-    #     return False
+    def re_classify_pair(self, pair):
+        force = self.options.get("force")
+        delete = self.options.get("delete")
+
+        classification = (pair.local_classification, pair.remote_classification)
+
+        print("re_classify_pair", pair)
+        if delete:
+            if classification == ("new", "missing"):
+                assert pair.operation == "copy_local"
+                pair.override_operation("delete_local", "restore")
+                # return
+
+        if force:
+            if classification == ("new", "new"):
+                pair.override_operation("copy_remote", "forced")
+            elif classification == ("deleted", "unmodified"):
+                pair.override_operation("copy_remote", "restore")
+            elif classification == ("modified", "modified"):
+                pair.override_operation("copy_remote", "force")
+            elif classification == ("modified", "unmodified"):
+                pair.override_operation("copy_remote", "restore")
+
+        # if delete and pair.operation == "copy_remote" and not pair.local:
+        #     print("delete: Re-classify copy_remote => delete_remote")
+        #     pair.operation = "delete_remote"
+        #     return
+        return
 
     def _interactive_resolve(self, local, remote):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
@@ -1194,18 +961,33 @@ class DownloadSynchronizer(BiDirSynchronizer):
 
         return r
 
+    def on_mismatch(self, pair):
+        """Called for pairs that don't match `match` and `exclude` filters.
+
+        If --delete-unmatched is on, remove the remote resource.
+        """
+        local_entry = pair.local
+        if self.options.get("delete_unmatched") and local_entry:
+            self._log_action("delete", "unmatched", "<", local_entry)
+            if local_entry.is_dir():
+                self._remove_dir(local_entry)
+            else:
+                self._remove_file(local_entry)
+        else:
+            self._log_action("skip", "unmatched", "-", pair.any_entry, min_level=4)
+
     # def on_equal(self, pair):
     #     self._log_action("", "equal", "=", pair.local, min_level=4)
     #     # self._check_del_unmatched(local_file)
 
     def on_copy_local(self, pair):
         # Download does not modify remote target
-        status = pair.local.classification if pair.local else "missing"
-        self._log_action("copy", status, "<", pair.remote)
+        status = pair.remote.classification if pair.remote else "missing"
+        self._log_action("copy", status, ">", pair.local)
 
     def on_delete_remote(self, pair):
         # Download does not modify remote target
-        self._log_action("", "modified", " >X", pair.remote)
+        self._log_action("skip", "missing", " >X", pair.remote)
 
     # def on_need_compare(self, pair):
     #     self._log_action("", "different", "?", pair.local, min_level=2)
@@ -1213,104 +995,3 @@ class DownloadSynchronizer(BiDirSynchronizer):
     # def on_conflict(self, pair):
     #     """Return False to prevent visiting of children"""
     #     self._log_action("skip", "conflict", "!", pair.local, min_level=2)
-    #
-#     def sync_conflict(self, local_entry, remote_entry):
-#         """Both targets changed; resolve according to strategy, but never modify remote."""
-#         if not self._test_match_or_print(local_entry or remote_entry):
-#             return
-#         resolve = self._interactive_resolve(local_entry, remote_entry)
-#         if resolve == "skip":
-#             self._log_action("skip", "conflict", "*?*", local_entry or remote_entry)
-#             return
-#         if local_entry and remote_entry:
-#             assert local_entry.is_file()
-#             is_newer = local_entry > remote_entry
-# #             if resolve == "local" or (is_newer and resolve == "newer") or (not is_newer and resolve == "older"):
-# #                 self._log_action("copy", "conflict", "*>*", local_entry)
-# #                 self._copy_file(self.local, self.remote, local_entry)
-#             if resolve == "remote" or (is_newer and resolve == "older") or (not is_newer and resolve == "newer"):
-#                 self._log_action("copy", "conflict", "*<*", local_entry)
-#                 self._copy_file(self.remote, self.local, remote_entry)
-#             else:
-#                 raise NotImplementedError
-#         elif local_entry:
-#             assert local_entry.is_file()
-# #             if resolve == "local":
-# #                 self._log_action("restore", "conflict", "*>x", local_entry)
-# #                 self._copy_file(self.local, self.remote, local_entry)
-#             if resolve == "remote":
-#                 self._log_action("delete", "conflict", "*<x", local_entry)
-#                 self._remove_file(local_entry)
-#             else:
-#                 raise NotImplementedError
-#         else:
-#             assert remote_entry.is_file()
-# #             if resolve == "local":
-# #                 self._log_action("delete", "conflict", "x>*", remote_entry)
-# #                 self._remove_file(remote_entry)
-#             if resolve == "remote":
-#                 self._log_action("restore", "conflict", "x<*", remote_entry)
-#                 self._copy_file(self.remote, self.local, remote_entry)
-#             else:
-#                 raise NotImplementedError
-#         return
-#
-#     def sync_equal_file(self, local_file, remote_file):
-#         self._log_action("", "equal", "=", local_file, min_level=4)
-#         self._check_del_unmatched(local_file)
-#
-#     def sync_equal_dir(self, local_dir, remote_dir):
-#         """Return False to prevent visiting of children"""
-#         if self._check_del_unmatched(local_dir):
-#             return False
-#         self._log_action("", "equal", "=", local_dir, min_level=4)
-#         return True
-#
-#     def sync_older_local_file(self, local_file, remote_file):
-#         if self._check_del_unmatched(local_file):
-#             return False
-#         self._log_action("copy", "modified", "<", local_file)
-#         self._copy_file(self.remote, self.local, remote_file)
-#
-#     def sync_newer_local_file(self, local_file, remote_file):
-#         if self._check_del_unmatched(local_file):
-#             return False
-#         elif self.options.get("force"):
-#             self._log_action("restore", "older", "<", local_file)
-#             self._copy_file(self.remote, self.local, remote_file)
-#         else:
-#             self._log_action("skip", "older", "?", local_file, 4)
-#
-#     def sync_missing_local_file(self, remote_file):
-#         if self._test_match_or_print(remote_file):
-#             self._log_action("copy", "new", "<", remote_file)
-#             self._copy_file(self.remote, self.local, remote_file)
-#
-#     def sync_missing_local_dir(self, remote_dir):
-#         if self._test_match_or_print(remote_dir):
-#             self._log_action("copy", "new", "<", remote_dir)
-#             self._copy_recursive(self.remote, self.local, remote_dir)
-#
-#     def sync_missing_remote_file(self, local_file):
-#         # If a file exists locally, but does not match the filter, this will be
-#         # handled by sync_newer_file()/sync_older_file()
-#         if self._check_del_unmatched(local_file):
-#             return False
-#         elif not self._test_match_or_print(local_file):
-#             return
-#         elif self.options.get("delete"):
-#             self._log_action("delete", "missing", "<", local_file)
-#             self._remove_file(local_file)
-#         else:
-#             self._log_action("skip", "missing", "?", local_file, 4)
-#
-#     def sync_missing_remote_dir(self, local_dir):
-#         if self._check_del_unmatched(local_dir):
-#             return False
-#         elif not self._test_match_or_print(local_dir):
-#             return False
-#         elif self.options.get("delete"):
-#             self._log_action("delete", "missing", "<", local_dir)
-#             self._remove_dir(local_dir)
-#         else:
-#             self._log_action("skip", "missing", "?", local_dir, 4)
