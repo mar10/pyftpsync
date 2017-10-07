@@ -12,6 +12,7 @@ from posixpath import join as join_url, normpath as normpath_url, relpath as rel
 
 from ftpsync.util import eps_compare
 
+
 PRINT_CLASSIFICATIONS = False
 
 ENTRY_CLASSIFICATIONS = frozenset([

@@ -6,10 +6,9 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 
 from __future__ import print_function
 
+import getpass
 import os
 import sys
-import getpass
-
 
 try:
     from urllib.parse import urlparse

@@ -29,9 +29,6 @@ from ftpsync.targets import make_target, FsTarget
 #    gc.garbage.append(sys.stdout)
 #    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 #disable_stdout_buffering()
-
-
-
 def namespace_to_dict(o):
     """Convert an argparse namespace object to a dictionary."""
     d = {}

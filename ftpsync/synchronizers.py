@@ -6,15 +6,15 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 
 from __future__ import print_function
 
+from datetime import datetime
 import fnmatch
 import sys
 import time
-from datetime import datetime
 
-from ftpsync.util import IS_REDIRECTED, DRY_RUN_PREFIX,\
-    ansi_code, console_input, VT_ERASE_LINE, byte_compare, eps_compare
-from ftpsync.resources import FileEntry, DirectoryEntry, EntryPair, operation_map
 from ftpsync.metadata import DirMetadata
+from ftpsync.resources import FileEntry, DirectoryEntry, EntryPair, operation_map
+from ftpsync.util import IS_REDIRECTED, DRY_RUN_PREFIX, \
+    ansi_code, console_input, VT_ERASE_LINE, byte_compare, eps_compare
 
 
 DEFAULT_OMIT = [".DS_Store",

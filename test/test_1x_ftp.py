@@ -11,26 +11,15 @@ import os
 from pprint import pprint
 import sys
 import unittest
-from unittest.case import SkipTest  # @UnusedImport
 
 from ftpsync.metadata import DirMetadata
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer, \
     BiDirSynchronizer
 from ftpsync.targets import make_target, FsTarget
 from ftpsync.util import urlparse
-from test.test_1x import prepare_fixtures_1
 from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL, \
     PYFTPSYNC_TEST_FOLDER, get_test_file_date, STAMP_20140101_120000, touch_test_file
-
-
-#===============================================================================
-# Module setUp / tearDown
-#===============================================================================
-def setUpModule():
-    pass
-
-def tearDownModule():
-    pass
+from test.test_1x import prepare_fixtures_1
 
 
 #===============================================================================

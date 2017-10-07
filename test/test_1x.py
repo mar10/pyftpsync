@@ -9,9 +9,9 @@ import os
 import unittest
 from unittest.case import SkipTest  # @UnusedImport
 
-from ftpsync.targets import FsTarget
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer, \
     BiDirSynchronizer
+from ftpsync.targets import FsTarget
 from test.fixture_tools import PYFTPSYNC_TEST_FOLDER, empty_folder, \
     get_test_file_date, STAMP_20140101_120000, touch_test_file, \
     write_test_file
@@ -20,7 +20,6 @@ from test.fixture_tools import PYFTPSYNC_TEST_FOLDER, empty_folder, \
 #===============================================================================
 # prepare_fixtures_1
 #===============================================================================
-
 def prepare_fixtures_1():
     """Create two test folders and some files.
 

@@ -6,10 +6,12 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 
 from __future__ import print_function
 
-import sys
 import json
+import sys
 import time
+
 from ftpsync import __version__
+
 
 #===============================================================================
 # DirMetadata

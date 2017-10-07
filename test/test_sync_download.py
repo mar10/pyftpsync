@@ -13,7 +13,6 @@ from test.fixture_tools import get_test_folder, _SyncTestBase
 #===============================================================================
 # DownloadResolveTest
 #===============================================================================
-
 class DownloadResolveTest(_SyncTestBase):
     """Test DownSynchronizer on file system targets with different resolve modes."""
 

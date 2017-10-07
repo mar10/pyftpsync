@@ -5,18 +5,18 @@ Tests for pyftpsync
 from __future__ import print_function
 
 import platform
-
-# Python 2.7+
 import unittest
 from unittest.case import SkipTest
 
+from ftpsync import targets
+from ftpsync.ftp_target import FtpTarget
+from ftpsync.synchronizers import DownloadSynchronizer
+from ftpsync.util import urlparse
+from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL
+
+
 on_windows = platform.system() == "Windows"
 
-from ftpsync.ftp_target import *  # @UnusedWildImport
-from ftpsync.targets import *  # @UnusedWildImport
-
-from ftpsync.synchronizers import DownloadSynchronizer
-from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL
 
 
 #===============================================================================
@@ -28,7 +28,7 @@ class RegressionTest(unittest.TestCase):
         # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"
         ftp_url = PYFTPSYNC_TEST_FTP_URL
         if not ftp_url:
-            self.skipTest("Must configure an FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
+            raise SkipTest("Must configure an FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
 
         parts = urlparse(ftp_url, allow_fragments=False)
         # self.assertIn(parts.scheme.lower(), ["ftp", "ftps"])

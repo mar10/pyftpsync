@@ -14,7 +14,6 @@ from test.fixture_tools import write_test_file, get_test_folder, remove_test_fol
 #===============================================================================
 # BidirSyncTest
 #===============================================================================
-
 class BidirSyncTest(_SyncTestBase):
     """Test BiDirSynchronizer on file system targets with different resolve modes."""
 

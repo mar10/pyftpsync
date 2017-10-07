@@ -6,21 +6,22 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 from __future__ import print_function
 
 import calendar
+from ftplib import error_perm
 import ftplib
 import io
+import json
 import os
 from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
 import sys
 import time
 
 from ftpsync import targets
-from ftpsync.targets import _Target
-from ftpsync.resources import DirectoryEntry, FileEntry
-from ftplib import error_perm
-import json
-from ftpsync.util import get_credentials_for_url, prompt_for_password,\
-    save_password
 from ftpsync.metadata import DirMetadata
+from ftpsync.resources import DirectoryEntry, FileEntry
+from ftpsync.targets import _Target
+from ftpsync.util import get_credentials_for_url, prompt_for_password, \
+    save_password
+
 
 DEFAULT_BLOCKSIZE = targets.DEFAULT_BLOCKSIZE
 

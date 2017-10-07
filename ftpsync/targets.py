@@ -10,9 +10,11 @@ import io
 import os
 from posixpath import join as join_url, normpath as normpath_url
 import shutil
+
+from ftpsync.metadata import DirMetadata
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftpsync.util import to_binary, urlparse, DEFAULT_BLOCKSIZE
-from ftpsync.metadata import DirMetadata
+
 
 #===============================================================================
 # make_target

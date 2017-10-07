@@ -6,12 +6,11 @@ from __future__ import print_function
 
 import os
 import unittest
-from unittest.case import SkipTest  # @UnusedImport
 
-from ftpsync.targets import DirMetadata, make_target
-from test.fixture_tools import is_test_file, get_test_folder,\
-    _SyncTestBase, get_metadata, PYFTPSYNC_TEST_FOLDER
 from ftpsync.ftp_target import FtpTarget
+from ftpsync.targets import DirMetadata, make_target
+from test.fixture_tools import is_test_file, get_test_folder, \
+    _SyncTestBase, get_metadata, PYFTPSYNC_TEST_FOLDER
 
 
 #===============================================================================

@@ -14,10 +14,9 @@ from unittest.case import SkipTest  # @UnusedImport
 from ftpsync.ftp_target import *  # @UnusedWildImport
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer
 from ftpsync.targets import *  # @UnusedWildImport
-
-from test.test_1x import prepare_fixtures_1
 from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL, \
     PYFTPSYNC_TEST_FOLDER, empty_folder, write_test_file
+from test.test_1x import prepare_fixtures_1
 
 
 DO_BENCHMARKS = False #True

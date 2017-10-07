@@ -6,8 +6,8 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 
 from __future__ import print_function
 
-import time
 from datetime import timedelta, datetime
+import time
 
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import DirectoryEntry

@@ -5,7 +5,6 @@ Tests for pyftpsync
 from __future__ import print_function
 
 import unittest
-# from unittest.case import SkipTest
 
 from ftpsync.synchronizers import UploadSynchronizer
 from test.fixture_tools import get_test_folder, _SyncTestBase
@@ -89,8 +88,8 @@ class UploadResolveTest(_SyncTestBase):
         stats = self.do_run_suite(UploadSynchronizer, opts)
 
         # DRY-RUN: We expect no changes
-        self.assertEqual(stats["bytes_written"], 0)
 
+        self.assertEqual(stats["bytes_written"], 0)
         self.assert_test_folder_equal(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
         self.assert_test_folder_equal(get_test_folder("remote"), _SyncTestBase.remote_fixture_modified)
 
