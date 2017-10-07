@@ -36,6 +36,22 @@ STAMP_20140101_120000 = 1388577600.0  # Wed, 01 Jan 2014 12:00:00 GMT
 # print(stamp)  # --> 1388577600
 # 1/0
 
+
+def prepare_fixture():
+    """Helper for command line testing.
+
+    Example:
+        >>>python -m test.fixture_tools
+        Created fixtures at /Users/martin/prj/test/pyftpsync_test_folder
+        >>>ls /Users/martin/prj/test/pyftpsync_test_folder
+        local	remote
+    """
+    # _SyncTestBase._prepare_synced_fixture_without_meta()
+    _SyncTestBase._prepare_initial_synced_fixture()
+    _SyncTestBase._prepare_modified_fixture()
+    print("Created fixtures at {}".format(PYFTPSYNC_TEST_FOLDER))
+
+
 def write_test_file(name, size=None, content=None, dt=None, age=None):
     """Create a file inside the temporary folder, optionally creating subfolders.
 
@@ -171,7 +187,7 @@ def get_test_folder(folder_name):
 def get_metadata(folder_path):
     try:
         meta = read_test_file(os.path.join(folder_path, DirMetadata.META_FILE_NAME))
-    except OSError as e:  # FileNotFoundError is only available in Python 3 
+    except OSError as e:  # FileNotFoundError is only available in Python 3
         if e.errno == errno.ENOENT:
             return None
         raise
@@ -271,7 +287,7 @@ def check_ftp_test_connection(test_folder, ftp_url, keep_open=False):
 #         buf = ftp.retrbinary("RETR {}".format(probe_file))
         try:
             data2 = read_test_file("remote/{}".format(probe_file))
-        except OSError as e:  # FileNotFoundError is only available in Python 3 
+        except OSError as e:  # FileNotFoundError is only available in Python 3
             if e.errno == errno.ENOENT:
                 _skip("FTP target path {} does not match `PYFTPSYNC_TEST_FOLDER/remote`".format(parts.path))
             raise
@@ -378,7 +394,8 @@ class _SyncTestBase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def _prepare_initial_local_fixture(self):
+    @classmethod
+    def _prepare_initial_local_fixture(cls):
         """
         Create a local folder that has some files and folders with defined mtimes.
 
@@ -426,7 +443,8 @@ class _SyncTestBase(unittest.TestCase):
         # os.chmod(remote_path, 0o777)
         return
 
-    def _prepare_initial_synced_fixture(self):
+    @classmethod
+    def _prepare_initial_synced_fixture(cls):
         """Create two folders that have already been sync'ed (so meta data is available).
 
                                   Local           Remote
@@ -447,17 +465,18 @@ class _SyncTestBase(unittest.TestCase):
           folder6/file6_1.txt     12:00           12:00
           folder7/file7_1.txt     12:00           12:00
         """
-        self._prepare_initial_local_fixture()
+        cls._prepare_initial_local_fixture()
 
         # Synchronize folders (also creates meta data files)
         opts = {"dry_run": False, "verbose": 0}
-        stats = self._sync_test_folders(BiDirSynchronizer, opts)
+        stats = cls._sync_test_folders(BiDirSynchronizer, opts)
 
         assert stats["files_written"] == 16
         assert stats["dirs_created"] == 7
         return
 
-    def _prepare_synced_fixture_without_meta(self):
+    @classmethod
+    def _prepare_synced_fixture_without_meta(cls):
         """Create two identical fixture folders.
 
         This creates the same result as`_prepare_initial_synced_fixture()`,
@@ -472,14 +491,15 @@ class _SyncTestBase(unittest.TestCase):
         """
         # The setUp() code already used `_prepare_initial_synced_fixture()`,
         # so we have to reset and do it again:
-        self._prepare_initial_local_fixture()
+        cls._prepare_initial_local_fixture()
 
         # Use file system commands to copy local to remote (maintan 12:00:00 times)
         remove_test_folder("remote")
         shutil.copytree(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"),
                         os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
 
-    def _prepare_modified_fixture(self):
+    @classmethod
+    def _prepare_modified_fixture(cls):
         """Modify both folders and run sync with specific options.
 
         1. This method assumes that _prepare_initial_synced_fixture() was already run
@@ -527,7 +547,7 @@ class _SyncTestBase(unittest.TestCase):
         4. Finally we call bi-dir sync with the custom options and return runtime stats.
         """
 
-        if not self.use_ftp_target:
+        if not cls.use_ftp_target:
             # On local targets, we can rely on mtimes:
             assert get_test_file_date("remote/folder5/file5_1.txt") == STAMP_20140101_120000
 
@@ -586,20 +606,22 @@ class _SyncTestBase(unittest.TestCase):
         write_test_file("local/new_file6.txt", dt="2014-01-01 13:00:05", content="local 13:00:05")
         write_test_file("remote/new_file6.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
 
-    def _make_remote_target(self):
+    @classmethod
+    def _make_remote_target(cls):
         """Return the remote target instance, depending on `use_ftp_target`."""
-        if self.use_ftp_target:
+        if cls.use_ftp_target:
             check_ftp_test_connection(PYFTPSYNC_TEST_FOLDER, PYFTPSYNC_TEST_FTP_URL)
             remote = make_target(PYFTPSYNC_TEST_FTP_URL)
         else:
             remote = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
         return remote
 
-    def _sync_test_folders(self, synchronizer_class, options, remote=None):
+    @classmethod
+    def _sync_test_folders(cls, synchronizer_class, options, remote=None):
         """Run synchronizer with fresh objects and custom options."""
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
         if remote is None:
-            remote = self._make_remote_target()
+            remote = cls._make_remote_target()
         opts = {"dry_run": False, "verbose": 1}
         if options:
             opts.update(options)
@@ -623,7 +645,7 @@ class _SyncTestBase(unittest.TestCase):
             a = copy.deepcopy(dict_1)
             for v in a.values():
                 v["date"] = "?"
-            
+
             b = copy.deepcopy(dict_2)
             for v in b.values():
                 v["date"] = "?"
@@ -641,3 +663,7 @@ class _SyncTestBase(unittest.TestCase):
         pprint(get_test_folder("local"), width=128)
         print("*** remote:")
         pprint(get_test_folder("remote"), width=128)
+
+
+if __name__ == "__main__":
+    prepare_fixture()

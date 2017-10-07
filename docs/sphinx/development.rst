@@ -14,7 +14,7 @@ Fork Repository
 .. todo:: Describe
 
 
-Work in a virtual environment
+Work in a Virtual Environment
 -----------------------------
 
 On Linux/OS X, we recommend to use `pipenv <https://github.com/kennethreitz/pipenv>`_
@@ -90,7 +90,35 @@ at the user's home directory::
     export PYFTPSYNC_TEST_FTP_URL=ftp://USER:PASSWORD@localhost/pyftpsync_test/remote
 
 
-Run built-in FTP Server on macOS Sierra
+Run Manual Tests
+----------------
+
+In order to run the command line script against a defined test scenario, we can use the
+``test.fixture_tools`` helper function to set up the default fixture::
+
+    $ python -m test.fixture_tools
+    Created fixtures at /Users/USER/pyftpsync_test_folder
+
+    $ ls -al /Users/USER/pyftpsync_test_folder
+    total 0
+    drwxrwxrwx   4 martin  staff  136  7 Okt 15:32 .
+    drwxr-xr-x   7 martin  staff  238 20 Aug 20:26 ..
+    drwxr-xr-x  19 martin  staff  646  7 Okt 15:32 local
+    drwxr-xr-x  18 martin  staff  612  7 Okt 15:32 remote
+
+Now run pyftpsync with arbitrary options, passing local and remote folders as targets,
+for example::
+
+    $ pyftpsync -v sync /Users/USER/pyftpsync_test_folder/local /Users/USER/pyftpsync_test_folder/remote
+
+If an FTP server was configured, we can also run the script against it::
+
+    $ pyftpsync -v sync /Users/USER/pyftpsync_test_folder/local ftp://localhost/Users/USER/pyftpsync_test_folder/remote
+
+Run  ``python -m test.fixture_tools`` again to reset the test folders.
+
+
+Run Built-in FTP Server on macOS Sierra
 ---------------------------------------
 
 On OSX (starting with Sierra) the built-in FTP server needs to be activated like so::
@@ -116,6 +144,7 @@ Run ProFTPD on macOS Sierra
 
 .. todo::
     This did not work yet due to permission problems.
+    If anyone get's this to run, please document here.
 
 For example, environment variables may look like this, assuming the FTP server is rooted
 at the user's home directory::
