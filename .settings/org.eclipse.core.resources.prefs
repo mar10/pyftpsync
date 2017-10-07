@@ -9,4 +9,3 @@ encoding//ftpsync/synchronizers.py=iso-8859-1
 encoding//ftpsync/targets.py=iso-8859-1
 encoding//ftpsync/util.py=iso-8859-1
 encoding//src/service.py=iso-8859-1
-encoding//test/test_ftp.py=UTF-8

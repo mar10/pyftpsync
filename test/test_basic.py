@@ -10,7 +10,7 @@ from unittest.case import SkipTest  # @UnusedImport
 
 from ftpsync.targets import DirMetadata, make_target
 from test.fixture_tools import is_test_file, get_test_folder,\
-    _SyncTestBase, read_test_file, get_metadata, PYFTPSYNC_TEST_FOLDER
+    _SyncTestBase, get_metadata, PYFTPSYNC_TEST_FOLDER
 from ftpsync.ftp_target import FtpTarget
 
 
@@ -31,10 +31,10 @@ class FixtureTest(_SyncTestBase):
     def test_prepare_initial_synced_fixture(self):
         # """Test that fixture set up code worked."""
         # Fixtures are initialized to 9 top-level files and 7 folders, all 12:00:00
-        self.assertDictEqual(get_test_folder("local"), _SyncTestBase.local_fixture_unmodified)
+        self.assert_test_folder_equal(get_test_folder("local"), _SyncTestBase.local_fixture_unmodified)
 
         # setUp() should have created a copy of /local in /remote
-        self.assertDictEqual(get_test_folder("remote"), _SyncTestBase.local_fixture_unmodified)
+        self.assert_test_folder_equal(get_test_folder("remote"), _SyncTestBase.local_fixture_unmodified)
 
         # Metadata files are created on local target only
         self.assertTrue(is_test_file("local/" + DirMetadata.META_FILE_NAME))
@@ -58,9 +58,9 @@ class FixtureTest(_SyncTestBase):
         #
         self._prepare_modified_fixture()
 
-        self.assertDictEqual(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
+        self.assert_test_folder_equal(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
 
-        self.assertDictEqual(get_test_folder("remote"), _SyncTestBase.remote_fixture_modified)
+        self.assert_test_folder_equal(get_test_folder("remote"), _SyncTestBase.remote_fixture_modified)
 
         # Metadata files are created on local target only
         self.assertTrue(is_test_file("local/" + DirMetadata.META_FILE_NAME))

@@ -48,7 +48,7 @@ is created on every test run, but it is recommended to define a location using t
 
     export PYFTPSYNC_TEST_FOLDER=/Users/USER/pyftpsync_test
 
-Run all tests with coverage report. Results are written to <pyftpsync>/htmlcoc/index.html::
+Run all tests with coverage report. Results are written to <pyftpsync>/htmlcov/index.html::
 
     $ pytest -v -rsx --cov=ftpsync --cov-report=html
 

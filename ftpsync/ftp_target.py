@@ -258,9 +258,9 @@ class FtpTarget(_Target):
                         # try to delete this as a file
                         self.ftp.delete(name)
                     except ftplib.all_errors as _e:
-                       print("    ftp.delete(%s) failed: %s, trying rmdir()..." % (name, _e))
-                       # assume <name> is a folder
-                       self.rmdir(name)
+                        print("    ftp.delete(%s) failed: %s, trying rmdir()..." % (name, _e))
+                        # assume <name> is a folder
+                        self.rmdir(name)
             finally:
                 if dir_name != ".":
                     self.ftp.cwd("..")

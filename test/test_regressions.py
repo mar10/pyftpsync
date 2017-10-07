@@ -15,23 +15,8 @@ on_windows = platform.system() == "Windows"
 from ftpsync.ftp_target import *  # @UnusedWildImport
 from ftpsync.targets import *  # @UnusedWildImport
 
-from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer, \
-    BiDirSynchronizer
-from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL, \
-    PYFTPSYNC_TEST_FOLDER, get_test_file_date, STAMP_20140101_120000, \
-    empty_folder, write_test_file, touch_test_file
-
-
-DO_BENCHMARKS = False #True
-
-#===============================================================================
-# Module setUp / tearDown
-#===============================================================================
-def setUpModule():
-    pass
-
-def tearDownModule():
-    pass
+from ftpsync.synchronizers import DownloadSynchronizer
+from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL
 
 
 #===============================================================================

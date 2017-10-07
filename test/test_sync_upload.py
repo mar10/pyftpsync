@@ -12,7 +12,7 @@ from test.fixture_tools import get_test_folder, _SyncTestBase
 
 
 #===============================================================================
-# BidirSyncTest
+# UploadResolveTest
 #===============================================================================
 
 class UploadResolveTest(_SyncTestBase):
@@ -42,7 +42,7 @@ class UploadResolveTest(_SyncTestBase):
         self.assertEqual(stats["conflict_files_skipped"], 7)
 
         # We expect that local remains unmodified
-        self.assertDictEqual(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
+        self.assert_test_folder_equal(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
 
         expect_remote = {
             'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
@@ -61,7 +61,7 @@ class UploadResolveTest(_SyncTestBase):
             'new_file5.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
             'new_file6.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
             }
-        self.assertDictEqual(get_test_folder("remote"), expect_remote)
+        self.assert_test_folder_equal(get_test_folder("remote"), expect_remote)
 
     def test_mirror(self):
         opts = {
@@ -74,8 +74,25 @@ class UploadResolveTest(_SyncTestBase):
         _stats = self.do_run_suite(UploadSynchronizer, opts)
 
         # We expect that local is mirrored 1:1 to remote
-        self.assertDictEqual(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
-        self.assertDictEqual(get_test_folder("remote"), _SyncTestBase.local_fixture_modified)
+        self.assert_test_folder_equal(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
+        self.assert_test_folder_equal(get_test_folder("remote"), _SyncTestBase.local_fixture_modified)
+
+    def test_dry_run(self):
+        opts = {
+            "verbose": self.verbose,
+            "resolve": "local",
+            "delete": True,
+            "force": True,
+            "dry_run": True,
+            }
+
+        stats = self.do_run_suite(UploadSynchronizer, opts)
+        
+        # DRY-RUN: We expect no changes
+        self.assertEqual(stats["bytes_written"], 0)
+        
+        self.assert_test_folder_equal(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
+        self.assert_test_folder_equal(get_test_folder("remote"), _SyncTestBase.remote_fixture_modified)
 
     def test_delete_unmatched(self):
         opts = {
@@ -100,7 +117,7 @@ class UploadResolveTest(_SyncTestBase):
         # self.assertEqual(stats["conflict_files"], 7)
         # self.assertEqual(stats["conflict_files_skipped"], 7)
 
-        self.assertDictEqual(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
+        self.assert_test_folder_equal(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
 
         # We expect that remote only contains files that do NOT match in '*1.txt'
         expect_remote = {
@@ -112,7 +129,17 @@ class UploadResolveTest(_SyncTestBase):
             'folder7/file7_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
             'new_file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
             }
-        self.assertDictEqual(get_test_folder("remote"), expect_remote)
+        self.assert_test_folder_equal(get_test_folder("remote"), expect_remote)
+
+#===============================================================================
+# FtpUploadResolveTest
+#===============================================================================
+
+class FtpUploadResolveTest(UploadResolveTest):
+    """Run the UploadResolveTest test suite against a local FTP server (ftp_target.FtpTarget)."""
+
+    use_ftp_target = True
+
 
 #===============================================================================
 # Main

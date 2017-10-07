@@ -5,7 +5,9 @@ Tests for pyftpsync
 from __future__ import print_function
 
 import calendar
+import copy
 import datetime
+import errno
 from ftplib import FTP, error_perm
 import io
 import json
@@ -169,8 +171,10 @@ def get_test_folder(folder_name):
 def get_metadata(folder_path):
     try:
         meta = read_test_file(os.path.join(folder_path, DirMetadata.META_FILE_NAME))
-    except FileNotFoundError:
-        return None
+    except OSError as e:  # FileNotFoundError is only available in Python 3 
+        if e.errno == errno.ENOENT:
+            return None
+        raise
     # print("meta", meta)
     meta = json.loads(meta)
     # print("meta", meta)
@@ -267,8 +271,10 @@ def check_ftp_test_connection(test_folder, ftp_url, keep_open=False):
 #         buf = ftp.retrbinary("RETR {}".format(probe_file))
         try:
             data2 = read_test_file("remote/{}".format(probe_file))
-        except FileNotFoundError:
-            _skip("FTP target path {} does not match `PYFTPSYNC_TEST_FOLDER/remote`".format(parts.path))
+        except OSError as e:  # FileNotFoundError is only available in Python 3 
+            if e.errno == errno.ENOENT:
+                _skip("FTP target path {} does not match `PYFTPSYNC_TEST_FOLDER/remote`".format(parts.path))
+            raise
 
         if data != data2:
             _skip("Probe file content mismatch")
@@ -614,12 +620,14 @@ class _SyncTestBase(unittest.TestCase):
         """Compare two folder content dicts, depending on `use_ftp_target`."""
         if self.use_ftp_target:
             # FTP target does not maintain the file time, so we ignore it for comparisons.
-            a = dict_1.copy()
+            a = copy.deepcopy(dict_1)
             for v in a.values():
                 v["date"] = "?"
-                b = dict_2.copy()
+            
+            b = copy.deepcopy(dict_2)
             for v in b.values():
                 v["date"] = "?"
+
             self.assertDictEqual(a, b)
         else:
             self.assertDictEqual(dict_1, dict_2)

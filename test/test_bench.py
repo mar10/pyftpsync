@@ -8,22 +8,16 @@ Tests for pyftpsync
 """
 from __future__ import print_function
 
-from ftplib import FTP
-from pprint import pprint
-
-# Python 2.7+
 import unittest
 from unittest.case import SkipTest  # @UnusedImport
 
 from ftpsync.ftp_target import *  # @UnusedWildImport
+from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer
 from ftpsync.targets import *  # @UnusedWildImport
 
-from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer, \
-    BiDirSynchronizer
 from test.test_1x import prepare_fixtures_1
 from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL, \
-    PYFTPSYNC_TEST_FOLDER, get_test_file_date, STAMP_20140101_120000, \
-    empty_folder, write_test_file, touch_test_file, check_ftp_test_connection
+    PYFTPSYNC_TEST_FOLDER, empty_folder, write_test_file
 
 
 DO_BENCHMARKS = False #True

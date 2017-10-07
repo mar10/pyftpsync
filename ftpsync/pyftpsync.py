@@ -169,7 +169,7 @@ def run():
 
     # --- Create the parser for the "scan" command -----------------------------
 
-    scan_parser = add_scan_parser(subparsers)
+    _scan_parser = add_scan_parser(subparsers)
 
     # --- Parse command line ---------------------------------------------------
 

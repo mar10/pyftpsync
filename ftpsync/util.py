@@ -37,13 +37,13 @@ IS_REDIRECTED = (os.fstat(0) != os.fstat(1))
 DEFAULT_BLOCKSIZE = 8 * 1024
 VT_ERASE_LINE = "\x1b[2K"
 
-DEBUG_FLAGS = set()
-
-def init_debug_flags(verbosity):
-    if verbosity >= 3:
-        DEBUG_FLAGS.add("runtime_stats")
-    if verbosity >= 4:
-        DEBUG_FLAGS.add("ftp_commands")
+# DEBUG_FLAGS = set()
+#
+# def init_debug_flags(verbosity):
+#     if verbosity >= 3:
+#         DEBUG_FLAGS.add("runtime_stats")
+#     if verbosity >= 4:
+#         DEBUG_FLAGS.add("ftp_commands")
 
 
 def eps_compare(f1, f2, eps):

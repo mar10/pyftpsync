@@ -315,9 +315,9 @@ class BaseSynchronizer(object):
         dir_entry.target.rmdir(dir_entry.name)
         dir_entry.target.remove_sync_info(dir_entry.name)
 
-    def _log_call(self, msg, min_level=4):
-        if self.verbose >= min_level:
-            print(msg)
+    # def _log_call(self, msg, min_level=4):
+    #     if self.verbose >= min_level:
+    #         print(msg)
 
     # https://github.com/tartley/colorama/blob/master/colorama/ansi.py
 #     COLOR_MAP = {("skip", "*"): ansi_code("Fore.LIGHTBLACK_EX"),

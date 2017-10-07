@@ -8,10 +8,7 @@ import unittest
 from unittest.case import SkipTest
 
 from ftpsync.synchronizers import BiDirSynchronizer
-from test.fixture_tools import PYFTPSYNC_TEST_FOLDER, \
-    write_test_file, get_test_folder, remove_test_folder, delete_metadata, \
-    _SyncTestBase, check_ftp_test_connection, PYFTPSYNC_TEST_FTP_URL, \
-    get_metadata
+from test.fixture_tools import write_test_file, get_test_folder, remove_test_folder, _SyncTestBase
 
 
 #===============================================================================
@@ -150,6 +147,21 @@ class BidirSyncTest(_SyncTestBase):
         self.assert_test_folder_equal(get_test_folder("local"), expect_local)
         self.assert_test_folder_equal(get_test_folder("remote"), expect_local)
 
+    def test_dry_run(self):
+        opts = {
+            "verbose": self.verbose,
+            "resolve": "local",
+            "dry_run": True,
+            }
+
+        stats = self.do_run_suite(BiDirSynchronizer, opts)
+
+        # DRY-RUN: We expect no changes
+        self.assertEqual(stats["bytes_written"], 0)
+
+        self.assert_test_folder_equal(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
+        self.assert_test_folder_equal(get_test_folder("remote"), _SyncTestBase.remote_fixture_modified)
+
     def test_no_metadata(self):
         """Synchronize with absent .pyftpsync-meta.json."""
 
@@ -158,7 +170,7 @@ class BidirSyncTest(_SyncTestBase):
 
         opts = {"verbose": self.verbose}
 
-        stats = self.do_run_suite(BiDirSynchronizer, opts)
+        _stats = self.do_run_suite(BiDirSynchronizer, opts)
 #         self._dump_de_facto_results(stats)
 
         # NOTE:
@@ -213,7 +225,7 @@ class BidirSyncTest(_SyncTestBase):
 #===============================================================================
 
 class FtpBidirSyncTest(BidirSyncTest):
-    """Test ftp_target.FtpTarget functionality."""
+    """Run the BidirSyncTest test suite against a local FTP server (ftp_target.FtpTarget)."""
 
     use_ftp_target = True
 
