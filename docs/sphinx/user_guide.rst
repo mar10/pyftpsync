@@ -2,6 +2,10 @@
 User Guide
 ==========
 
+.. note::
+    This page describes release 1.x.
+
+
 Command line syntax
 ===================
 

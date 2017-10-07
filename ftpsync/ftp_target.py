@@ -164,7 +164,7 @@ class FtpTarget(_Target):
 
     def _lock(self, break_existing=False):
         """Write a special file to the target root folder."""
-        print("_lock")
+        # print("_lock")
         data = {"lock_time": time.time(),
                 "lock_holder": None}
 
@@ -181,7 +181,7 @@ class FtpTarget(_Target):
         """Remove lock file to the target root folder.
 
         """
-        print("_unlock", closing)
+        # print("_unlock", closing)
         try:
             if self.cur_dir != self.root_dir:
                 if closing:

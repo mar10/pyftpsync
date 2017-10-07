@@ -73,7 +73,9 @@ class BaseSynchronizer(object):
             self.local.dry_run = True
             self.remote.readonly = True
             self.remote.dry_run = True
-
+        #: bool: True if this synchronizer is used by a command line script (e.g. pyftpsync.exe)
+        self.is_script = None
+        #: str: Conflict resolution strategy
         self.resolve_all = None
 
         self._stats = {"bytes_written": 0,
@@ -179,7 +181,8 @@ class BaseSynchronizer(object):
             print("    Files are different (size {:,d} != {:,d}).".format(local.size, remote.size))
             return False
 
-        with local.target.open_readable(local.name) as fp_src, remote.target.open_readable(remote.name) as fp_dest:
+        with local.target.open_readable(local.name) as fp_src, \
+             remote.target.open_readable(remote.name) as fp_dest:
             res, ofs = byte_compare(fp_src, fp_dest)
 
         if not res:
@@ -578,13 +581,13 @@ class BiDirSynchronizer(BaseSynchronizer):
     def get_info_strings(self):
         return ("synchronize", "with")
 
-    def _print_pair_diff(self, local, remote):
+    def _print_pair_diff(self, pair):
         RED = ansi_code("Fore.LIGHTRED_EX")
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
-        # print("_print_pair_diff", local, remote)
-        any_entry = local or remote
+        any_entry = pair.any_entry
+
         has_meta = any_entry.get_sync_info("m") is not None
 
         print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})" + R)
@@ -594,40 +597,71 @@ class BiDirSynchronizer(BaseSynchronizer):
                   .format(_ts(any_entry.get_sync_info("m")), any_entry.get_sync_info("s")))
         else:
             print("    (No meta data available.)")
-        print("    local:  {}".format(local.as_string() if local else "n.a."))
-        print("    remote: {}".format(remote.as_string(local) if remote else "n.a."))
+        print("    local:  {}".format(pair.local.as_string() if pair.local else "n.a."))
+        print("    remote: {}".format(pair.remote.as_string(pair.local) if pair.remote else "n.a."))
 
-    def _interactive_resolve(self, local, remote):
+    def _interactive_resolve(self, pair):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
         if self.resolve_all:
-            return self.resolve_all
-        resolve = self.options.get("resolve", "skip")
-        if resolve in ("local", "remote", "skip"):
-            self.resolve_all = resolve
+            # A resolution strategy was selected using Shift+MODE
+            resolve = self.resolve_all
+        else:
+            # A resolution strategy was configured
+            resolve = self.options.get("resolve", "skip")
+
+        if resolve in ("new", "old") and pair.is_same_time():
+            # We cannot apply this resolution: force an alternative
+            print("Cannot resolve using '{}' strategy: {}".format(resolve, pair))
+            resolve = "ask" if self.is_script else "skip"
+
+        if resolve in ("local", "remote", "old", "new", "skip"):
+            # self.resolve_all = resolve
             return resolve
 
-        self._print_pair_diff(local, remote)
+        self._print_pair_diff(pair)
 
         RED = ansi_code("Fore.LIGHTRED_EX")
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
         while True:
-            prompt = "Use " + M + "L" + R + "ocal, use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + M + "H" + R + "elp)? "
+            prompt = "Use " + M + "L" + R + "ocal, " + M + "R" + R + "emote, " + \
+                M + "O" + R + "lder, " + M + "N" + R + "ewer, " + \
+                M + "S" + R + "kip, " + M + "B" + R + "inary compare, " + \
+                "H" + R + "elp?"
+
             r = console_input(prompt).strip()
+
             if r in ("h", "H", "?"):
                 print("The following keys are supported:")
-                print("  'r': Use remote file")
+                print("  'b': Binary compare")
+                print("  'n': Use newer file")
+                print("  'o': Use older file")
                 print("  'l': Use local file")
+                print("  'r': Use remote file")
                 print("  's': Skip this file (leave both versions unchanged)")
                 print("Hold Shift (upper case letters) to apply choice for all remaining conflicts.")
                 print("Hit Ctrl+C to abort.")
+                self._print_pair_diff(pair)
                 continue
-            elif r in ("L", "R", "S"):
+
+            elif r in ("b", "B"):
+                # TODO: we could (offer to) set both mtimes to the same value if files are identical
+                self._compare_file(pair.local, pair.remote)
+                # self._print_pair_diff(pair)
+                continue
+
+            elif r in ("o", "O", "n", "N") and pair.is_same_time():
+                # Ignore 'old' or 'new' selection if times are the same
+                print("Files have identical modification times.")
+                continue
+
+            elif r in ("L", "R", "O", "N", "S"):
                 r = self._resolve_shortcuts[r.lower()]
                 self.resolve_all = r
                 break
-            elif r in ("l", "r", "s"):
+
+            elif r in ("l", "r", "o", "n", "s"):
                 r = self._resolve_shortcuts[r]
                 break
 
@@ -723,21 +757,24 @@ class BiDirSynchronizer(BaseSynchronizer):
         """Return False to prevent visiting of children"""
         # self._log_action("skip", "conflict", "!", pair.local, min_level=2)
         # print("on_conflict", pair)
-        any_entry = pair.local or pair.remote
+        any_entry = pair.any_entry
         if not self._test_match_or_print(any_entry):
             return
-        resolve = self._interactive_resolve(pair.local, pair.remote)
+
+        resolve = self._interactive_resolve(pair)
+
         if resolve == "skip":
             self._log_action("skip", "conflict", "*?*", any_entry)
             self._inc_stat("conflict_files_skipped")
             return
+
         if pair.local and pair.remote:
             assert pair.local.is_file()
             is_newer = pair.local > pair.remote
-            if resolve == "local" or (is_newer and resolve == "newer") or (not is_newer and resolve == "older"):
+            if resolve == "local" or (is_newer and resolve == "new") or (not is_newer and resolve == "old"):
                 self._log_action("copy", "conflict", "*>*", pair.local)
                 self._copy_file(self.local, self.remote, pair.local)
-            elif resolve == "remote" or (is_newer and resolve == "older") or (not is_newer and resolve == "newer"):
+            elif resolve == "remote" or (is_newer and resolve == "old") or (not is_newer and resolve == "new"):
                 self._log_action("copy", "conflict", "*<*", pair.local)
                 self._copy_file(self.remote, self.local, pair.remote)
             else:
@@ -807,13 +844,13 @@ class UploadSynchronizer(BiDirSynchronizer):
         #     return
         return
 
-    def _interactive_resolve(self, local, remote):
+    def _interactive_resolve(self, pair):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
         RED = ansi_code("Fore.LIGHTRED_EX")
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
-        self._print_pair_diff(local, remote)
+        self._print_pair_diff(pair)
 
         if self.resolve_all:
             return self.resolve_all
@@ -825,10 +862,13 @@ class UploadSynchronizer(BiDirSynchronizer):
             return resolve
 
         while True:
-            prompt = "Use " + M + "L" + R + "ocal, " + M + "S" + R + "kip, " + M + "B" + R + "inary compare, " + M + "H" + R + "elp)? "
+            prompt = "Use " + M + "L" + R + "ocal, " + M + "S" + R + "kip, " + \
+                M + "B" + R + "inary compare, " + M + "H" + R + "elp)? "
+
             r = console_input(prompt).strip()
             if r in ("h", "H", "?"):
                 print("The following keys are supported:")
+                print("  'b': Binary compare")
                 print("  'l': Upload local file")
                 print("  's': Skip this file (leave both versions unchanged)")
                 print("Hold Shift (upper case letters) to apply choice for all remaining conflicts.")
@@ -837,11 +877,11 @@ class UploadSynchronizer(BiDirSynchronizer):
             elif r in ("B", "b"):
                 self._compare_file(local, remote)
                 continue
-            elif r in ("L", "R", "S"):
+            elif r in ("L", "S"):
                 r = self._resolve_shortcuts[r.lower()]
                 self.resolve_all = r
                 break
-            elif r in ("l", "r", "s"):
+            elif r in ("l", "s"):
                 r = self._resolve_shortcuts[r]
                 break
 
@@ -925,7 +965,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
         #     return
         return
 
-    def _interactive_resolve(self, local, remote):
+    def _interactive_resolve(self, pair):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
         if self.resolve_all:
             return self.resolve_all
@@ -939,23 +979,29 @@ class DownloadSynchronizer(BiDirSynchronizer):
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
-        self._print_pair_diff(local, remote)
+        self._print_pair_diff(pair)
 
         while True:
-            prompt = "Use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + M + "H" + R + "elp)? "
+            prompt = "Use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + \
+                M + "B" + R + "inary compare, " + M + "H" + R + "elp? "
+
             r = console_input(prompt).strip()
             if r in ("h", "H", "?"):
                 print("The following keys are supported:")
+                print("  'b': Binary compare")
                 print("  'r': Download remote file")
                 print("  's': Skip this file (leave both versions unchanged)")
                 print("Hold Shift (upper case letters) to apply choice for all remaining conflicts.")
                 print("Hit Ctrl+C to abort.")
                 continue
-            elif r in ("L", "R", "S"):
+            elif r in ("B", "b"):
+                self._compare_file(local, remote)
+                continue
+            elif r in ("R", "S"):
                 r = self._resolve_shortcuts[r.lower()]
                 self.resolve_all = r
                 break
-            elif r in ("l", "r", "s"):
+            elif r in ("r", "s"):
                 r = self._resolve_shortcuts[r]
                 break
 

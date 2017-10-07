@@ -123,23 +123,23 @@ def get_credentials_for_url(url, allow_prompt):
 def save_password(url, username, password):
     if keyring:
         if ":" in username:
-            raise RuntimeError("Unable to store credentials if username contains a ':' ({})"
+            raise RuntimeError("Unable to store credentials if username contains a ':' ({})."
                     .formta(username))
 
         try:
             # Note: we pass the url as `username` and username:password as `password`
             if password is None:
                 keyring.delete_password("pyftpsync", url)
-                print("delete_password({})".format(url))
+                print("Delete credentials from keyring ({})".format(url))
             else:
                 keyring.set_password("pyftpsync", url, "{}:{}".format(username, password))
-                print("save_password({}, {}:***)".format(url, username))
+                print("Store credentials in keyring ({}, {}:***).".format(url, username))
 #        except keyring.errors.TransientKeyringError:
         except Exception as e:
-            print("Could not delete/set password {}".format(e))
+            print("Could not delete/set password {}.".format(e))
             pass # e.g. user clicked 'no'
     else:
-        print("Could not store password (missing keyring library)")
+        print("Could not store credentials (missing keyring support).")
     return
 
 

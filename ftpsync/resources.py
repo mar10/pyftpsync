@@ -115,6 +115,11 @@ class EntryPair(object):
         assert self.operation
         return self.operation == "conflict"
 
+    def is_same_time(self):
+        """Return True if local.mtime == remote.mtime."""
+        return (self.local and self.remote and
+                FileEntry._eps_compare(self.local.mtime, self.remote.mtime) == 0)
+
     def override_operation(self, operation, reason):
         """Re-Classify entry pair."""
         prev = (self.local_classification, self.remote_classification)
@@ -149,34 +154,7 @@ class EntryPair(object):
         else:
             self.remote_classification =  "missing"
 
-#         if peer_dir_meta is None:
-#             #
-#             self.local_classification = self.local.classification = "unknown"
         c_pair = (self.local_classification, self.remote_classification)
-
-#         # If no metadata is available, we could only classify file entries as
-#         # 'existing'.
-#         # Now we use peer information to improve this classification.
-#         if c_pair == ("missing", "existing"):
-#             # Treat unmatched entry as unmodified, so it get's copied
-#             c_pair = ("missing", "unmodified")
-#         elif c_pair == ("existing", "missing"):
-#             # Treat unmatched entry as unmodified, so it get's copied
-#             c_pair = ("unmodified", "missing")
-#         elif c_pair == ("existing", "existing"):
-#             # Naive classification derived from file time and size
-#             time_cmp = eps_compare(self.local.mtime, self.remote.mtime, FileEntry.EPS_TIME)
-#             if time_cmp < 0:
-#                 c_pair = ("unmodified", "modified")  # remote is newer
-#             elif time_cmp > 0:
-#                 c_pair = ("modified", "unmodified")  # local is newer
-#             elif self.local.size == self.remote.size:
-#                 c_pair = ("unmodified", "unmodified")  # equal
-#             else:
-#                 c_pair = ("modified", "modified")  # conflict!
-#
-#         self.local_classification = c_pair[0]
-#         self.remote_classification = c_pair[1]
 
         self.operation = operation_map.get(c_pair)
         if not self.operation:
