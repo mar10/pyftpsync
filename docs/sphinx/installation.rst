@@ -1,7 +1,7 @@
 Installation
 ============
 
-Requirements: `Python <https://www.python.org/downloads/>`_ 2.7+ or 3.3+ is required.
+Requirements: `Python <https://www.python.org/downloads/>`_ 2.7+ or 3.4+ is required.
 
 Releases are hosted on `PyPI <https://pypi.python.org/pypi/pyftpsync>`_ and can
 be installed using `pip <http://www.pip-installer.org/>`_::

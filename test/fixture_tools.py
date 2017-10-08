@@ -46,10 +46,27 @@ def prepare_fixture():
         >>>ls /Users/martin/prj/test/pyftpsync_test_folder
         local	remote
     """
-    # _SyncTestBase._prepare_synced_fixture_without_meta()
-    _SyncTestBase._prepare_initial_synced_fixture()
-    _SyncTestBase._prepare_modified_fixture()
+    use_ftp = False
+    if "--no-ftp" not in sys.argv:
+        try:
+            check_ftp_test_connection(PYFTPSYNC_TEST_FOLDER, PYFTPSYNC_TEST_FTP_URL)
+            use_ftp = True
+        except SkipTest:
+            pass
+
+    class _DummySuite(_SyncTestBase):
+        use_ftp_target = use_ftp
+
+    _DummySuite._prepare_initial_synced_fixture()
+    _DummySuite._prepare_modified_fixture()
+
     print("Created fixtures at {}".format(PYFTPSYNC_TEST_FOLDER))
+    if use_ftp:
+        print("NOTE: The remote target is prepared for FTP access, using PYFTPSYNC_TEST_FTP_URL.")
+        print("      Pass `--no-ftp` to prepare for file access.")
+    else:
+        print("NOTE: The remote target is prepared for FILE SYSTEM access, because\n"
+              "      PYFTPSYNC_TEST_FTP_URL is invalid or no server is running.")
 
 
 def write_test_file(name, size=None, content=None, dt=None, age=None):
@@ -62,11 +79,6 @@ def write_test_file(name, size=None, content=None, dt=None, age=None):
         parent_dir = os.path.dirname(path)
         if not os.path.isdir(parent_dir):
             os.makedirs(parent_dir)
-            # try:
-            #     original_umask = os.umask(0)
-            #     os.makedirs(parent_dir, 0o777)
-            # finally:
-            #     os.umask(original_umask)
 
     with open(path, "wt") as f:
         if content is None:
@@ -143,6 +155,7 @@ def empty_folder(folder_path):
             os.unlink(file_object_path)
         else:
             shutil.rmtree(file_object_path)
+    return
 
 
 def delete_metadata(folder_path, recursive=True):
@@ -196,18 +209,6 @@ def get_metadata(folder_path):
     # print("meta", meta)
     pprint(meta)
     return meta
-
-# def _sync_test_folders(synchronizer_class, options):
-#     """Run bi-dir sync with fresh objects."""
-#     local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
-#     remote = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
-#     opts = {"dry_run": False, "verbose": 1}
-#     if options:
-#         opts.update(options)
-#
-#     s = synchronizer_class(local, remote, opts)
-#     s.run()
-#     return s.get_stats()
 
 
 #===============================================================================

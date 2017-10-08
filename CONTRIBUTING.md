@@ -1,7 +1,7 @@
 # Contribution Guideline
 ## Setup for Contributors
 
-We need [Python 2.7](https://www.python.org/downloads/), [Python 3.3+](https://www.python.org/downloads/), and [pip](https://pip.pypa.io/en/stable/installing/#do-i-need-to-install-pip) on our system:
+We need [Python 2.7](https://www.python.org/downloads/), [Python 3.4+](https://www.python.org/downloads/), and [pip](https://pip.pypa.io/en/stable/installing/#do-i-need-to-install-pip) on our system:
 
 Then clone pyftpsync to a local folder and checkout the branch you want to work on:
 

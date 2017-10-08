@@ -1,29 +1,6 @@
 ftpsync package
 ===============
 
-Submodules
-----------
-
-ftpsync.ftp_target module
--------------------------
-
-.. automodule:: ftpsync.ftp_target
-    :members:
-    :undoc-members:
-    :private-members:
-    :show-inheritance:
-    :inherited-members:
-
-ftpsync.pyftpsync module
-------------------------
-
-.. automodule:: ftpsync.pyftpsync
-    :members:
-    :undoc-members:
-    :private-members:
-    :show-inheritance:
-    :inherited-members:
-
 ftpsync.resources module
 ------------------------
 
@@ -54,12 +31,12 @@ ftpsync.targets module
     :show-inheritance:
     :inherited-members:
 
+ftpsync.ftp_target module
+-------------------------
 
-Module contents
----------------
-
-.. automodule:: ftpsync
+.. automodule:: ftpsync.ftp_target
     :members:
     :undoc-members:
+    :private-members:
     :show-inheritance:
     :inherited-members:

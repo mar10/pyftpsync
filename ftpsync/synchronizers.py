@@ -34,8 +34,8 @@ def _ts(timestamp):
     """Convert timestamp to verbose string."""
 #     return "{} ({})".format(datetime.fromtimestamp(timestamp), timestamp)
     if timestamp is None:
-        return "<?>"
-    return "{}".format(datetime.fromtimestamp(timestamp))
+        return "n.a."
+    return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
 #===============================================================================
@@ -147,10 +147,11 @@ class BaseSynchronizer(object):
         start = time.time()
 
         info_strings = self.get_info_strings()
-        print("{} {}\n{:>20} {}".format(info_strings[0].capitalize(),
-                                        self.local.get_base_name(),
-                                        info_strings[1],
-                                        self.remote.get_base_name()))
+        if self.options["verbose"] >= 3:
+            print("{} {}\n{:>20} {}".format(info_strings[0].capitalize(),
+                                            self.local.get_base_name(),
+                                            info_strings[1],
+                                            self.remote.get_base_name()))
 
         res = self._sync_dir()
 
@@ -591,7 +592,7 @@ class BiDirSynchronizer(BaseSynchronizer):
         has_meta = any_entry.get_sync_info("m") is not None
 
         print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})" + R)
-              .format(any_entry.name, _ts(any_entry .get_sync_info("u"))))
+              .format(any_entry.name, _ts(any_entry.get_sync_info("u"))))
         if has_meta:
             print("    original modification time: {}, size: {:,d} bytes"
                   .format(_ts(any_entry.get_sync_info("m")), any_entry.get_sync_info("s")))
@@ -628,7 +629,7 @@ class BiDirSynchronizer(BaseSynchronizer):
             prompt = "Use " + M + "L" + R + "ocal, " + M + "R" + R + "emote, " + \
                 M + "O" + R + "lder, " + M + "N" + R + "ewer, " + \
                 M + "S" + R + "kip, " + M + "B" + R + "inary compare, " + \
-                "H" + R + "elp?"
+                M + "H" + R + "elp ? "
 
             r = console_input(prompt).strip()
 

@@ -166,7 +166,7 @@ def run():
     del args.quiet
 
     ftp_debug = 0
-    if args.verbose >= 5:
+    if args.verbose >= 6:
         ftp_debug = 1
 
     if callable(getattr(args, "command", None)):
@@ -220,8 +220,8 @@ def run():
     elif args.verbose >= 1:
         if args.dry_run:
             print("(DRY-RUN) ", end="")
-        print("Wrote %s/%s files in %s dirs. Elap: %s"
-              % (stats["files_written"], stats["local_files"], stats["local_dirs"], stats["elap_str"]))
+        print("Wrote {}/{} files in {} dirs, elap: {}."
+            .format(stats["files_written"], stats["local_files"], stats["local_dirs"], stats["elap_str"]))
 
     return
 

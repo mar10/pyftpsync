@@ -24,7 +24,7 @@ Have a look at 1.x for a more stable version.
 
 ## Quickstart
 
-[Python](http://www.python.org/download/Python) 2.7+ or 3.3+ is required,
+[Python](http://www.python.org/download/Python) 2.7+ or 3.4+ is required,
 [pip](http://www.pip-installer.org/) recommended:
 
 ```bash

@@ -206,7 +206,7 @@ class FtpTarget(_Target):
     def _probe_lock_file(self, reported_mtime):
         """Called by get_dir"""
         delta = reported_mtime - self.lock_data["lock_time"]
-        if self.get_option("verbose", 2) >= 2:
+        if self.get_option("verbose", 2) >= 4:
             print("Server time offset: {0:.2f} seconds".format(delta))
 
     def get_id(self):
@@ -236,10 +236,10 @@ class FtpTarget(_Target):
         self.check_write(dir_name)
         names = []
         nlst_res = self.ftp.nlst(dir_name)
-        print("rmdir(%s): %s" % (dir_name, nlst_res))
+        # print("rmdir(%s): %s" % (dir_name, nlst_res))
         for name in nlst_res:
             if "/" in name:
-                print("_rmdir_impl({}): convert {} to {}".format(dir_name, name, os.path.basename(name)))
+                # print("_rmdir_impl({}): convert {} to {}".format(dir_name, name, os.path.basename(name)))
                 name = os.path.basename(name)
             if name in (".", ".."):
                 continue
@@ -367,7 +367,7 @@ class FtpTarget(_Target):
                         #      or
                         #   2. the reported files size is different than the
                         #      size we stored in the meta-data
-                        if self.get_option("verbose", 2) >= 3:
+                        if self.get_option("verbose", 2) >= 5:
                             print(("META: Removing outdated meta entry %s\n" +
                                    "      modified after upload (%s > %s), or\n"
                                    "      cur. size (%s) != meta size (%s)") %

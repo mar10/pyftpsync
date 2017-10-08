@@ -14,9 +14,9 @@ Synchronize local directories with FTP server.
   * Allows FTP-to-FTP and Filesystem-to-Filesystem synchronization as well
   * Architecture is open to add other target types.
 
-Requires `Python <http://www.python.org/download/>`_ 2.7+ or 3.3+.
+Requires `Python <http://www.python.org/download/>`_ 2.7+ or 3.4+.
 
-See also https://github.com/mar10/pyftpsync for details 
+See also https://github.com/mar10/pyftpsync for details
 and `Read the Docs <http://pyftpsync.readthedocs.io/>`_.
 
 Change Log
