@@ -148,7 +148,7 @@ Upload changes from local folder to FTP server::
   user ="joe"
   passwd = "secret"
   remote = FtpTarget("/temp", "example.com", username=user, password=passwd)
-  opts = {"force": False, "delete_unmatched": True, "verbose": 3, "dry_run" : False}
+  opts = {"force": False, "delete_unmatched": True, "verbose": 3}
   s = UploadSynchronizer(local, remote, opts)
   s.run()
 
@@ -162,6 +162,6 @@ Synchronize local folder with FTP server using TLS::
   user ="joe"
   passwd = "secret"
   remote = FtpTarget("/temp", "example.com", username=user, password=passwd, tls=True)
-  opts = {"resolve": "skip", "verbose": 1, "dry_run" : False}
+  opts = {"resolve": "skip", "verbose": 1}
   s = BiDirSynchronizer(local, remote, opts)
   s.run()

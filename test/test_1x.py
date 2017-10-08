@@ -62,7 +62,7 @@ class FilesystemTest(unittest.TestCase):
         # Download files from local to remote (which is empty)
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
         remote = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
-        opts = {"force": False, "delete": False, "dry_run": False, "verbose": self.verbose}
+        opts = {"force": False, "delete": False, "verbose": self.verbose}
         s = DownloadSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
@@ -94,7 +94,7 @@ class FilesystemTest(unittest.TestCase):
     def test_upload_fs_fs(self):
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
         remote = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
-        opts = {"force": False, "delete": False, "dry_run": False, "verbose": self.verbose}
+        opts = {"force": False, "delete": False, "verbose": self.verbose}
         s = UploadSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()

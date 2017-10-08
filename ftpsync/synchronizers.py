@@ -54,7 +54,7 @@ class BaseSynchronizer(object):
         #TODO: check for self-including paths
         self.options = options or {}
         self.verbose = self.options.get("verbose", 3)
-        self.dry_run = self.options.get("dry_run", True)
+        self.dry_run = self.options.get("dry_run", False)
 
         self.match = self.options.get("match")
         if self.match:

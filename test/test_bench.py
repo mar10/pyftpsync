@@ -61,7 +61,7 @@ class BenchmarkTest(unittest.TestCase):
 
         # Upload all of temp/local to remote
 
-        opts = {"force": False, "delete": False, "verbose": 3, "dry_run": False}
+        opts = {"force": False, "delete": False, "verbose": 3}
         s = UploadSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
@@ -76,7 +76,7 @@ class BenchmarkTest(unittest.TestCase):
 
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
 
-        opts = {"force": False, "delete": True, "verbose": 3, "dry_run": False}
+        opts = {"force": False, "delete": True, "verbose": 3}
         s = DownloadSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()

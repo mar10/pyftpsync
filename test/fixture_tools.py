@@ -469,7 +469,7 @@ class _SyncTestBase(unittest.TestCase):
         cls._prepare_initial_local_fixture()
 
         # Synchronize folders (also creates meta data files)
-        opts = {"dry_run": False, "verbose": 0}
+        opts = {"verbose": 0}
         stats = cls._sync_test_folders(BiDirSynchronizer, opts)
 
         assert stats["files_written"] == 16
@@ -623,7 +623,7 @@ class _SyncTestBase(unittest.TestCase):
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
         if remote is None:
             remote = cls._make_remote_target()
-        opts = {"dry_run": False, "verbose": 1}
+        opts = {"verbose": 1}
         if options:
             opts.update(options)
 
