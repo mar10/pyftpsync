@@ -104,7 +104,7 @@ def run():
                                help="overwrite remote files, even if the target is newer "
                                "(but no conflict was detected)")
     upload_parser.add_argument("--resolve",
-                               default="skip",
+                               default="ask",
                                choices=["local", "skip", "ask"],
                                help="conflict resolving strategy (default: '%(default)s')")
     upload_parser.add_argument("--delete",
@@ -128,7 +128,7 @@ def run():
                                  help="overwrite local files, even if the target is newer "
                                  "(but no conflict was detected)")
     download_parser.add_argument("--resolve",
-                                 default="skip",
+                                 default="ask",
                                  choices=["remote", "skip", "ask"],
                                  help="conflict resolving strategy (default: '%(default)s')")
     download_parser.add_argument("--delete",

@@ -6,6 +6,7 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 
 from __future__ import print_function
 
+from datetime import datetime
 import getpass
 import os
 import sys
@@ -52,6 +53,15 @@ def eps_compare(f1, f2, eps):
     elif res < 0:
         return -1
     return 1
+
+
+def pretty_stamp(stamp):
+    """Convert timestamp to verbose string (strip fractions of seconds)."""
+    if stamp is None:
+        return "n.a."
+    # return time.ctime(stamp)
+    # return datetime.fromtimestamp(stamp).isoformat(" ")
+    return datetime.fromtimestamp(stamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
 #===============================================================================
@@ -106,7 +116,7 @@ def get_credentials_for_url(url, allow_prompt):
             if c is not None:
                 creds = c.split(":", 1)
 #                print(creds)
-                print("Using credentials from keyring('pyftpsync', '{}'): {}:***)"
+                print("Using credentials from keyring('pyftpsync', '{}'): {}:***."
                         .format(url, creds[0]))
 #        except keyring.errors.TransientKeyringError:
         except Exception as e:

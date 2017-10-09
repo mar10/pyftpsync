@@ -97,9 +97,9 @@ In order to run the command line script against a defined test scenario, we can 
 ``test.fixture_tools`` helper function to set up the default fixture::
 
     $ python -m test.fixture_tools
-    Created fixtures at /Users/USER/pyftpsync_test_folder
+    Created fixtures at /Users/USER/test_pyftpsync
 
-    $ ls -al /Users/USER/pyftpsync_test_folder
+    $ ls -al /Users/USER/test_pyftpsync
     total 0
     drwxrwxrwx   4 martin  staff  136  7 Okt 15:32 .
     drwxr-xr-x   7 martin  staff  238 20 Aug 20:26 ..
@@ -143,11 +143,11 @@ meta data, so conflicts can be detected::
 Now run pyftpsync with arbitrary options, passing local and remote folders as targets,
 for example::
 
-    $ pyftpsync -v sync /Users/USER/pyftpsync_test_folder/local /Users/USER/pyftpsync_test_folder/remote
+    $ pyftpsync -v sync /Users/USER/test_pyftpsync/local /Users/USER/test_pyftpsync/remote
 
 If an FTP server was configured, we can also run the script against it::
 
-    $ pyftpsync -v sync /Users/USER/pyftpsync_test_folder/local ftp://localhost/Users/USER/pyftpsync_test_folder/remote
+    $ pyftpsync -v sync /Users/USER/test_pyftpsync/local ftp://localhost/Users/USER/test_pyftpsync/remote
 
 Run  ``python -m test.fixture_tools`` again to reset the test folders.
 
@@ -188,7 +188,7 @@ The FTP server exposes the whole file system, so the URL must start from root::
 
     We could install XAMPP and add this to `proftpd.conf`::
 
-      <Anonymous /Users/joe/pyftpsync_test_folder/remote>
+      <Anonymous /Users/joe/test_pyftpsync/remote>
         User  ftp
         Group ftp
 

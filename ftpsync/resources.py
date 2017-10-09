@@ -126,7 +126,7 @@ class EntryPair(object):
         prev_op = self.operation
         assert operation != prev_op
         assert operation in PAIR_OPERATIONS
-        print("override_operation({}, {}) -> {} ({})".format(prev, prev_op, operation, reason))
+        # print("override_operation({}, {}) -> {} ({})".format(prev, prev_op, operation, reason))
         self.operation = operation
         self.re_class_reason = reason
 

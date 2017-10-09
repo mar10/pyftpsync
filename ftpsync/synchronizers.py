@@ -6,7 +6,6 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 
 from __future__ import print_function
 
-from datetime import datetime
 import fnmatch
 import sys
 import time
@@ -14,7 +13,7 @@ import time
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import FileEntry, DirectoryEntry, EntryPair, operation_map
 from ftpsync.util import IS_REDIRECTED, DRY_RUN_PREFIX, \
-    ansi_code, console_input, VT_ERASE_LINE, byte_compare, eps_compare
+    ansi_code, console_input, VT_ERASE_LINE, byte_compare, eps_compare, pretty_stamp
 
 
 DEFAULT_OMIT = [".DS_Store",
@@ -30,13 +29,7 @@ DEFAULT_OMIT = [".DS_Store",
 # Helpers
 #===============================================================================
 
-def _ts(timestamp):
-    """Convert timestamp to verbose string."""
-#     return "{} ({})".format(datetime.fromtimestamp(timestamp), timestamp)
-    if timestamp is None:
-        return "n.a."
-    return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
-
+_ts = pretty_stamp
 
 #===============================================================================
 # BaseSynchronizer
@@ -615,11 +608,12 @@ class BiDirSynchronizer(BaseSynchronizer):
             print("Cannot resolve using '{}' strategy: {}".format(resolve, pair))
             resolve = "ask" if self.is_script else "skip"
 
+        if resolve == "ask" or self.options["verbose"] >= 5:
+            self._print_pair_diff(pair)
+
         if resolve in ("local", "remote", "old", "new", "skip"):
             # self.resolve_all = resolve
             return resolve
-
-        self._print_pair_diff(pair)
 
         RED = ansi_code("Fore.LIGHTRED_EX")
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
@@ -640,7 +634,7 @@ class BiDirSynchronizer(BaseSynchronizer):
                 print("  'o': Use older file")
                 print("  'l': Use local file")
                 print("  'r': Use remote file")
-                print("  's': Skip this file (leave both versions unchanged)")
+                print("  's': Skip this file (leave both targets unchanged)")
                 print("Hold Shift (upper case letters) to apply choice for all remaining conflicts.")
                 print("Hit Ctrl+C to abort.")
                 self._print_pair_diff(pair)
@@ -822,7 +816,7 @@ class UploadSynchronizer(BiDirSynchronizer):
 
         classification = (pair.local_classification, pair.remote_classification)
 
-        print("re_classify_pair", pair)
+        # print("re_classify_pair", pair)
         if delete:
             if classification == ("missing", "new"):
                 assert pair.operation == "copy_remote"
@@ -851,32 +845,37 @@ class UploadSynchronizer(BiDirSynchronizer):
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
-        self._print_pair_diff(pair)
-
-        if self.resolve_all:
-            return self.resolve_all
         resolve = self.options.get("resolve", "skip")
         assert resolve in ("local", "ask", "skip")
 
+        if self.resolve_all:
+            if self.options["verbose"] >= 5:
+                self._print_pair_diff(pair)
+            return self.resolve_all
+
+        if resolve == "ask" or self.options["verbose"] >= 5:
+            self._print_pair_diff(pair)
+
         if resolve in ("local", "skip"):
-            self.resolve_all = resolve
+            # self.resolve_all = resolve
             return resolve
 
         while True:
             prompt = "Use " + M + "L" + R + "ocal, " + M + "S" + R + "kip, " + \
-                M + "B" + R + "inary compare, " + M + "H" + R + "elp)? "
+                M + "B" + R + "inary compare, " + M + "H" + R + "elp ? "
 
             r = console_input(prompt).strip()
+
             if r in ("h", "H", "?"):
                 print("The following keys are supported:")
                 print("  'b': Binary compare")
                 print("  'l': Upload local file")
-                print("  's': Skip this file (leave both versions unchanged)")
+                print("  's': Skip this file (leave both targets unchanged)")
                 print("Hold Shift (upper case letters) to apply choice for all remaining conflicts.")
                 print("Hit Ctrl+C to abort.")
                 continue
             elif r in ("B", "b"):
-                self._compare_file(local, remote)
+                self._compare_file(pair.local, pair.remote)
                 continue
             elif r in ("L", "S"):
                 r = self._resolve_shortcuts[r.lower()]
@@ -943,7 +942,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
 
         classification = (pair.local_classification, pair.remote_classification)
 
-        print("re_classify_pair", pair)
+        # print("re_classify_pair", pair)
         if delete:
             if classification == ("new", "missing"):
                 assert pair.operation == "copy_local"
@@ -969,18 +968,25 @@ class DownloadSynchronizer(BiDirSynchronizer):
     def _interactive_resolve(self, pair):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
         if self.resolve_all:
+            if self.options["verbose"] >= 5:
+                self._print_pair_diff(pair)
             return self.resolve_all
+
         resolve = self.options.get("resolve", "skip")
         assert resolve in ("remote", "ask", "skip")
+
+        if resolve == "ask" or self.options["verbose"] >= 5:
+            self._print_pair_diff(pair)
+
         if resolve in ("remote", "skip"):
-            self.resolve_all = resolve
+            # self.resolve_all = resolve
             return resolve
 
         RED = ansi_code("Fore.LIGHTRED_EX")
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
-        self._print_pair_diff(pair)
+        # self._print_pair_diff(pair)
 
         while True:
             prompt = "Use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + \
@@ -991,7 +997,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
                 print("The following keys are supported:")
                 print("  'b': Binary compare")
                 print("  'r': Download remote file")
-                print("  's': Skip this file (leave both versions unchanged)")
+                print("  's': Skip this file (leave both targets unchanged)")
                 print("Hold Shift (upper case letters) to apply choice for all remaining conflicts.")
                 print("Hit Ctrl+C to abort.")
                 continue
@@ -1030,7 +1036,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
     def on_copy_local(self, pair):
         # Download does not modify remote target
         status = pair.remote.classification if pair.remote else "missing"
-        self._log_action("copy", status, ">", pair.local)
+        self._log_action("skip", status, ">", pair.local)
 
     def on_delete_remote(self, pair):
         # Download does not modify remote target
