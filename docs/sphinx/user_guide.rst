@@ -3,7 +3,9 @@ User Guide
 ==========
 
 .. note::
-    This page describes release 1.x.
+    This page describes release 2.x.
+
+    Run ``pyftpsync --help`` to get help on your current version.
 
 
 Command line syntax
@@ -12,27 +14,30 @@ Command line syntax
 Use the ``--help`` or ``-h`` argument to get help::
 
     $ pyftpsync -h
-    usage: pyftpsync [-h] [--verbose | --quiet] [--version] [--progress]
-                     {upload,download,sync} ...
+    usage: pyftpsync [-h] [--verbose | --quiet] [-V] [--progress]
+                     {upload,download,sync,scan} ...
 
     Synchronize folders over FTP.
 
     positional arguments:
-      {upload,download,sync}
+      {upload,download,sync,scan}
                             sub-command help
         upload              copy new and modified files to remote folder
         download            copy new and modified files from remote folder to
                             local target
         sync                synchronize new and modified files between remote
                             folder and local target
+        scan                repair, purge, or check targets
 
     optional arguments:
       -h, --help            show this help message and exit
       --verbose, -v         increment verbosity by one (default: 3, range: 0..5)
       --quiet, -q           decrement verbosity by one
-      --version             show program's version number and exit
+      -V, --version         show program's version number and exit
       --progress, -p        show progress info, even if redirected or verbose < 3
-   $
+
+    See also https://github.com/mar10/pyftpsync
+    $
 
 
 Upload files syntax
@@ -40,8 +45,8 @@ Upload files syntax
 
 Command specific help is available like so::
 
-    $ pyftpsync upload --help
-    usage: pyftpsync upload [-h] [-x] [-f INCLUDE_FILES] [-o OMIT]
+    $ pyftpsync upload -h
+    usage: pyftpsync upload [-h] [--dry-run] [-m MATCH] [-x EXCLUDE]
                             [--store-password] [--no-prompt] [--no-color]
                             [--force] [--resolve {local,skip,ask}] [--delete]
                             [--delete-unmatched]
@@ -53,26 +58,27 @@ Command specific help is available like so::
 
     optional arguments:
       -h, --help            show this help message and exit
-      -x, --execute         turn off the dry-run mode (which is ON by default),
-                            that would just print status messages but does not
-                            change anything
-      -f INCLUDE_FILES, --include-files INCLUDE_FILES
+      --dry-run             just simulate and log results, but don't change
+                            anything
+      -m MATCH, --match MATCH
                             wildcard for file names (default: all, separate
                             multiple values with ',')
-      -o OMIT, --omit OMIT  wildcard of files and directories to exclude (applied
-                            after --include)
+      -x EXCLUDE, --exclude EXCLUDE
+                            wildcard of files and directories to exclude (applied
+                            after --match, default: .DS_Store,.git,.hg,.svn
       --store-password      save password to keyring if login succeeds
       --no-prompt           prevent prompting for missing credentials
       --no-color            prevent use of ansi terminal color codes
       --force               overwrite remote files, even if the target is newer
                             (but no conflict was detected)
       --resolve {local,skip,ask}
-                            conflict resolving strategy (default: 'skip')
+                            conflict resolving strategy (default: 'ask')
       --delete              remove remote files if they don't exist locally
       --delete-unmatched    remove remote files if they don't exist locally or
                             don't match the current filter (implies '--delete'
                             option)
-   $
+    $
+
 
 Example: Upload files
 ---------------------
@@ -87,9 +93,19 @@ don't exist locally::
 
   $ pyftpsync upload ~/temp ftp://example.com/target/folder --delete
 
-Add the ``-x`` option to switch from DRY-RUN mode to real execution::
+Add the ``--dry-run`` option to switch to DRY-RUN mode, i.e. run in test mode without
+modifying files::
 
-  $ pyftpsync upload ~/temp ftp://example.com/target/folder --delete -x
+  $ pyftpsync upload ~/temp ftp://example.com/target/folder --delete --dry-run
+
+Add one or more  ``-v`` options to increase output verbosity::
+
+  $ pyftpsync -vv upload ~/temp ftp://example.com/target/folder --delete
+
+Mirror current directory to remote folder::
+
+  $ pyftpsync upload . ftp://example.com/target/folder --force --delete --resolve=local
+
 
 .. note:: Replace ``ftp://`` with ``ftps://`` to enable TLS encryption.
 
@@ -98,8 +114,8 @@ Synchronize files syntax
 ------------------------
 ::
 
-    $ pyftpsync sync --help
-    usage: pyftpsync sync [-h] [-x] [-f INCLUDE_FILES] [-o OMIT]
+    $ pyftpsync sync -h
+    usage: pyftpsync sync [-h] [--dry-run] [-m MATCH] [-x EXCLUDE]
                           [--store-password] [--no-prompt] [--no-color]
                           [--resolve {old,new,local,remote,skip,ask}]
                           LOCAL REMOTE
@@ -110,14 +126,14 @@ Synchronize files syntax
 
     optional arguments:
       -h, --help            show this help message and exit
-      -x, --execute         turn off the dry-run mode (which is ON by default),
-                            that would just print status messages but does not
-                            change anything
-      -f INCLUDE_FILES, --include-files INCLUDE_FILES
+      --dry-run             just simulate and log results, but don't change
+                            anything
+      -m MATCH, --match MATCH
                             wildcard for file names (default: all, separate
                             multiple values with ',')
-      -o OMIT, --omit OMIT  wildcard of files and directories to exclude (applied
-                            after --include)
+      -x EXCLUDE, --exclude EXCLUDE
+                            wildcard of files and directories to exclude (applied
+                            after --match, default: .DS_Store,.git,.hg,.svn
       --store-password      save password to keyring if login succeeds
       --no-prompt           prevent prompting for missing credentials
       --no-color            prevent use of ansi terminal color codes
@@ -137,6 +153,9 @@ Note that ``ftps:`` protocol was specified to enable TLS.
 
 Script examples
 ===============
+
+All options described that are available for command line mode, can also be passed to
+the synchronizers. For example ``--delete-unmatched`` becomes ``"delete_unmatched": True``.
 
 Upload changes from local folder to FTP server::
 
