@@ -50,27 +50,9 @@ class SphinxCommand(Command):
 
 
 try:
-  readme = open("readme_pypi.rst", "rt").read()
+    readme = open("readme_pypi.rst", "rt").read()
 except IOError:
-  readme = "(readme_pypi.rst not found. Running from tox/setup.py test?)"
-
-
-try:
-    from cx_Freeze import setup, Executable
-    executables = [
-        Executable(script="ftpsync/pyftpsync.py",
-                   base=None,
-                   targetName= "pyftpsync.exe",
-                   # icon= "doc/logo.ico",
-                   shortcutName= "pyftpsync",
-                   )
-         ]
-except ImportError:
-    # tox has problems to install cx_Freeze to it's venvs, but it is not needed
-    # for the tests anyway
-    print("Could not import cx_Freeze; 'build' and 'bdist' commands will not be available.")
-    print("See https://pypi.python.org/pypi/cx_Freeze")
-    executables = []
+    readme = "(readme_pypi.rst not found. Running from tox/setup.py test?)"
 
 
 # 'setup.py upload' fails on Vista, because .pypirc is searched on 'HOME' path
@@ -81,6 +63,10 @@ if not "HOME" in os.environ and  "HOMEPATH" in os.environ:
 install_requires = ["colorama",
                     "keyring",
                     ]
+# The Windows MSI Setup should include some extras?
+# if "bdist_msi" in sys.argv:
+#     install_requires.extend([])
+
 tests_require = ["pytest",
                  "pytest-cov",
                  "tox",
@@ -89,8 +75,42 @@ tests_require = ["pytest",
 
 setup_requires = install_requires
 
+
+use_cx_freeze = False
+for cmd in ["bdist_msi"]:
+    if cmd in sys.argv:
+        use_cx_freeze = True
+        break
+
+if use_cx_freeze:
+    try:
+        from cx_Freeze import setup, Executable
+        executables = [
+            Executable(script="wsgidav/server/run_server.py",
+                       base=None,
+                       # base="Win32GUI",
+                       targetName="wsgidav.exe",
+                       icon="doc/logo.ico",
+                       shortcutName="WsgiDAV",
+                       # copyright="(c) 2009-2017 Martin Wendt",  # requires cx_Freeze PR#94
+                       # trademarks="...",
+                       )
+            ]
+    except ImportError:
+        # tox has problems to install cx_Freeze to it's venvs, but it is not needed
+        # for the tests anyway
+        print("Could not import cx_Freeze; 'build' and 'bdist' commands will not be available.")
+        print("See https://pypi.python.org/pypi/cx_Freeze")
+        executables = []
+else:
+    print("Did not import cx_Freeze, because 'bdist_msi' commands are not used ({})."
+        .format(sys.argv))
+    print("NOTE: this is a hack, because cx_Freeze seemed to sabotage wheel creation")
+    executables = []
+
+
 build_exe_options = {
-    "init_script": "Console",
+    # "init_script": "Console",
     "includes": install_requires,
     "packages": ["keyring.backends",  # loaded dynamically
                  ],
@@ -123,7 +143,7 @@ setup(name="pyftpsync",
         #Development Status :: 4 - Beta
         #Development Status :: 5 - Production/Stable
 
-      classifiers = ["Development Status :: 3 - Alpha",
+      classifiers = ["Development Status :: 4 - Beta",
                      "Environment :: Console",
                      "Intended Audience :: Information Technology",
                      "Intended Audience :: Developers",
@@ -138,7 +158,7 @@ setup(name="pyftpsync",
                      "Topic :: Software Development :: Libraries :: Python Modules",
                      "Topic :: Utilities",
                      ],
-      keywords = "python ftp synchronize tool",
+      keywords = "python ftp synchronize tftp tool",
 #      platforms=["Unix", "Windows"],
       license = "The MIT License",
       install_requires = install_requires,
@@ -166,5 +186,5 @@ setup(name="pyftpsync",
       executables = executables,
       options = {"build_exe": build_exe_options,
                  "bdist_msi": bdist_msi_options,
-                 }
+                 },
       )

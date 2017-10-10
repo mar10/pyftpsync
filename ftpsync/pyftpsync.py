@@ -177,7 +177,7 @@ def run():
             exit(2)
 
     elif not hasattr(args, "command"):
-        parser.error("missing command (choose from 'upload', 'download', 'sync')")
+        parser.error("missing command (choose from 'upload', 'download', 'sync', 'scan')")
 
     # Post-process and check arguments
     if hasattr(args, "delete_unmatched") and args.delete_unmatched:

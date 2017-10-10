@@ -8,7 +8,7 @@ User Guide
     Run ``pyftpsync --help`` to get help on your current version.
 
 
-Command line syntax
+Command Line Syntax
 ===================
 
 Use the ``--help`` or ``-h`` argument to get help::
@@ -40,7 +40,7 @@ Use the ``--help`` or ``-h`` argument to get help::
     $
 
 
-Upload files syntax
+Upload Files Syntax
 -------------------
 
 Command specific help is available like so::
@@ -80,7 +80,7 @@ Command specific help is available like so::
     $
 
 
-Example: Upload files
+Example: Upload Files
 ---------------------
 
 Upload all new and modified files from user's temp folder to an FTP server.
@@ -110,7 +110,7 @@ Mirror current directory to remote folder::
 .. note:: Replace ``ftp://`` with ``ftps://`` to enable TLS encryption.
 
 
-Synchronize files syntax
+Synchronize Files Syntax
 ------------------------
 ::
 
@@ -141,7 +141,7 @@ Synchronize files syntax
                             conflict resolving strategy (default: 'ask')
     $
 
-Example: Synchronize folders
+Example: Synchronize Folders
 ----------------------------
 
 Two-way synchronization of a local folder with an FTP server::
@@ -151,7 +151,7 @@ Two-way synchronization of a local folder with an FTP server::
 Note that ``ftps:`` protocol was specified to enable TLS.
 
 
-Script examples
+Script Examples
 ===============
 
 All options described that are available for command line mode, can also be passed to
