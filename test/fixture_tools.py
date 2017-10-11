@@ -24,7 +24,7 @@ from unittest.case import SkipTest
 from ftpsync.metadata import DirMetadata
 from ftpsync.synchronizers import BiDirSynchronizer
 from ftpsync.targets import FsTarget, make_target
-from ftpsync.util import to_str, to_binary, urlparse
+from ftpsync.util import to_str, to_binary, urlparse, StringIO
 
 
 PYFTPSYNC_TEST_FOLDER = os.environ.get("PYFTPSYNC_TEST_FOLDER") or tempfile.mkdtemp()
@@ -35,6 +35,42 @@ STAMP_20140101_120000 = 1388577600.0  # Wed, 01 Jan 2014 12:00:00 GMT
 # stamp = calendar.timegm(dt.timetuple())
 # print(stamp)  # --> 1388577600
 # 1/0
+
+
+class CaptureStdout(list):
+    """Context manager that redirects sys.stdout into a buffer.
+
+    Usage:
+        with CaptureStdout() as out:
+            do_semthing()
+        print(out)
+
+    Taken from here https://stackoverflow.com/a/16571630/19166
+    and expanded to capture stderr as well.
+
+    Note: For testing python scripts, it may dependend on the Python version whether
+    output is some output is written to stdout or stderr, so we need to check both:
+    https://stackoverflow.com/a/31715011/19166
+    """
+    def __init__(self, stdout=True, stderr=True):
+        self._do_stdout = stdout
+        self._do_stderr = stderr
+
+    def __enter__(self):
+        self._stdout = sys.stdout
+        self._stderr = sys.stderr
+        self._stringio = StringIO()
+        if self._do_stdout:
+            sys.stdout = self._stringio
+        if self._do_stderr:
+            sys.stderr = self._stringio
+        return self
+
+    def __exit__(self, *args):
+        self.extend(self._stringio.getvalue().splitlines())
+        del self._stringio    # free up some memory
+        sys.stdout = self._stdout
+        sys.stderr = self._stderr
 
 
 def prepare_fixture():
@@ -310,6 +346,23 @@ def check_ftp_test_connection(test_folder, ftp_url, keep_open=False):
     if keep_open:
         return (ftp, parts.path)
     return True
+
+
+def get_local_test_url():
+    return os.path.join(PYFTPSYNC_TEST_FOLDER, "local")
+
+
+def get_remote_test_url():
+    if FTP_PRECONDITIONS_PASSED is None:
+        try:
+            check_ftp_test_connection(PYFTPSYNC_TEST_FOLDER, PYFTPSYNC_TEST_FTP_URL)
+        except SkipTest:
+            pass
+
+    if FTP_PRECONDITIONS_PASSED:
+        return PYFTPSYNC_TEST_FTP_URL
+    return os.path.join(PYFTPSYNC_TEST_FOLDER, "remote")
+
 
 #===============================================================================
 # _SyncTestBase

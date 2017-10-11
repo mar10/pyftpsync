@@ -5,37 +5,31 @@ Tests for pyftpsync
 from __future__ import print_function
 
 import os
+import re
 import sys
 import unittest
 
 from ftpsync import pyftpsync, __version__
-from test.fixture_tools import _SyncTestBase, PYFTPSYNC_TEST_FOLDER
+from test.fixture_tools import _SyncTestBase, PYFTPSYNC_TEST_FOLDER, CaptureStdout, \
+    get_local_test_url, get_remote_test_url
 
 
-try:
-    from io import StringIO
-except ImportError:
-    from cStringIO import StringIO
+def run_script(*args, **kw):
+    """Run `pyftpsync <args>`, check exit code, and return output.
 
+    Example:
+        out = run_script("-h")
+        assert "pyftpsync" in out
 
-class CaptureStdout(list):
-    def __enter__(self):
-        self._stdout = sys.stdout
-        sys.stdout = self._stringio = StringIO()
-        return self
-    def __exit__(self, *args):
-        self.extend(self._stringio.getvalue().splitlines())
-        del self._stringio    # free up some memory
-        sys.stdout = self._stdout
-
-
-def run_script(*args, expect_code=0, **kw):
-    """Run `pyftpsync args` and return output."""
+        out = run_script("foobar", expect_code=2)
+    """
+    expect_code = kw.get("expect_code", 0)
     sys.argv = ["pyftpsync_dummy"] + list(args)
-    # print("S", sys.argv)
     errcode = 0
     out = []
     try:
+        # Depending on the Python version, some output may go to stdout or stderr,
+        # so we capture both (see https://stackoverflow.com/a/31715011/19166)
         with CaptureStdout() as out:
             pyftpsync.run()
     except SystemExit as e:
@@ -57,14 +51,15 @@ class ScriptTest(_SyncTestBase):
     def setUp(self):
         # Call self._prepare_initial_synced_fixture():
         super(ScriptTest, self).setUp()
+        self.local = get_local_test_url()
+        self.remote = get_remote_test_url()
 
     def tearDown(self):
         super(ScriptTest, self).tearDown()
 
     def test_basic(self):
         out = run_script("--version")
-        # self.assertEqual(errcode, 0)
-        self.assertEqual(out, __version__)
+        assert out == __version__
 
         out = run_script("--help")
         assert "usage: pyftpsync" in out
@@ -72,8 +67,22 @@ class ScriptTest(_SyncTestBase):
         out = run_script("foobar", expect_code=2)
 
     def test_scan_list(self):
-        out = run_script("scan", os.path.join(PYFTPSYNC_TEST_FOLDER, "local"), "--list")
-        assert "file1.txt                                2014-01-01 13:00:00" in out
+        out = run_script("scan", self.local, "--list")
+        # We expect "file1.txt [spaces] 2014-01-01 13:00:00"
+        # but the time zone may be different on the travis server, so we relax:
+        assert re.match("file1.txt\s+2014-01-01 \d\d:00:00", out)
+
+    def test_sync(self):
+        out = run_script("sync", self.local, self.remote, "--dry-run")
+        assert "(DRY-RUN) Wrote 0/16 files in 7 dirs" in out
+
+    def test_upload(self):
+        out = run_script("upload", self.local, self.remote, "--dry-run")
+        assert "(DRY-RUN) Wrote 0/16 files in 7 dirs" in out
+
+    def test_download(self):
+        out = run_script("download", self.local, self.remote, "--dry-run")
+        assert "(DRY-RUN) Wrote 0/16 files in 7 dirs" in out
 
 
 #===============================================================================

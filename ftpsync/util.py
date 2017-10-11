@@ -30,6 +30,11 @@ except ImportError:
     print("Unable to import 'keyring' library: Storage of passwords is not available. Try `pip install keyring`.")
     keyring = None
 
+try:
+    from cStringIO import StringIO  # Py2
+except ImportError:
+    from io import StringIO  # Py3
+
 
 DEFAULT_CREDENTIAL_STORE = "pyftpsync.pw"
 DRY_RUN_PREFIX = "(DRY-RUN) "
