@@ -18,7 +18,7 @@ except ImportError:
     from cStringIO import StringIO
 
 
-class Capturing(list):
+class CaptureStdout(list):
     def __enter__(self):
         self._stdout = sys.stdout
         sys.stdout = self._stringio = StringIO()
@@ -30,13 +30,13 @@ class Capturing(list):
 
 
 def run_script(*args, expect_code=0, **kw):
-    """Run `pyftpsync args` and return (errcode, output)."""
-    pyftpsync.sys.argv = ["pyftpsync_dummy"] + list(args)
+    """Run `pyftpsync args` and return output."""
+    sys.argv = ["pyftpsync_dummy"] + list(args)
     # print("S", sys.argv)
     errcode = 0
     out = []
     try:
-        with Capturing() as out:
+        with CaptureStdout() as out:
             pyftpsync.run()
     except SystemExit as e:
         errcode = e.code

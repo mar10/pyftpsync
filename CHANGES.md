@@ -9,6 +9,7 @@
 - `-o`, `--omit` option was renamed to `-x`, `--exclude`.
 - Modified format of .pyftpsync.meta.json
 - Dropped support for Python 2.6 and 3.3
+- CLI: Defined error codes
 - New `scan` command to list, purge, etc remote targets.
 - Remove lock file on Ctrl-C
 - Add FTPS (TLS) support
