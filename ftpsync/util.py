@@ -250,32 +250,3 @@ def byte_compare(stream_a, stream_b):
         if not b1:  # both buffers empty
             break
     return (equal, ofs)
-
-#===============================================================================
-# LogginFileWrapper
-# Wrapper around a file for writing to write a hash sign every block.
-#===============================================================================
-#class LoggingFileWrapper(object):
-#    def __init__(self, fp, callback=None):
-#        self.fp = fp
-#        self.callback = callback or self.default_callback
-#        self.bytes = 0
-#
-#    def __enter__(self):
-#        return self
-#
-#    def __exit__(self, type, value, tb):
-#        self.close()
-#
-#    @staticmethod
-#    def default_callback(wrapper, data):
-#        print("#", end="")
-#        sys.stdout.flush()
-#
-#    def write(self, data):
-#        self.bytes += len(data)
-#        self.fp.write(data)
-#        self.callback(self, data)
-#
-#    def close(self):
-#        self.fp.close()

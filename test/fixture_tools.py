@@ -349,10 +349,12 @@ def check_ftp_test_connection(test_folder, ftp_url, keep_open=False):
 
 
 def get_local_test_url():
+    """Return path to local fixture folder."""
     return os.path.join(PYFTPSYNC_TEST_FOLDER, "local")
 
 
 def get_remote_test_url():
+    """Return URL to remote fixture (ftp:// URL if available, folder path otherwise)."""
     if FTP_PRECONDITIONS_PASSED is None:
         try:
             check_ftp_test_connection(PYFTPSYNC_TEST_FOLDER, PYFTPSYNC_TEST_FTP_URL)

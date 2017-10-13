@@ -16,7 +16,7 @@ import sys
 import time
 
 from ftpsync import targets
-from ftpsync.metadata import DirMetadata
+from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersion
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftpsync.targets import _Target
 from ftpsync.util import get_credentials_for_url, prompt_for_password, \
@@ -340,9 +340,11 @@ class FtpTarget(_Target):
         if local_res["has_meta"]:
             try:
                 self.cur_dir_meta.read()
+            except IncompatibleMetadataVersion:
+                raise  # this should end the script (user should pass --migrate)
             except Exception as e:
                 print("Could not read meta info {}: {}"
-                        .format(self.cur_dir_meta, e), file=sys.stderr)
+                      .format(self.cur_dir_meta, e), file=sys.stderr)
 
             meta_files = self.cur_dir_meta.list
 

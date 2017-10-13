@@ -22,6 +22,7 @@ to make this easy::
 
 	$ cd /path/to/pyftpsync
 	$ pipenv shell
+    bash-3.2$
 
 Alternatively (especially on Windows), use `virtualenv <https://virtualenv.pypa.io/en/latest/>`_
 to create and activate the virtual environment::

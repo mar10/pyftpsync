@@ -58,6 +58,11 @@ def run():
                         action="store_true",
                         default=False,
                         help="show progress info, even if redirected or verbose < 3")
+    parser.add_argument("--migrate",
+                        action="store_true",
+                        default=False,
+                        help="replace meta data files from different versions with current format. "
+                             "Existing data will be discarded.")
 
     subparsers = parser.add_subparsers(help="sub-command help")
 

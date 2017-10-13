@@ -42,20 +42,20 @@ def run_script(*args, **kw):
 
 
 #===============================================================================
-# ScriptTest
+# CliTest
 #===============================================================================
 
-class ScriptTest(_SyncTestBase):
+class CliTest(_SyncTestBase):
     """Test command line script interface."""
 
     def setUp(self):
         # Call self._prepare_initial_synced_fixture():
-        super(ScriptTest, self).setUp()
+        super(CliTest, self).setUp()
         self.local = get_local_test_url()
         self.remote = get_remote_test_url()
 
     def tearDown(self):
-        super(ScriptTest, self).tearDown()
+        super(CliTest, self).tearDown()
 
     def test_basic(self):
         out = run_script("--version")
