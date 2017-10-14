@@ -16,12 +16,12 @@ from ftpsync.util import IS_REDIRECTED, DRY_RUN_PREFIX, \
     ansi_code, console_input, VT_ERASE_LINE, byte_compare, eps_compare, pretty_stamp
 
 
+#: Default for --exclude CLI option
+#: Note: DirMetadata.META_FILE_NAME and LOCK_FILE_NAME are always ignored
 DEFAULT_OMIT = [".DS_Store",
                 ".git",
                 ".hg",
                 ".svn",
-                DirMetadata.META_FILE_NAME,
-                DirMetadata.LOCK_FILE_NAME,
                 ]
 
 
@@ -30,6 +30,46 @@ DEFAULT_OMIT = [".DS_Store",
 #===============================================================================
 
 _ts = pretty_stamp
+
+def process_options(opts):
+    """Check and prepare options dict."""
+    # Convert match and exclude args into pattern lists
+    match = opts.get("match")
+    if match and type(match) is str:
+        opts["match"] = [ pat.strip() for pat in match.split(",") ]
+    else:
+        opts["match"] = []
+
+    exclude = opts.get("exclude")
+    if exclude and type(exclude) is str:
+        opts["exclude"] = [ pat.strip() for pat in exclude.split(",") ]
+    else:
+        opts["exclude"] = []
+
+
+def match_path(entry, opts):
+    """Return True if `path` matches `match` and `exclude` options."""
+    if entry.name == DirMetadata.META_FILE_NAME:
+        return False
+    path = entry.get_rel_path()
+    ok = True
+    match = opts.get("match")
+    exclude = opts.get("exclude")
+    if entry.is_file() and match:
+        assert type(match) is list
+        ok = False
+        for pat in match:
+            if fnmatch.fnmatch(path, pat):
+                ok = True
+                break
+    if ok and exclude:
+        assert type(exclude) is list
+        for pat in exclude:
+            if fnmatch.fnmatch(path, pat):
+                ok = False
+                break
+    # print("match", ok, entry)
+    return ok
 
 #===============================================================================
 # BaseSynchronizer
@@ -45,18 +85,12 @@ class BaseSynchronizer(object):
         self.local = local
         self.remote = remote
         #TODO: check for self-including paths
+
         self.options = options or {}
+        process_options(self.options)
+
         self.verbose = self.options.get("verbose", 3)
         self.dry_run = self.options.get("dry_run", False)
-
-        self.match = self.options.get("match")
-        if self.match:
-            self.match = [ pat.strip() for pat in self.match.split(",") ]
-
-        self.exclude = self.options.get("exclude")
-        if self.exclude:
-            self.exclude = [ pat.strip() for pat in self.exclude.split(",") ]
-
         self.local.synchronizer = self
         self.local.peer = remote
         self.remote.synchronizer = self
@@ -117,24 +151,25 @@ class BaseSynchronizer(object):
         self._stats[name] = self._stats.get(name, 0) + ofs
 
     def _match(self, entry):
-        name = entry.name
-        if name == DirMetadata.META_FILE_NAME:
-            return False
-#        if name in self.DEFAULT_OMIT:
-#            return False
-        ok = True
-        if entry.is_file() and self.match:
-            ok = False
-            for pat in self.match:
-                if fnmatch.fnmatch(name, pat):
-                    ok = True
-                    break
-        if ok and self.exclude:
-            for pat in self.exclude:
-                if fnmatch.fnmatch(name, pat):
-                    ok = False
-                    break
-        return ok
+        return match_path(entry, self.options)
+#         name = entry.name
+#         if name == DirMetadata.META_FILE_NAME:
+#             return False
+# #        if name in self.DEFAULT_OMIT:
+# #            return False
+#         ok = True
+#         if entry.is_file() and self.match:
+#             ok = False
+#             for pat in self.match:
+#                 if fnmatch.fnmatch(name, pat):
+#                     ok = True
+#                     break
+#         if ok and self.exclude:
+#             for pat in self.exclude:
+#                 if fnmatch.fnmatch(name, pat):
+#                     ok = False
+#                     break
+#         return ok
 
     def run(self):
         start = time.time()

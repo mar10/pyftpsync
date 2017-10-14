@@ -5,39 +5,72 @@ Development
 Install for Development
 =======================
 
-If you plan to debug or contribute, install to run directly from the source.
+First off, thanks for taking the time to contribute!
+
+Following a guideline that may help.
+
+Happy hacking :)
 
 
 Fork Repository
 ---------------
 
-.. todo:: Describe
+Clone pyftpsync to a local folder and checkout the branch you want to work on::
+
+    $ git clone git@github.com:mar10/pyftpsync.git
+    $ cd pyftpsync
+    $ git checkout my_branch
+
+
+Create a Pull Request
+---------------------
+
+.. todo::
+
+    	TODO
 
 
 Work in a Virtual Environment
 -----------------------------
 
+We need `Python 2.7 <https://www.python.org/downloads/>`_,
+`Python 3.4+ <https://www.python.org/downloads/>`_,
+and `pip <https://pip.pypa.io/en/stable/installing/#do-i-need-to-install-pip>`_ on our system.
+
 On Linux/OS X, we recommend to use `pipenv <https://github.com/kennethreitz/pipenv>`_
 to make this easy::
 
-	$ cd /path/to/pyftpsync
-	$ pipenv shell
+    $ cd /path/to/pyftpsync
+    $ pipenv shell
     bash-3.2$
 
 Alternatively (especially on Windows), use `virtualenv <https://virtualenv.pypa.io/en/latest/>`_
-to create and activate the virtual environment::
+to create and activate the virtual environment.
+For example using Python's builtin ``venv`` (instead of ``virtualenvwrapper``)
+in a Windows PowerShell::
 
-	TODO
+    > py -3.6 -m venv c:\env\pyftpsync_py36
+    > c:\env\pyftpsync_py36\Scripts\Activate.ps1
+    (pyftpsync_py36) $
 
-Now we can setup the requirements and install pyftpsync to run from source code::
+Now that the new environment exists and is activated, we can setup the requirements
+and install pyftpsync to run from source code::
 
-	$ pip install -r requirements-dev.txt
-	$ python setup.py develop
-	$ python setup.py test
+    $ pip install -r requirements-dev.txt
+    $ python setup.py develop
+
+The code should now run::
+
+    $ pyftpsync --version
+    $ 2.0.0
+
+The test suite should run as well::
+
+    $ python setup.py test
 
 Build Sphinx documentation::
 
-	$ python setup.py sphinx
+    $ python setup.py sphinx
 
 
 Run Tests
@@ -209,28 +242,3 @@ The FTP server exposes the whole file system, so the URL must start from root::
 
     .. seealso::
       https://delightlylinux.wordpress.com/2017/06/10/how-to-set-up-anonymous-ftp-with-proftp/
-
-
-How to Contribute
-=================
-
-.. todo:
-    https://pip.pypa.io/en/stable/development/
-
-Create a Fork:
-
-
-Checkout the source code:
-
-TODO
-
-
-Create a Pull Request::
-
-	TODO
-
-.. Make a release::
-
-	$ python setup.py test
-	$ python setup.py bdist_wheel
-	$ twine upload

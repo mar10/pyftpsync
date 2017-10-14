@@ -12,50 +12,59 @@ import time
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import DirectoryEntry
 from ftpsync.targets import make_target
+from ftpsync.synchronizers import process_options, match_path, DEFAULT_OMIT
+from ftpsync.util import pretty_stamp, namespace_to_dict
 
 
 def add_scan_parser(subparsers):
     # --- Create the parser for the "scan" command -----------------------------
 
-    scan_parser = subparsers.add_parser("scan",
+    parser = subparsers.add_parser("scan",
             help="repair, purge, or check targets")
-    # __add_common_sub_args(scan_parser)
+    # __add_common_sub_args(parser)
 
-    scan_parser.add_argument("target",
+    parser.add_argument("target",
             metavar="TARGET",
             default=".",
             help="path to target folder (default: %(default)s)")
-    scan_parser.add_argument("--dry-run",
+    parser.add_argument("--dry-run",
             action="store_true",
             help="just simulate and log results, but don't change anything")
-    scan_parser.add_argument("--store-password",
+    parser.add_argument("--store-password",
             action="store_true",
             help="save password to keyring if login succeeds")
-    scan_parser.add_argument("--no-prompt",
+    parser.add_argument("--no-prompt",
             action="store_true",
             help="prevent prompting for missing credentials")
-    scan_parser.add_argument("--no-color",
+    parser.add_argument("--no-color",
             action="store_true",
             help="prevent use of ansi terminal color codes")
-    scan_parser.add_argument("--list",
+    parser.add_argument("--list",
             action="store_true",
             help="print target files")
-    scan_parser.add_argument("-r", "--recursive",
+    parser.add_argument("-r", "--recursive",
             action="store_true",
             help="visit sub folders")
-    scan_parser.add_argument("--remove-meta",
+    parser.add_argument("-m", "--match",
+                        help="wildcard for file names using fnmatch syntax "
+                        "(default: match all, separate multiple values with ',')")
+    parser.add_argument("-x", "--exclude",
+                        default=",".join(DEFAULT_OMIT),
+                        help="wildcard of files and directories to exclude "
+                        "(applied after --match, default: '%(default)s')")
+    parser.add_argument("--remove-meta",
             action="store_true",
             help="delete all {} files".format(DirMetadata.META_FILE_NAME))
-    # scan_parser.add_argument("--remove-debug",
+    # parser.add_argument("--remove-debug",
     #         action="store_true",
     #         help="delete all {} files".format(DirMetadata.DEBUG_META_FILE_NAME))
-    scan_parser.add_argument("--remove-locks",
+    parser.add_argument("--remove-locks",
             action="store_true",
             help="delete all {} files".format(DirMetadata.LOCK_FILE_NAME))
 
-    scan_parser.set_defaults(command=scan_handler)
+    parser.set_defaults(command=scan_handler)
 
-    return scan_parser
+    return parser
 
 
 def scan_handler(args):
@@ -68,9 +77,17 @@ def scan_handler(args):
     file_count = 0
     processed_files = set()
 
+    opts = namespace_to_dict(args)
+    process_options(opts)
+
+    def _pred(entry):
+        """Walker predicate that check match/exclude options."""
+        if not match_path(entry, opts):
+            return False
+
     try:
         target.open()
-        for e in target.walk(recursive=args.recursive):
+        for e in target.walk(recursive=args.recursive, pred=_pred):
             is_dir = isinstance(e, DirectoryEntry)
             indent = "    " * (target.cur_dir.count("/") - root_depth)
 
@@ -84,7 +101,7 @@ def scan_handler(args):
                     print(indent, "[{e.name}]".format(e=e))
                 else:
                     delta = e.mtime_org - e.mtime
-                    dt_modified = datetime.fromtimestamp(e.mtime)
+                    dt_modified = pretty_stamp(e.mtime)
                     if delta:
                         prefix = "+" if delta > 0 else ""
                         print(indent, "{e.name:<40} {dt_modified} (system: {prefix}{delta})"

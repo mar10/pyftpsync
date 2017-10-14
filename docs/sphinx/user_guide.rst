@@ -8,8 +8,8 @@ User Guide
     Run ``pyftpsync --help`` to get help on your current version.
 
 
-Command Line Syntax
-===================
+Command Line Interface
+======================
 
 Use the ``--help`` or ``-h`` argument to get help::
 
@@ -38,6 +38,28 @@ Use the ``--help`` or ``-h`` argument to get help::
 
     See also https://github.com/mar10/pyftpsync
     $
+
+
+Target URLs
+-----------
+
+The ``local`` and ``remote`` target arguments can be file paths or URLs
+(currently the ``ftp`` and ``ftps`` protocols are supported).
+
+
+Matching and Filtering
+----------------------
+
+The ``--match`` option filters processed files using on or more patterns
+(using the `fnmatch syntax <https://docs.python.org/3/library/fnmatch.html#module-fnmatch>`_). |br|
+**Note:**  These patterns are only applied to files, not directories.
+
+The ``--exclude`` option is applied after `--match` and removes entries from processing. Unlike `--match`,
+these patterns are also applied to directories.
+
+Example::
+
+    $ pyftpsync scan /my/folder --list --match=*.js,*.css --exclude=.git,.DS_Store
 
 
 Upload Files Syntax
@@ -151,13 +173,39 @@ Two-way synchronization of a local folder with an FTP server::
 Note that ``ftps:`` protocol was specified to enable TLS.
 
 
+Verbosity Level
+---------------
+
+The verbosity level can have a value from 0 to 6::
+
+    0: quiet
+    1: show errors only
+    2: show conflicts and 1 line summary only
+    3: show write operations
+    4: show equal files
+    5: diff-info and benchmark summary
+    6: show FTP commands
+
+
+Exit Codes
+----------
+
+The CLI returns those exit codes::
+
+    0: OK
+    1: Error (network, internal, ...)
+    2: cli syntax error
+    3: Aborted by user
+    10: Unresolved conflicts remaining (with option --conflicts-as-error)
+
+
 Script Examples
 ===============
 
-All options described that are available for command line mode, can also be passed to
+All options that are available for command line, can also be passed to
 the synchronizers. For example ``--delete-unmatched`` becomes ``"delete_unmatched": True``.
 
-Upload changes from local folder to FTP server::
+Upload modified files from local folder to FTP server::
 
   from ftpsync.targets import FsTarget
   from ftpsync.ftp_target import FtpTarget
@@ -171,7 +219,7 @@ Upload changes from local folder to FTP server::
   s = UploadSynchronizer(local, remote, opts)
   s.run()
 
-Synchronize local folder with FTP server using TLS::
+Synchronize a local folder with an FTP server using TLS::
 
   from ftpsync.targets import FsTarget
   from ftpsync.ftp_target import FtpTarget

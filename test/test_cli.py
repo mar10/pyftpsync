@@ -9,36 +9,9 @@ import re
 import sys
 import unittest
 
-from ftpsync import pyftpsync, __version__
-from test.fixture_tools import _SyncTestBase, PYFTPSYNC_TEST_FOLDER, CaptureStdout, \
+from ftpsync import __version__
+from test.fixture_tools import _SyncTestBase, PYFTPSYNC_TEST_FOLDER, run_script, \
     get_local_test_url, get_remote_test_url
-
-
-def run_script(*args, **kw):
-    """Run `pyftpsync <args>`, check exit code, and return output.
-
-    Example:
-        out = run_script("-h")
-        assert "pyftpsync" in out
-
-        out = run_script("foobar", expect_code=2)
-    """
-    expect_code = kw.get("expect_code", 0)
-    sys.argv = ["pyftpsync_dummy"] + list(args)
-    errcode = 0
-    out = []
-    try:
-        # Depending on the Python version, some output may go to stdout or stderr,
-        # so we capture both (see https://stackoverflow.com/a/31715011/19166)
-        with CaptureStdout() as out:
-            pyftpsync.run()
-    except SystemExit as e:
-        errcode = e.code
-
-    if expect_code is not None:
-        assert errcode == expect_code
-
-    return "\n".join(out).strip()
 
 
 #===============================================================================

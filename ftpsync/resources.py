@@ -248,7 +248,7 @@ class _Resource(object):
                 comp.append("larger")
 
             if comp:
-                res += " (%s)" % ", ".join(comp)
+                res += " ({})".format(", ".join(comp))
         return res
 
     def __eq__(self, other):

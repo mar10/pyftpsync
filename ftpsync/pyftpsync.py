@@ -17,25 +17,9 @@ from pprint import pprint
 from ftpsync import __version__
 from ftpsync.scan_command import add_scan_parser
 from ftpsync.synchronizers import UploadSynchronizer, \
-    DownloadSynchronizer, BiDirSynchronizer
+    DownloadSynchronizer, BiDirSynchronizer, DEFAULT_OMIT
 from ftpsync.targets import make_target, FsTarget
-
-
-#def disable_stdout_buffering():
-#    """http://stackoverflow.com/questions/107705/python-output-buffering"""
-#    # Appending to gc.garbage is a way to stop an object from being
-#    # destroyed.  If the old sys.stdout is ever collected, it will
-#    # close() stdout, which is not good.
-#    gc.garbage.append(sys.stdout)
-#    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
-#disable_stdout_buffering()
-def namespace_to_dict(o):
-    """Convert an argparse namespace object to a dictionary."""
-    d = {}
-    for k, v in o.__dict__.items():
-        if not callable(v):
-            d[k] = v
-    return d
+from ftpsync.util import namespace_to_dict
 
 
 #===============================================================================
@@ -53,7 +37,7 @@ def run():
     qv_group.add_argument("--quiet", "-q", action="count", default=0,
                         help="decrement verbosity by one")
 
-    parser.add_argument("-V", "--version", action="version", version="%s" % __version__)
+    parser.add_argument("-V", "--version", action="version", version="{}".format(__version__))
     parser.add_argument("--progress", "-p",
                         action="store_true",
                         default=False,
@@ -79,11 +63,12 @@ def run():
                             action="store_true",
                             help="just simulate and log results, but don't change anything")
         parser.add_argument("-m", "--match",
-                            help="wildcard for file names (default: all, "
-                            "separate multiple values with ',')")
+                            help="wildcard for file names using fnmatch syntax "
+                            "(default: match all, separate multiple values with ',')")
         parser.add_argument("-x", "--exclude",
-                            help="wildcard of files and directories to exclude (applied after --match, "
-                            "default: .DS_Store,.git,.hg,.svn")
+                            default=",".join(DEFAULT_OMIT),
+                            help="wildcard of files and directories to exclude "
+                            "(applied after --match, default: '%(default)s')")
         parser.add_argument("--store-password",
                             action="store_true",
                             help="save password to keyring if login succeeds")
@@ -205,7 +190,7 @@ def run():
     elif args.command == "synchronize":
         s = BiDirSynchronizer(args.local_target, args.remote_target, opts)
     else:
-        parser.error("unknown command %s" % args.command)
+        parser.error("unknown command {}".format(args.command))
 
     s.is_script = True
 

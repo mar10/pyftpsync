@@ -231,13 +231,13 @@ class FsTarget(_Target):
         root_dir = os.path.expanduser(root_dir)
         root_dir = os.path.abspath(root_dir)
         if not os.path.isdir(root_dir):
-            raise ValueError("%s is not a directory" % root_dir)
+            raise ValueError("{} is not a directory.".format(root_dir))
         super(FsTarget, self).__init__(root_dir, extra_opts)
         self.support_set_time = True
         self.open()
 
     def __str__(self):
-        return "<FS:%s + %s>" % (self.root_dir, os.path.relpath(self.cur_dir, self.root_dir))
+        return "<FS:{} + {}>".format(self.root_dir, os.path.relpath(self.cur_dir, self.root_dir))
 
     def open(self):
         self.connected = True

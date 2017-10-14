@@ -51,6 +51,15 @@ VT_ERASE_LINE = "\x1b[2K"
 #         DEBUG_FLAGS.add("ftp_commands")
 
 
+def namespace_to_dict(o):
+    """Convert an argparse namespace object to a dictionary."""
+    d = {}
+    for k, v in o.__dict__.items():
+        if not callable(v):
+            d[k] = v
+    return d
+
+
 def eps_compare(f1, f2, eps):
     res = f1 - f2
     if abs(res) <= eps: # '<=',so eps == 0 works as expected
