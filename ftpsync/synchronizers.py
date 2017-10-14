@@ -119,6 +119,7 @@ class BaseSynchronizer(object):
                        "files_created": 0,
                        "files_deleted": 0,
                        "files_written": 0,
+                       "interactive_ask": 0,
                        "local_dirs": 0,
                        "local_files": 0,
                        "meta_bytes_read": 0,
@@ -152,24 +153,6 @@ class BaseSynchronizer(object):
 
     def _match(self, entry):
         return match_path(entry, self.options)
-#         name = entry.name
-#         if name == DirMetadata.META_FILE_NAME:
-#             return False
-# #        if name in self.DEFAULT_OMIT:
-# #            return False
-#         ok = True
-#         if entry.is_file() and self.match:
-#             ok = False
-#             for pat in self.match:
-#                 if fnmatch.fnmatch(name, pat):
-#                     ok = True
-#                     break
-#         if ok and self.exclude:
-#             for pat in self.exclude:
-#                 if fnmatch.fnmatch(name, pat):
-#                     ok = False
-#                     break
-#         return ok
 
     def run(self):
         start = time.time()
@@ -654,6 +637,8 @@ class BiDirSynchronizer(BaseSynchronizer):
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
+        self._inc_stat("interactive_ask")
+
         while True:
             prompt = "Use " + M + "L" + R + "ocal, " + M + "R" + R + "emote, " + \
                 M + "O" + R + "lder, " + M + "N" + R + "ewer, " + \
@@ -895,6 +880,8 @@ class UploadSynchronizer(BiDirSynchronizer):
             # self.resolve_all = resolve
             return resolve
 
+        self._inc_stat("interactive_ask")
+
         while True:
             prompt = "Use " + M + "L" + R + "ocal, " + M + "S" + R + "kip, " + \
                 M + "B" + R + "inary compare, " + M + "H" + R + "elp ? "
@@ -1022,6 +1009,8 @@ class DownloadSynchronizer(BiDirSynchronizer):
         R = ansi_code("Style.RESET_ALL")
 
         # self._print_pair_diff(pair)
+
+        self._inc_stat("interactive_ask")
 
         while True:
             prompt = "Use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + \
