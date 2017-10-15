@@ -51,7 +51,10 @@ def match_path(entry, opts):
     """Return True if `path` matches `match` and `exclude` options."""
     if entry.name == DirMetadata.META_FILE_NAME:
         return False
-    path = entry.get_rel_path()
+    # TODO: currently we use fnmatch syntax and match against names.
+    # We also might allow glob syntax and match against the whole relative path instead
+    # path = entry.get_rel_path()
+    path = entry.name
     ok = True
     match = opts.get("match")
     exclude = opts.get("exclude")

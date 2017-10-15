@@ -44,7 +44,16 @@ Target URLs
 -----------
 
 The ``local`` and ``remote`` target arguments can be file paths or URLs
-(currently the ``ftp`` and ``ftps`` protocols are supported).
+(currently the ``ftp`` and ``ftps`` protocols are supported)::
+
+    $ pyftpsync upload ~/temp ftp://example.com/target/folder
+
+FTP URLs may contain credentials::
+
+    $ pyftpsync upload ~/temp ftp://joe:secret@example.com/target/folder
+
+Note that `pyftpsync` also supports prompting for passwords and storing passwords
+in the system keyring.
 
 
 Matching and Filtering
@@ -59,7 +68,7 @@ these patterns are also applied to directories.
 
 Example::
 
-    $ pyftpsync scan /my/folder --list --match=*.js,*.css --exclude=.git,.DS_Store
+    $ pyftpsync scan /my/folder --list --match=*.js,*.css --exclude=.git,build,node_modules
 
 
 Upload Files Syntax
@@ -194,9 +203,10 @@ The CLI returns those exit codes::
 
     0: OK
     1: Error (network, internal, ...)
-    2: cli syntax error
+    2: CLI syntax error
     3: Aborted by user
-    10: Unresolved conflicts remaining (with option --conflicts-as-error)
+
+..    10: Unresolved conflicts remaining (with option --conflicts-as-error)
 
 
 Script Examples
