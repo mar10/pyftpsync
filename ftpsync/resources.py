@@ -268,7 +268,7 @@ class _Resource(object):
         return self.target.is_local()
 
     def get_sync_info(self, key=None):
-        raise NotImplementedError
+        return None
 
     def set_sync_info(self, local_file):
         raise NotImplementedError
@@ -375,6 +375,22 @@ class FileEntry(_Resource):
 class DirectoryEntry(_Resource):
     def __init__(self, target, rel_path, name, size, mtime, unique):
         super(DirectoryEntry, self).__init__(target, rel_path, name, size, mtime, unique)
+        # Directories don't have a size (that we could reasonably use for classification)
+        self.size = 0
 
     def is_dir(self):
         return True
+
+    # def as_string(self, other_resource=None):
+    #     dt = datetime.fromtimestamp(self.mtime)
+    #     res = "{}".format(dt.strftime("%Y-%m-%d %H:%M:%S"))
+    #     if other_resource:
+    #         comp = []
+    #         if self.mtime < other_resource.mtime:
+    #             comp.append("older")
+    #         elif self.mtime > other_resource.mtime:
+    #             comp.append("newer")
+    #
+    #         if comp:
+    #             res += " ({})".format(", ".join(comp))
+    #     return res

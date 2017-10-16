@@ -169,7 +169,7 @@ def save_password(url, username, password):
 
 def str_to_bool(val):
     """Return a boolean for '0', 'false', 'on', ...."""
-    val = str(val).lower()
+    val = str(val).lower().strip()
     if val in ("1", "true", "on", "yes"):
         return True
     elif val in ("0", "false", "off", "no"):

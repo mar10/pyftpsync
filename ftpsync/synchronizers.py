@@ -49,7 +49,7 @@ def process_options(opts):
 
 def match_path(entry, opts):
     """Return True if `path` matches `match` and `exclude` options."""
-    if entry.name == DirMetadata.META_FILE_NAME:
+    if entry.name in (DirMetadata.META_FILE_NAME, DirMetadata.LOCK_FILE_NAME):
         return False
     # TODO: currently we use fnmatch syntax and match against names.
     # We also might allow glob syntax and match against the whole relative path instead
@@ -353,7 +353,7 @@ class BaseSynchronizer(object):
                 color = ansi_code("Fore.RED")
             elif status == "conflict":
                 color = ansi_code("Fore.LIGHTRED_EX")
-            elif action == "skip" or status == "equal":
+            elif action == "skip" or status == "equal" or status == "visit":
                 color = ansi_code("Fore.LIGHTBLACK_EX")
 
             final = ansi_code("Style.RESET_ALL")
@@ -555,7 +555,7 @@ class BaseSynchronizer(object):
         self._log_action("", "modified", " >X", pair.remote)
 
     def on_need_compare(self, pair):
-        """Called when the remote resource should be deleted."""
+        """Re-classify pair based on file attributes and options."""
         self._log_action("", "different", "?", pair.local, min_level=2)
 
     def on_conflict(self, pair):
@@ -605,15 +605,19 @@ class BiDirSynchronizer(BaseSynchronizer):
 
         has_meta = any_entry.get_sync_info("m") is not None
 
-        print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})" + R)
-              .format(any_entry.name, _ts(any_entry.get_sync_info("u"))))
+        # print("pair", pair)
+        # print("pair.local", pair.local)
+        # print("pair.remote", pair.remote)
+
+        print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})." + R)
+              .format(any_entry.get_rel_path(), _ts(any_entry.get_sync_info("u"))))
         if has_meta:
-            print("    original modification time: {}, size: {:,d} bytes"
+            print("    Original modification time: {}, size: {:,d} bytes."
                   .format(_ts(any_entry.get_sync_info("m")), any_entry.get_sync_info("s")))
         else:
             print("    (No meta data available.)")
-        print("    local:  {}".format(pair.local.as_string() if pair.local else "n.a."))
-        print("    remote: {}".format(pair.remote.as_string(pair.local) if pair.remote else "n.a."))
+        print("    Local:  {}".format(pair.local.as_string() if pair.local else "n.a."))
+        print("    Remote: {}".format(pair.remote.as_string(pair.local) if pair.remote else "n.a."))
 
     def _interactive_resolve(self, pair):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
@@ -737,7 +741,18 @@ class BiDirSynchronizer(BaseSynchronizer):
         org_pair = c_pair
         org_operation = pair.operation
 
-        if c_pair == ("existing", "existing"):
+        # print("need_compare", pair)
+
+        if pair.is_dir:
+            # For directores, we cannot compare existing peer entries.
+            # Instead, we simply log (and traverse the children later).
+            pair.local_classification = pair.remote_classification = "existing"
+            pair.operation = "equal"
+            self._log_action("", "visit", "?", pair.local, min_level=4)
+            # self._log_action("", "equal", "=", pair.local, min_level=4)
+            return
+
+        elif c_pair == ("existing", "existing"):
             # Naive classification derived from file time and size
             time_cmp = eps_compare(pair.local.mtime, pair.remote.mtime, FileEntry.EPS_TIME)
             if time_cmp < 0:
@@ -748,6 +763,7 @@ class BiDirSynchronizer(BaseSynchronizer):
                 c_pair = ("unmodified", "unmodified")  # equal
             else:
                 c_pair = ("modified", "modified")  # conflict!
+
         elif c_pair == ("new", "new"):
             # Naive classification derived from file time and size
             time_cmp = eps_compare(pair.local.mtime, pair.remote.mtime, FileEntry.EPS_TIME)
@@ -772,7 +788,7 @@ class BiDirSynchronizer(BaseSynchronizer):
         return res
 
     def on_conflict(self, pair):
-        """Return False to prevent visiting of children"""
+        """Return False to prevent visiting of children."""
         # self._log_action("skip", "conflict", "!", pair.local, min_level=2)
         # print("on_conflict", pair)
         any_entry = pair.any_entry
@@ -836,6 +852,7 @@ class UploadSynchronizer(BiDirSynchronizer):
     def re_classify_pair(self, pair):
         force = self.options.get("force")
         delete = self.options.get("delete")
+        is_file = not pair.is_dir
 
         classification = (pair.local_classification, pair.remote_classification)
 
@@ -847,13 +864,13 @@ class UploadSynchronizer(BiDirSynchronizer):
                 # return
 
         if force:
-            if classification == ("new", "new"):
-                pair.override_operation("copy_local", "forced")
-            elif classification == ("unmodified", "deleted"):
-                pair.override_operation("copy_local", "restore")
-            elif classification == ("modified", "modified"):
+            if is_file and classification == ("new", "new"):
                 pair.override_operation("copy_local", "force")
-            elif classification == ("unmodified", "modified"):
+            elif is_file and classification == ("modified", "modified"):
+                pair.override_operation("copy_local", "force")
+            elif is_file and classification == ("unmodified", "modified"):
+                pair.override_operation("copy_local", "restore")
+            elif classification == ("unmodified", "deleted"):
                 pair.override_operation("copy_local", "restore")
 
         # if delete and pair.operation == "copy_remote" and not pair.local:
@@ -964,6 +981,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
     def re_classify_pair(self, pair):
         force = self.options.get("force")
         delete = self.options.get("delete")
+        is_file = not pair.is_dir
 
         classification = (pair.local_classification, pair.remote_classification)
 
@@ -975,13 +993,13 @@ class DownloadSynchronizer(BiDirSynchronizer):
                 # return
 
         if force:
-            if classification == ("new", "new"):
+            if is_file and classification == ("new", "new"):
                 pair.override_operation("copy_remote", "forced")
-            elif classification == ("deleted", "unmodified"):
+            elif is_file and classification == ("modified", "unmodified"):
                 pair.override_operation("copy_remote", "restore")
-            elif classification == ("modified", "modified"):
+            elif is_file and classification == ("modified", "modified"):
                 pair.override_operation("copy_remote", "force")
-            elif classification == ("modified", "unmodified"):
+            elif classification == ("deleted", "unmodified"):
                 pair.override_operation("copy_remote", "restore")
 
         # if delete and pair.operation == "copy_remote" and not pair.local:

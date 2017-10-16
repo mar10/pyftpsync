@@ -123,6 +123,11 @@ at the user's home directory::
     export PYFTPSYNC_TEST_FOLDER=/Users/USER/pyftpsync_test
     export PYFTPSYNC_TEST_FTP_URL=ftp://USER:PASSWORD@localhost/pyftpsync_test/remote
 
+This environment variable may be set to generate ``.pyftpsync-meta`` files in a
+larger, but more readable format::
+
+    export PYFTPSYNC_VERBOSE_META=True
+
 
 Run Manual Tests
 ----------------
