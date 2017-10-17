@@ -164,7 +164,7 @@ def run():
             return getattr(args, "command")(args)
         except KeyboardInterrupt:
             print("\nAborted by user.")
-            exit(3)
+            sys.exit(3)
 
     elif not hasattr(args, "command"):
         parser.error("missing command (choose from 'upload', 'download', 'sync', 'scan')")
@@ -198,7 +198,7 @@ def run():
         s.run()
     except KeyboardInterrupt:
         print("\nAborted by user.")
-        exit(3)
+        sys.exit(3)
     finally:
         # Prevent sporadic exceptions in ftplib, when closing in __del__
         s.local.close()
