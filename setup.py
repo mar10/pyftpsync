@@ -5,7 +5,7 @@ from __future__ import print_function
 import os
 import sys
 
-from setuptools import setup, find_packages, Command
+from setuptools import setup, Command
 from setuptools.command.test import test as TestCommand
 
 from ftpsync import __version__
@@ -17,6 +17,7 @@ class ToxCommand(TestCommand):
         TestCommand.finalize_options(self)
         self.test_args = []
         self.test_suite = True
+
     def run_tests(self):
         # Import here, cause outside the eggs aren't loaded
         import tox
@@ -39,10 +40,10 @@ class SphinxCommand(Command):
 
     def run(self):
         import subprocess
-        sourcedir = os.path.join("docs", "sphinx")
+        # sourcedir = os.path.join("docs", "sphinx")
         outdir = os.path.join("docs", "sphinx-build")
         res = subprocess.call("sphinx-build -b html docs/sphinx docs/sphinx-build",
-            shell=True)
+                              shell=True)
         if res:
             print("ERROR: sphinx-build exited with code {}".format(res))
         else:
@@ -56,7 +57,7 @@ except IOError:
 
 
 # 'setup.py upload' fails on Vista, because .pypirc is searched on 'HOME' path
-if not "HOME" in os.environ and  "HOMEPATH" in os.environ:
+if "HOME" not in os.environ and "HOMEPATH" in os.environ:
     os.environ.setdefault("HOME", os.environ.get("HOMEPATH", ""))
     print("Initializing HOME environment variable to '{}'".format(os.environ["HOME"]))
 
@@ -84,7 +85,7 @@ for cmd in ["bdist_msi"]:
 
 if use_cx_freeze:
     try:
-        from cx_Freeze import setup, Executable
+        from cx_Freeze import setup, Executable  # noqa re-import setup
         executables = [
             Executable(script="wsgidav/server/run_server.py",
                        base=None,
@@ -104,7 +105,7 @@ if use_cx_freeze:
         executables = []
 else:
     print("Did not import cx_Freeze, because 'bdist_msi' commands are not used ({})."
-        .format(sys.argv))
+          .format(sys.argv))
     print("NOTE: this is a hack, because cx_Freeze seemed to sabotage wheel creation")
     executables = []
 
@@ -121,70 +122,61 @@ bdist_msi_options = {
     "upgrade_code": "{8F4CA3EF-06AD-418E-A64D-B975E3CFA3F6}",
     "add_to_path": True,
     # TODO: configure target dir
-#   "initial_target_dir": r"[ProgramFilesFolder]\%s\%s" % (company_name, product_name),
+    # "initial_target_dir": r"[ProgramFilesFolder]\%s\%s" % (company_name, product_name),
     # TODO: configure shortcuts:
     # http://stackoverflow.com/a/15736406/19166
     }
 
 
-setup(name="pyftpsync",
-      version = __version__,
-      author = "Martin Wendt",
-      author_email = "pyftpsync@wwwendt.de",
-      # copyright = "(c) 2012-2017 Martin Wendt",
-      maintainer = "Martin Wendt",
-      maintainer_email = "pyftpsync@wwwendt.de",
-      url = "https://github.com/mar10/pyftpsync",
-      description = "Synchronize directories using FTP(S) or file system access.",
-      long_description = readme, #+ "\n\n" + changes,
+setup(
+    name="pyftpsync",
+    version=__version__,
+    author="Martin Wendt",
+    author_email="pyftpsync@wwwendt.de",
+    # copyright="(c) 2012-2017 Martin Wendt",
+    maintainer="Martin Wendt",
+    maintainer_email="pyftpsync@wwwendt.de",
+    url="https://github.com/mar10/pyftpsync",
+    description="Synchronize directories using FTP(S) or file system access.",
+    long_description=readme,  # + "\n\n" + changes,
 
-        #Development Status :: 2 - Pre-Alpha
-        #Development Status :: 3 - Alpha
-        #Development Status :: 4 - Beta
-        #Development Status :: 5 - Production/Stable
+    # Development Status :: 2 - Pre-Alpha
+    # Development Status :: 3 - Alpha
+    # Development Status :: 4 - Beta
+    # Development Status :: 5 - Production/Stable
 
-      classifiers = ["Development Status :: 4 - Beta",
-                     "Environment :: Console",
-                     "Intended Audience :: Information Technology",
-                     "Intended Audience :: Developers",
-                     "License :: OSI Approved :: MIT License",
-                     "Operating System :: OS Independent",
-                     "Programming Language :: Python :: 2",
-                     "Programming Language :: Python :: 2.7",
-                     "Programming Language :: Python :: 3",
-                     "Programming Language :: Python :: 3.4",
-                     "Programming Language :: Python :: 3.5",
-                     "Programming Language :: Python :: 3.6",
-                     "Topic :: Software Development :: Libraries :: Python Modules",
-                     "Topic :: Utilities",
-                     ],
-      keywords = "python ftp ftps synchronize tls tool",
-#      platforms=["Unix", "Windows"],
-      license = "The MIT License",
-      install_requires = install_requires,
-      setup_requires = setup_requires,
-      tests_require = tests_require,
-#      package_dir = {"": "src"},
-      packages = ["ftpsync"],
-      # packages = find_packages(exclude=['tests']),
-
-      py_modules = [
-#                    "ez_setup",
-                    ],
-      # See also MANIFEST.in
-#      package_data={"": ["*.txt", "*.html", "*.conf"]},
-#      include_package_data = True, # TODO: PP
-      zip_safe = False,
-      extras_require = {},
-#      test_suite = "test.test_flow",
-      cmdclass = {"test": ToxCommand,
-                  "sphinx": SphinxCommand,
-                  },
-      entry_points = {
-          "console_scripts" : ["pyftpsync = ftpsync.pyftpsync:run"],
-          },
-      executables = executables,
-      options = {"build_exe": build_exe_options,
-                 "bdist_msi": bdist_msi_options,
-                 },
-      )
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Environment :: Console",
+        "Intended Audience :: Information Technology",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: Utilities",
+        ],
+    keywords="python ftp ftps synchronize tls tool",
+    license="The MIT License",
+    install_requires=install_requires,
+    setup_requires=setup_requires,
+    tests_require=tests_require,
+    packages=["ftpsync"],
+    zip_safe=False,
+    extras_require={},
+    cmdclass={"test": ToxCommand,
+              "sphinx": SphinxCommand,
+              },
+    entry_points={
+      "console_scripts": ["pyftpsync=ftpsync.pyftpsync:run"],
+      },
+    executables=executables,
+    options={"build_exe": build_exe_options,
+             "bdist_msi": bdist_msi_options,
+             },
+    )

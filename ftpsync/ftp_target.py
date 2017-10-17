@@ -25,9 +25,10 @@ from ftpsync.util import get_credentials_for_url, prompt_for_password, \
 
 DEFAULT_BLOCKSIZE = targets.DEFAULT_BLOCKSIZE
 
-#===============================================================================
+
+# ===============================================================================
 # FtpTarget
-#===============================================================================
+# ===============================================================================
 class FtpTarget(_Target):
     """Represents a synchronization target on an FTP server.
 
@@ -115,7 +116,7 @@ class FtpTarget(_Target):
             # If credentials were passed, but authentication fails, prompt
             # for new password
             if not e.args[0].startswith("530"):
-                raise # error other then '530 Login incorrect'
+                raise  # error other then '530 Login incorrect'
             print(e)
             if not no_prompt:
                 self.user, self.password = prompt_for_password(self.host, self.username)
@@ -131,12 +132,14 @@ class FtpTarget(_Target):
             # If credentials were passed, but authentication fails, prompt
             # for new password
             if not e.args[0].startswith("550"):
-                raise # error other then 550 No such directory'
-            print("Could not change directory to %s (%s): missing permissions?" % (self.root_dir, e))
+                raise  # error other then 550 No such directory'
+            print("Could not change directory to {} ({}): missing permissions?"
+                  .format(self.root_dir, e))
 
         pwd = self.ftp.pwd()
         if pwd != self.root_dir:
-            raise RuntimeError("Unable to navigate to working directory %r (now at %r)" % (self.root_dir, pwd))
+            raise RuntimeError("Unable to navigate to working directory {!r} (now at {!r})"
+                               .format(self.root_dir, pwd))
 
         self.cur_dir = pwd
         self.connected = True
@@ -145,8 +148,8 @@ class FtpTarget(_Target):
             save_password(self.host, self.username, self.password)
 
         # TODO: case sensitivity?
-#         resp = self.ftp.sendcmd("system")
-#         self.is_unix = "unix" in resp.lower() # not necessarily true, better check with read/write tests
+        # resp = self.ftp.sendcmd("system")
+        # self.is_unix = "unix" in resp.lower() # not necessarily true, better check with r/w tests
 
         self._lock()
 
@@ -185,10 +188,12 @@ class FtpTarget(_Target):
         try:
             if self.cur_dir != self.root_dir:
                 if closing:
-                    print("Changing to ftp root folder to remove lock file: {}".format(self.root_dir))
+                    print("Changing to ftp root folder to remove lock file: {}"
+                          .format(self.root_dir))
                     self.cwd(self.root_dir)
                 else:
-                    print("Could not remove lock file, because CWD != ftp root: {}".format(self.cur_dir), file=sys.stderr)
+                    print("Could not remove lock file, because CWD != ftp root: {}"
+                          .format(self.cur_dir), file=sys.stderr)
                     return
 
             if self.lock_data is False:
@@ -232,24 +237,18 @@ class FtpTarget(_Target):
 
     def _rmdir_impl(self, dir_name, keep_root_folder=False, predicate=None):
         # FTP does not support deletion of non-empty directories.
-#        print("rmdir(%s)" % dir_name)
         self.check_write(dir_name)
         names = []
         nlst_res = self.ftp.nlst(dir_name)
         # print("rmdir(%s): %s" % (dir_name, nlst_res))
         for name in nlst_res:
             if "/" in name:
-                # print("_rmdir_impl({}): convert {} to {}".format(dir_name, name, os.path.basename(name)))
                 name = os.path.basename(name)
             if name in (".", ".."):
                 continue
             if predicate and not predicate(name):
                 continue
             names.append(name)
-        # Skip ftp.cwd(), if dir is empty
-        # names = [ n for n in names if n not in (".", "..") ]
-        # if predicate:
-        #     names = [ n for n in names if predicate(n) ]
 
         if len(names) > 0:
             self.ftp.cwd(dir_name)
@@ -276,7 +275,7 @@ class FtpTarget(_Target):
     def get_dir(self):
         entry_list = []
         entry_map = {}
-        local_res = {"has_meta": False} # pass local variables outside func scope
+        local_res = {"has_meta": False}  # pass local variables outside func scope
 
         def _addline(line):
             data, _, name = line.partition("; ")
@@ -299,7 +298,6 @@ class FtpTarget(_Target):
                         mtime = calendar.timegm(time.strptime(field_value, "%Y%m%d%H%M%S.%f"))
                     else:
                         mtime = calendar.timegm(time.strptime(field_value, "%Y%m%d%H%M%S"))
-#                     print("MLSD modify: ", field_value, "mtime", mtime, "ctime", time.ctime(mtime))
                 elif field_name == "unique":
                     unique = field_value
 
@@ -356,7 +354,7 @@ class FtpTarget(_Target):
                     # We have a meta-data entry for this resource
                     upload_time = meta.get("u", 0)
                     if(entry_map[n].size == meta.get("s") and
-                           FileEntry._eps_compare(entry_map[n].mtime, upload_time) <= 0):
+                       FileEntry._eps_compare(entry_map[n].mtime, upload_time) <= 0):
                         # Use meta-data mtime instead of the one reported by FTP server
                         entry_map[n].meta = meta
                         entry_map[n].mtime = meta["m"]
@@ -378,7 +376,7 @@ class FtpTarget(_Target):
                         missing.append(n)
                 else:
                     # File is stored in meta-data, but no longer exists on FTP server
-#                     print("META: Removing missing meta entry %s" % n)
+                    # print("META: Removing missing meta entry %s" % n)
                     missing.append(n)
             # Remove missing or invalid files from cur_dir_meta
             for n in missing:
@@ -402,13 +400,13 @@ class FtpTarget(_Target):
     def remove_file(self, name):
         """Remove cur_dir/name."""
         self.check_write(name)
-#         self.cur_dir_meta.remove(name)
+        # self.cur_dir_meta.remove(name)
         self.ftp.delete(name)
         self.remove_sync_info(name)
 
     def set_mtime(self, name, mtime, size):
         self.check_write(name)
-#         print("META set_mtime(%s): %s" % (name, time.ctime(mtime)))
+        # print("META set_mtime(%s): %s" % (name, time.ctime(mtime)))
         # We cannot set the mtime on FTP servers, so we store this as additional
         # meta data in the same directory
         # TODO: try "SITE UTIME", "MDTM (set version)", or "SRFT" command

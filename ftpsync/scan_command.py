@@ -6,7 +6,7 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 
 from __future__ import print_function
 
-from datetime import timedelta, datetime
+from datetime import timedelta
 import time
 
 from ftpsync.metadata import DirMetadata
@@ -19,32 +19,33 @@ from ftpsync.util import pretty_stamp, namespace_to_dict
 def add_scan_parser(subparsers):
     # --- Create the parser for the "scan" command -----------------------------
 
-    parser = subparsers.add_parser("scan",
+    parser = subparsers.add_parser(
+            "scan",
             help="repair, purge, or check targets")
     # __add_common_sub_args(parser)
 
     parser.add_argument("target",
-            metavar="TARGET",
-            default=".",
-            help="path to target folder (default: %(default)s)")
+                        metavar="TARGET",
+                        default=".",
+                        help="path to target folder (default: %(default)s)")
     parser.add_argument("--dry-run",
-            action="store_true",
-            help="just simulate and log results, but don't change anything")
+                        action="store_true",
+                        help="just simulate and log results, but don't change anything")
     parser.add_argument("--store-password",
-            action="store_true",
-            help="save password to keyring if login succeeds")
+                        action="store_true",
+                        help="save password to keyring if login succeeds")
     parser.add_argument("--no-prompt",
-            action="store_true",
-            help="prevent prompting for missing credentials")
+                        action="store_true",
+                        help="prevent prompting for missing credentials")
     parser.add_argument("--no-color",
-            action="store_true",
-            help="prevent use of ansi terminal color codes")
+                        action="store_true",
+                        help="prevent use of ansi terminal color codes")
     parser.add_argument("--list",
-            action="store_true",
-            help="print target files")
+                        action="store_true",
+                        help="print target files")
     parser.add_argument("-r", "--recursive",
-            action="store_true",
-            help="visit sub folders")
+                        action="store_true",
+                        help="visit sub folders")
     parser.add_argument("-m", "--match",
                         help="wildcard for file names using fnmatch syntax "
                         "(default: match all, separate multiple values with ',')")
@@ -53,14 +54,14 @@ def add_scan_parser(subparsers):
                         help="wildcard of files and directories to exclude "
                         "(applied after --match, default: '%(default)s')")
     parser.add_argument("--remove-meta",
-            action="store_true",
-            help="delete all {} files".format(DirMetadata.META_FILE_NAME))
+                        action="store_true",
+                        help="delete all {} files".format(DirMetadata.META_FILE_NAME))
     # parser.add_argument("--remove-debug",
     #         action="store_true",
     #         help="delete all {} files".format(DirMetadata.DEBUG_META_FILE_NAME))
     parser.add_argument("--remove-locks",
-            action="store_true",
-            help="delete all {} files".format(DirMetadata.LOCK_FILE_NAME))
+                        action="store_true",
+                        help="delete all {} files".format(DirMetadata.LOCK_FILE_NAME))
 
     parser.set_defaults(command=scan_handler)
 
@@ -105,11 +106,11 @@ def scan_handler(args):
                     if delta:
                         prefix = "+" if delta > 0 else ""
                         print(indent, "{e.name:<40} {dt_modified} (system: {prefix}{delta})"
-                            .format(e=e, prefix=prefix, delta=timedelta(seconds=delta),
-                                    dt_modified=dt_modified))
+                              .format(e=e, prefix=prefix, delta=timedelta(seconds=delta),
+                                      dt_modified=dt_modified))
                     else:
                         print(indent, "{e.name:<40} {dt_modified}"
-                            .format(e=e, dt_modified=dt_modified))
+                              .format(e=e, dt_modified=dt_modified))
 
             if args.remove_meta and target.cur_dir_meta and target.cur_dir_meta.was_read:
                 fspec = target.cur_dir_meta.get_full_path()
@@ -124,4 +125,4 @@ def scan_handler(args):
         target.close()
 
     print("Scanning {:,} files in {:,} directories took {:02.2f} seconds."
-            .format(file_count, dir_count, time.time()-start))
+          .format(file_count, dir_count, time.time()-start))

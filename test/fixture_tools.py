@@ -4,6 +4,7 @@ Tests for pyftpsync
 """
 from __future__ import print_function
 
+# noqa: E501
 import calendar
 import copy
 import datetime
@@ -14,7 +15,6 @@ import json
 import os
 from pprint import pprint
 import shutil
-import stat
 import sys
 import tempfile
 import time
@@ -31,11 +31,6 @@ from ftpsync.util import to_str, to_binary, urlparse, StringIO
 PYFTPSYNC_TEST_FOLDER = os.environ.get("PYFTPSYNC_TEST_FOLDER") or tempfile.mkdtemp()
 PYFTPSYNC_TEST_FTP_URL = os.environ.get("PYFTPSYNC_TEST_FTP_URL")
 STAMP_20140101_120000 = 1388577600.0  # Wed, 01 Jan 2014 12:00:00 GMT
-
-# dt = datetime.datetime.strptime("2014-01-01 12:00:00", "%Y-%m-%d %H:%M:%S")
-# stamp = calendar.timegm(dt.timetuple())
-# print(stamp)  # --> 1388577600
-# 1/0
 
 
 class CaptureStdout(list):
@@ -239,6 +234,7 @@ def get_test_folder(folder_name):
 #     root_path = os.path.join(PYFTPSYNC_TEST_FOLDER, folder_name.replace("/", os.sep))
     file_map = {}
     root_folder = os.path.join(PYFTPSYNC_TEST_FOLDER, folder_name)
+
     def __scan(rel_folder_path):
         abs_folder_path = os.path.join(root_folder, rel_folder_path)
         for fn in os.listdir(abs_folder_path):
@@ -253,7 +249,7 @@ def get_test_folder(folder_name):
             rel_file_path = os.path.join(rel_folder_path, fn).replace(os.sep, "/")
             file_map[rel_file_path] = {
                             "date": dt.strftime("%Y-%m-%d %H:%M:%S"),
-                            #"size": stat.st_size,
+                            # "size": stat.st_size,
                             }
             with open(abs_file_path, "rb") as fp:
                 file_map[rel_file_path]["content"] = to_str(fp.read())
@@ -275,9 +271,9 @@ def get_metadata(folder_path):
     return meta
 
 
-#===============================================================================
+# ===============================================================================
 #
-#===============================================================================
+# ===============================================================================
 
 MSG_FTP_TESTS_NOT_AVAILABLE = """\
     Skipping FTP tests.
@@ -288,6 +284,7 @@ MSG_FTP_TESTS_NOT_AVAILABLE = """\
 
 #: bool:
 FTP_PRECONDITIONS_PASSED = None
+
 
 def check_ftp_test_connection(test_folder, ftp_url, keep_open=False):
     """Check if we have a FTP server for a locally accessible test folder.
@@ -309,7 +306,8 @@ def check_ftp_test_connection(test_folder, ftp_url, keep_open=False):
         return True
 
     def _skip(msg):
-        msg = "Check for FTP server configuration failed:\n{}\n{}".format(msg, MSG_FTP_TESTS_NOT_AVAILABLE)
+        msg = "Check for FTP server configuration failed:\n{}\n{}" \
+            .format(msg, MSG_FTP_TESTS_NOT_AVAILABLE)
         print(msg, file=sys.stderr)
         # raise RuntimeError(msg)
         raise SkipTest(msg)
@@ -354,7 +352,8 @@ def check_ftp_test_connection(test_folder, ftp_url, keep_open=False):
             data2 = read_test_file("remote/{}".format(probe_file))
         except OSError as e:  # FileNotFoundError is only available in Python 3
             if e.errno == errno.ENOENT:
-                _skip("FTP target path {} does not match `PYFTPSYNC_TEST_FOLDER/remote`".format(parts.path))
+                _skip("FTP target path {} does not match `PYFTPSYNC_TEST_FOLDER/remote`"
+                      .format(parts.path))
             raise
 
         if data != data2:
@@ -394,9 +393,9 @@ def get_remote_test_url():
     return os.path.join(PYFTPSYNC_TEST_FOLDER, "remote")
 
 
-#===============================================================================
+# ===============================================================================
 # _SyncTestBase
-#===============================================================================
+# ===============================================================================
 
 class _SyncTestBase(unittest.TestCase):
     """Test BiDirSynchronizer on file system targets with different resolve modes."""
@@ -503,14 +502,15 @@ class _SyncTestBase(unittest.TestCase):
           folder6/file6_1.txt     12:00           -
           folder7/file7_1.txt     12:00           -
         """
-        assert os.path.isdir(PYFTPSYNC_TEST_FOLDER), "Invalid folder: {}".format(PYFTPSYNC_TEST_FOLDER)
+        assert os.path.isdir(PYFTPSYNC_TEST_FOLDER), \
+            "Invalid folder: {}".format(PYFTPSYNC_TEST_FOLDER)
         # Reset all
         empty_folder(PYFTPSYNC_TEST_FOLDER)
         # Add some files to ../local/
         dt = "2014-01-01 12:00:00"
         for i in range(1, 10):
             write_test_file("local/file{}.txt".format(i), dt=dt,
-                             content="local{}".format(i))
+                            content="local{}".format(i))
 
         write_test_file("local/folder1/file1_1.txt", dt=dt, content="local1_1")
         write_test_file("local/folder2/file2_1.txt", dt=dt, content="local2_1")

@@ -13,6 +13,7 @@ from __future__ import print_function
 
 import argparse
 from pprint import pprint
+import sys
 
 from ftpsync import __version__
 from ftpsync.scan_command import add_scan_parser
@@ -22,9 +23,9 @@ from ftpsync.targets import make_target, FsTarget
 from ftpsync.util import namespace_to_dict
 
 
-#===============================================================================
+# ===============================================================================
 # run
-#===============================================================================
+# ===============================================================================
 def run():
     parser = argparse.ArgumentParser(
         description="Synchronize folders over FTP.",
@@ -33,9 +34,9 @@ def run():
 
     qv_group = parser.add_mutually_exclusive_group()
     qv_group.add_argument("--verbose", "-v", action="count", default=3,
-                        help="increment verbosity by one (default: %(default)s, range: 0..5)")
+                          help="increment verbosity by one (default: %(default)s, range: 0..5)")
     qv_group.add_argument("--quiet", "-q", action="count", default=0,
-                        help="decrement verbosity by one")
+                          help="decrement verbosity by one")
 
     parser.add_argument("-V", "--version", action="version", version="{}".format(__version__))
     parser.add_argument("--progress", "-p",
@@ -45,15 +46,14 @@ def run():
     parser.add_argument("--migrate",
                         action="store_true",
                         default=False,
-                        help="replace meta data files from different versions with current format. "
-                             "Existing data will be discarded.")
+                        help="replace meta data files from different versions with current "
+                             "format. Existing data will be discarded.")
 
     subparsers = parser.add_subparsers(help="sub-command help")
 
     def __add_common_sub_args(parser):
         parser.add_argument("local",
                             metavar="LOCAL",
-#                             required=True,
                             default=".",
                             help="path to local folder (default: %(default)s)")
         parser.add_argument("remote",
@@ -78,10 +78,6 @@ def run():
         parser.add_argument("--no-color",
                             action="store_true",
                             help="prevent use of ansi terminal color codes")
-        # parser.add_argument("-r", "--recursive",
-        #                     type=util.str_to_bool,
-        #                     default='on',
-        #                     help="traverse sub directories (default: %(default)s)")
 
     # --- Create the parser for the "upload" command ---------------------------
 
@@ -109,7 +105,8 @@ def run():
 
     # --- Create the parser for the "download" command -------------------------
 
-    download_parser = subparsers.add_parser("download",
+    download_parser = subparsers.add_parser(
+            "download",
             help="copy new and modified files from remote folder to local target")
     __add_common_sub_args(download_parser)
 
@@ -133,7 +130,8 @@ def run():
 
     # --- Create the parser for the "sync" command -----------------------------
 
-    sync_parser = subparsers.add_parser("sync",
+    sync_parser = subparsers.add_parser(
+            "sync",
             help="synchronize new and modified files between remote folder and local target")
     __add_common_sub_args(sync_parser)
 
@@ -146,7 +144,7 @@ def run():
 
     # --- Create the parser for the "scan" command -----------------------------
 
-    _scan_parser = add_scan_parser(subparsers)
+    add_scan_parser(subparsers)
 
     # --- Parse command line ---------------------------------------------------
 
@@ -211,8 +209,8 @@ def run():
         if args.dry_run:
             print("(DRY-RUN) ", end="")
         print("Wrote {}/{} files in {} directories, skipped: {}."
-            .format(stats["files_written"], stats["local_files"], stats["local_dirs"],
-                    stats["conflict_files_skipped"]), end="")
+              .format(stats["files_written"], stats["local_files"], stats["local_dirs"],
+                      stats["conflict_files_skipped"]), end="")
         if stats["interactive_ask"]:
             print()
         else:

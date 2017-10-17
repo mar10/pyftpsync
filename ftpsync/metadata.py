@@ -22,16 +22,16 @@ class IncompatibleMetadataVersion(RuntimeError):
     """Raised when existing meta data file has an obsolete version number."""
 
 
-#===============================================================================
+# ===============================================================================
 # DirMetadata
-#===============================================================================
+# ===============================================================================
 class DirMetadata(object):
     """
 
     """
     META_FILE_NAME = ".pyftpsync-meta.json"
     LOCK_FILE_NAME = ".pyftpsync-lock.json"
-    PRETTY = PYFTPSYNC_VERBOSE_META  # False: Reduce meta file size to 35% (like 3759 -> 1375 bytes)
+    PRETTY = PYFTPSYNC_VERBOSE_META  # False: Reduce file size to 35% (like 3759 -> 1375 bytes)
     VERSION = 2    # Increment if format changes. Old files will be discarded then!
 
     def __init__(self, target):
@@ -94,7 +94,7 @@ class DirMetadata(object):
                               "u": ut,
                               }
         if self.PRETTY:
-            ps[":last_sync_str"] = pretty_stamp(ut)  # this is an invalid file name to avoid conflicts
+            ps[":last_sync_str"] = pretty_stamp(ut)  # use an invalid file name to avoid conflicts
             pse["mtime_str"] = pretty_stamp(mtime) if mtime else "(directory)"
             pse["uploaded_str"] = pretty_stamp(ut)
         self.modified_sync = True
@@ -107,7 +107,8 @@ class DirMetadata(object):
             if self.target.is_local():
                 remote_target = self.target.peer
                 if remote_target.get_id() in self.dir["peer_sync"]:
-                    self.modified_sync = bool(self.dir["peer_sync"][remote_target.get_id()].pop(filename, None))
+                    rid = remote_target.get_id()
+                    self.modified_sync = bool(self.dir["peer_sync"][rid].pop(filename, None))
         return
 
     def read(self):
@@ -126,7 +127,7 @@ class DirMetadata(object):
             self.list = self.dir["mtimes"]
             self.peer_sync = self.dir["peer_sync"]
             is_valid_file = True
-#             print("DirMetadata: read(%s)" % (self.filename, ), self.dir)
+            # print("DirMetadata: read(%s)" % (self.filename, ), self.dir)
         # except IncompatibleMetadataVersion:
         #     raise  # We want version errors to terminate the app
         except Exception as e:
@@ -143,7 +144,7 @@ class DirMetadata(object):
                     .format(self.dir.get("_file_version"), self.VERSION))
             #
             print("Migrating meta data version from {} to {} (discarding old): {}"
-                .format(self.dir.get("_file_version"), self.VERSION, self.filename))
+                  .format(self.dir.get("_file_version"), self.VERSION, self.filename))
             self.list = {}
             self.peer_sync = {}
 
@@ -157,15 +158,15 @@ class DirMetadata(object):
 #             return
         assert self.path == self.target.cur_dir
         if self.target.dry_run:
-#             print("DirMetadata.flush(%s): dry-run; nothing to do" % self.target)
+            # print("DirMetadata.flush(%s): dry-run; nothing to do" % self.target)
             pass
 
         elif self.was_read and len(self.list) == 0 and len(self.peer_sync) == 0:
-#             print("DirMetadata.flush(%s): DELETE" % self.target)
+            # print("DirMetadata.flush(%s): DELETE" % self.target)
             self.target.remove_file(self.filename)
 
         elif not self.modified_list and not self.modified_sync:
-#             print("DirMetadata.flush(%s): unmodified; nothing to do" % self.target)
+            # print("DirMetadata.flush(%s): unmodified; nothing to do" % self.target)
             pass
 
         else:

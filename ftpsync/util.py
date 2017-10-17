@@ -15,25 +15,27 @@ try:
     from urllib.parse import urlparse
 except ImportError:
     # Python 2
-    from urlparse import urlparse  # @UnusedImport
+    from urlparse import urlparse  # noqa @UnusedImport
 
 try:
     import colorama  # provide color codes, ...
     colorama.init()  # improve color handling on windows terminals
 except ImportError:
-    print("Unable to import 'colorama' library: Colored output is not available. Try `pip install colorama`.")
+    print("Unable to import 'colorama' library: Colored output is not available. "
+          "Try `pip install colorama`.")
     colorama = None
 
 try:
     import keyring
 except ImportError:
-    print("Unable to import 'keyring' library: Storage of passwords is not available. Try `pip install keyring`.")
+    print("Unable to import 'keyring' library: Storage of passwords is not available. "
+          "Try `pip install keyring`.")
     keyring = None
 
 try:
     from cStringIO import StringIO  # Py2
 except ImportError:
-    from io import StringIO  # Py3
+    from io import StringIO  # noqa Py3
 
 
 DEFAULT_CREDENTIAL_STORE = "pyftpsync.pw"
@@ -62,7 +64,7 @@ def namespace_to_dict(o):
 
 def eps_compare(f1, f2, eps):
     res = f1 - f2
-    if abs(res) <= eps: # '<=',so eps == 0 works as expected
+    if abs(res) <= eps:  # '<=',so eps == 0 works as expected
         return 0
     elif res < 0:
         return -1
@@ -78,9 +80,9 @@ def pretty_stamp(stamp):
     return datetime.fromtimestamp(stamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
-#===============================================================================
+# ===============================================================================
 #
-#===============================================================================
+# ===============================================================================
 
 def prompt_for_password(url, user=None):
     if user is None:
@@ -109,18 +111,7 @@ def get_credentials_for_url(url, allow_prompt):
     file_path = os.path.join(home_path, DEFAULT_CREDENTIAL_STORE)
     if os.path.isfile(file_path):
         raise RuntimeError("Custom password files are no longer supported. Consider deleting {}."
-                .format(file_path))
-#         with open(file_path, "rt") as f:
-#             for line in f:
-#                 line = line.strip()
-#                 if not "=" in line or line.startswith("#") or line.startswith(";"):
-#                     continue
-#                 u, c = line.split("=", 1)
-#                 if c and u.strip().lower() == url.lower():
-#                     c = c.strip()
-#                     creds = c.split(":", 1)
-#                     print("Using credentials from %s ('%s'): %s:***)" % (file_path, url, creds[0]))
-#                     break
+                           .format(file_path))
 
     # Query
     if creds is None and keyring:
@@ -129,13 +120,12 @@ def get_credentials_for_url(url, allow_prompt):
             c = keyring.get_password("pyftpsync", url)
             if c is not None:
                 creds = c.split(":", 1)
-#                print(creds)
                 print("Using credentials from keyring('pyftpsync', '{}'): {}:***."
-                        .format(url, creds[0]))
+                      .format(url, creds[0]))
 #        except keyring.errors.TransientKeyringError:
         except Exception as e:
             print("Could not get password {}".format(e))
-            pass # e.g. user clicked 'no'
+            pass  # e.g. user clicked 'no'
 
     # Prompt
     if creds is None and allow_prompt:
@@ -148,7 +138,7 @@ def save_password(url, username, password):
     if keyring:
         if ":" in username:
             raise RuntimeError("Unable to store credentials if username contains a ':' ({})."
-                    .formta(username))
+                               .formta(username))
 
         try:
             # Note: we pass the url as `username` and username:password as `password`
@@ -161,7 +151,7 @@ def save_password(url, username, password):
 #        except keyring.errors.TransientKeyringError:
         except Exception as e:
             print("Could not delete/set password {}.".format(e))
-            pass # e.g. user clicked 'no'
+            pass  # e.g. user clicked 'no'
     else:
         print("Could not store credentials (missing keyring support).")
     return
@@ -200,13 +190,13 @@ if sys.version_info[0] < 3:
 
     def to_text(s):
         """Convert binary data to unicode (text strings) on Python 2 and 3."""
-        if type(s) is not unicode:
+        if type(s) is not unicode:  # noqa: F821
             s = s.decode("utf8")
         return s
 
     def to_str(s):
         """Convert unicode to native str on Python 2 and 3."""
-        if type(s) is unicode:
+        if type(s) is unicode:  # noqa: F821
             s = s.encode("utf8")
         return s
 else:

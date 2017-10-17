@@ -66,9 +66,10 @@ operation_map = {
     ("existing", "existing"): "need_compare",
     }
 
-#===============================================================================
+
+# ===============================================================================
 # EntryPair
-#===============================================================================
+# ===============================================================================
 class EntryPair(object):
     """"""
     def __init__(self, local, remote):
@@ -102,8 +103,6 @@ class EntryPair(object):
             "[{}]".format(self.rel_path) if self.is_dir else self.rel_path,
             self.local_classification, self.remote_classification,
             self.operation)
-        # s = "{}: [{}]{} - [{}]{} => {}".format(
-        #     self.rel_path, self.local_classification, self.local, self.remote_classification, self.remote, self.operation)
         return s
 
     @property
@@ -122,7 +121,7 @@ class EntryPair(object):
 
     def override_operation(self, operation, reason):
         """Re-Classify entry pair."""
-        prev = (self.local_classification, self.remote_classification)
+        # prev = (self.local_classification, self.remote_classification)
         prev_op = self.operation
         assert operation != prev_op
         assert operation in PAIR_OPERATIONS
@@ -142,17 +141,17 @@ class EntryPair(object):
             self.local.classify(peer_dir_meta)
             self.local_classification = self.local.classification
         elif peer_entry_meta:
-            self.local_classification =  "deleted"
+            self.local_classification = "deleted"
         else:
-            self.local_classification =  "missing"
+            self.local_classification = "missing"
 
         if self.remote:
             self.remote.classify(peer_dir_meta)
             self.remote_classification = self.remote.classification
         elif peer_entry_meta:
-            self.remote_classification =  "deleted"
+            self.remote_classification = "deleted"
         else:
-            self.remote_classification =  "missing"
+            self.remote_classification = "missing"
 
         c_pair = (self.local_classification, self.remote_classification)
 
@@ -163,16 +162,14 @@ class EntryPair(object):
         if PRINT_CLASSIFICATIONS:
             print("classify {}".format(self))
         # if not entry.meta:
-#         assert self.classification in PAIR_CLASSIFICATIONS
+        # assert self.classification in PAIR_CLASSIFICATIONS
         assert self.operation in PAIR_OPERATIONS
         return self.operation
 
 
-
-#===============================================================================
+# ===============================================================================
 # _Resource
-#===============================================================================
-
+# ===============================================================================
 class _Resource(object):
     """Common base class for files and directories."""
     def __init__(self, target, rel_path, name, size, mtime, unique):
@@ -232,7 +229,7 @@ class _Resource(object):
         return res
 
     def as_string(self, other_resource=None):
-#         dt = datetime.fromtimestamp(self.get_adjusted_mtime())
+        # dt = datetime.fromtimestamp(self.get_adjusted_mtime())
         dt = datetime.fromtimestamp(self.mtime)
         res = "{}, {:>8,} bytes".format(dt.strftime("%Y-%m-%d %H:%M:%S"), self.size)
         if other_resource:
@@ -293,7 +290,8 @@ class _Resource(object):
                 self.ps_size = peer_entry_meta.get("s")
                 self.ps_mtime = peer_entry_meta.get("m")
                 self.ps_utime = peer_entry_meta.get("u")
-                if self.size == self.ps_size and FileEntry._eps_compare(self.mtime, self.ps_mtime) == 0:
+                if self.size == self.ps_size and \
+                        FileEntry._eps_compare(self.mtime, self.ps_mtime) == 0:
                     self.classification = "unmodified"
                 else:
                     self.classification = "modified"
@@ -316,9 +314,9 @@ class _Resource(object):
         return self.classification
 
 
-#===============================================================================
+# ===============================================================================
 # FileEntry
-#===============================================================================
+# ===============================================================================
 class FileEntry(_Resource):
 
     # 2 seconds difference is considered equal.
@@ -364,14 +362,12 @@ class FileEntry(_Resource):
             return True
         if self.mtime > info["m"]:
             return True
-#         if res:
-#             print("%s was_modified_since_last_sync: %s" % (self, (self.get_adjusted_mtime() - self.target.cur_dir_meta.get_last_sync_with(peer_target))))
         return False
 
 
-#===============================================================================
+# ===============================================================================
 # DirectoryEntry
-#===============================================================================
+# ===============================================================================
 class DirectoryEntry(_Resource):
     def __init__(self, target, rel_path, name, size, mtime, unique):
         super(DirectoryEntry, self).__init__(target, rel_path, name, size, mtime, unique)
@@ -380,17 +376,3 @@ class DirectoryEntry(_Resource):
 
     def is_dir(self):
         return True
-
-    # def as_string(self, other_resource=None):
-    #     dt = datetime.fromtimestamp(self.mtime)
-    #     res = "{}".format(dt.strftime("%Y-%m-%d %H:%M:%S"))
-    #     if other_resource:
-    #         comp = []
-    #         if self.mtime < other_resource.mtime:
-    #             comp.append("older")
-    #         elif self.mtime > other_resource.mtime:
-    #             comp.append("newer")
-    #
-    #         if comp:
-    #             res += " ({})".format(", ".join(comp))
-    #     return res

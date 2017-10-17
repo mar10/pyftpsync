@@ -24,25 +24,25 @@ DEFAULT_OMIT = [".DS_Store",
                 ".svn",
                 ]
 
-
-#===============================================================================
+# ===============================================================================
 # Helpers
-#===============================================================================
+# ===============================================================================
 
 _ts = pretty_stamp
+
 
 def process_options(opts):
     """Check and prepare options dict."""
     # Convert match and exclude args into pattern lists
     match = opts.get("match")
     if match and type(match) is str:
-        opts["match"] = [ pat.strip() for pat in match.split(",") ]
+        opts["match"] = [pat.strip() for pat in match.split(",")]
     else:
         opts["match"] = []
 
     exclude = opts.get("exclude")
     if exclude and type(exclude) is str:
-        opts["exclude"] = [ pat.strip() for pat in exclude.split(",") ]
+        opts["exclude"] = [pat.strip() for pat in exclude.split(",")]
     else:
         opts["exclude"] = []
 
@@ -74,9 +74,10 @@ def match_path(entry, opts):
     # print("match", ok, entry)
     return ok
 
-#===============================================================================
+
+# ===============================================================================
 # BaseSynchronizer
-#===============================================================================
+# ===============================================================================
 class BaseSynchronizer(object):
     """Synchronizes two target instances in dry_run mode (also base class for other synchronizers).
 
@@ -87,7 +88,7 @@ class BaseSynchronizer(object):
     def __init__(self, local, remote, options):
         self.local = local
         self.remote = remote
-        #TODO: check for self-including paths
+        # TODO: check for self-including paths
 
         self.options = options or {}
         process_options(self.options)
@@ -182,11 +183,6 @@ class BaseSynchronizer(object):
 
     def _compare_file(self, local, remote):
         """Byte compare two files (early out on first difference)."""
-#         print("_compare_file(%s, %s --> %s)... " % (local.target, remote.target, local.name), end="")
-#         sys.stdout.write("Comparing %s/%s entries in %s dirs...\r"
-#             % (prefix,
-#                stats["entries_touched"], stats["entries_seen"],
-#                stats["local_dirs"]))
         assert isinstance(local, FileEntry) and isinstance(remote, FileEntry)
 
         if not local or not remote:
@@ -197,8 +193,8 @@ class BaseSynchronizer(object):
             return False
 
         with local.target.open_readable(local.name) as fp_src, \
-             remote.target.open_readable(remote.name) as fp_dest:
-            res, ofs = byte_compare(fp_src, fp_dest)
+                remote.target.open_readable(remote.name) as fp_dest:
+                res, ofs = byte_compare(fp_src, fp_dest)
 
         if not res:
             print("    Files are different at offset {:,d}.".format(ofs))
@@ -212,7 +208,7 @@ class BaseSynchronizer(object):
         # 2. copy to target.temp
         # 3. use loggingFile for feedback
         # 4. rename target.temp
-#        print("_copy_file(%s, %s --> %s)" % (file_entry, src, dest))
+        # print("_copy_file(%s, %s --> %s)" % (file_entry, src, dest))
         assert isinstance(file_entry, FileEntry)
         self._inc_stat("files_written")
         self._inc_stat("entries_touched")
@@ -228,8 +224,9 @@ class BaseSynchronizer(object):
             raise RuntimeError("target is read-only: %s" % dest)
 
         start = time.time()
+
         def __block_written(data):
-#            print(">(%s), " % len(data))
+            # print(">(%s), " % len(data))
             self._inc_stat("bytes_written", len(data))
             if is_upload:
                 self._inc_stat("upload_bytes_written", len(data))
@@ -253,7 +250,7 @@ class BaseSynchronizer(object):
         return
 
     def _copy_recursive(self, src, dest, dir_entry):
-#        print("_copy_recursive(%s, %s --> %s)" % (dir_entry, src, dest))
+        # print("_copy_recursive(%s, %s --> %s)" % (dir_entry, src, dest))
         assert isinstance(dir_entry, DirectoryEntry)
         self._inc_stat("entries_touched")
         self._inc_stat("dirs_created")
@@ -292,7 +289,7 @@ class BaseSynchronizer(object):
 
     def _remove_file(self, file_entry):
         # TODO: honor backup
-#        print("_remove_file(%s)" % (file_entry, ))
+        # print("_remove_file(%s)" % (file_entry, ))
         assert isinstance(file_entry, FileEntry)
         self._inc_stat("entries_touched")
         self._inc_stat("files_deleted")
@@ -315,40 +312,32 @@ class BaseSynchronizer(object):
         dir_entry.target.rmdir(dir_entry.name)
         dir_entry.target.remove_sync_info(dir_entry.name)
 
-    # def _log_call(self, msg, min_level=4):
-    #     if self.verbose >= min_level:
-    #         print(msg)
-
-    # https://github.com/tartley/colorama/blob/master/colorama/ansi.py
-#     COLOR_MAP = {("skip", "*"): ansi_code("Fore.LIGHTBLACK_EX"),
-#                  ("*", "equal"): ansi_code("Fore.LIGHTBLACK_EX"),#colorama.Fore.WHITE + colorama.Style.DIM,
-#                  ("skip", "conflict"): ansi_code("Fore.LIGHTRED_EX"),  # + ansi_code("Style.BRIGHT"),
-#                  ("delete", "*"): ansi_code("Fore.RED"),
-#                  ("*", "modified"): ansi_code("Fore.BLUE"),
-#                  ("restore", "*"): ansi_code("Fore.BLUE"),
-#                  ("copy", "new"): ansi_code("Fore.GREEN"),
-#                  }
-
     def _log_action(self, action, status, symbol, entry, min_level=3):
         if self.verbose < min_level:
             return
 
         if len(symbol) > 1 and symbol[0] in (">", "<"):
-            symbol = " " + symbol # make sure direction characters are aligned at 2nd column
+            symbol = " " + symbol  # make sure direction characters are aligned at 2nd column
 
         color = ""
         final = ""
         if not self.options.get("no_color"):
-#             CM = self.COLOR_MAP
-#             color = CM.get((action, status),
-#                            CM.get(("*", status),
-#                                   CM.get((action, "*"),
-#                                          "")))
+            # CM = self.COLOR_MAP
+            # color = CM.get((action, status),
+            #                CM.get(("*", status),
+            #                       CM.get((action, "*"),
+            #                              "")))
             if action in ("copy", "restore"):
                 if "<" in symbol:
-                    color = ansi_code("Fore.GREEN") + ansi_code("Style.BRIGHT") if status == "new" else ansi_code("Fore.GREEN")
+                    if status == "new":
+                        color = ansi_code("Fore.GREEN") + ansi_code("Style.BRIGHT")
+                    else:
+                        color = ansi_code("Fore.GREEN")
                 else:
-                    color = ansi_code("Fore.CYAN") + ansi_code("Style.BRIGHT") if status == "new" else ansi_code("Fore.CYAN")
+                    if status == "new":
+                        color = ansi_code("Fore.CYAN") + ansi_code("Style.BRIGHT")
+                    else:
+                        color = ansi_code("Fore.CYAN")
             elif action == "delete":
                 color = ansi_code("Fore.RED")
             elif status == "conflict":
@@ -380,10 +369,10 @@ class BaseSynchronizer(object):
         if (self.verbose >= 3 and not IS_REDIRECTED) or self.options.get("progress"):
             stats = self.get_stats()
             prefix = DRY_RUN_PREFIX if self.dry_run else ""
-            sys.stdout.write("%sTouched %s/%s entries in %s directories...\r"
-                % (prefix,
-                   stats["entries_touched"], stats["entries_seen"],
-                   stats["local_dirs"]))
+            sys.stdout.write("{}Touched {}/{} entries in {} directories...\r"
+                             .format(prefix,
+                                     stats["entries_touched"], stats["entries_seen"],
+                                     stats["local_dirs"]))
         sys.stdout.flush()
         return
 
@@ -401,6 +390,7 @@ class BaseSynchronizer(object):
 
     def _before_sync(self, entry):
         """Called by the synchronizer for each entry.
+
         Return False to prevent the synchronizer's default action.
         """
         self._inc_stat("entries_seen")
@@ -457,7 +447,7 @@ class BaseSynchronizer(object):
             if not self._before_sync(remote_entry):
                 continue
 
-            if not remote_entry.name in local_entry_map:
+            if remote_entry.name not in local_entry_map:
                 entry_pair = EntryPair(None, remote_entry)
                 entry_pair_list.append(entry_pair)
 
@@ -476,7 +466,8 @@ class BaseSynchronizer(object):
             # Let synchronizer modify the default operation (e.g. apply `--force` option)
             hook_result = self.re_classify_pair(pair)
 
-            # Let synchronizer implement special handling of unmatched entries (e.g. `--delete_unmatched`)
+            # Let synchronizer implement special handling of unmatched entries
+            # (e.g. `--delete_unmatched`)
             if not self._match(pair.any_entry):
                 self.on_mismatch(pair)
                 # ... do not call opertaion handler...
@@ -567,9 +558,9 @@ class BaseSynchronizer(object):
         self._log_action("skip", "conflict", "!", pair.local, min_level=2)
 
 
-#===============================================================================
+# ===============================================================================
 # BiDirSynchronizer
-#===============================================================================
+# ===============================================================================
 class BiDirSynchronizer(BaseSynchronizer):
     """Synchronizer that performs up- and download operations as required.
 
@@ -598,7 +589,7 @@ class BiDirSynchronizer(BaseSynchronizer):
 
     def _print_pair_diff(self, pair):
         RED = ansi_code("Fore.LIGHTRED_EX")
-        M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
+        # M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
         any_entry = pair.any_entry
@@ -609,15 +600,19 @@ class BiDirSynchronizer(BaseSynchronizer):
         # print("pair.local", pair.local)
         # print("pair.remote", pair.remote)
 
-        print((VT_ERASE_LINE + RED + "CONFLICT: {!r} was modified on both targets since last sync ({})." + R)
+        print((VT_ERASE_LINE + RED +
+              "CONFLICT: {!r} was modified on both targets since last sync ({})." + R)
               .format(any_entry.get_rel_path(), _ts(any_entry.get_sync_info("u"))))
         if has_meta:
             print("    Original modification time: {}, size: {:,d} bytes."
                   .format(_ts(any_entry.get_sync_info("m")), any_entry.get_sync_info("s")))
         else:
             print("    (No meta data available.)")
-        print("    Local:  {}".format(pair.local.as_string() if pair.local else "n.a."))
-        print("    Remote: {}".format(pair.remote.as_string(pair.local) if pair.remote else "n.a."))
+
+        print("    Local:  {}"
+              .format(pair.local.as_string() if pair.local else "n.a."))
+        print("    Remote: {}"
+              .format(pair.remote.as_string(pair.local) if pair.remote else "n.a."))
 
     def _interactive_resolve(self, pair):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
@@ -640,7 +635,7 @@ class BiDirSynchronizer(BaseSynchronizer):
             # self.resolve_all = resolve
             return resolve
 
-        RED = ansi_code("Fore.LIGHTRED_EX")
+        # RED = ansi_code("Fore.LIGHTRED_EX")
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
@@ -662,13 +657,15 @@ class BiDirSynchronizer(BaseSynchronizer):
                 print("  'l': Use local file")
                 print("  'r': Use remote file")
                 print("  's': Skip this file (leave both targets unchanged)")
-                print("Hold Shift (upper case letters) to apply choice for all remaining conflicts.")
+                print("Hold Shift (upper case letters) to apply choice for all "
+                      "remaining conflicts.")
                 print("Hit Ctrl+C to abort.")
                 self._print_pair_diff(pair)
                 continue
 
             elif r in ("b", "B"):
-                # TODO: we could (offer to) set both mtimes to the same value if files are identical
+                # TODO: we could (offer to) set both mtimes to the same value
+                # if files are identical
                 self._compare_file(pair.local, pair.remote)
                 # self._print_pair_diff(pair)
                 continue
@@ -716,7 +713,7 @@ class BiDirSynchronizer(BaseSynchronizer):
 
     def on_delete_local(self, pair):
         self._log_action("delete", "missing", "X< ", pair.local)
-#         self._log_action("delete", pair.local_classification, "X< ", pair.local)
+        # self._log_action("delete", pair.local_classification, "X< ", pair.local)
         if pair.is_dir:
             self._remove_dir(pair.local)
         else:
@@ -724,7 +721,7 @@ class BiDirSynchronizer(BaseSynchronizer):
 
     def on_delete_remote(self, pair):
         self._log_action("delete", "missing", " >X", pair.remote)
-#         self._log_action("delete", pair.remote_classification, " >X", pair.remote)
+        # self._log_action("delete", pair.remote_classification, " >X", pair.remote)
         if pair.is_dir:
             self._remove_dir(pair.remote)
         else:
@@ -732,7 +729,7 @@ class BiDirSynchronizer(BaseSynchronizer):
 
     def on_need_compare(self, pair):
         """Re-classify pair based on file attributes and options."""
-#         print("on_need_compare", pair)
+        # print("on_need_compare", pair)
         # If no metadata is available, we could only classify file entries as
         # 'existing'.
         # Now we use peer information to improve this classification.
@@ -805,10 +802,12 @@ class BiDirSynchronizer(BaseSynchronizer):
         if pair.local and pair.remote:
             assert pair.local.is_file()
             is_newer = pair.local > pair.remote
-            if resolve == "local" or (is_newer and resolve == "new") or (not is_newer and resolve == "old"):
+            if resolve == "local" or (is_newer and resolve == "new") or \
+                    (not is_newer and resolve == "old"):
                 self._log_action("copy", "conflict", "*>*", pair.local)
                 self._copy_file(self.local, self.remote, pair.local)
-            elif resolve == "remote" or (is_newer and resolve == "old") or (not is_newer and resolve == "new"):
+            elif resolve == "remote" or (is_newer and resolve == "old") or \
+                    (not is_newer and resolve == "new"):
                 self._log_action("copy", "conflict", "*<*", pair.local)
                 self._copy_file(self.remote, self.local, pair.remote)
             else:
@@ -836,9 +835,9 @@ class BiDirSynchronizer(BaseSynchronizer):
         return
 
 
-#===============================================================================
+# ===============================================================================
 # UploadSynchronizer
-#===============================================================================
+# ===============================================================================
 
 class UploadSynchronizer(BiDirSynchronizer):
 
@@ -881,7 +880,7 @@ class UploadSynchronizer(BiDirSynchronizer):
 
     def _interactive_resolve(self, pair):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
-        RED = ansi_code("Fore.LIGHTRED_EX")
+        # RED = ansi_code("Fore.LIGHTRED_EX")
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
@@ -913,7 +912,8 @@ class UploadSynchronizer(BiDirSynchronizer):
                 print("  'b': Binary compare")
                 print("  'l': Upload local file")
                 print("  's': Skip this file (leave both targets unchanged)")
-                print("Hold Shift (upper case letters) to apply choice for all remaining conflicts.")
+                print("Hold Shift (upper case letters) to apply choice for all "
+                      "remaining conflicts.")
                 print("Hit Ctrl+C to abort.")
                 continue
             elif r in ("B", "b"):
@@ -964,9 +964,9 @@ class UploadSynchronizer(BiDirSynchronizer):
     #     self._log_action("skip", "conflict", "!", pair.local, min_level=2)
 
 
-#===============================================================================
+# ===============================================================================
 # DownloadSynchronizer
-#===============================================================================
+# ===============================================================================
 
 class DownloadSynchronizer(BiDirSynchronizer):
     """
@@ -1025,7 +1025,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
             # self.resolve_all = resolve
             return resolve
 
-        RED = ansi_code("Fore.LIGHTRED_EX")
+        # RED = ansi_code("Fore.LIGHTRED_EX")
         M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
         R = ansi_code("Style.RESET_ALL")
 
@@ -1043,11 +1043,12 @@ class DownloadSynchronizer(BiDirSynchronizer):
                 print("  'b': Binary compare")
                 print("  'r': Download remote file")
                 print("  's': Skip this file (leave both targets unchanged)")
-                print("Hold Shift (upper case letters) to apply choice for all remaining conflicts.")
+                print("Hold Shift (upper case letters) to apply choice for all "
+                      "remaining conflicts.")
                 print("Hit Ctrl+C to abort.")
                 continue
             elif r in ("B", "b"):
-                self._compare_file(local, remote)
+                self._compare_file(pair.local, pair.remote)
                 continue
             elif r in ("R", "S"):
                 r = self._resolve_shortcuts[r.lower()]
