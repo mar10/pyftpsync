@@ -47,15 +47,15 @@ class CliTest(_SyncTestBase):
 
     def test_sync(self):
         out = run_script("sync", self.local, self.remote, "--dry-run")
-        assert "(DRY-RUN) Wrote 0/16 files in 7 dirs" in out
+        assert "(DRY-RUN) Wrote 0/16 files in 7 directories, skipped: 0." in out
 
     def test_upload(self):
         out = run_script("upload", self.local, self.remote, "--dry-run")
-        assert "(DRY-RUN) Wrote 0/16 files in 7 dirs" in out
+        assert "(DRY-RUN) Wrote 0/16 files in 7 directories, skipped: 0." in out
 
     def test_download(self):
         out = run_script("download", self.local, self.remote, "--dry-run")
-        assert "(DRY-RUN) Wrote 0/16 files in 7 dirs" in out
+        assert "(DRY-RUN) Wrote 0/16 files in 7 directories, skipped: 0." in out
 
 
 #===============================================================================

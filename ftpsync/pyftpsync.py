@@ -210,7 +210,7 @@ def run():
     elif args.verbose >= 1:
         if args.dry_run:
             print("(DRY-RUN) ", end="")
-        print("Wrote {}/{} files in {} dirs, skipped: {}."
+        print("Wrote {}/{} files in {} directories, skipped: {}."
             .format(stats["files_written"], stats["local_files"], stats["local_dirs"],
                     stats["conflict_files_skipped"]), end="")
         if stats["interactive_ask"]:

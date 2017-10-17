@@ -123,5 +123,5 @@ def scan_handler(args):
     finally:
         target.close()
 
-    print("Scanning {:,} files in {:,} dirs took {:02.2f} seconds."
+    print("Scanning {:,} files in {:,} directories took {:02.2f} seconds."
             .format(file_count, dir_count, time.time()-start))

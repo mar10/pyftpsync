@@ -380,7 +380,7 @@ class BaseSynchronizer(object):
         if (self.verbose >= 3 and not IS_REDIRECTED) or self.options.get("progress"):
             stats = self.get_stats()
             prefix = DRY_RUN_PREFIX if self.dry_run else ""
-            sys.stdout.write("%sTouched %s/%s entries in %s dirs...\r"
+            sys.stdout.write("%sTouched %s/%s entries in %s directories...\r"
                 % (prefix,
                    stats["entries_touched"], stats["entries_seen"],
                    stats["local_dirs"]))
@@ -949,12 +949,12 @@ class UploadSynchronizer(BiDirSynchronizer):
 
     def on_copy_remote(self, pair):
         # Uploads does not modify local target
-        status = pair.local.classification if pair.local else "missing"
-        self._log_action("skip", status, "<", pair.remote)
+        # status = pair.local.classification if pair.local else "missing"
+        self._log_action("skip", "download", "<", pair.remote)
 
     def on_delete_local(self, pair):
         # Uploads does not modify local target
-        self._log_action("skip", "missing", "X< ", pair.local)
+        self._log_action("skip", "delete", "X< ", pair.local)
 
     # def on_need_compare(self, pair):
     #     self._log_action("", "different", "?", pair.local, min_level=2)
@@ -1080,12 +1080,12 @@ class DownloadSynchronizer(BiDirSynchronizer):
 
     def on_copy_local(self, pair):
         # Download does not modify remote target
-        status = pair.remote.classification if pair.remote else "missing"
-        self._log_action("skip", status, ">", pair.local)
+        # status = pair.remote.classification if pair.remote else "missing"
+        self._log_action("skip", "upload", ">", pair.local)
 
     def on_delete_remote(self, pair):
         # Download does not modify remote target
-        self._log_action("skip", "missing", " >X", pair.remote)
+        self._log_action("skip", "delete", " >X", pair.remote)
 
     # def on_need_compare(self, pair):
     #     self._log_action("", "different", "?", pair.local, min_level=2)
