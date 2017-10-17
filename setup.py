@@ -135,7 +135,7 @@ setup(name="pyftpsync",
       maintainer = "Martin Wendt",
       maintainer_email = "pyftpsync@wwwendt.de",
       url = "https://github.com/mar10/pyftpsync",
-      description = "Synchronize folders over FTP.",
+      description = "Synchronize directories using FTP(S) or file system access.",
       long_description = readme, #+ "\n\n" + changes,
 
         #Development Status :: 2 - Pre-Alpha

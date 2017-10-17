@@ -4,13 +4,13 @@
 [![License](https://img.shields.io/pypi/l/pyftpsync.svg)](https://github.com/mar10/pyftpsync/blob/master/LICENSE.txt)
 [![Documentation Status](https://readthedocs.org/projects/pyftpsync/badge/?version=latest)](http://pyftpsync.readthedocs.io/)
 
-> Synchronize local directories with FTP servers.
+> Synchronize directories using FTP(S) or file system access.
 
 [ ![sample](teaser.png?raw=true) ](https://github.com/mar10/pyftpsync "Live demo")
 
 ## Summary
 
-Synchronize local directories with FTP server.
+Synchronize directories using FTP(S) or file system access.
 
   * This is a command line tool...
   * ... and a library for use in your Python projects

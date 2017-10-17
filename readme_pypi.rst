@@ -6,7 +6,7 @@ Status
 
 Summary
 -------
-Synchronize local directories with FTP server.
+Synchronize directories using FTP(S) or file system access.
 
   * This is a command line tool...
   * ... and a library for use in your Python projects
