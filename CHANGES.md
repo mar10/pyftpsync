@@ -15,6 +15,7 @@
 - Add FTPS (TLS) support.
 - Split into more modules.
 - Release as Wheel
+- Enforce PEP8
 
 1.0.4 (unreleased)
 ------------------

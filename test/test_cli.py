@@ -4,19 +4,16 @@ Tests for pyftpsync
 """
 from __future__ import print_function
 
-import os
 import re
-import sys
 import unittest
 
 from ftpsync import __version__
-from test.fixture_tools import _SyncTestBase, PYFTPSYNC_TEST_FOLDER, run_script, \
-    get_local_test_url, get_remote_test_url
+from test.fixture_tools import _SyncTestBase, run_script,  get_local_test_url, get_remote_test_url
 
 
-#===============================================================================
+# ===============================================================================
 # CliTest
-#===============================================================================
+# ===============================================================================
 
 class CliTest(_SyncTestBase):
     """Test command line script interface."""
@@ -58,8 +55,8 @@ class CliTest(_SyncTestBase):
         assert "(DRY-RUN) Wrote 0/16 files in 7 directories, skipped: 0." in out
 
 
-#===============================================================================
+# ===============================================================================
 # Main
-#===============================================================================
+# ===============================================================================
 if __name__ == "__main__":
     unittest.main()

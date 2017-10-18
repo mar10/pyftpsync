@@ -11,4 +11,4 @@ install:
   - pip install tox-travis
 script:
   - tox
-  - flake8
+  - flake8 ftpsync

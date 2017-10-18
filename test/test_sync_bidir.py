@@ -2,6 +2,9 @@
 """
 Tests for pyftpsync
 """
+# Allow long lines for readabilty
+# flake8: noqa: E501
+
 from __future__ import print_function
 
 import unittest
@@ -11,9 +14,9 @@ from ftpsync.synchronizers import BiDirSynchronizer
 from test.fixture_tools import write_test_file, get_test_folder, remove_test_folder, _SyncTestBase
 
 
-#===============================================================================
+# ===============================================================================
 # BidirSyncTest
-#===============================================================================
+# ===============================================================================
 class BidirSyncTest(_SyncTestBase):
     """Test BiDirSynchronizer on file system targets with different resolve modes."""
 
@@ -24,7 +27,7 @@ class BidirSyncTest(_SyncTestBase):
         super(BidirSyncTest, self).tearDown()
 
     def test_default(self):
-        opts = {"verbose": self.verbose} # default options, i.e. 'skip' conflicts
+        opts = {"verbose": self.verbose}  # default options, i.e. 'skip' conflicts
         # Default options: expect 4 unresolved conflicts
         stats = self.do_run_suite(BiDirSynchronizer, opts)
 #         self._dump_de_facto_results(stats)
@@ -158,8 +161,10 @@ class BidirSyncTest(_SyncTestBase):
         # DRY-RUN: We expect no changes
         self.assertEqual(stats["bytes_written"], 0)
 
-        self.assert_test_folder_equal(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
-        self.assert_test_folder_equal(get_test_folder("remote"), _SyncTestBase.remote_fixture_modified)
+        self.assert_test_folder_equal(get_test_folder("local"),
+                                      _SyncTestBase.local_fixture_modified)
+        self.assert_test_folder_equal(get_test_folder("remote"),
+                                      _SyncTestBase.remote_fixture_modified)
 
     def test_no_metadata(self):
         """Synchronize with absent .pyftpsync-meta.json."""
@@ -169,7 +174,7 @@ class BidirSyncTest(_SyncTestBase):
 
         opts = {"verbose": self.verbose}
 
-        _stats = self.do_run_suite(BiDirSynchronizer, opts)
+        self.do_run_suite(BiDirSynchronizer, opts)
 #         self._dump_de_facto_results(stats)
 
         # NOTE:
@@ -219,9 +224,9 @@ class BidirSyncTest(_SyncTestBase):
         self.assert_test_folder_equal(get_test_folder("remote"), expect_remote)
 
 
-#===============================================================================
+# ===============================================================================
 # FtpBidirResolveTest
-#===============================================================================
+# ===============================================================================
 
 class FtpBidirSyncTest(BidirSyncTest):
     """Run the BidirSyncTest test suite against a local FTP server (ftp_target.FtpTarget)."""
@@ -229,9 +234,9 @@ class FtpBidirSyncTest(BidirSyncTest):
     use_ftp_target = True
 
 
-#===============================================================================
+# ===============================================================================
 # BidirSpecialTest
-#===============================================================================
+# ===============================================================================
 
 class BidirSpecialTest(_SyncTestBase):
     """Test BiDirSynchronizer on file system targets."""
@@ -245,7 +250,8 @@ class BidirSpecialTest(_SyncTestBase):
     def test_folder_conflict(self):
         """Delete a folder on one side, but change content on other side."""
 
-        write_test_file("local/folder1/file1_1.txt", dt="2014-01-01 13:00:00", content="local 13:00")
+        write_test_file("local/folder1/file1_1.txt", dt="2014-01-01 13:00:00",
+                        content="local 13:00")
         remove_test_folder("remote/folder1")
 
         opts = {"verbose": self.verbose}
@@ -286,8 +292,9 @@ class BidirSpecialTest(_SyncTestBase):
         self.assert_test_folder_equal(get_test_folder("local"), expect_local)
         self.assert_test_folder_equal(get_test_folder("remote"), expect_local)
 
-#===============================================================================
+
+# ===============================================================================
 # Main
-#===============================================================================
+# ===============================================================================
 if __name__ == "__main__":
     unittest.main()

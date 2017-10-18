@@ -10,9 +10,9 @@ from ftpsync.synchronizers import DownloadSynchronizer
 from test.fixture_tools import get_test_folder, _SyncTestBase
 
 
-#===============================================================================
+# ===============================================================================
 # DownloadResolveTest
-#===============================================================================
+# ===============================================================================
 class DownloadResolveTest(_SyncTestBase):
     """Test DownSynchronizer on file system targets with different resolve modes."""
 
@@ -24,7 +24,7 @@ class DownloadResolveTest(_SyncTestBase):
         super(DownloadResolveTest, self).tearDown()
 
     def test_default(self):
-        opts = {"verbose": self.verbose} # default options, i.e. 'skip' conflicts
+        opts = {"verbose": self.verbose}  # default options, i.e. 'skip' conflicts
         # Default options: expect 4 unresolved conflicts
         stats = self.do_run_suite(DownloadSynchronizer, opts)
         # self._dump_de_facto_results(stats)
@@ -40,7 +40,8 @@ class DownloadResolveTest(_SyncTestBase):
         self.assertEqual(stats["conflict_files_skipped"], 7)
 
         # We expect that remote remains unmodified
-        self.assert_test_folder_equal(get_test_folder("remote"), _SyncTestBase.remote_fixture_modified)
+        self.assert_test_folder_equal(get_test_folder("remote"),
+                                      _SyncTestBase.remote_fixture_modified)
 
         expect_local = {
             'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
@@ -69,11 +70,13 @@ class DownloadResolveTest(_SyncTestBase):
             "force": True,
             }
 
-        _stats = self.do_run_suite(DownloadSynchronizer, opts)
+        self.do_run_suite(DownloadSynchronizer, opts)
 
         # We expect that remote is mirrored 1:1 to local
-        self.assert_test_folder_equal(get_test_folder("local"), _SyncTestBase.remote_fixture_modified)
-        self.assert_test_folder_equal(get_test_folder("remote"), _SyncTestBase.remote_fixture_modified)
+        self.assert_test_folder_equal(get_test_folder("local"),
+                                      _SyncTestBase.remote_fixture_modified)
+        self.assert_test_folder_equal(get_test_folder("remote"),
+                                      _SyncTestBase.remote_fixture_modified)
 
     def test_dry_run(self):
         opts = {
@@ -89,8 +92,10 @@ class DownloadResolveTest(_SyncTestBase):
         # DRY-RUN: We expect no changes
         self.assertEqual(stats["bytes_written"], 0)
 
-        self.assert_test_folder_equal(get_test_folder("local"), _SyncTestBase.local_fixture_modified)
-        self.assert_test_folder_equal(get_test_folder("remote"), _SyncTestBase.remote_fixture_modified)
+        self.assert_test_folder_equal(get_test_folder("local"),
+                                      _SyncTestBase.local_fixture_modified)
+        self.assert_test_folder_equal(get_test_folder("remote"),
+                                      _SyncTestBase.remote_fixture_modified)
 
     def test_delete_unmatched(self):
         opts = {
@@ -116,7 +121,8 @@ class DownloadResolveTest(_SyncTestBase):
         # self.assertEqual(stats["conflict_files_skipped"], 7)
 
         # We expect that remote remains unmodified
-        self.assert_test_folder_equal(get_test_folder("remote"), _SyncTestBase.remote_fixture_modified)
+        self.assert_test_folder_equal(get_test_folder("remote"),
+                                      _SyncTestBase.remote_fixture_modified)
 
         # We expect that local only contains files that match '*1.txt'
         expect_local = {
@@ -129,18 +135,18 @@ class DownloadResolveTest(_SyncTestBase):
             }
         self.assert_test_folder_equal(get_test_folder("local"), expect_local)
 
-#===============================================================================
+
+# ===============================================================================
 # FtpDownloadResolveTest
-#===============================================================================
+# ===============================================================================
 
 class FtpDownloadResolveTest(DownloadResolveTest):
     """Run the DownloadResolveTest test suite against a local FTP server (ftp_target.FtpTarget)."""
-
     use_ftp_target = True
 
 
-#===============================================================================
+# ===============================================================================
 # Main
-#===============================================================================
+# ===============================================================================
 if __name__ == "__main__":
     unittest.main()

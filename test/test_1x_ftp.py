@@ -22,9 +22,9 @@ from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL, \
 from test.test_1x import prepare_fixtures_1
 
 
-#===============================================================================
+# ===============================================================================
 # FtpTest
-#===============================================================================
+# ===============================================================================
 class FtpTest(unittest.TestCase):
     """Test basic ftplib.FTP functionality."""
     def setUp(self):
@@ -33,7 +33,8 @@ class FtpTest(unittest.TestCase):
         # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"
         ftp_url = PYFTPSYNC_TEST_FTP_URL
         if not ftp_url:
-            self.skipTest("Must configure an FTP target (environment variable PYFTPSYNC_TEST_FTP_URL).")
+            self.skipTest("Must configure an FTP target "
+                          "(environment variable PYFTPSYNC_TEST_FTP_URL).")
 
         parts = urlparse(ftp_url, allow_fragments=False)
         self.assertIn(parts.scheme.lower(), ["ftp", "ftps"])
@@ -49,8 +50,8 @@ class FtpTest(unittest.TestCase):
         self.ftp.login(parts.username, parts.password)
 
     def tearDown(self):
-#        self.ftp.abort()
-#        self.ftp.close()
+        # self.ftp.abort()
+        # self.ftp.close()
         self.ftp.quit()
         del self.ftp
 
@@ -78,9 +79,10 @@ class FtpTest(unittest.TestCase):
 #        for f in dir.walk():
 #            print(f)
 
-#===============================================================================
+
+# ===============================================================================
 # FtpTargetTest
-#===============================================================================
+# ===============================================================================
 class FtpTargetTest(unittest.TestCase):
     """Test ftp_target.FtpTarget functionality."""
     def setUp(self):
@@ -91,7 +93,8 @@ class FtpTargetTest(unittest.TestCase):
 
         ftp_url = PYFTPSYNC_TEST_FTP_URL
         if not ftp_url:
-            self.skipTest("Must configure an FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
+            self.skipTest("Must configure an FTP target "
+                          "(environment variable PYFTPSYNC_TEST_FTP_URL)")
         self.assertTrue("/test" in ftp_url or "/temp" in ftp_url,
                         "FTP target path must include '/test' or '/temp'")
 
@@ -133,7 +136,6 @@ class FtpTargetTest(unittest.TestCase):
         self.assertRaises(RuntimeError, remote.cwd, "..")
         self.assertEqual(remote.pwd(), self.PATH)
 
-
     def test_readwrite(self):
         remote = self.remote
 
@@ -167,7 +169,8 @@ class FtpTargetTest(unittest.TestCase):
             buf.seek(0)
             while 1:
                 s = buf.readline()
-                if not s: break
+                if not s:
+                    break
                 print("%r" % s)
             buf.seek(0)
             print(buf.getvalue())
@@ -185,7 +188,6 @@ class FtpTargetTest(unittest.TestCase):
 #         pprint(stats)
 # #        self.assertEqual(stats["source_files"], 1)
 
-
     def test_sync_fs_ftp(self):
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
         remote = self.remote
@@ -200,7 +202,8 @@ class FtpTargetTest(unittest.TestCase):
 #         pprint(stats)
 
         self.assertEqual(stats["local_dirs"], 2)
-        self.assertEqual(stats["local_files"], 4) # currently files are not counted, when inside a *new* folder
+        # currently files are not counted, when inside a *new* folder:
+        self.assertEqual(stats["local_files"], 4)
         self.assertEqual(stats["remote_dirs"], 0)
         self.assertEqual(stats["remote_files"], 0)
         self.assertEqual(stats["files_written"], 6)
@@ -218,7 +221,7 @@ class FtpTargetTest(unittest.TestCase):
 #         pprint(stats)
 #         assert False
 
-        self.assertEqual(stats["entries_seen"], 18) # ???
+        self.assertEqual(stats["entries_seen"], 18)  # ???
         self.assertEqual(stats["entries_touched"], 1)
         self.assertEqual(stats["files_created"], 0)
         self.assertEqual(stats["files_deleted"], 0)
@@ -253,7 +256,8 @@ class FtpTargetTest(unittest.TestCase):
         # Original file times are preserved, even when retrieved from FTP
 
         self.assertNotEqual(get_test_file_date("local/file1.txt"), STAMP_20140101_120000)
-        self.assertEqual(get_test_file_date("local/file1.txt"), get_test_file_date("local//file1.txt"))
+        self.assertEqual(get_test_file_date("local/file1.txt"),
+                         get_test_file_date("local//file1.txt"))
 
         self.assertEqual(get_test_file_date("local/file2.txt"), STAMP_20140101_120000)
         self.assertEqual(get_test_file_date("remote//file2.txt"), STAMP_20140101_120000)
@@ -285,8 +289,8 @@ class FtpTargetTest(unittest.TestCase):
         self.assertEqual(stats["bytes_written"], 0)
 
 
-#===============================================================================
+# ===============================================================================
 # Main
-#===============================================================================
+# ===============================================================================
 if __name__ == "__main__":
     unittest.main()

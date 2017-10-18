@@ -14,19 +14,20 @@ from ftpsync.synchronizers import DownloadSynchronizer
 from ftpsync.util import urlparse
 from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL
 
-
 on_windows = platform.system() == "Windows"
 
-#===============================================================================
+
+# ===============================================================================
 # FtpTest
-#===============================================================================
+# ===============================================================================
 class RegressionTest(unittest.TestCase):
     """Test basic ftplib.FTP functionality."""
     def setUp(self):
         # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"
         ftp_url = PYFTPSYNC_TEST_FTP_URL
         if not ftp_url:
-            raise SkipTest("Must configure an FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
+            raise SkipTest("Must configure an FTP target "
+                           "(environment variable PYFTPSYNC_TEST_FTP_URL)")
 
         parts = urlparse(ftp_url, allow_fragments=False)
         # self.assertIn(parts.scheme.lower(), ["ftp", "ftps"])
@@ -50,13 +51,14 @@ class RegressionTest(unittest.TestCase):
         opts = {
             "resolve": "remote",
             "verbose": 3,
-            "dry_run": True
-        }
+            "dry_run": True,
+            }
         s = DownloadSynchronizer(local, remote, opts)
         s.run()
 
-#===============================================================================
+
+# ===============================================================================
 # Main
-#===============================================================================
+# ===============================================================================
 if __name__ == "__main__":
     unittest.main()

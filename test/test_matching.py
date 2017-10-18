@@ -6,16 +6,13 @@ from __future__ import print_function
 
 import re
 import unittest
-from unittest.case import SkipTest
 
-from ftpsync.synchronizers import UploadSynchronizer
-from test.fixture_tools import write_test_file, get_test_folder, _SyncTestBase, \
-    get_local_test_url, get_remote_test_url, run_script
+from test.fixture_tools import _SyncTestBase, get_local_test_url, get_remote_test_url, run_script
 
 
-#===============================================================================
+# ===============================================================================
 # MatchTest
-#===============================================================================
+# ===============================================================================
 class MatchTest(_SyncTestBase):
     """Test --match and --exclude."""
 
@@ -96,7 +93,7 @@ class MatchTest(_SyncTestBase):
 
     def test_match_5(self):
         out = run_script("scan", self.local, "--list", "--recursive",
-            "--match", "*5*")
+                         "--match", "*5*")
         self.assert_scan_equal(out, [
             'file5.txt',
             '[folder1]',
@@ -111,15 +108,15 @@ class MatchTest(_SyncTestBase):
 
     def test_match_5b(self):
         out = run_script("scan", self.local, "--list", "--recursive",
-            "--match", "*5*", "--exclude", "folder?")
+                         "--match", "*5*", "--exclude", "folder?")
         self.assert_scan_equal(out, [
             'file5.txt',
             ])
 
 
-#===============================================================================
+# ===============================================================================
 # FtpMatchTest
-#===============================================================================
+# ===============================================================================
 
 class FtpMatchTest(MatchTest):
     """Run the BidirSyncTest test suite against a local FTP server (ftp_target.FtpTarget)."""
@@ -127,8 +124,8 @@ class FtpMatchTest(MatchTest):
     use_ftp_target = True
 
 
-#===============================================================================
+# ===============================================================================
 # Main
-#===============================================================================
+# ===============================================================================
 if __name__ == "__main__":
     unittest.main()

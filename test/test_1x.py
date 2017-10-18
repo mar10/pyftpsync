@@ -7,7 +7,6 @@ from __future__ import print_function
 import datetime
 import os
 import unittest
-from unittest.case import SkipTest  # @UnusedImport
 
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer, \
     BiDirSynchronizer
@@ -17,9 +16,9 @@ from test.fixture_tools import PYFTPSYNC_TEST_FOLDER, empty_folder, \
     write_test_file
 
 
-#===============================================================================
+# ===============================================================================
 # prepare_fixtures_1
-#===============================================================================
+# ===============================================================================
 def prepare_fixtures_1():
     """Create two test folders and some files.
 
@@ -43,15 +42,14 @@ def prepare_fixtures_1():
     os.mkdir(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
 
 
-
-#===============================================================================
+# ===============================================================================
 # FilesystemTest
-#===============================================================================
+# ===============================================================================
 
 class FilesystemTest(unittest.TestCase):
     """Test different synchronizers on file system targets."""
     def setUp(self):
-#         raise SkipTest
+        # raise SkipTest
         self.verbose = 3  # 4
         prepare_fixtures_1()
 
@@ -70,7 +68,8 @@ class FilesystemTest(unittest.TestCase):
         self.assertEqual(stats["local_dirs"], 0)
         self.assertEqual(stats["local_files"], 0)
         self.assertEqual(stats["remote_dirs"], 2)
-        self.assertEqual(stats["remote_files"], 4) # currently files are not counted, when inside a *new* folder
+        # currently files are not counted, when inside a *new* folder:
+        self.assertEqual(stats["remote_files"], 4)
         self.assertEqual(stats["files_written"], 6)
         self.assertEqual(stats["dirs_created"], 2)
         self.assertEqual(stats["bytes_written"], 16403)
@@ -90,7 +89,6 @@ class FilesystemTest(unittest.TestCase):
         self.assertEqual(get_test_file_date("local/file1.txt"), STAMP_20140101_120000)
         self.assertEqual(get_test_file_date("remote/file1.txt"), STAMP_20140101_120000)
 
-
     def test_upload_fs_fs(self):
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
         remote = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
@@ -100,7 +98,8 @@ class FilesystemTest(unittest.TestCase):
         stats = s.get_stats()
 #        pprint(stats)
         self.assertEqual(stats["local_dirs"], 2)
-        self.assertEqual(stats["local_files"], 4) # currently files are not counted, when inside a *new* folder
+        # currently files are not counted, when inside a *new* folder:
+        self.assertEqual(stats["local_files"], 4)
         self.assertEqual(stats["remote_dirs"], 0)
         self.assertEqual(stats["remote_files"], 0)
         self.assertEqual(stats["files_written"], 6)
@@ -109,7 +108,6 @@ class FilesystemTest(unittest.TestCase):
         # file times are preserved
         self.assertEqual(get_test_file_date("local/file1.txt"), STAMP_20140101_120000)
         self.assertEqual(get_test_file_date("remote/file1.txt"), STAMP_20140101_120000)
-
 
     def test_sync_fs_fs(self):
         local = FsTarget(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
@@ -120,7 +118,8 @@ class FilesystemTest(unittest.TestCase):
         stats = s.get_stats()
 #        pprint(stats)
         self.assertEqual(stats["local_dirs"], 2)
-        self.assertEqual(stats["local_files"], 4) # currently files are not counted, when inside a *new* folder
+        # currently files are not counted, when inside a *new* folder:
+        self.assertEqual(stats["local_files"], 4)
         self.assertEqual(stats["remote_dirs"], 0)
         self.assertEqual(stats["remote_files"], 0)
         self.assertEqual(stats["files_written"], 6)
@@ -197,7 +196,6 @@ class FilesystemTest(unittest.TestCase):
         dt = datetime.datetime.utcnow() - datetime.timedelta(seconds=10)
         touch_test_file("local/file2.txt", dt=dt)
 
-
         s = BiDirSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
@@ -208,8 +206,8 @@ class FilesystemTest(unittest.TestCase):
         self.assertEqual(stats["conflict_files"], 2)
 
 
-#===============================================================================
+# ===============================================================================
 # Main
-#===============================================================================
+# ===============================================================================
 if __name__ == "__main__":
     unittest.main()

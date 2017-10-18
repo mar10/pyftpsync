@@ -8,24 +8,26 @@ Tests for pyftpsync
 """
 from __future__ import print_function
 
+import os
+import sys
 import unittest
-from unittest.case import SkipTest  # @UnusedImport
 
-from ftpsync.ftp_target import *  # @UnusedWildImport
+# from ftpsync.ftp_target import *  # @UnusedWildImport
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer
-from ftpsync.targets import *  # @UnusedWildImport
+from ftpsync.targets import make_target, FsTarget
+# from ftpsync.targets import *  # @UnusedWildImport
 from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL, \
     PYFTPSYNC_TEST_FOLDER, empty_folder, write_test_file
 from test.test_1x import prepare_fixtures_1
 
 
-DO_BENCHMARKS = False #True
+DO_BENCHMARKS = False  # True
+# slow = pytest.mark.skipif(not pytest.config.getoption("--runslow"), reason="need --runslow")
 
-# slow = pytest.mark.skipif(not pytest.config.getoption("--runslow"), reason="need --runslow option to run")
 
-#===============================================================================
+# ===============================================================================
 # BenchmarkTest
-#===============================================================================
+# ===============================================================================
 class BenchmarkTest(unittest.TestCase):
     """Test ftp_target.FtpTarget functionality."""
     def setUp(self):
@@ -34,8 +36,10 @@ class BenchmarkTest(unittest.TestCase):
         # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"
         ftp_url = PYFTPSYNC_TEST_FTP_URL
         if not ftp_url:
-            self.skipTest("Must configure an FTP target (environment variable PYFTPSYNC_TEST_FTP_URL)")
-        self.assertTrue("/test" in ftp_url or "/temp" in ftp_url, "FTP target path must include '/test' or '/temp'")
+            self.skipTest("Must configure an FTP target "
+                          "(environment variable PYFTPSYNC_TEST_FTP_URL)")
+        self.assertTrue("/test" in ftp_url or "/temp" in ftp_url,
+                        "FTP target path must include '/test' or '/temp'")
 
         # Create temp/local folder with files and empty temp/remote folder
         prepare_fixtures_1()
@@ -51,7 +55,7 @@ class BenchmarkTest(unittest.TestCase):
 
     def _transfer_files(self, count, size):
         temp1_path = os.path.join(PYFTPSYNC_TEST_FOLDER, "local")
-        empty_folder(temp1_path) # remove standard test files
+        empty_folder(temp1_path)  # remove standard test files
 
         local = FsTarget(temp1_path)
         remote = self.remote
@@ -70,7 +74,9 @@ class BenchmarkTest(unittest.TestCase):
         self.assertEqual(stats["files_written"], count)
         self.assertEqual(stats["bytes_written"], count * size)
 #        pprint(stats)
-        print("Upload %s x %s bytes took %s: %s" % (count, size, stats["upload_write_time"], stats["upload_rate_str"]), file=sys.stderr)
+        print("Upload %s x %s bytes took %s: %s"
+              % (count, size, stats["upload_write_time"], stats["upload_rate_str"]),
+              file=sys.stderr)
 
         # Download all of remote to temp/remote
 
@@ -86,7 +92,9 @@ class BenchmarkTest(unittest.TestCase):
         self.assertEqual(stats["bytes_written"], count * size)
 
 #        pprint(stats)
-        print("Download %s x %s bytes took %s: %s" % (count, size, stats["download_write_time"], stats["download_rate_str"]), file=sys.stderr)
+        print("Download %s x %s bytes took %s: %s"
+              % (count, size, stats["download_write_time"], stats["download_rate_str"]),
+              file=sys.stderr)
 
     def test_transfer_small_files(self):
         """Transfer 20 KiB in many small files."""
@@ -97,8 +105,8 @@ class BenchmarkTest(unittest.TestCase):
         self._transfer_files(count=1, size=20*1024)
 
 
-#===============================================================================
+# ===============================================================================
 # Main
-#===============================================================================
+# ===============================================================================
 if __name__ == "__main__":
     unittest.main()
