@@ -4,7 +4,6 @@ Tests for pyftpsync
 """
 from __future__ import print_function
 
-# noqa: E501
 import calendar
 import copy
 import datetime
@@ -628,7 +627,7 @@ class _SyncTestBase(unittest.TestCase):
                     target and the parent folder is removed on the peer target.
                     The folder will be removed on sync!
 
-        4. Finally we call bi-dir sync with the custom options and return runtime stats.
+        4. Finally we call a synchronizer with custom options and return runtime stats.
         """
 
         if not cls.use_ftp_target:
