@@ -5,7 +5,7 @@ from __future__ import print_function
 import os
 import sys
 
-from setuptools import setup, find_packages, Command
+from setuptools import setup, Command
 from setuptools.command.test import test as TestCommand
 
 from ftpsync import __version__
@@ -17,6 +17,7 @@ class ToxCommand(TestCommand):
         TestCommand.finalize_options(self)
         self.test_args = []
         self.test_suite = True
+
     def run_tests(self):
         # Import here, cause outside the eggs aren't loaded
         import tox
@@ -90,7 +91,7 @@ if use_cx_freeze:
                        base=None,
                        # base="Win32GUI",
                        targetName="pyftpsync.exe",
-#                       icon="docs/logo.ico",
+                       # icon="docs/logo.ico",
                        shortcutName="pyftpsync",
                        # copyright="(c) 2012-2017 Martin Wendt",  # requires cx_Freeze PR#94
                        # trademarks="...",
