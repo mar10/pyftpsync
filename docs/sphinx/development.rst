@@ -7,13 +7,13 @@ Install for Development
 
 First off, thanks for taking the time to contribute!
 
-Following a guideline that may help.
+This small guideline may help takinf the first steps.
 
 Happy hacking :)
 
 
-Fork Repository
----------------
+Fork the Repository
+-------------------
 
 Clone pyftpsync to a local folder and checkout the branch you want to work on::
 
@@ -22,21 +22,22 @@ Clone pyftpsync to a local folder and checkout the branch you want to work on::
     $ git checkout my_branch
 
 
-Create a Pull Request
----------------------
-
-.. todo::
-
-    	TODO
-
-
 Work in a Virtual Environment
 -----------------------------
 
+Install Python
+^^^^^^^^^^^^^^
 We need `Python 2.7 <https://www.python.org/downloads/>`_,
 `Python 3.4+ <https://www.python.org/downloads/>`_,
 and `pip <https://pip.pypa.io/en/stable/installing/#do-i-need-to-install-pip>`_ on our system.
 
+If you want to run tests on *all* supported platforms, install Python 2.7, 3.4,
+3.5, and 3.6.
+
+Create and Activate the Virtual Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Linux / macOS
+"""""""""""""
 On Linux/OS X, we recommend to use `pipenv <https://github.com/kennethreitz/pipenv>`_
 to make this easy::
 
@@ -44,17 +45,22 @@ to make this easy::
     $ pipenv shell
     bash-3.2$
 
+Windows
+"""""""
 Alternatively (especially on Windows), use `virtualenv <https://virtualenv.pypa.io/en/latest/>`_
 to create and activate the virtual environment.
 For example using Python's builtin ``venv`` (instead of ``virtualenvwrapper``)
 in a Windows PowerShell::
 
+    > cd /path/pyftpsync
     > py -3.6 -m venv c:\env\pyftpsync_py36
     > c:\env\pyftpsync_py36\Scripts\Activate.ps1
     (pyftpsync_py36) $
 
-Now that the new environment exists and is activated, we can setup the requirements
-and install pyftpsync to run from source code::
+Install Requirements
+^^^^^^^^^^^^^^^^^^^^
+Now that the new environment exists and is activated, we can setup the
+requirements and install pyftpsync to run from source code::
 
     $ pip install -r requirements-dev.txt
     $ python setup.py develop
@@ -191,8 +197,10 @@ If an FTP server was configured, we can also run the script against it::
 Run  ``python -m test.fixture_tools`` again to reset the test folders.
 
 
+Run FTP Server
+--------------
 Run Built-in FTP Server on macOS Sierra
----------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 On OSX (starting with Sierra) the built-in FTP server needs to be activated like so::
 
@@ -212,38 +220,28 @@ The FTP server exposes the whole file system, so the URL must start from root::
    Exposing the file system may be dangerous! Make sure to stop the FTP server after testing.
 
 
-.. Run ProFTPD on macOS Sierra
-    ---------------------------
+Run FTP Server on Windows
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    .. todo::
-        This did not work yet due to permission problems.
-        If anyone get's this to run, please document here.
-
-    For example, environment variables may look like this, assuming the FTP server is rooted
-    at the user's home directory::
-
-        export PYFTPSYNC_TEST_FOLDER=/Users/USER/pyftpsync_test
-        export PYFTPSYNC_TEST_FTP_URL=ftp://USER:PASSWORD@localhost/pyftpsync_test/remote
-
-    We could install XAMPP and add this to `proftpd.conf`::
-
-      <Anonymous /Users/joe/test_pyftpsync/remote>
-        User  ftp
-        Group ftp
-
-        # We want clients to be able to login with "anonymous" as well as "ftp"
-        UserAlias anonymous ftp
-
-        # Limit the maximum number of anonymous logins
-        MaxClients  10
-
-        # Limit WRITE everywhere in the anonymous chroot
-        <Limit WRITE>
-          AllowAll
-         </Limit>
-        AllowOverwrite  on
-      </Anonymous>
+On Windows the
+`Filezilla Server <https://filezilla-project.org/download.php?type=server>`_
+may be a good choice.
 
 
-    .. seealso::
-      https://delightlylinux.wordpress.com/2017/06/10/how-to-set-up-anonymous-ftp-with-proftp/
+Code
+====
+
+.. note::
+
+    	Follow the Style Guide, basically
+        `Pep8 <https://www.python.org/dev/peps/pep-0008/>`_.
+
+        Run `$ pytest` and `$ flake8` frequently!
+
+
+Create a Pull Request
+=====================
+
+.. todo::
+
+    	TODO
