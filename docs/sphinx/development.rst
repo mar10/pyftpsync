@@ -73,6 +73,7 @@ The code should now run::
 The test suite should run as well::
 
     $ python setup.py test
+    $ pytest -v -rs
 
 Build Sphinx documentation::
 
@@ -234,9 +235,11 @@ Code
 .. note::
 
     	Follow the Style Guide, basically
-        `Pep8 <https://www.python.org/dev/peps/pep-0008/>`_.
+        `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_.
 
-        Run `$ pytest` and `$ flake8` frequently!
+        Failing tests or not follwing PEP 8 will break builds on
+        `travis <https://travis-ci.org/mar10/pyftpsync>`_,
+        so run ``$ pytest`` and ``$ flake8`` frequently and before you commit!
 
 
 Create a Pull Request

@@ -16,6 +16,8 @@ Synchronize directories using FTP(S) or file system access.
 
 Requires `Python <http://www.python.org/download/>`_ 2.7+ or 3.4+.
 
+A Windows `MSI installer is also available on GitHub <https://github.com/mar10/pyftpsync/releases>`_.
+
 See also https://github.com/mar10/pyftpsync for details
 and `Read the Docs <http://pyftpsync.readthedocs.io/>`_.
 
