@@ -61,7 +61,7 @@ class BenchmarkTest(unittest.TestCase):
         remote = self.remote
 
         for i in range(count):
-            write_test_file("local/file_%s.txt" % i, size=size)
+            write_test_file("local/file_{}.txt".format(i), size=size)
 
         # Upload all of temp/local to remote
 
@@ -74,8 +74,8 @@ class BenchmarkTest(unittest.TestCase):
         self.assertEqual(stats["files_written"], count)
         self.assertEqual(stats["bytes_written"], count * size)
 #        pprint(stats)
-        print("Upload %s x %s bytes took %s: %s"
-              % (count, size, stats["upload_write_time"], stats["upload_rate_str"]),
+        print("Upload {} x {} bytes took {}: {}"
+              .format(count, size, stats["upload_write_time"], stats["upload_rate_str"]),
               file=sys.stderr)
 
         # Download all of remote to temp/remote
@@ -92,8 +92,8 @@ class BenchmarkTest(unittest.TestCase):
         self.assertEqual(stats["bytes_written"], count * size)
 
 #        pprint(stats)
-        print("Download %s x %s bytes took %s: %s"
-              % (count, size, stats["download_write_time"], stats["download_rate_str"]),
+        print("Download {} x {} bytes took {}: {}"
+              .format(count, size, stats["download_write_time"], stats["download_rate_str"]),
               file=sys.stderr)
 
     def test_transfer_small_files(self):

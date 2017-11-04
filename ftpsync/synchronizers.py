@@ -219,9 +219,9 @@ class BaseSynchronizer(object):
             self._inc_stat("download_files_written")
         self._tick()
         if self.dry_run:
-            return self._dry_run_action("copy file (%s, %s --> %s)" % (file_entry, src, dest))
+            return self._dry_run_action("copy file ({}, {} --> {})".format(file_entry, src, dest))
         elif dest.readonly:
-            raise RuntimeError("target is read-only: %s" % dest)
+            raise RuntimeError("target is read-only: {}".format(dest))
 
         start = time.time()
 
@@ -256,9 +256,9 @@ class BaseSynchronizer(object):
         self._inc_stat("dirs_created")
         self._tick()
         if self.dry_run:
-            return self._dry_run_action("copy directory (%s, %s --> %s)" % (dir_entry, src, dest))
+            return self._dry_run_action("copy directory ({}, {} --> {})".format(dir_entry, src, dest))
         elif dest.readonly:
-            raise RuntimeError("target is read-only: %s" % dest)
+            raise RuntimeError("target is read-only: {}".format(dest))
 
         dest.set_sync_info(dir_entry.name, None, None)
 
@@ -294,9 +294,9 @@ class BaseSynchronizer(object):
         self._inc_stat("entries_touched")
         self._inc_stat("files_deleted")
         if self.dry_run:
-            return self._dry_run_action("delete file (%s)" % (file_entry,))
+            return self._dry_run_action("delete file ({})".format(file_entry))
         elif file_entry.target.readonly:
-            raise RuntimeError("target is read-only: %s" % file_entry.target)
+            raise RuntimeError("target is read-only: {}".format(file_entry.target))
         file_entry.target.remove_file(file_entry.name)
         file_entry.target.remove_sync_info(file_entry.name)
 
@@ -306,9 +306,9 @@ class BaseSynchronizer(object):
         self._inc_stat("entries_touched")
         self._inc_stat("dirs_deleted")
         if self.dry_run:
-            return self._dry_run_action("delete directory (%s)" % (dir_entry,))
+            return self._dry_run_action("delete directory ({})".format(dir_entry))
         elif dir_entry.target.readonly:
-            raise RuntimeError("target is read-only: %s" % dir_entry.target)
+            raise RuntimeError("target is read-only: {}".format(dir_entry.target))
         dir_entry.target.rmdir(dir_entry.name)
         dir_entry.target.remove_sync_info(dir_entry.name)
 
@@ -353,13 +353,13 @@ class BaseSynchronizer(object):
             prefix = DRY_RUN_PREFIX
 
         if action and status:
-            tag = ("%s %s" % (action, status)).upper()
+            tag = ("{} {}".format(action, status)).upper()
         else:
-            tag = ("%s%s" % (action, status)).upper()
+            tag = ("{}".format(action, status)).upper()
 
         name = entry.get_rel_path()
         if entry.is_dir():
-            name = "[%s]" % name
+            name = "[{}]".format(name)
 
 #         print("{}{:<16} {:^3} {}".format(prefix, tag, symbol, name))
         print("{}{}{:<16} {:^3} {}{}".format(prefix, color, tag, symbol, name, final))

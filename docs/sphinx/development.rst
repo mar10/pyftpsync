@@ -60,10 +60,15 @@ in a Windows PowerShell::
 Install Requirements
 ^^^^^^^^^^^^^^^^^^^^
 Now that the new environment exists and is activated, we can setup the
-requirements and install pyftpsync to run from source code::
+requirements::
 
     $ pip install -r requirements-dev.txt
-    $ python setup.py develop
+
+and install pyftpsync to run from source code::
+
+    $ pip install -e .
+
+..    $ python setup.py develop
 
 The code should now run::
 

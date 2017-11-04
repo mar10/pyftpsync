@@ -84,12 +84,12 @@ class FtpTarget(_Target):
 #            self.open()
 
     def __str__(self):
-        return "<%s + %s>" % (self.get_base_name(),
+        return "<{} + {}>".format(self.get_base_name(),
                               relpath_url(self.cur_dir, self.root_dir))
 
     def get_base_name(self):
         scheme = "ftps" if self.tls else "ftp"
-        return "%s://%s%s" % (scheme, self.host, self.root_dir)
+        return "{}://{}{}".format(scheme, self.host, self.root_dir)
 
     def open(self):
         assert not self.connected
@@ -176,7 +176,7 @@ class FtpTarget(_Target):
             self.write_text(DirMetadata.LOCK_FILE_NAME, json.dumps(data))
             self.lock_data = data
         except Exception as e:
-            print("Could not write lock file: %s" % e, file=sys.stderr)
+            print("Could not write lock file: {}".format(e), file=sys.stderr)
             # Set to False, so we don't try to remove later
             self.lock_data = False
 
@@ -205,7 +205,7 @@ class FtpTarget(_Target):
 
             self.lock_data = None
         except Exception as e:
-            print("Could not remove lock file: %s" % e, file=sys.stderr)
+            print("Could not remove lock file: {}".format(e), file=sys.stderr)
             raise
 
     def _probe_lock_file(self, reported_mtime):
@@ -258,7 +258,7 @@ class FtpTarget(_Target):
                         # try to delete this as a file
                         self.ftp.delete(name)
                     except ftplib.all_errors as _e:
-                        print("    ftp.delete(%s) failed: %s, trying rmdir()..." % (name, _e))
+                        print("    ftp.delete({}) failed: {}, trying rmdir()...".format(name, _e))
                         # assume <name> is a folder
                         self.rmdir(name)
             finally:
@@ -368,11 +368,12 @@ class FtpTarget(_Target):
                         #   2. the reported files size is different than the
                         #      size we stored in the meta-data
                         if self.get_option("verbose", 2) >= 5:
-                            print(("META: Removing outdated meta entry %s\n" +
-                                   "      modified after upload (%s > %s), or\n"
-                                   "      cur. size (%s) != meta size (%s)") %
-                                  (n, time.ctime(entry_map[n].mtime), time.ctime(upload_time),
-                                   entry_map[n].size, meta.get("s")))
+                            print(("META: Removing outdated meta entry {}\n" +
+                                   "      modified after upload ({} > {}), or\n"
+                                   "      cur. size ({}) != meta size ({})")
+                                  .format(n, time.ctime(entry_map[n].mtime),
+                                          time.ctime(upload_time),
+                                          entry_map[n].size, meta.get("s")))
                         missing.append(n)
                 else:
                     # File is stored in meta-data, but no longer exists on FTP server
@@ -387,14 +388,14 @@ class FtpTarget(_Target):
     def open_readable(self, name):
         """Open cur_dir/name for reading."""
         out = io.BytesIO()
-        self.ftp.retrbinary("RETR %s" % name, out.write)
+        self.ftp.retrbinary("RETR {}".format(name), out.write)
         out.flush()
         out.seek(0)
         return out
 
     def write_file(self, name, fp_src, blocksize=DEFAULT_BLOCKSIZE, callback=None):
         self.check_write(name)
-        self.ftp.storbinary("STOR %s" % name, fp_src, blocksize, callback)
+        self.ftp.storbinary("STOR {}".format(name), fp_src, blocksize, callback)
         # TODO: check result
 
     def remove_file(self, name):
