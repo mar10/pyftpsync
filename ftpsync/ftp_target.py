@@ -93,6 +93,7 @@ class FtpTarget(_Target):
 
     def open(self):
         assert not self.connected
+        super(FtpTarget, self).open()
         no_prompt = self.get_option("no_prompt", True)
         store_password = self.get_option("store_password", False)
 
@@ -163,7 +164,8 @@ class FtpTarget(_Target):
             self.ftp.quit()
             self.ftp_socket_connected = False
 
-        self.connected = False
+        super(FtpTarget, self).close()
+#         self.connected = False
 
     def _lock(self, break_existing=False):
         """Write a special file to the target root folder."""

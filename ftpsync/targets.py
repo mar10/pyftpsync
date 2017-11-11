@@ -14,6 +14,7 @@ import shutil
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftpsync.util import to_binary, urlparse, DEFAULT_BLOCKSIZE
+import threading
 
 
 # ===============================================================================
@@ -58,6 +59,8 @@ class _Target(object):
     def __init__(self, root_dir, extra_opts):
         if root_dir != "/":
             root_dir = root_dir.rstrip("/")
+        #: This target is not thread safe 
+        self._rlock = threading.RLock()
         #:
         self.root_dir = root_dir
         self.extra_opts = extra_opts or {}
@@ -79,6 +82,13 @@ class _Target(object):
         # TODO: http://pydev.blogspot.de/2015/01/creating-safe-cyclic-reference.html
         self.close()
 
+#     def __enter__(self):
+#         self.open()
+#         return self
+# 
+#     def __exit__(self, exc_type, exc_value, traceback):
+#         self.close()
+
     def get_base_name(self):
         return "{}".format(self.root_dir)
 
@@ -95,10 +105,16 @@ class _Target(object):
         return self.extra_opts.get(key, default)
 
     def open(self):
+        # Not thread safe (issue #20)
+        if not self._rlock.acquire(False):
+            raise RuntimeError("Could not acquire _Target lock on open")
         self.connected = True
 
     def close(self):
-        self.connected = False
+        if self.connected:
+            self.connected = False
+            self.readonly = False  # issue #20
+            self._rlock.release()
 
     def check_write(self, name):
         """Raise exception if writing cur_dir/name is not allowed."""
@@ -240,11 +256,13 @@ class FsTarget(_Target):
         return "<FS:{} + {}>".format(self.root_dir, os.path.relpath(self.cur_dir, self.root_dir))
 
     def open(self):
-        self.connected = True
+        super(FsTarget, self).open()
+#         self.connected = True
         self.cur_dir = self.root_dir
 
     def close(self):
-        self.connected = False
+        super(FsTarget, self).close()
+#         self.connected = False
 
     def cwd(self, dir_name):
         path = normpath_url(join_url(self.cur_dir, dir_name))
