@@ -141,6 +141,22 @@ larger, but more readable format::
     export PYFTPSYNC_VERBOSE_META=True
 
 
+.pyftpsyncrc
+------------
+
+Instead of using environment variables, it is recommended to create a ``.pyftsyncrc``
+file in the user's home directory::
+
+    [test]
+    folder = /Users/USER/pyftpsync_test
+    ftp_url = ftp://USER:PASSWORD@localhost/pyftpsync_test/remote
+
+    [debug]
+    verbose_meta = True
+
+Settings from environment variables still take precedence.
+
+
 Run Manual Tests
 ----------------
 

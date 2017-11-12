@@ -37,6 +37,11 @@ try:
 except ImportError:
     from io import StringIO  # noqa Py3
 
+try:
+    import ConfigParser as configparser  # Py2
+except ImportError:
+    import configparser  # Py3
+
 
 DEFAULT_CREDENTIAL_STORE = "pyftpsync.pw"
 DRY_RUN_PREFIX = "(DRY-RUN) "
@@ -78,6 +83,23 @@ def pretty_stamp(stamp):
     # return time.ctime(stamp)
     # return datetime.fromtimestamp(stamp).isoformat(" ")
     return datetime.fromtimestamp(stamp).strftime("%Y-%m-%d %H:%M:%S")
+
+
+_pyftpsyncrc_parser = configparser.RawConfigParser()   
+_pyftpsyncrc_parser.read(os.path.expanduser("~/.pyftpsyncrc"))
+
+
+def get_option(env_name, section, opt_name, default=None):
+    """Return a configuration setting from environment var or .pyftpsyncrc"""
+    val = os.environ.get(env_name) 
+    if val is None:
+        try:
+            val = _pyftpsyncrc_parser.get(section, opt_name)
+        except (configparser.NoSectionError, configparser.NoOptionError):
+            pass
+    if val is None:
+        val = default
+    return val
 
 
 # ===============================================================================

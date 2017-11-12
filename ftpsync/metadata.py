@@ -7,15 +7,15 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 from __future__ import print_function
 
 import json
-import os
 import sys
 import time
 
 from ftpsync import __version__
-from ftpsync.util import pretty_stamp, str_to_bool
+from ftpsync.util import pretty_stamp, str_to_bool, get_option
 
 
-PYFTPSYNC_VERBOSE_META = str_to_bool(os.environ.get("PYFTPSYNC_VERBOSE_META", False))
+PYFTPSYNC_VERBOSE_META = str_to_bool(
+    get_option("PYFTPSYNC_VERBOSE_META", "debug", "verbose_meta", False))
 
 
 class IncompatibleMetadataVersion(RuntimeError):

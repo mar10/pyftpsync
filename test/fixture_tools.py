@@ -27,11 +27,11 @@ from ftpsync import pyftpsync
 from ftpsync.metadata import DirMetadata
 from ftpsync.synchronizers import BiDirSynchronizer
 from ftpsync.targets import FsTarget, make_target
-from ftpsync.util import to_str, to_binary, urlparse, StringIO
+from ftpsync.util import to_str, to_binary, urlparse, StringIO, get_option
 
 
-PYFTPSYNC_TEST_FOLDER = os.environ.get("PYFTPSYNC_TEST_FOLDER") or tempfile.mkdtemp()
-PYFTPSYNC_TEST_FTP_URL = os.environ.get("PYFTPSYNC_TEST_FTP_URL")
+PYFTPSYNC_TEST_FOLDER = get_option("PYFTPSYNC_TEST_FOLDER", "test", "folder") or tempfile.mkdtemp()
+PYFTPSYNC_TEST_FTP_URL = get_option("PYFTPSYNC_TEST_FTP_URL", "test", "ftp_url")
 STAMP_20140101_120000 = 1388577600.0  # Wed, 01 Jan 2014 12:00:00 GMT
 
 
