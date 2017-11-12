@@ -64,7 +64,7 @@ class FtpTarget(_Target):
                 raise
         else:
             self.ftp = ftplib.FTP()
-        self.ftp.debug(self.get_option("ftp_debug", 0))
+        self.ftp.set_debuglevel(self.get_option("ftp_debug", 0))
         self.host = host
         self.port = port or 0
         self.username = username
@@ -93,9 +93,17 @@ class FtpTarget(_Target):
 
     def open(self):
         assert not self.connected
+        
         super(FtpTarget, self).open()
+        
         no_prompt = self.get_option("no_prompt", True)
         store_password = self.get_option("store_password", False)
+
+        self.ftp.set_debuglevel(self.get_option("ftp_debug", 0))
+        
+        # Optionally use FTP active mode (default: PASV) (issue #21)
+        force_active = self.get_option("ftp_active", False)
+        self.ftp.set_pasv(not force_active)
 
         if self.timeout:
             self.ftp.connect(self.host, self.port, self.timeout)
@@ -178,7 +186,12 @@ class FtpTarget(_Target):
             self.write_text(DirMetadata.LOCK_FILE_NAME, json.dumps(data))
             self.lock_data = data
         except Exception as e:
-            print("Could not write lock file: {}".format(e), file=sys.stderr)
+            errmsg = "{}".format(e)
+            print("Could not write lock file: {}".format(errmsg), file=sys.stderr)
+            if errmsg.startswith("550") and self.ftp.passiveserver:
+                print("The server probably requires FTP Active mode. "
+                      "Try passing the --ftp-active option.", file=sys.stderr)
+                
             # Set to False, so we don't try to remove later
             self.lock_data = False
 

@@ -29,7 +29,7 @@ def make_target(url, extra_opts=None):
         TLS is only supported on Python 2.7/3.2+.
     Args:
         url (str):
-        extra_opts (dict, optional): Passed to Target contructor. Default: None.
+        extra_opts (dict, optional): Passed to Target constructor. Default: None.
     Returns:
         :class:`_Target`
     """

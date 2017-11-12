@@ -78,6 +78,9 @@ def run():
         parser.add_argument("--no-color",
                             action="store_true",
                             help="prevent use of ansi terminal color codes")
+        parser.add_argument("--ftp-active",
+                            action="store_true",
+                            help="use Active FTP mode instead of passive")
 
     # --- Create the parser for the "upload" command ---------------------------
 
