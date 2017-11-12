@@ -40,6 +40,9 @@ def add_scan_parser(subparsers):
     parser.add_argument("--no-color",
                         action="store_true",
                         help="prevent use of ansi terminal color codes")
+    parser.add_argument("--ftp-active",
+                        action="store_true",
+                        help="use Active FTP mode instead of passive")
     parser.add_argument("--list",
                         action="store_true",
                         help="print target files")
@@ -70,7 +73,11 @@ def add_scan_parser(subparsers):
 
 def scan_handler(args):
     """Implement `cleanup` sub-command."""
-    target = make_target(args.target, {"ftp_debug": args.verbose >= 5})
+    opts = {
+        "ftp_debug": args.verbose >= 5,
+        "ftp_active": args.ftp_active,
+        }
+    target = make_target(args.target, opts)
     target.readonly = True
     root_depth = target.root_dir.count("/")
     start = time.time()
