@@ -59,7 +59,7 @@ class _Target(object):
     def __init__(self, root_dir, extra_opts):
         if root_dir != "/":
             root_dir = root_dir.rstrip("/")
-        #: This target is not thread safe 
+        # This target is not thread safe
         self._rlock = threading.RLock()
         #:
         self.root_dir = root_dir
@@ -85,7 +85,7 @@ class _Target(object):
 #     def __enter__(self):
 #         self.open()
 #         return self
-# 
+#
 #     def __exit__(self, exc_type, exc_value, traceback):
 #         self.close()
 

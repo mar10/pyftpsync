@@ -85,7 +85,7 @@ class FtpTarget(_Target):
 
     def __str__(self):
         return "<{} + {}>".format(self.get_base_name(),
-                              relpath_url(self.cur_dir, self.root_dir))
+                                  relpath_url(self.cur_dir, self.root_dir))
 
     def get_base_name(self):
         scheme = "ftps" if self.tls else "ftp"
@@ -93,14 +93,14 @@ class FtpTarget(_Target):
 
     def open(self):
         assert not self.connected
-        
+
         super(FtpTarget, self).open()
-        
+
         no_prompt = self.get_option("no_prompt", True)
         store_password = self.get_option("store_password", False)
 
         self.ftp.set_debuglevel(self.get_option("ftp_debug", 0))
-        
+
         # Optionally use FTP active mode (default: PASV) (issue #21)
         force_active = self.get_option("ftp_active", False)
         self.ftp.set_pasv(not force_active)
@@ -191,7 +191,7 @@ class FtpTarget(_Target):
             if errmsg.startswith("550") and self.ftp.passiveserver:
                 print("The server probably requires FTP Active mode. "
                       "Try passing the --ftp-active option.", file=sys.stderr)
-                
+
             # Set to False, so we don't try to remove later
             self.lock_data = False
 

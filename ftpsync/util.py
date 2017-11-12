@@ -85,13 +85,13 @@ def pretty_stamp(stamp):
     return datetime.fromtimestamp(stamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
-_pyftpsyncrc_parser = configparser.RawConfigParser()   
+_pyftpsyncrc_parser = configparser.RawConfigParser()
 _pyftpsyncrc_parser.read(os.path.expanduser("~/.pyftpsyncrc"))
 
 
 def get_option(env_name, section, opt_name, default=None):
     """Return a configuration setting from environment var or .pyftpsyncrc"""
-    val = os.environ.get(env_name) 
+    val = os.environ.get(env_name)
     if val is None:
         try:
             val = _pyftpsyncrc_parser.get(section, opt_name)

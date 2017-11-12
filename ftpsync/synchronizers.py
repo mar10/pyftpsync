@@ -160,7 +160,7 @@ class BaseSynchronizer(object):
 
     def run(self):
         start = time.time()
-        
+
         info_strings = self.get_info_strings()
         if self.options["verbose"] >= 3:
             print("{} {}\n{:>20} {}".format(info_strings[0].capitalize(),
@@ -172,24 +172,24 @@ class BaseSynchronizer(object):
             self.local.synchronizer = self.remote.synchronizer = self
             self.local.peer = self.remote
             self.remote.peer = self.local
-            
+
             if self.dry_run:
                 self.local.readonly = True
                 self.local.dry_run = True
                 self.remote.readonly = True
                 self.remote.dry_run = True
-            
+
             if not self.local.connected:
                 self.local.open()
             if not self.remote.connected:
                 self.remote.open()
-                
+
             res = self._sync_dir()
         finally:
             self.local.synchronizer = self.remote.synchronizer = None
             self.local.peer = self.remote.peer = None
             self.close()
-        
+
         stats = self._stats
         stats["elap_secs"] = time.time() - start
         stats["elap_str"] = "%0.2f sec" % stats["elap_secs"]
@@ -276,7 +276,8 @@ class BaseSynchronizer(object):
         self._inc_stat("dirs_created")
         self._tick()
         if self.dry_run:
-            return self._dry_run_action("copy directory ({}, {} --> {})".format(dir_entry, src, dest))
+            return self._dry_run_action("copy directory ({}, {} --> {})"
+                                        .format(dir_entry, src, dest))
         elif dest.readonly:
             raise RuntimeError("target is read-only: {}".format(dest))
 
@@ -708,8 +709,6 @@ class BiDirSynchronizer(BaseSynchronizer):
 
     def run(self):
         # Don't override setting by derived up/downloader
-#         self.local.readonly = False
-#         self.remote.readonly = False
         res = super(BiDirSynchronizer, self).run()
         return res
 
