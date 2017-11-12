@@ -12,7 +12,6 @@ import io
 import json
 import os
 from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
-import sys
 import time
 
 from ftpsync import targets
@@ -20,7 +19,7 @@ from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersion
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftpsync.targets import _Target
 from ftpsync.util import get_credentials_for_url, prompt_for_password, \
-    save_password
+    save_password, write, write_error
 
 
 DEFAULT_BLOCKSIZE = targets.DEFAULT_BLOCKSIZE
@@ -60,7 +59,7 @@ class FtpTarget(_Target):
             try:
                 self.ftp = ftplib.FTP_TLS()
             except AttributeError:
-                print("Python 2.7/3.2+ required for FTPS (TLS).")
+                write("Python 2.7/3.2+ required for FTPS (TLS).")
                 raise
         else:
             self.ftp = ftplib.FTP()
@@ -126,7 +125,7 @@ class FtpTarget(_Target):
             # for new password
             if not e.args[0].startswith("530"):
                 raise  # error other then '530 Login incorrect'
-            print(e)
+            write(e)
             if not no_prompt:
                 self.user, self.password = prompt_for_password(self.host, self.username)
                 self.ftp.login(self.username, self.password)
@@ -142,7 +141,7 @@ class FtpTarget(_Target):
             # for new password
             if not e.args[0].startswith("550"):
                 raise  # error other then 550 No such directory'
-            print("Could not change directory to {} ({}): missing permissions?"
+            write("Could not change directory to {} ({}): missing permissions?"
                   .format(self.root_dir, e))
 
         pwd = self.ftp.pwd()
@@ -177,7 +176,7 @@ class FtpTarget(_Target):
 
     def _lock(self, break_existing=False):
         """Write a special file to the target root folder."""
-        # print("_lock")
+        # write("_lock")
         data = {"lock_time": time.time(),
                 "lock_holder": None}
 
@@ -187,10 +186,10 @@ class FtpTarget(_Target):
             self.lock_data = data
         except Exception as e:
             errmsg = "{}".format(e)
-            print("Could not write lock file: {}".format(errmsg), file=sys.stderr)
+            write_error("Could not write lock file: {}".format(errmsg))
             if errmsg.startswith("550") and self.ftp.passiveserver:
-                print("The server probably requires FTP Active mode. "
-                      "Try passing the --ftp-active option.", file=sys.stderr)
+                write_error("The server probably requires FTP Active mode. "
+                            "Try passing the --ftp-active option.")
 
             # Set to False, so we don't try to remove later
             self.lock_data = False
@@ -199,20 +198,20 @@ class FtpTarget(_Target):
         """Remove lock file to the target root folder.
 
         """
-        # print("_unlock", closing)
+        # write("_unlock", closing)
         try:
             if self.cur_dir != self.root_dir:
                 if closing:
-                    print("Changing to ftp root folder to remove lock file: {}"
+                    write("Changing to ftp root folder to remove lock file: {}"
                           .format(self.root_dir))
                     self.cwd(self.root_dir)
                 else:
-                    print("Could not remove lock file, because CWD != ftp root: {}"
-                          .format(self.cur_dir), file=sys.stderr)
+                    write_error("Could not remove lock file, because CWD != ftp root: {}"
+                                .format(self.cur_dir))
                     return
 
             if self.lock_data is False:
-                print("Skip remove lock file (was not written)", file=sys.stderr)
+                write_error("Skip remove lock file (was not written)")
             else:
                 # direct delete, without updating metadata or checking for target access:
                 self.ftp.delete(DirMetadata.LOCK_FILE_NAME)
@@ -220,14 +219,14 @@ class FtpTarget(_Target):
 
             self.lock_data = None
         except Exception as e:
-            print("Could not remove lock file: {}".format(e), file=sys.stderr)
+            write_error("Could not remove lock file: {}".format(e))
             raise
 
     def _probe_lock_file(self, reported_mtime):
         """Called by get_dir"""
         delta = reported_mtime - self.lock_data["lock_time"]
         if self.get_option("verbose", 2) >= 4:
-            print("Server time offset: {0:.2f} seconds".format(delta))
+            write("Server time offset: {0:.2f} seconds".format(delta))
 
     def get_id(self):
         return self.host + self.root_dir
@@ -255,7 +254,7 @@ class FtpTarget(_Target):
         self.check_write(dir_name)
         names = []
         nlst_res = self.ftp.nlst(dir_name)
-        # print("rmdir(%s): %s" % (dir_name, nlst_res))
+        # write("rmdir(%s): %s" % (dir_name, nlst_res))
         for name in nlst_res:
             if "/" in name:
                 name = os.path.basename(name)
@@ -273,13 +272,13 @@ class FtpTarget(_Target):
                         # try to delete this as a file
                         self.ftp.delete(name)
                     except ftplib.all_errors as _e:
-                        print("    ftp.delete({}) failed: {}, trying rmdir()...".format(name, _e))
+                        write("    ftp.delete({}) failed: {}, trying rmdir()...".format(name, _e))
                         # assume <name> is a folder
                         self.rmdir(name)
             finally:
                 if dir_name != ".":
                     self.ftp.cwd("..")
-#        print("ftp.rmd(%s)..." % (dir_name, ))
+#        write("ftp.rmd(%s)..." % (dir_name, ))
         if not keep_root_folder:
             self.ftp.rmd(dir_name)
         return
@@ -341,7 +340,7 @@ class FtpTarget(_Target):
         try:
             self.ftp.retrlines("MLSD", _addline)
         except error_perm as e:
-            # print("The FTP server responded with {}".format(e), file=sys.stderr)
+            # write_error("The FTP server responded with {}".format(e))
             # raises error_perm "500 Unknown command" if command is not supported
             if "500" in str(e.args):
                 raise RuntimeError("The FTP server does not support the 'MLSD' command.")
@@ -356,8 +355,7 @@ class FtpTarget(_Target):
             except IncompatibleMetadataVersion:
                 raise  # this should end the script (user should pass --migrate)
             except Exception as e:
-                print("Could not read meta info {}: {}"
-                      .format(self.cur_dir_meta, e), file=sys.stderr)
+                write_error("Could not read meta info {}: {}" .format(self.cur_dir_meta, e))
 
             meta_files = self.cur_dir_meta.list
 
@@ -383,7 +381,7 @@ class FtpTarget(_Target):
                         #   2. the reported files size is different than the
                         #      size we stored in the meta-data
                         if self.get_option("verbose", 2) >= 5:
-                            print(("META: Removing outdated meta entry {}\n" +
+                            write(("META: Removing outdated meta entry {}\n" +
                                    "      modified after upload ({} > {}), or\n"
                                    "      cur. size ({}) != meta size ({})")
                                   .format(n, time.ctime(entry_map[n].mtime),
@@ -392,7 +390,7 @@ class FtpTarget(_Target):
                         missing.append(n)
                 else:
                     # File is stored in meta-data, but no longer exists on FTP server
-                    # print("META: Removing missing meta entry %s" % n)
+                    # write("META: Removing missing meta entry %s" % n)
                     missing.append(n)
             # Remove missing or invalid files from cur_dir_meta
             for n in missing:
@@ -422,7 +420,7 @@ class FtpTarget(_Target):
 
     def set_mtime(self, name, mtime, size):
         self.check_write(name)
-        # print("META set_mtime(%s): %s" % (name, time.ctime(mtime)))
+        # write("META set_mtime(%s): %s" % (name, time.ctime(mtime)))
         # We cannot set the mtime on FTP servers, so we store this as additional
         # meta data in the same directory
         # TODO: try "SITE UTIME", "MDTM (set version)", or "SRFT" command

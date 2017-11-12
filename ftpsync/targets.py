@@ -237,7 +237,7 @@ class _Target(object):
             return self.peer.remove_sync_info(name)
         if self.cur_dir_meta:
             return self.cur_dir_meta.remove(name)
-        # print("%s.remove_sync_info(%s): nothing to do" % (self, name))
+        # write("%s.remove_sync_info(%s): nothing to do" % (self, name))
         return
 
 
@@ -287,7 +287,7 @@ class FsTarget(_Target):
         """Remove cur_dir/name."""
         self.check_write(dir_name)
         path = normpath_url(join_url(self.cur_dir, dir_name))
-#         print("REMOVE %r" % path)
+#         write("REMOVE %r" % path)
         shutil.rmtree(path)
 
     def flush_meta(self):
@@ -302,16 +302,16 @@ class FsTarget(_Target):
         for name in os.listdir(self.cur_dir):
             path = os.path.join(self.cur_dir, name)
             stat = os.lstat(path)
-#            print(name)
-#            print("    mt : %s" % stat.st_mtime)
-#            print("    lc : %s" % (time.localtime(stat.st_mtime),))
-#            print("       : %s" % time.asctime(time.localtime(stat.st_mtime)))
-#            print("    gmt: %s" % (time.gmtime(stat.st_mtime),))
-#            print("       : %s" % time.asctime(time.gmtime(stat.st_mtime)))
+#            write(name)
+#            write("    mt : %s" % stat.st_mtime)
+#            write("    lc : %s" % (time.localtime(stat.st_mtime),))
+#            write("       : %s" % time.asctime(time.localtime(stat.st_mtime)))
+#            write("    gmt: %s" % (time.gmtime(stat.st_mtime),))
+#            write("       : %s" % time.asctime(time.gmtime(stat.st_mtime)))
 #
 #            utc_stamp = st_mtime_to_utc(stat.st_mtime)
-#            print("    utc: %s" % utc_stamp)
-#            print("    diff: %s" % ((utc_stamp - stat.st_mtime) / (60*60)))
+#            write("    utc: %s" % utc_stamp)
+#            write("    diff: %s" % ((utc_stamp - stat.st_mtime) / (60*60)))
             # stat.st_mtime is returned as UTC
             mtime = stat.st_mtime
             if os.path.isdir(path):

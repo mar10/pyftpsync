@@ -7,11 +7,10 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 from __future__ import print_function
 
 import json
-import sys
 import time
 
 from ftpsync import __version__
-from ftpsync.util import pretty_stamp, str_to_bool, get_option
+from ftpsync.util import pretty_stamp, str_to_bool, get_option, write, write_error
 
 
 PYFTPSYNC_VERBOSE_META = str_to_bool(
@@ -127,11 +126,11 @@ class DirMetadata(object):
             self.list = self.dir["mtimes"]
             self.peer_sync = self.dir["peer_sync"]
             is_valid_file = True
-            # print("DirMetadata: read(%s)" % (self.filename, ), self.dir)
+            # write"DirMetadata: read(%s)" % (self.filename, ), self.dir)
         # except IncompatibleMetadataVersion:
         #     raise  # We want version errors to terminate the app
         except Exception as e:
-            print("Could not read meta info {}: {!r}".format(self, e), file=sys.stderr)
+            write_error("Could not read meta info {}: {!r}".format(self, e))
 
         # If the version is incompatible, we stop, unless:
         # if --migrate is set, we simply ignore this file (and probably replace it
@@ -143,7 +142,7 @@ class DirMetadata(object):
                     "Consider passing --migrate to discard old data."
                     .format(self.dir.get("_file_version"), self.VERSION))
             #
-            print("Migrating meta data version from {} to {} (discarding old): {}"
+            write("Migrating meta data version from {} to {} (discarding old): {}"
                   .format(self.dir.get("_file_version"), self.VERSION, self.filename))
             self.list = {}
             self.peer_sync = {}
@@ -154,19 +153,19 @@ class DirMetadata(object):
         """Write self to .pyftpsync-meta.json."""
         # We DO write meta files even on read-only targets, but not in dry-run mode
 #         if self.target.readonly:
-#             print("DirMetadata.flush(%s): read-only; nothing to do" % self.target)
+#             write("DirMetadata.flush(%s): read-only; nothing to do" % self.target)
 #             return
         assert self.path == self.target.cur_dir
         if self.target.dry_run:
-            # print("DirMetadata.flush(%s): dry-run; nothing to do" % self.target)
+            # write("DirMetadata.flush(%s): dry-run; nothing to do" % self.target)
             pass
 
         elif self.was_read and len(self.list) == 0 and len(self.peer_sync) == 0:
-            # print("DirMetadata.flush(%s): DELETE" % self.target)
+            # write("DirMetadata.flush(%s): DELETE" % self.target)
             self.target.remove_file(self.filename)
 
         elif not self.modified_list and not self.modified_sync:
-            # print("DirMetadata.flush(%s): unmodified; nothing to do" % self.target)
+            # write("DirMetadata.flush(%s): unmodified; nothing to do" % self.target)
             pass
 
         else:
@@ -179,7 +178,7 @@ class DirMetadata(object):
                 s = json.dumps(self.dir, indent=4, sort_keys=True)
             else:
                 s = json.dumps(self.dir, sort_keys=True)
-#             print("DirMetadata.flush(%s)" % (self.target, ))#, s)
+#             write("DirMetadata.flush(%s)" % (self.target, ))#, s)
             self.target.write_text(self.filename, s)
             if self.target.synchronizer:
                 self.target.synchronizer._inc_stat("meta_bytes_written", len(s))

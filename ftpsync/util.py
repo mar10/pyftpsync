@@ -10,6 +10,30 @@ from datetime import datetime
 import getpass
 import os
 import sys
+import logging
+
+_logger = None
+
+
+def write(*args, **kwargs):
+    """Redirectable wrapper for print statements."""
+    if _logger:
+        kwargs.pop("end", None)
+        kwargs.pop("file", None)
+        _logger.info(*args, **kwargs)
+    else:
+        print(*args, **kwargs)
+
+
+def write_error(*args, **kwargs):
+    """Redirectable wrapper for print sys.stderr statements."""
+    if _logger:
+        kwargs.pop("end", None)
+        kwargs.pop("file", None)
+        _logger.error(*args, **kwargs)
+    else:
+        print(*args, file=sys.stderr, **kwargs)
+
 
 try:
     from urllib.parse import urlparse
@@ -21,15 +45,15 @@ try:
     import colorama  # provide color codes, ...
     colorama.init()  # improve color handling on windows terminals
 except ImportError:
-    print("Unable to import 'colorama' library: Colored output is not available. "
-          "Try `pip install colorama`.")
+    write_error("Unable to import 'colorama' library: Colored output is not available. "
+                "Try `pip install colorama`.")
     colorama = None
 
 try:
     import keyring
 except ImportError:
-    print("Unable to import 'keyring' library: Storage of passwords is not available. "
-          "Try `pip install keyring`.")
+    write_error("Unable to import 'keyring' library: Storage of passwords is not available. "
+                "Try `pip install keyring`.")
     keyring = None
 
 try:
@@ -56,6 +80,27 @@ VT_ERASE_LINE = "\x1b[2K"
 #         DEBUG_FLAGS.add("runtime_stats")
 #     if verbosity >= 4:
 #         DEBUG_FLAGS.add("ftp_commands")
+
+
+def set_logger(logger=True):
+    """Define target for common output.
+
+    Args:
+        logger (bool|logging.Logger):
+            Pass None to use `print()` to stdout instead of logging.
+            Pass True to create a simple standard logger.
+    """
+    global _logger
+    if logger is True:
+        logging.basicConfig(level=logging.INFO)
+        _logger = logging.getLogger("pyftpsync")
+        _logger.setLevel(logging.DEBUG)
+    else:
+        _logger = logger
+
+
+# Init default logger
+set_logger()
 
 
 def namespace_to_dict(o):
@@ -142,11 +187,11 @@ def get_credentials_for_url(url, allow_prompt):
             c = keyring.get_password("pyftpsync", url)
             if c is not None:
                 creds = c.split(":", 1)
-                print("Using credentials from keyring('pyftpsync', '{}'): {}:***."
+                write("Using credentials from keyring('pyftpsync', '{}'): {}:***."
                       .format(url, creds[0]))
 #        except keyring.errors.TransientKeyringError:
         except Exception as e:
-            print("Could not get password {}".format(e))
+            write("Could not get password {}".format(e))
             pass  # e.g. user clicked 'no'
 
     # Prompt
@@ -166,16 +211,16 @@ def save_password(url, username, password):
             # Note: we pass the url as `username` and username:password as `password`
             if password is None:
                 keyring.delete_password("pyftpsync", url)
-                print("Delete credentials from keyring ({})".format(url))
+                write("Delete credentials from keyring ({})".format(url))
             else:
                 keyring.set_password("pyftpsync", url, "{}:{}".format(username, password))
-                print("Store credentials in keyring ({}, {}:***).".format(url, username))
+                write("Store credentials in keyring ({}, {}:***).".format(url, username))
 #        except keyring.errors.TransientKeyringError:
         except Exception as e:
-            print("Could not delete/set password {}.".format(e))
+            write("Could not delete/set password {}.".format(e))
             pass  # e.g. user clicked 'no'
     else:
-        print("Could not store credentials (missing keyring support).")
+        write("Could not store credentials (missing keyring support).")
     return
 
 

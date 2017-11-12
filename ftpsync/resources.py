@@ -10,7 +10,7 @@ from datetime import datetime
 import os
 from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
 
-from ftpsync.util import eps_compare
+from ftpsync.util import eps_compare, write
 
 
 PRINT_CLASSIFICATIONS = False
@@ -125,18 +125,18 @@ class EntryPair(object):
         prev_op = self.operation
         assert operation != prev_op
         assert operation in PAIR_OPERATIONS
-        # print("override_operation({}, {}) -> {} ({})".format(prev, prev_op, operation, reason))
+        # write("override_operation({}, {}) -> {} ({})".format(prev, prev_op, operation, reason))
         self.operation = operation
         self.re_class_reason = reason
 
     def classify(self, peer_dir_meta):
         """Classify entry pair."""
         assert self.operation is None
-        # print("CLASSIFIY", self, peer_dir_meta)
+        # write("CLASSIFIY", self, peer_dir_meta)
         # Note: We pass False if the entry is not listed in the metadata.
         #       We pass None if we don't have metadata all.
         peer_entry_meta = peer_dir_meta.get(self.name, False) if peer_dir_meta else None
-        # print("=>", self, peer_entry_meta)
+        # write("=>", self, peer_entry_meta)
         if self.local:
             self.local.classify(peer_dir_meta)
             self.local_classification = self.local.classification
@@ -160,7 +160,7 @@ class EntryPair(object):
             raise RuntimeError("Undefined operation for pair classification {}".format(c_pair))
 
         if PRINT_CLASSIFICATIONS:
-            print("classify {}".format(self))
+            write("classify {}".format(self))
         # if not entry.meta:
         # assert self.classification in PAIR_CLASSIFICATIONS
         assert self.operation in PAIR_OPERATIONS
@@ -309,7 +309,7 @@ class _Resource(object):
                 self.classification = "existing"
 
         if PRINT_CLASSIFICATIONS:
-            print("classify {}".format(self))
+            write("classify {}".format(self))
         assert self.classification in ENTRY_CLASSIFICATIONS
         return self.classification
 

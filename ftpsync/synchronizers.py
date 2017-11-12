@@ -13,7 +13,7 @@ import time
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import FileEntry, DirectoryEntry, EntryPair, operation_map
 from ftpsync.util import IS_REDIRECTED, DRY_RUN_PREFIX, \
-    ansi_code, console_input, VT_ERASE_LINE, byte_compare, eps_compare, pretty_stamp
+    ansi_code, console_input, VT_ERASE_LINE, byte_compare, eps_compare, pretty_stamp, write
 
 
 #: Default for --exclude CLI option
@@ -71,7 +71,7 @@ def match_path(entry, opts):
             if fnmatch.fnmatch(path, pat):
                 ok = False
                 break
-    # print("match", ok, entry)
+    # write("match", ok, entry)
     return ok
 
 
@@ -163,7 +163,7 @@ class BaseSynchronizer(object):
 
         info_strings = self.get_info_strings()
         if self.options["verbose"] >= 3:
-            print("{} {}\n{:>20} {}".format(info_strings[0].capitalize(),
+            write("{} {}\n{:>20} {}".format(info_strings[0].capitalize(),
                                             self.local.get_base_name(),
                                             info_strings[1],
                                             self.remote.get_base_name()))
@@ -206,10 +206,10 @@ class BaseSynchronizer(object):
         assert isinstance(local, FileEntry) and isinstance(remote, FileEntry)
 
         if not local or not remote:
-            print("    Files cannot be compared ({} != {}).".format(local, remote))
+            write("    Files cannot be compared ({} != {}).".format(local, remote))
             return False
         elif local.size != remote.size:
-            print("    Files are different (size {:,d} != {:,d}).".format(local.size, remote.size))
+            write("    Files are different (size {:,d} != {:,d}).".format(local.size, remote.size))
             return False
 
         with local.target.open_readable(local.name) as fp_src, \
@@ -217,9 +217,9 @@ class BaseSynchronizer(object):
                 res, ofs = byte_compare(fp_src, fp_dest)
 
         if not res:
-            print("    Files are different at offset {:,d}.".format(ofs))
+            write("    Files are different at offset {:,d}.".format(ofs))
         else:
-            print("    Files are equal.")
+            write("    Files are equal.")
         return res
 
     def _copy_file(self, src, dest, file_entry):
@@ -228,7 +228,7 @@ class BaseSynchronizer(object):
         # 2. copy to target.temp
         # 3. use loggingFile for feedback
         # 4. rename target.temp
-        # print("_copy_file(%s, %s --> %s)" % (file_entry, src, dest))
+        # write("_copy_file(%s, %s --> %s)" % (file_entry, src, dest))
         assert isinstance(file_entry, FileEntry)
         self._inc_stat("files_written")
         self._inc_stat("entries_touched")
@@ -246,7 +246,7 @@ class BaseSynchronizer(object):
         start = time.time()
 
         def __block_written(data):
-            # print(">(%s), " % len(data))
+            # write(">(%s), " % len(data))
             self._inc_stat("bytes_written", len(data))
             if is_upload:
                 self._inc_stat("upload_bytes_written", len(data))
@@ -270,7 +270,7 @@ class BaseSynchronizer(object):
         return
 
     def _copy_recursive(self, src, dest, dir_entry):
-        # print("_copy_recursive(%s, %s --> %s)" % (dir_entry, src, dest))
+        # write("_copy_recursive(%s, %s --> %s)" % (dir_entry, src, dest))
         assert isinstance(dir_entry, DirectoryEntry)
         self._inc_stat("entries_touched")
         self._inc_stat("dirs_created")
@@ -310,7 +310,7 @@ class BaseSynchronizer(object):
 
     def _remove_file(self, file_entry):
         # TODO: honor backup
-        # print("_remove_file(%s)" % (file_entry, ))
+        # write("_remove_file(%s)" % (file_entry, ))
         assert isinstance(file_entry, FileEntry)
         self._inc_stat("entries_touched")
         self._inc_stat("files_deleted")
@@ -382,8 +382,8 @@ class BaseSynchronizer(object):
         if entry.is_dir():
             name = "[{}]".format(name)
 
-#         print("{}{:<16} {:^3} {}".format(prefix, tag, symbol, name))
-        print("{}{}{:<16} {:^3} {}{}".format(prefix, color, tag, symbol, name, final))
+#         write("{}{:<16} {:^3} {}".format(prefix, tag, symbol, name))
+        write("{}{}{:<16} {:^3} {}{}".format(prefix, color, tag, symbol, name, final))
 
     def _tick(self):
         """Write progress info and move cursor to beginning of line."""
@@ -399,7 +399,7 @@ class BaseSynchronizer(object):
 
     def _dry_run_action(self, action):
         """"Called in dry-run mode after call to _log_action() and before exiting function."""
-#        print("dry-run", action)
+#        write("dry-run", action)
         return
 
     def _test_match_or_print(self, entry):
@@ -491,14 +491,15 @@ class BaseSynchronizer(object):
             # (e.g. `--delete_unmatched`)
             if not self._match(pair.any_entry):
                 self.on_mismatch(pair)
-                # ... do not call opertaion handler...
+                # ... do not call operation handler...
             elif hook_result is not False:
                 handler = getattr(self, "on_" + pair.operation, None)
                 # print(handler)
                 if handler:
                     res = handler(pair)
                 else:
-                    print("NO HANDLER")
+                    # write("NO HANDLER")
+                    raise NotImplementedError("No handler for {}".format(pair))
 
             if pair.is_conflict():
                 self._inc_stat("conflict_files")
@@ -511,7 +512,7 @@ class BaseSynchronizer(object):
         # 6. Finally visit all local sub-directories recursively that also
         #    exist on the remote target.
         for local_dir in local_entries:
-            # print("local_dir(%s, %s)" % (local_dir, local_dir))
+            # write("local_dir(%s, %s)" % (local_dir, local_dir))
             if not local_dir.is_dir():
                 continue
             elif not self._before_sync(local_dir):
@@ -519,7 +520,7 @@ class BaseSynchronizer(object):
 
             remote_dir = remote_entry_map.get(local_dir.name)
             if remote_dir:
-                # print("sync_equal_dir(%s, %s)" % (local_dir, remote_dir))
+                # write("sync_equal_dir(%s, %s)" % (local_dir, remote_dir))
                 # self._log_call("sync_equal_dir(%s, %s)" % (local_dir, remote_dir))
                 # res = self.sync_equal_dir(local_dir, remote_dir)
                 # res = self.on_equal(local_dir, remote_dir)
@@ -617,22 +618,22 @@ class BiDirSynchronizer(BaseSynchronizer):
 
         has_meta = any_entry.get_sync_info("m") is not None
 
-        # print("pair", pair)
+        # write("pair", pair)
         # print("pair.local", pair.local)
         # print("pair.remote", pair.remote)
 
-        print((VT_ERASE_LINE + RED +
+        write((VT_ERASE_LINE + RED +
               "CONFLICT: {!r} was modified on both targets since last sync ({})." + R)
               .format(any_entry.get_rel_path(), _ts(any_entry.get_sync_info("u"))))
         if has_meta:
-            print("    Original modification time: {}, size: {:,d} bytes."
+            write("    Original modification time: {}, size: {:,d} bytes."
                   .format(_ts(any_entry.get_sync_info("m")), any_entry.get_sync_info("s")))
         else:
-            print("    (No meta data available.)")
+            write("    (No meta data available.)")
 
-        print("    Local:  {}"
+        write("    Local:  {}"
               .format(pair.local.as_string() if pair.local else "n.a."))
-        print("    Remote: {}"
+        write("    Remote: {}"
               .format(pair.remote.as_string(pair.local) if pair.remote else "n.a."))
 
     def _interactive_resolve(self, pair):
@@ -1017,7 +1018,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
 
         classification = (pair.local_classification, pair.remote_classification)
 
-        # print("re_classify_pair", pair)
+        # write("re_classify_pair", pair)
         if delete:
             if classification == ("new", "missing"):
                 assert pair.operation == "copy_local"
@@ -1035,7 +1036,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
                 pair.override_operation("copy_remote", "restore")
 
         # if delete and pair.operation == "copy_remote" and not pair.local:
-        #     print("delete: Re-classify copy_remote => delete_remote")
+        #     write("delete: Re-classify copy_remote => delete_remote")
         #     pair.operation = "delete_remote"
         #     return
         return

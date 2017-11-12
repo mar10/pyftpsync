@@ -13,6 +13,8 @@
 - New `scan` command to list, purge, etc remote targets.
 - Remove lock file on Ctrl-C.
 - Add FTPS (TLS) support.
+- Support Active FTP.
+- Use logger for output when not in CLI mode.
 - Split into more modules.
 - Release as Wheel
 - Enforce PEP8

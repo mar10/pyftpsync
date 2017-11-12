@@ -20,13 +20,18 @@ from ftpsync.scan_command import add_scan_parser
 from ftpsync.synchronizers import UploadSynchronizer, \
     DownloadSynchronizer, BiDirSynchronizer, DEFAULT_OMIT
 from ftpsync.targets import make_target, FsTarget
-from ftpsync.util import namespace_to_dict
+from ftpsync.util import namespace_to_dict, set_logger
 
 
 # ===============================================================================
 # run
 # ===============================================================================
 def run():
+    """CLI main entry point."""
+
+    # Use print() instead of logging when running in CLI mode:
+    set_logger(None)
+
     parser = argparse.ArgumentParser(
         description="Synchronize folders over FTP.",
         epilog="See also https://github.com/mar10/pyftpsync"
@@ -164,7 +169,7 @@ def run():
         try:
             return getattr(args, "command")(args)
         except KeyboardInterrupt:
-            print("\nAborted by user.")
+            print("\nAborted by user.", file=sys.stderr)
             sys.exit(3)
 
     elif not hasattr(args, "command"):
@@ -198,7 +203,7 @@ def run():
     try:
         s.run()
     except KeyboardInterrupt:
-        print("\nAborted by user.")
+        print("\nAborted by user.", file=sys.stderr)
         sys.exit(3)
     finally:
         # Prevent sporadic exceptions in ftplib, when closing in __del__
