@@ -33,7 +33,7 @@ class MatchTest(_SyncTestBase):
         # out = list(out)
         a = []
         for s in out.split("\n"):
-            # append firs ttoken (i.e. file or folder name)
+            # append first token (i.e. file or folder name)
             if s.startswith("Scanning "):
                 break
             a.append(s.strip().split(" ")[0].strip())

@@ -95,15 +95,15 @@ class BaseSynchronizer(object):
 
         self.verbose = self.options.get("verbose", 3)
         self.dry_run = self.options.get("dry_run", False)
-        self.local.synchronizer = self
-        self.local.peer = remote
-        self.remote.synchronizer = self
-        self.remote.peer = local
-        if self.dry_run:
-            self.local.readonly = True
-            self.local.dry_run = True
-            self.remote.readonly = True
-            self.remote.dry_run = True
+#         self.local.synchronizer = self
+#         self.local.peer = remote
+#         self.remote.synchronizer = self
+#         self.remote.peer = local
+#         if self.dry_run:
+#             self.local.readonly = True
+#             self.local.dry_run = True
+#             self.remote.readonly = True
+#             self.remote.dry_run = True
         #: bool: True if this synchronizer is used by a command line script (e.g. pyftpsync.exe)
         self.is_script = None
         #: str: Conflict resolution strategy
@@ -135,10 +135,10 @@ class BaseSynchronizer(object):
                        "upload_files_written": 0,
                        }
 
-        if not local.connected:
-            local.open()
-        if not remote.connected:
-            remote.open()
+#         if not local.connected:
+#             local.open()
+#         if not remote.connected:
+#             remote.open()
 
     def __del__(self):
         self.close()
@@ -160,7 +160,7 @@ class BaseSynchronizer(object):
 
     def run(self):
         start = time.time()
-
+        
         info_strings = self.get_info_strings()
         if self.options["verbose"] >= 3:
             print("{} {}\n{:>20} {}".format(info_strings[0].capitalize(),
@@ -168,8 +168,28 @@ class BaseSynchronizer(object):
                                             info_strings[1],
                                             self.remote.get_base_name()))
 
-        res = self._sync_dir()
-
+        try:
+            self.local.synchronizer = self.remote.synchronizer = self
+            self.local.peer = self.remote
+            self.remote.peer = self.local
+            
+            if self.dry_run:
+                self.local.readonly = True
+                self.local.dry_run = True
+                self.remote.readonly = True
+                self.remote.dry_run = True
+            
+            if not self.local.connected:
+                self.local.open()
+            if not self.remote.connected:
+                self.remote.open()
+                
+            res = self._sync_dir()
+        finally:
+            self.local.synchronizer = self.remote.synchronizer = None
+            self.local.peer = self.remote.peer = None
+            self.close()
+        
         stats = self._stats
         stats["elap_secs"] = time.time() - start
         stats["elap_str"] = "%0.2f sec" % stats["elap_secs"]
@@ -686,6 +706,13 @@ class BiDirSynchronizer(BaseSynchronizer):
 
         return r
 
+    def run(self):
+        # Don't override setting by derived up/downloader
+#         self.local.readonly = False
+#         self.remote.readonly = False
+        res = super(BiDirSynchronizer, self).run()
+        return res
+
     def on_mismatch(self, pair):
         """Called for pairs that don't match `match` and `exclude` filters."""
         self._log_action("skip", "mismatch", "?", pair.any_entry, min_level=4)
@@ -843,7 +870,7 @@ class UploadSynchronizer(BiDirSynchronizer):
 
     def __init__(self, local, remote, options):
         super(UploadSynchronizer, self).__init__(local, remote, options)
-        local.readonly = True
+#         local.readonly = True
 
     def get_info_strings(self):
         return ("upload", "to")
@@ -929,6 +956,12 @@ class UploadSynchronizer(BiDirSynchronizer):
 
         return r
 
+    def run(self):
+        self.local.readonly = True
+        self.remote.readonly = False
+        res = super(UploadSynchronizer, self).run()
+        return res
+
     def on_mismatch(self, pair):
         """Called for pairs that don't match `match` and `exclude` filters.
 
@@ -973,7 +1006,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
     """
     def __init__(self, local, remote, options):
         super(DownloadSynchronizer, self).__init__(local, remote, options)
-        remote.readonly = True
+#         remote.readonly = True
 
     def get_info_strings(self):
         return ("download to", "from")
@@ -1059,6 +1092,12 @@ class DownloadSynchronizer(BiDirSynchronizer):
                 break
 
         return r
+
+    def run(self):
+        self.local.readonly = False
+        self.remote.readonly = True
+        res = super(DownloadSynchronizer, self).run()
+        return res
 
     def on_mismatch(self, pair):
         """Called for pairs that don't match `match` and `exclude` filters.

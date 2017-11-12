@@ -105,16 +105,19 @@ class _Target(object):
         return self.extra_opts.get(key, default)
 
     def open(self):
+        if self.connected:
+            raise RuntimeError("Target already open: {}.  ".format(self))
         # Not thread safe (issue #20)
         if not self._rlock.acquire(False):
             raise RuntimeError("Could not acquire _Target lock on open")
         self.connected = True
 
     def close(self):
-        if self.connected:
-            self.connected = False
-            self.readonly = False  # issue #20
-            self._rlock.release()
+        if not self.connected:
+            return
+        self.connected = False
+        self.readonly = False  # issue #20
+        self._rlock.release()
 
     def check_write(self, name):
         """Raise exception if writing cur_dir/name is not allowed."""
@@ -250,7 +253,7 @@ class FsTarget(_Target):
             raise ValueError("{} is not a directory.".format(root_dir))
         super(FsTarget, self).__init__(root_dir, extra_opts)
         self.support_set_time = True
-        self.open()
+#         self.open()
 
     def __str__(self):
         return "<FS:{} + {}>".format(self.root_dir, os.path.relpath(self.cur_dir, self.root_dir))
