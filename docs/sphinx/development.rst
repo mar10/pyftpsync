@@ -221,8 +221,26 @@ Run  ``python -m test.fixture_tools`` again to reset the test folders.
 
 Run FTP Server
 --------------
+Run ``pylibdftp`` FTP Server Locally
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In develpoment mode, pyftpsync installs `pyftpdlib <https://github.com/giampaolo/pyftpdlib>`_
+which can be used to run an FTP server for testing.
+We allow anonymous access and use a custom port > 1024, so we don't need to sudo::
+
+  $ python -m pyftpdlib  -p 8021 -w -d /Users/martin/test_pyftpsync/remote
+
+Also set the test options accordingly in ``.pyftpsyncrc``::
+
+  [test]
+  folder = /Users/USER/pyftpsync_test
+  ftp_url = ftp://anonymous:@localhost:8021
+
+
 Run Built-in FTP Server on macOS Sierra
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Note:** This does **not** work anymore with macOS *High* Sierra.
 
 On OSX (starting with Sierra) the built-in FTP server needs to be activated like so::
 
@@ -234,12 +252,13 @@ It can be stopped the same way::
 
 The FTP server exposes the whole file system, so the URL must start from root::
 
-  export PYFTPSYNC_TEST_FOLDER=/Users/USER/pyftpsync_test
-  export PYFTPSYNC_TEST_FTP_URL=ftp://USER:PASSWORD@localhost/Users/USER/pyftpsync_test/remote
+  [test]
+  folder = /Users/USER/pyftpsync_test
+  ftp_url = ftp://USER:PASSWORD@localhost/Users/USER/pyftpsync_test/remote
 
 .. warning::
 
-   Exposing the file system may be dangerous! Make sure to stop the FTP server after testing.
+   Exposing the file system is dangerous! Make sure to stop the FTP server after testing.
 
 
 Run FTP Server on Windows

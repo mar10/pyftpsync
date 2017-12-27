@@ -16,7 +16,7 @@ from ftpsync.metadata import DirMetadata
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer, \
     BiDirSynchronizer
 from ftpsync.targets import make_target, FsTarget
-from ftpsync.util import urlparse
+from ftpsync.compat import urlparse
 from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL, \
     PYFTPSYNC_TEST_FOLDER, get_test_file_date, STAMP_20140101_120000, touch_test_file
 from test.test_1x import prepare_fixtures_1

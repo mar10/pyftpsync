@@ -12,6 +12,9 @@ import os
 import sys
 import logging
 
+from ftpsync import compat
+
+
 _logger = None
 
 
@@ -36,12 +39,6 @@ def write_error(*args, **kwargs):
 
 
 try:
-    from urllib.parse import urlparse
-except ImportError:
-    # Python 2
-    from urlparse import urlparse  # noqa @UnusedImport
-
-try:
     import colorama  # provide color codes, ...
     colorama.init()  # improve color handling on windows terminals
 except ImportError:
@@ -56,21 +53,11 @@ except ImportError:
                 "Try `pip install keyring`.")
     keyring = None
 
-try:
-    from cStringIO import StringIO  # Py2
-except ImportError:
-    from io import StringIO  # noqa Py3
-
-try:
-    import ConfigParser as configparser  # Py2
-except ImportError:
-    import configparser  # Py3
-
 
 DEFAULT_CREDENTIAL_STORE = "pyftpsync.pw"
 DRY_RUN_PREFIX = "(DRY-RUN) "
 IS_REDIRECTED = (os.fstat(0) != os.fstat(1))
-DEFAULT_BLOCKSIZE = 8 * 1024
+# DEFAULT_BLOCKSIZE = 8 * 1024
 VT_ERASE_LINE = "\x1b[2K"
 
 # DEBUG_FLAGS = set()
@@ -130,7 +117,7 @@ def pretty_stamp(stamp):
     return datetime.fromtimestamp(stamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
-_pyftpsyncrc_parser = configparser.RawConfigParser()
+_pyftpsyncrc_parser = compat.configparser.RawConfigParser()
 _pyftpsyncrc_parser.read(os.path.expanduser("~/.pyftpsyncrc"))
 
 
@@ -140,7 +127,7 @@ def get_option(env_name, section, opt_name, default=None):
     if val is None:
         try:
             val = _pyftpsyncrc_parser.get(section, opt_name)
-        except (configparser.NoSectionError, configparser.NoOptionError):
+        except (compat.configparser.NoSectionError, compat.configparser.NoOptionError):
             pass
     if val is None:
         val = default
@@ -155,7 +142,8 @@ def prompt_for_password(url, user=None):
     if user is None:
         default_user = getpass.getuser()
         while user is None:
-            user = console_input("Enter username for {} [{}]: ".format(url, default_user))
+            user = compat.console_input("Enter username for {} [{}]: "
+                                        .format(url, default_user))
             if user.strip() == "" and default_user:
                 user = default_user
     if user:
@@ -245,51 +233,6 @@ def ansi_code(name):
         return obj
     except AttributeError:
         return ""
-
-
-if sys.version_info[0] < 3:
-    # Python 2
-    def to_binary(s):
-        """Convert unicode (text strings) to binary data on Python 2 and 3."""
-        if type(s) is not str:
-            s = s.encode("utf8")
-        return s
-
-    def to_text(s):
-        """Convert binary data to unicode (text strings) on Python 2 and 3."""
-        if type(s) is not unicode:  # noqa: F821
-            s = s.decode("utf8")
-        return s
-
-    def to_str(s):
-        """Convert unicode to native str on Python 2 and 3."""
-        if type(s) is unicode:  # noqa: F821
-            s = s.encode("utf8")
-        return s
-else:
-    # Python 3
-    def to_binary(s):
-        """Convert unicode (text strings) to binary data on Python 2 and 3."""
-        if type(s) is str:
-            s = bytes(s, "utf8")
-        return s
-
-    def to_text(s):
-        """Convert binary data to unicode (text strings) on Python 2 and 3."""
-        if type(s) is bytes:
-            s = str(s, "utf8")
-        return s
-
-    def to_str(s):
-        """Convert binary data to unicode (text strings) on Python 2 and 3."""
-        if type(s) is bytes:
-            s = str(s, "utf8")
-        return s
-
-try:
-    console_input = raw_input
-except NameError:
-    console_input = input
 
 
 def byte_compare(stream_a, stream_b):

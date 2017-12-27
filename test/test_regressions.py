@@ -11,7 +11,7 @@ from unittest.case import SkipTest
 from ftpsync import targets
 from ftpsync.ftp_target import FtpTarget
 from ftpsync.synchronizers import DownloadSynchronizer
-from ftpsync.util import urlparse
+from ftpsync.compat import urlparse
 from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL
 
 on_windows = platform.system() == "Windows"

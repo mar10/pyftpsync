@@ -13,9 +13,9 @@
 Synchronize directories using FTP(S) or file system access.
 
   * This is a command line tool...
-  * ... and a library for use in your Python projects
-  * Upload, download, and bi-directional synch mode
-  * Allows FTP-to-FTP and Filesystem-to-Filesystem synchronization as well
+  * ... and a library for use in your Python projects.
+  * Upload, download, and bi-directional synch mode.
+  * Allows FTP-to-FTP and Filesystem-to-Filesystem synchronization as well.
   * Architecture is open to add other target types.
 
 **Note:**   Currently version 2.0 is under development with *breaking changes*.

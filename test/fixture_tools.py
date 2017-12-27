@@ -27,7 +27,8 @@ from ftpsync import pyftpsync
 from ftpsync.metadata import DirMetadata
 from ftpsync.synchronizers import BiDirSynchronizer
 from ftpsync.targets import FsTarget, make_target
-from ftpsync.util import to_str, to_binary, urlparse, StringIO, get_option
+from ftpsync.compat import to_native, to_bytes, urlparse, StringIO
+from ftpsync.util import get_option
 
 
 PYFTPSYNC_TEST_FOLDER = get_option("PYFTPSYNC_TEST_FOLDER", "test", "folder") or tempfile.mkdtemp()
@@ -188,7 +189,7 @@ def get_test_file_date(name):
 def read_test_file(name):
     path = os.path.join(PYFTPSYNC_TEST_FOLDER, name.replace("/", os.sep))
     with open(path, "rb") as fp:
-        return to_str(fp.read())
+        return to_native(fp.read())
 
 
 def is_test_file(name):
@@ -254,7 +255,7 @@ def get_test_folder(folder_name):
                             # "size": stat.st_size,
                             }
             with open(abs_file_path, "rb") as fp:
-                file_map[rel_file_path]["content"] = to_str(fp.read())
+                file_map[rel_file_path]["content"] = to_native(fp.read())
     __scan("")
     return file_map
 
@@ -323,15 +324,15 @@ def check_ftp_test_connection(test_folder, ftp_url, keep_open=False):
         parts = urlparse(ftp_url, allow_fragments=False)
         assert parts.scheme.lower() in ("ftp", "ftps")
 #         print(ftp_url, "->", parts, ", ", parts.username, ":", parts.password)
-        if "@" in parts.netloc:
-            host = parts.netloc.rsplit("@", 1)[1]
-        else:
-            host = parts.netloc
+#         if "@" in parts.netloc:
+#             host = parts.netloc.rsplit("@", 1)[1]
+#         else:
+#             host = parts.netloc
         # self.PATH = parts.path
         ftp = FTP()
         # ftp.set_debuglevel(2)
         # Can we connect to host?
-        ftp.connect(host)
+        ftp.connect(parts.hostname, parts.port or 0)
         ftp.login(parts.username, parts.password)
         # Change directory
         ftp.cwd(parts.path)
@@ -345,7 +346,7 @@ def check_ftp_test_connection(test_folder, ftp_url, keep_open=False):
 
         # Check if we have write access
         data = "{}".format(time.time())
-        buf = io.BytesIO(to_binary(data))
+        buf = io.BytesIO(to_bytes(data))
         probe_file = "pyftpsync_probe.txt"
         ftp.storbinary("STOR {}".format(probe_file), buf)
         # Check if the FTP target is identical to the FS path

@@ -26,7 +26,7 @@ class MatchTest(_SyncTestBase):
 
     re_whitespace = re.compile(r"\s+")
 
-    def assert_scan_equal(self, out, expect):
+    def assert_scan_equal(self, out, expect, ignore_order=True):
         # out = out.strip().split("\n")
         # out = map(lambda s: re.sub(self.re_whitespace, " ", s), out)
         #
@@ -40,6 +40,9 @@ class MatchTest(_SyncTestBase):
         # print(out)
         if isinstance(expect, str):
             expect = expect.strip().split("\n")
+        if ignore_order:
+            a.sort()
+            expect = sorted(expect)
         self.assertListEqual(a, expect)
 
     def test_match_all(self):
