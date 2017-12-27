@@ -8,12 +8,11 @@ import unittest
 
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer
 from test.fixture_tools import _SyncTestBase, run_script, get_local_test_url,\
-    get_remote_test_url, write_test_file, empty_folder, PYFTPSYNC_TEST_FOLDER
+    get_remote_test_url, write_test_file, empty_folder, PYFTPSYNC_TEST_FOLDER,\
+    get_test_file_size, is_test_file
 from unittest.case import SkipTest
-from ftpsync.targets import make_target, FsTarget
+from ftpsync.targets import make_target
 import os
-from ftpsync.ftp_target import FtpTarget
-from tempfile import SpooledTemporaryFile
 
 
 # ===============================================================================
@@ -95,8 +94,9 @@ class TempDevelopTest(_SyncTestBase):
         local_target = make_target(self.local_url)
         remote_target = make_target(self.remote_url)
 
-        write_test_file("local/large1.txt", size=1000*1000)
-        write_test_file("remote/large2.txt", size=1000*1000)
+        SIZE = 1000*1000
+        write_test_file("local/large1.txt", size=SIZE)
+        write_test_file("remote/large2.txt", size=SIZE)
 
         opts = {
             "verbose": 5,
@@ -104,8 +104,16 @@ class TempDevelopTest(_SyncTestBase):
             }
         synchronizer = DownloadSynchronizer(local_target, remote_target, opts)
 
+        assert is_test_file("local/large1.txt")
+        assert is_test_file("remote/large2.txt")
+        assert not is_test_file("remote/large1.txt")
+        assert not is_test_file("local/large2.txt")
+
         synchronizer.run()
-        # assert False
+
+        # Expect that large2 was downloaded
+        assert not is_test_file("remote/large1.txt")
+        assert get_test_file_size("local/large2.txt") == SIZE
 
 
 # ===============================================================================

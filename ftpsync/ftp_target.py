@@ -6,24 +6,18 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 from __future__ import print_function
 
 import calendar
-from ftplib import error_perm
 import ftplib
-# import io
 import json
 import os
 from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
 import time
 from tempfile import SpooledTemporaryFile
 
-# from ftpsync import targets
 from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersion
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftpsync.targets import _Target
 from ftpsync.util import get_credentials_for_url, prompt_for_password, \
     save_password, write, write_error
-# from ftpsync.stream_tools import StreamingFile
-
-# DEFAULT_BLOCKSIZE = targets.DEFAULT_BLOCKSIZE
 
 
 # ===============================================================================
@@ -125,7 +119,7 @@ class FtpTarget(_Target):
         try:
             # Login (as 'anonymous' if self.username is undefined):
             self.ftp.login(self.username, self.password)
-        except error_perm as e:
+        except ftplib.error_perm as e:
             # If credentials were passed, but authentication fails, prompt
             # for new password
             if not e.args[0].startswith("530"):
@@ -141,7 +135,7 @@ class FtpTarget(_Target):
 
         try:
             self.ftp.cwd(self.root_dir)
-        except error_perm as e:
+        except ftplib.error_perm as e:
             # If credentials were passed, but authentication fails, prompt
             # for new password
             if not e.args[0].startswith("550"):
@@ -344,7 +338,7 @@ class FtpTarget(_Target):
 
         try:
             self.ftp.retrlines("MLSD", _addline)
-        except error_perm as e:
+        except ftplib.error_perm as e:
             # write_error("The FTP server responded with {}".format(e))
             # raises error_perm "500 Unknown command" if command is not supported
             if "500" in str(e.args):
@@ -413,7 +407,7 @@ class FtpTarget(_Target):
         Returns:
             file-like (must support read() method)
         """
-        print("FTP open_readable({})".format(name))
+        # print("FTP open_readable({})".format(name))
         out = SpooledTemporaryFile(max_size=self.MAX_SPOOL_MEM, mode="w+b")
         self.ftp.retrbinary("RETR {}".format(name), out.write, FtpTarget.DEFAULT_BLOCKSIZE)
         out.seek(0)
@@ -444,7 +438,7 @@ class FtpTarget(_Target):
                 Called like `func(buf)` for every written chunk
         """
         def _write_to_file(data):
-            print("_write_to_file() {} bytes.".format(len(data)))
+            # print("_write_to_file() {} bytes.".format(len(data)))
             fp_dest.write(data)
             if callback:
                 callback(data)

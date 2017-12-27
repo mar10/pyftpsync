@@ -11,7 +11,8 @@ import unittest
 from unittest.case import SkipTest
 
 from ftpsync.synchronizers import BiDirSynchronizer
-from test.fixture_tools import write_test_file, get_test_folder, remove_test_folder, _SyncTestBase
+from test.fixture_tools import write_test_file, get_test_folder, remove_test_folder,\
+    _SyncTestBase
 
 
 # ===============================================================================

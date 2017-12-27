@@ -24,10 +24,10 @@ import unittest
 from unittest.case import SkipTest
 
 from ftpsync import pyftpsync
+from ftpsync.compat import to_native, to_bytes, urlparse, StringIO
 from ftpsync.metadata import DirMetadata
 from ftpsync.synchronizers import BiDirSynchronizer
 from ftpsync.targets import FsTarget, make_target
-from ftpsync.compat import to_native, to_bytes, urlparse, StringIO
 from ftpsync.util import get_option
 
 
@@ -184,6 +184,11 @@ def get_test_file_date(name):
     path = os.path.join(PYFTPSYNC_TEST_FOLDER, name.replace("/", os.sep))
     stat = os.lstat(path)
     return stat.st_mtime
+
+
+def get_test_file_size(name):
+    path = os.path.join(PYFTPSYNC_TEST_FOLDER, name.replace("/", os.sep))
+    return os.path.getsize(path)
 
 
 def read_test_file(name):

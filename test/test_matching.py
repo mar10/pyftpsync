@@ -7,7 +7,8 @@ from __future__ import print_function
 import re
 import unittest
 
-from test.fixture_tools import _SyncTestBase, get_local_test_url, get_remote_test_url, run_script
+from test.fixture_tools import _SyncTestBase, get_local_test_url, get_remote_test_url,\
+    run_script
 
 
 # ===============================================================================

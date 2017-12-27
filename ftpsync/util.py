@@ -240,7 +240,7 @@ def byte_compare(stream_a, stream_b):
 
     @return: (bool, int): offset of first mismatch or 0 if equal
     """
-    bufsize = DEFAULT_BLOCKSIZE
+    bufsize = 16 * 1024
     equal = True
     ofs = 0
     while True:

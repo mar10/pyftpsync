@@ -12,10 +12,9 @@ from posixpath import join as join_url, normpath as normpath_url
 import shutil
 import threading
 
+from ftpsync import compat
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import DirectoryEntry, FileEntry
-# from ftpsync.util import DEFAULT_BLOCKSIZE
-from ftpsync import compat
 
 
 # ===============================================================================
@@ -369,17 +368,6 @@ class FsTarget(_Target):
                 if callback:
                     callback(data)
         return
-
-#     def copy_chunked(self, name, src_target, blocksize=DEFAULT_BLOCKSIZE, callback=None):
-#         self.check_write(name)
-#
-#         with open(os.path.join(self.cur_dir, name), "wb") as fp_dst:
-#             def on_chunk(chunk):
-#                 fp_dst.write(chunk)
-#                 if callback:
-#                     callback(chunk)
-#             src_target.ftp.retrbinary("RETR {}".format(name), on_chunk, blocksize)
-#         return
 
     def remove_file(self, name):
         """Remove cur_dir/name."""

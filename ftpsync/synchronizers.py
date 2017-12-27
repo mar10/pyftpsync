@@ -248,7 +248,7 @@ class BaseSynchronizer(object):
         start = time.time()
 
         def __block_written(data):
-            write("__block_written() {} bytes".format(len(data)))
+            # write("__block_written() {} bytes".format(len(data)))
             self._inc_stat("bytes_written", len(data))
             if is_upload:
                 self._inc_stat("upload_bytes_written", len(data))
