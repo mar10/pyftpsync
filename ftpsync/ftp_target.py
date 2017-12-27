@@ -8,21 +8,22 @@ from __future__ import print_function
 import calendar
 from ftplib import error_perm
 import ftplib
-import io
+# import io
 import json
 import os
 from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
 import time
+from tempfile import SpooledTemporaryFile
 
-from ftpsync import targets
+# from ftpsync import targets
 from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersion
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftpsync.targets import _Target
 from ftpsync.util import get_credentials_for_url, prompt_for_password, \
     save_password, write, write_error
+# from ftpsync.stream_tools import StreamingFile
 
-
-DEFAULT_BLOCKSIZE = targets.DEFAULT_BLOCKSIZE
+# DEFAULT_BLOCKSIZE = targets.DEFAULT_BLOCKSIZE
 
 
 # ===============================================================================
@@ -39,6 +40,10 @@ class FtpTarget(_Target):
         username (str):
         password (str):
     """
+
+    DEFAULT_BLOCKSIZE = 8 * 1024  # ftplib uses 8k chunks by default
+    MAX_SPOOL_MEM = 100 * 1024   # keep open_readable() buffer in memory if smaller than 100kB
+
     def __init__(self, path, host, port=0, username=None, password=None,
                  tls=False, timeout=None, extra_opts=None):
         """Create FTP target with host, initial path, optional credentials and options.
@@ -399,17 +404,52 @@ class FtpTarget(_Target):
         return entry_list
 
     def open_readable(self, name):
-        """Open cur_dir/name for reading."""
-        out = io.BytesIO()
-        self.ftp.retrbinary("RETR {}".format(name), out.write)
-        out.flush()
+        """Open cur_dir/name for reading.
+
+        Note: we read everything into a buffer that supports .read().
+
+        Args:
+            name (str): file name, located in self.curdir
+        Returns:
+            file-like (must support read() method)
+        """
+        print("FTP open_readable({})".format(name))
+        out = SpooledTemporaryFile(max_size=self.MAX_SPOOL_MEM, mode="w+b")
+        self.ftp.retrbinary("RETR {}".format(name), out.write, FtpTarget.DEFAULT_BLOCKSIZE)
         out.seek(0)
         return out
 
     def write_file(self, name, fp_src, blocksize=DEFAULT_BLOCKSIZE, callback=None):
+        """Write file-like `fp_src` to cur_dir/name.
+
+        Args:
+            name (str): file name, located in self.curdir
+            fp_src (file-like): must support read() method
+            blocksize (int, optional):
+            callback (function, optional):
+                Called like `func(buf)` for every written chunk
+        """
         self.check_write(name)
+        # print("FTP write_file({})".format(name), blocksize)
         self.ftp.storbinary("STOR {}".format(name), fp_src, blocksize, callback)
         # TODO: check result
+
+    def copy_to_file(self, name, fp_dest, callback=None):
+        """Write cur_dir/name to file-like `fp_dest`.
+
+        Args:
+            name (str): file name, located in self.curdir
+            fp_dest (file-like): must support write() method
+            callback (function, optional):
+                Called like `func(buf)` for every written chunk
+        """
+        def _write_to_file(data):
+            print("_write_to_file() {} bytes.".format(len(data)))
+            fp_dest.write(data)
+            if callback:
+                callback(data)
+
+        self.ftp.retrbinary("RETR {}".format(name), _write_to_file, FtpTarget.DEFAULT_BLOCKSIZE)
 
     def remove_file(self, name):
         """Remove cur_dir/name."""

@@ -10,11 +10,12 @@ import io
 import os
 from posixpath import join as join_url, normpath as normpath_url
 import shutil
+import threading
 
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import DirectoryEntry, FileEntry
-from ftpsync.util import to_binary, urlparse, DEFAULT_BLOCKSIZE
-import threading
+# from ftpsync.util import DEFAULT_BLOCKSIZE
+from ftpsync import compat
 
 
 # ===============================================================================
@@ -34,7 +35,7 @@ def make_target(url, extra_opts=None):
         :class:`_Target`
     """
 #    debug = extra_opts.get("debug", 1)
-    parts = urlparse(url, allow_fragments=False)
+    parts = compat.urlparse(url, allow_fragments=False)
     # scheme is case-insensitive according to http://tools.ietf.org/html/rfc3986
     scheme = parts.scheme.lower()
     if scheme in ["ftp", "ftps"]:
@@ -56,6 +57,8 @@ def make_target(url, extra_opts=None):
 # ===============================================================================
 class _Target(object):
     """Base class for :class:`FsTarget`, :class:`FtpTarget`, etc."""
+    DEFAULT_BLOCKSIZE = 16 * 1024  # shutil.copyobj() uses 16k blocks by default
+
     def __init__(self, root_dir, extra_opts):
         if root_dir != "/":
             root_dir = root_dir.rstrip("/")
@@ -199,6 +202,10 @@ class _Target(object):
         """Return file-like object opened in binary mode for cur_dir/name."""
         raise NotImplementedError
 
+    def open_writable(self, name):
+        """Return file-like object opened in binary mode for cur_dir/name."""
+        raise NotImplementedError
+
     def read_text(self, name):
         """Read text string from cur_dir/name using open_readable()."""
         with self.open_readable(name) as fp:
@@ -210,13 +217,23 @@ class _Target(object):
             res = res.decode("utf8")
             return res
 
-    def write_file(self, name, fp_src, blocksize=8192, callback=None):
+    def copy_to_file(self, name, fp_dest, callback=None):
+        """Write cur_dir/name to file-like `fp_dest`.
+
+        Args:
+            name (str): file name, located in self.curdir
+            fp_dest (file-like): must support write() method
+            callback (function, optional):
+                Called like `func(buf)` for every written chunk
+        """
+
+    def write_file(self, name, fp_src, blocksize=DEFAULT_BLOCKSIZE, callback=None):
         """Write binary data from file-like to cur_dir/name."""
         raise NotImplementedError
 
     def write_text(self, name, s):
         """Write string data to cur_dir/name using write_file()."""
-        buf = io.BytesIO(to_binary(s))
+        buf = io.BytesIO(compat.to_bytes(s))
         self.write_file(name, buf)
 
     def remove_file(self, name):
@@ -246,6 +263,9 @@ class _Target(object):
 # ===============================================================================
 
 class FsTarget(_Target):
+
+    DEFAULT_BLOCKSIZE = 16 * 1024  # shutil.copyobj() uses 16k blocks by default
+
     def __init__(self, root_dir, extra_opts=None):
         root_dir = os.path.expanduser(root_dir)
         root_dir = os.path.abspath(root_dir)
@@ -329,6 +349,12 @@ class FsTarget(_Target):
 
     def open_readable(self, name):
         fp = open(os.path.join(self.cur_dir, name), "rb")
+        # print("open_readable({})".format(name))
+        return fp
+
+    def open_writable(self, name):
+        fp = open(os.path.join(self.cur_dir, name), "wb")
+        # print("open_readable({})".format(name))
         return fp
 
     def write_file(self, name, fp_src, blocksize=DEFAULT_BLOCKSIZE, callback=None):
@@ -336,12 +362,24 @@ class FsTarget(_Target):
         with open(os.path.join(self.cur_dir, name), "wb") as fp_dst:
             while True:
                 data = fp_src.read(blocksize)
+                # print("write_file({})".format(name), len(data))
                 if data is None or not len(data):
                     break
                 fp_dst.write(data)
                 if callback:
                     callback(data)
         return
+
+#     def copy_chunked(self, name, src_target, blocksize=DEFAULT_BLOCKSIZE, callback=None):
+#         self.check_write(name)
+#
+#         with open(os.path.join(self.cur_dir, name), "wb") as fp_dst:
+#             def on_chunk(chunk):
+#                 fp_dst.write(chunk)
+#                 if callback:
+#                     callback(chunk)
+#             src_target.ftp.retrbinary("RETR {}".format(name), on_chunk, blocksize)
+#         return
 
     def remove_file(self, name):
         """Remove cur_dir/name."""

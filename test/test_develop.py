@@ -8,9 +8,12 @@ import unittest
 
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer
 from test.fixture_tools import _SyncTestBase, run_script, get_local_test_url,\
-    get_remote_test_url, write_test_file
+    get_remote_test_url, write_test_file, empty_folder, PYFTPSYNC_TEST_FOLDER
 from unittest.case import SkipTest
-from ftpsync.targets import make_target
+from ftpsync.targets import make_target, FsTarget
+import os
+from ftpsync.ftp_target import FtpTarget
+from tempfile import SpooledTemporaryFile
 
 
 # ===============================================================================
@@ -61,16 +64,55 @@ class TempDevelopTest(_SyncTestBase):
         assert "*cmd* 'PORT" in out or "*cmd* 'EPRT" in out
         assert not ("*cmd* 'PASV" in out or "*cmd* 'EPSV" in out)
 
-    def test_issue_22(self):
-        # write()
+    def test_logging(self):
         pass
+        # import requests
+        # import logging
+        #
+        # # Enabling debugging at http.client level (requests->urllib3->http.client)
+        # # you will see the REQUEST, including HEADERS and DATA, and RESPONSE with HEADERS but without DATA.
+        # # the only thing missing will be the response.body which is not logged.
+        # try: # for Python 3
+        #     from http.client import HTTPConnection
+        # except ImportError:
+        #     from httplib import HTTPConnection
+        # HTTPConnection.debuglevel = 1
+        #
+        # logging.basicConfig() # you need to initialize logging, otherwise you will not see anything from requests
+        # logging.getLogger().setLevel(logging.DEBUG)
+        # requests_log = logging.getLogger("requests.packages.urllib3")
+        # requests_log.setLevel(logging.DEBUG)
+        # requests_log.propagate = True
+
+    def test_issue_24(self):
+        if not self.use_ftp_target:
+            raise SkipTest("Only FTP targets.")
+
+#         empty_folder()
+        empty_folder(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
+        empty_folder(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
+
+        local_target = make_target(self.local_url)
+        remote_target = make_target(self.remote_url)
+
+        write_test_file("local/large1.txt", size=1000*1000)
+        write_test_file("remote/large2.txt", size=1000*1000)
+
+        opts = {
+            "verbose": 5,
+            "match": "large*.txt",
+            }
+        synchronizer = DownloadSynchronizer(local_target, remote_target, opts)
+
+        synchronizer.run()
+        # assert False
 
 
 # ===============================================================================
 # TempDevelopTest
 # ===============================================================================
 
-class FtpDownloadResolveTest(TempDevelopTest):
+class FtpTempDevelopTest(TempDevelopTest):
     """Run the DownloadResolveTest test suite against a local FTP server (ftp_target.FtpTarget)."""
     use_ftp_target = True
 

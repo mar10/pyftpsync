@@ -13,7 +13,9 @@ import time
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import FileEntry, DirectoryEntry, EntryPair, operation_map
 from ftpsync.util import IS_REDIRECTED, DRY_RUN_PREFIX, \
-    ansi_code, console_input, VT_ERASE_LINE, byte_compare, eps_compare, pretty_stamp, write
+    ansi_code, VT_ERASE_LINE, byte_compare, eps_compare, pretty_stamp, write
+from ftpsync import compat
+from ftpsync.ftp_target import FtpTarget
 
 
 #: Default for --exclude CLI option
@@ -246,18 +248,26 @@ class BaseSynchronizer(object):
         start = time.time()
 
         def __block_written(data):
-            # write(">(%s), " % len(data))
+            write("__block_written() {} bytes".format(len(data)))
             self._inc_stat("bytes_written", len(data))
             if is_upload:
                 self._inc_stat("upload_bytes_written", len(data))
             else:
                 self._inc_stat("download_bytes_written", len(data))
 
-        with src.open_readable(file_entry.name) as fp_src:
-            dest.write_file(file_entry.name, fp_src, callback=__block_written)
+        if isinstance(src, FtpTarget) and not isinstance(dest, FtpTarget):
+            # Copy FTP to File:
+            # FtpTarget.open_readable() would read everything into a temporary buffer
+            # before we can start writing.
+            # It is more efficient to let FtpTarget write in the retrbinary() callbacks.
+            # (Note that copying FTP to FTP would require a temp buffer anyway,
+            # so we handle this in the default branch below.)
+            with dest.open_writable(file_entry.name) as fp_dest:
+                src.copy_to_file(file_entry.name, fp_dest, callback=__block_written)
+        else:
+            with src.open_readable(file_entry.name) as fp_src:
+                dest.write_file(file_entry.name, fp_src, callback=__block_written)
 
-#         dest.set_mtime(file_entry.name, file_entry.get_adjusted_mtime(), file_entry.size)
-#         dest.set_sync_info(file_entry.name, file_entry.get_adjusted_mtime(), file_entry.size)
         dest.set_mtime(file_entry.name, file_entry.mtime, file_entry.size)
         dest.set_sync_info(file_entry.name, file_entry.mtime, file_entry.size)
 
@@ -669,7 +679,7 @@ class BiDirSynchronizer(BaseSynchronizer):
                 M + "S" + R + "kip, " + M + "B" + R + "inary compare, " + \
                 M + "H" + R + "elp ? "
 
-            r = console_input(prompt).strip()
+            r = compat.console_input(prompt).strip()
 
             if r in ("h", "H", "?"):
                 print("The following keys are supported:")
@@ -932,7 +942,7 @@ class UploadSynchronizer(BiDirSynchronizer):
             prompt = "Use " + M + "L" + R + "ocal, " + M + "S" + R + "kip, " + \
                 M + "B" + R + "inary compare, " + M + "H" + R + "elp ? "
 
-            r = console_input(prompt).strip()
+            r = compat.console_input(prompt).strip()
 
             if r in ("h", "H", "?"):
                 print("The following keys are supported:")
@@ -1070,7 +1080,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
             prompt = "Use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + \
                 M + "B" + R + "inary compare, " + M + "H" + R + "elp? "
 
-            r = console_input(prompt).strip()
+            r = compat.console_input(prompt).strip()
             if r in ("h", "H", "?"):
                 print("The following keys are supported:")
                 print("  'b': Binary compare")
