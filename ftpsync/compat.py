@@ -3,7 +3,7 @@
 (c) 2012-2017 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 """
-
+# flake8: noqa
 from __future__ import print_function
 
 import sys
