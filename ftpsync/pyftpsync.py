@@ -16,11 +16,27 @@ from pprint import pprint
 import sys
 
 from ftpsync import __version__
+from ftpsync.cli_common import add_cli_sub_args, add_matcher_sub_args, add_credential_sub_args
 from ftpsync.scan_command import add_scan_parser
 from ftpsync.synchronizers import UploadSynchronizer, \
-    DownloadSynchronizer, BiDirSynchronizer, DEFAULT_OMIT
+    DownloadSynchronizer, BiDirSynchronizer
 from ftpsync.targets import make_target, FsTarget
 from ftpsync.util import namespace_to_dict, set_logger
+
+
+def add_common_sub_args(parser):
+    parser.add_argument("local",
+                        metavar="LOCAL",
+                        default=".",
+                        help="path to local folder (default: %(default)s)")
+    parser.add_argument("remote",
+                        metavar="REMOTE",
+                        help="path to remote folder")
+
+    add_cli_sub_args(parser)
+    add_matcher_sub_args(parser)
+    add_credential_sub_args(parser)
+    return
 
 
 # ===============================================================================
@@ -37,130 +53,72 @@ def run():
         epilog="See also https://github.com/mar10/pyftpsync"
         )
 
-    qv_group = parser.add_mutually_exclusive_group()
-    qv_group.add_argument("-v", "--verbose", action="count", default=3,
-                          help="increment verbosity by one (default: %(default)s, range: 0..5)")
-    qv_group.add_argument("-q", "--quiet", action="count", default=0,
-                          help="decrement verbosity by one")
-
     parser.add_argument("-V", "--version", action="version", version="{}".format(__version__))
-    parser.add_argument("--progress",
-                        action="store_true",
-                        default=False,
-                        help="show progress info, even if redirected or verbose < 3")
-    parser.add_argument("--migrate",
-                        action="store_true",
-                        default=False,
-                        help="replace meta data files from different versions with current "
-                             "format. Existing data will be discarded.")
 
     subparsers = parser.add_subparsers(help="sub-command help")
 
-    def __add_common_sub_args(parser):
-        parser.add_argument("local",
-                            metavar="LOCAL",
-                            default=".",
-                            help="path to local folder (default: %(default)s)")
-        parser.add_argument("remote",
-                            metavar="REMOTE",
-                            help="path to remote folder")
-        parser.add_argument("-n", "--dry-run",
-                            action="store_true",
-                            help="just simulate and log results, but don't change anything")
-        parser.add_argument("-m", "--match",
-                            help="wildcard for file names using fnmatch syntax "
-                            "(default: match all, separate multiple values with ',')")
-        parser.add_argument("-x", "--exclude",
-                            default=",".join(DEFAULT_OMIT),
-                            help="wildcard of files and directories to exclude "
-                            "(applied after --match, default: '%(default)s')")
-        parser.add_argument("--store-password",
-                            action="store_true",
-                            help="save password to keyring if login succeeds")
-
-        p_group = parser.add_mutually_exclusive_group()
-        p_group.add_argument("--prompt",
-                             action="store_true",
-                             help="always prompt for password")
-        p_group.add_argument("--no-prompt",
-                             action="store_true",
-                             help="prevent prompting for invalid credentials")
-
-        parser.add_argument("--no-keyring",
-                            action="store_true",
-                            help="prevent use of the system keyring service for credential lookup")
-        parser.add_argument("--no-netrc",
-                            action="store_true",
-                            help="prevent use of .netrc file for credential lookup")
-        parser.add_argument("--no-color",
-                            action="store_true",
-                            help="prevent use of ansi terminal color codes")
-        parser.add_argument("--ftp-active",
-                            action="store_true",
-                            help="use Active FTP mode instead of passive")
-
     # --- Create the parser for the "upload" command ---------------------------
 
-    upload_parser = subparsers.add_parser("upload",
-                                          help="copy new and modified files to remote folder")
-    __add_common_sub_args(upload_parser)
+    sp = subparsers.add_parser("upload",
+                               help="copy new and modified files to remote folder")
 
-    upload_parser.add_argument("--force",
-                               action="store_true",
-                               help="overwrite remote files, even if the target is newer "
-                               "(but no conflict was detected)")
-    upload_parser.add_argument("--resolve",
-                               default="ask",
-                               choices=["local", "skip", "ask"],
-                               help="conflict resolving strategy (default: '%(default)s')")
-    upload_parser.add_argument("--delete",
-                               action="store_true",
-                               help="remove remote files if they don't exist locally")
-    upload_parser.add_argument("--delete-unmatched",
-                               action="store_true",
-                               help="remove remote files if they don't exist locally "
-                               "or don't match the current filter (implies '--delete' option)")
+    sp.add_argument("--force",
+                    action="store_true",
+                    help="overwrite remote files, even if the target is newer "
+                    "(but no conflict was detected)")
+    sp.add_argument("--resolve",
+                    default="ask",
+                    choices=["local", "skip", "ask"],
+                    help="conflict resolving strategy (default: '%(default)s')")
+    sp.add_argument("--delete",
+                    action="store_true",
+                    help="remove remote files if they don't exist locally")
+    sp.add_argument("--delete-unmatched",
+                    action="store_true",
+                    help="remove remote files if they don't exist locally "
+                    "or don't match the current filter (implies '--delete' option)")
 
-    upload_parser.set_defaults(command="upload")
+    add_common_sub_args(sp)
+    sp.set_defaults(command="upload")
 
     # --- Create the parser for the "download" command -------------------------
 
-    download_parser = subparsers.add_parser(
+    sp = subparsers.add_parser(
             "download",
             help="copy new and modified files from remote folder to local target")
-    __add_common_sub_args(download_parser)
 
-    download_parser.add_argument("--force",
-                                 action="store_true",
-                                 help="overwrite local files, even if the target is newer "
-                                 "(but no conflict was detected)")
-    download_parser.add_argument("--resolve",
-                                 default="ask",
-                                 choices=["remote", "skip", "ask"],
-                                 help="conflict resolving strategy (default: '%(default)s')")
-    download_parser.add_argument("--delete",
-                                 action="store_true",
-                                 help="remove local files if they don't exist on remote target")
-    download_parser.add_argument("--delete-unmatched",
-                                 action="store_true",
-                                 help="remove local files if they don't exist on remote target "
-                                 "or don't match the current filter (implies '--delete' option)")
+    sp.add_argument("--force",
+                    action="store_true",
+                    help="overwrite local files, even if the target is newer "
+                    "(but no conflict was detected)")
+    sp.add_argument("--resolve",
+                    default="ask",
+                    choices=["remote", "skip", "ask"],
+                    help="conflict resolving strategy (default: '%(default)s')")
+    sp.add_argument("--delete",
+                    action="store_true",
+                    help="remove local files if they don't exist on remote target")
+    sp.add_argument("--delete-unmatched",
+                    action="store_true",
+                    help="remove local files if they don't exist on remote target "
+                    "or don't match the current filter (implies '--delete' option)")
 
-    download_parser.set_defaults(command="download")
+    add_common_sub_args(sp)
+    sp.set_defaults(command="download")
 
     # --- Create the parser for the "sync" command -----------------------------
 
-    sync_parser = subparsers.add_parser(
+    sp = subparsers.add_parser(
             "sync",
             help="synchronize new and modified files between remote folder and local target")
-    __add_common_sub_args(sync_parser)
 
-    sync_parser.add_argument("--resolve",
-                             default="ask",
-                             choices=["old", "new", "local", "remote", "skip", "ask"],
-                             help="conflict resolving strategy (default: '%(default)s')")
+    sp.add_argument("--resolve",
+                    default="ask",
+                    choices=["old", "new", "local", "remote", "skip", "ask"],
+                    help="conflict resolving strategy (default: '%(default)s')")
 
-    sync_parser.set_defaults(command="synchronize")
+    add_common_sub_args(sp)
+    sp.set_defaults(command="synchronize")
 
     # --- Create the parser for the "scan" command -----------------------------
 

@@ -171,7 +171,7 @@ def prompt_for_password(url, user=None, default_user=None):
     return None
 
 
-def get_credentials_for_url(url, opts):
+def get_credentials_for_url(url, opts, force_user=None):
     """
     @returns 2-tuple (username, password) or None
     """
@@ -179,17 +179,22 @@ def get_credentials_for_url(url, opts):
     verbose = int(opts.get("verbose"))
     force_prompt = opts.get("prompt", False)
     allow_prompt = not opts.get("no_prompt", True)
-    allow_keyring = not opts.get("no_keyring", False)
-    allow_netrc = not opts.get("no_netrc", False)
+    allow_keyring = not opts.get("no_keyring", False) and not force_user
+    allow_netrc = not opts.get("no_netrc", False) and not force_user
 
-    # Lookup our own credential store
-    # Parse a file in the user's home directory, formatted like:
-    # URL = user:password
+    print("get_credentials_for_url", force_user, allow_prompt)
+    if force_user and not allow_prompt:
+        raise RuntimeError(
+            "Cannot get credentials for a distinct user ({}) from keyring or .netrc and "
+            "prompting is disabled.".format(force_user))
+
+    # Lookup our own pyftpsync 1.x credential store. This is deprecated with 2.x
     home_path = os.path.expanduser("~")
     file_path = os.path.join(home_path, DEFAULT_CREDENTIAL_STORE)
     if os.path.isfile(file_path):
-        raise RuntimeError("Custom password files are no longer supported. Consider deleting {}."
-                           .format(file_path))
+        raise RuntimeError(
+            "Custom password files are no longer supported. Delete {} and use .netrc instead."
+            .format(file_path))
 
     # Query keyring database
     if creds is None and keyring and allow_keyring:

@@ -53,12 +53,12 @@ class TempDevelopTest(_SyncTestBase):
         write_test_file("local/large.txt", size=10*1000)
         write_test_file("remote/large.txt", size=10*1000)
 
-        out = run_script("-vvv", "download", self.local_url, self.remote_url)
+        out = run_script("download", "-vvv", self.local_url, self.remote_url)
 #         print(out)
         assert not ("*cmd* 'PORT" in out or "*cmd* 'EPRT" in out)
         assert "*cmd* 'PASV" in out or "*cmd* 'EPSV" in out
 
-        out = run_script("-vvv", "download", self.local_url, self.remote_url, "--ftp-active")
+        out = run_script("download", self.local_url, self.remote_url, "-vvv", "--ftp-active")
 #         print(out)
         assert "*cmd* 'PORT" in out or "*cmd* 'EPRT" in out
         assert not ("*cmd* 'PASV" in out or "*cmd* 'EPSV" in out)

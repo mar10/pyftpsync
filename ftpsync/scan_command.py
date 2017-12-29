@@ -9,10 +9,11 @@ from __future__ import print_function
 from datetime import timedelta
 import time
 
+from ftpsync.cli_common import add_cli_sub_args, add_matcher_sub_args, add_credential_sub_args
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import DirectoryEntry
 from ftpsync.targets import make_target
-from ftpsync.synchronizers import process_options, match_path, DEFAULT_OMIT
+from ftpsync.synchronizers import process_options, match_path
 from ftpsync.util import pretty_stamp, namespace_to_dict
 
 
@@ -22,61 +23,28 @@ def add_scan_parser(subparsers):
     parser = subparsers.add_parser(
             "scan",
             help="repair, purge, or check targets")
-    # __add_common_sub_args(parser)
 
     parser.add_argument("target",
                         metavar="TARGET",
                         default=".",
                         help="path to target folder (default: %(default)s)")
-    # parser.add_argument("-n", "--dry-run",
-    #                     action="store_true",
-    #                     help="just simulate and log results, but don't change anything")
-    parser.add_argument("--store-password",
-                        action="store_true",
-                        help="save password to keyring if login succeeds")
 
-    p_group = parser.add_mutually_exclusive_group()
-    p_group.add_argument("--prompt",
-                         action="store_true",
-                         help="always prompt for password")
-    p_group.add_argument("--no-prompt",
-                         action="store_true",
-                         help="prevent prompting for invalid credentials")
-
-    parser.add_argument("--no-keyring",
-                        action="store_true",
-                        help="prevent use of the system keyring service for credential lookup")
-    parser.add_argument("--no-netrc",
-                        action="store_true",
-                        help="prevent use of .netrc file for credential lookup")
-    parser.add_argument("--no-color",
-                        action="store_true",
-                        help="prevent use of ansi terminal color codes")
-    parser.add_argument("--ftp-active",
-                        action="store_true",
-                        help="use Active FTP mode instead of passive")
     parser.add_argument("--list",
                         action="store_true",
                         help="print target files")
     parser.add_argument("-r", "--recursive",
                         action="store_true",
                         help="visit sub folders")
-    parser.add_argument("-m", "--match",
-                        help="wildcard for file names using fnmatch syntax "
-                        "(default: match all, separate multiple values with ',')")
-    parser.add_argument("-x", "--exclude",
-                        default=",".join(DEFAULT_OMIT),
-                        help="wildcard of files and directories to exclude "
-                        "(applied after --match, default: '%(default)s')")
     parser.add_argument("--remove-meta",
                         action="store_true",
                         help="delete all {} files".format(DirMetadata.META_FILE_NAME))
-    # parser.add_argument("--remove-debug",
-    #         action="store_true",
-    #         help="delete all {} files".format(DirMetadata.DEBUG_META_FILE_NAME))
     parser.add_argument("--remove-locks",
                         action="store_true",
                         help="delete all {} files".format(DirMetadata.LOCK_FILE_NAME))
+
+    add_cli_sub_args(parser)
+    add_matcher_sub_args(parser)
+    add_credential_sub_args(parser)
 
     parser.set_defaults(command=scan_handler)
 

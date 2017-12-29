@@ -76,7 +76,6 @@ class FtpTarget(_Target):
         self.time_zone_ofs = None
         self.clock_ofs = None
         self.ftp_socket_connected = False
-        # self.ftp_initialized = False
         self.support_set_time = False
 
     def __str__(self):
@@ -89,7 +88,6 @@ class FtpTarget(_Target):
 
     def open(self):
         assert not self.ftp_socket_connected
-        # assert not self.ftp_initialized
 
         super(FtpTarget, self).open()
 
@@ -112,7 +110,7 @@ class FtpTarget(_Target):
         self.ftp_socket_connected = True
 
         if self.username is None or self.password is None:
-            creds = get_credentials_for_url(self.host, options)
+            creds = get_credentials_for_url(self.host, options, force_user=self.username)
             if creds:
                 self.username, self.password = creds
 
@@ -174,9 +172,6 @@ class FtpTarget(_Target):
     def close(self):
         if self.lock_data:
             self._unlock(closing=True)
-
-        # if self.ftp_initialized:
-        #     self.ftp_initialized = False
 
         if self.ftp_socket_connected:
             self.ftp.quit()
