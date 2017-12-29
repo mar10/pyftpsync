@@ -1,23 +1,30 @@
 2.0.0 (unreleased)
 ------------------
-**Note**: the command line options have changed!  
+**Note**: the command line options have changed:
 **Be careful with existing shell scripts after updating from v1.x!**
 
-- Write mode is now on by default.<br>
-  The `-x`, `--execute` option was removed, use `--dry-run` instead.
-- `-f`, `--include-files` option was renamed to `-m`, `--match`.
-- `-o`, `--omit` option was renamed to `-x`, `--exclude`.
-- Modified format of .pyftpsync.meta.json
-- Dropped support for Python 2.6 and 3.3
-- CLI: return defined error codes.
-- New `scan` command to list, purge, etc remote targets.
-- Remove lock file on Ctrl-C.
+**New Features:**
+- New `scan` command to list, purge, etc. remote targets.
 - Add FTPS (TLS) support.
 - Support Active FTP.
-- Use logger for output when not in CLI mode.
-- Split into more modules.
-- Release as Wheel
-- Enforce PEP8
+- Support for `.netrc` files.
+- CLI returns defined error codes.
+- Use configurable logger for output when not in CLI mode.
+- Release as Wheel.
+
+**Breaking Changes:**
+- Write mode is now on by default.<br>
+  The `-x`, `--execute` option was removed, use `--dry-run` instead.
+- `-f`, `--include-files` option was renamed to `-m`, `--match`.<br>
+  `-o`, `--omit` option was renamed to `-x`, `--exclude`.
+- Modified format of `.pyftpsync-meta.json`.
+- Dropped support for Python 2.6 and 3.3.
+
+**Fixes and Improvements:**
+- Remove lock file on Ctrl-C.
+- Refactored and split into more modules.
+- Improved test framework and documentation.
+- Enforce PEP8, use flake8.
 
 1.0.4 (unreleased)
 ------------------

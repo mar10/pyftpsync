@@ -12,4 +12,4 @@ install:
   - pip install flake8
 script:
   - tox
-  - flake8 .
+#  - flake8 .  # Now part of tox.ini
