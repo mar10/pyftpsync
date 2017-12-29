@@ -15,6 +15,7 @@ import threading
 from ftpsync import compat
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import DirectoryEntry, FileEntry
+from ftpsync.util import write
 
 
 # ===============================================================================
@@ -100,6 +101,12 @@ class _Target(object):
     def is_unbound(self):
         return self.synchronizer is None
 
+    def get_options_dict(self):
+        """Return options from synchronizer (possibly overridden by own extra_opts)."""
+        d = self.synchronizer.options if self.synchronizer else {}
+        d.update(self.extra_opts)
+        return d
+
     def get_option(self, key, default=None):
         """Return option from synchronizer (possibly overridden by target extra_opts)."""
         if self.synchronizer:
@@ -117,6 +124,8 @@ class _Target(object):
     def close(self):
         if not self.connected:
             return
+        if self.get_option("verbose", 3) >= 5:
+            write("Closing target {}.".format(self))
         self.connected = False
         self.readonly = False  # issue #20
         self._rlock.release()

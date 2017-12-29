@@ -41,6 +41,11 @@ try:
 except NameError:
     xrange = range  # py3
 
+try: 
+    CompatFileNotFoundError = FileNotFoundError
+except NameError:
+    CompatFileNotFoundError = IOError
+    
 
 # String Abstractions
 

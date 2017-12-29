@@ -38,13 +38,13 @@ def run():
         )
 
     qv_group = parser.add_mutually_exclusive_group()
-    qv_group.add_argument("--verbose", "-v", action="count", default=3,
+    qv_group.add_argument("-v", "--verbose", action="count", default=3,
                           help="increment verbosity by one (default: %(default)s, range: 0..5)")
-    qv_group.add_argument("--quiet", "-q", action="count", default=0,
+    qv_group.add_argument("-q", "--quiet", action="count", default=0,
                           help="decrement verbosity by one")
 
     parser.add_argument("-V", "--version", action="version", version="{}".format(__version__))
-    parser.add_argument("--progress", "-p",
+    parser.add_argument("--progress",
                         action="store_true",
                         default=False,
                         help="show progress info, even if redirected or verbose < 3")
@@ -64,7 +64,7 @@ def run():
         parser.add_argument("remote",
                             metavar="REMOTE",
                             help="path to remote folder")
-        parser.add_argument("--dry-run",
+        parser.add_argument("-n", "--dry-run",
                             action="store_true",
                             help="just simulate and log results, but don't change anything")
         parser.add_argument("-m", "--match",
@@ -77,9 +77,21 @@ def run():
         parser.add_argument("--store-password",
                             action="store_true",
                             help="save password to keyring if login succeeds")
-        parser.add_argument("--no-prompt",
+
+        p_group = parser.add_mutually_exclusive_group()
+        p_group.add_argument("--prompt",
+                             action="store_true",
+                             help="always prompt for password")
+        p_group.add_argument("--no-prompt",
+                             action="store_true",
+                             help="prevent prompting for invalid credentials")
+
+        parser.add_argument("--no-keyring",
                             action="store_true",
-                            help="prevent prompting for missing credentials")
+                            help="prevent use of the system keyring service for credential lookup")
+        parser.add_argument("--no-netrc",
+                            action="store_true",
+                            help="prevent use of .netrc file for credential lookup")
         parser.add_argument("--no-color",
                             action="store_true",
                             help="prevent use of ansi terminal color codes")

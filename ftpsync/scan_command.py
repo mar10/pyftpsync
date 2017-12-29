@@ -28,15 +28,27 @@ def add_scan_parser(subparsers):
                         metavar="TARGET",
                         default=".",
                         help="path to target folder (default: %(default)s)")
-    parser.add_argument("--dry-run",
-                        action="store_true",
-                        help="just simulate and log results, but don't change anything")
+    # parser.add_argument("-n", "--dry-run",
+    #                     action="store_true",
+    #                     help="just simulate and log results, but don't change anything")
     parser.add_argument("--store-password",
                         action="store_true",
                         help="save password to keyring if login succeeds")
-    parser.add_argument("--no-prompt",
+
+    p_group = parser.add_mutually_exclusive_group()
+    p_group.add_argument("--prompt",
+                         action="store_true",
+                         help="always prompt for password")
+    p_group.add_argument("--no-prompt",
+                         action="store_true",
+                         help="prevent prompting for invalid credentials")
+
+    parser.add_argument("--no-keyring",
                         action="store_true",
-                        help="prevent prompting for missing credentials")
+                        help="prevent use of the system keyring service for credential lookup")
+    parser.add_argument("--no-netrc",
+                        action="store_true",
+                        help="prevent use of .netrc file for credential lookup")
     parser.add_argument("--no-color",
                         action="store_true",
                         help="prevent use of ansi terminal color codes")
@@ -73,10 +85,10 @@ def add_scan_parser(subparsers):
 
 def scan_handler(args):
     """Implement `cleanup` sub-command."""
-    opts = {
-        "ftp_debug": args.verbose >= 5,
-        "ftp_active": args.ftp_active,
-        }
+    opts = namespace_to_dict(args)
+    opts.update({
+        "ftp_debug": args.verbose >= 6,
+        })
     target = make_target(args.target, opts)
     target.readonly = True
     root_depth = target.root_dir.count("/")

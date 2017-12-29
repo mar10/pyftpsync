@@ -228,7 +228,7 @@ In develpoment mode, pyftpsync installs `pyftpdlib <https://github.com/giampaolo
 which can be used to run an FTP server for testing.
 We allow anonymous access and use a custom port > 1024, so we don't need to sudo::
 
-  $ python -m pyftpdlib  -p 8021 -w -d /Users/martin/test_pyftpsync/remote
+  $ python -m pyftpdlib  -p 8021 -w -d /Users/USER/test_pyftpsync/remote
 
 Also set the test options accordingly in ``.pyftpsyncrc``::
 

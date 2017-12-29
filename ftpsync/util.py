@@ -8,11 +8,13 @@ from __future__ import print_function
 
 from datetime import datetime
 import getpass
+import netrc
 import os
 import sys
 import logging
 
 from ftpsync import compat
+from ftpsync.compat import CompatFileNotFoundError
 
 
 _logger = None
@@ -138,26 +140,47 @@ def get_option(env_name, section, opt_name, default=None):
 #
 # ===============================================================================
 
-def prompt_for_password(url, user=None):
+def prompt_for_password(url, user=None, default_user=None):
+    """Prompt for username and password.
+
+    If a user name is passed, only prompt for a password.
+    Args:
+        url (str): hostname
+        user (str, optional):
+            Pass a valid name to skip prompting for a user name
+        default_user (str, optional):
+            Pass a valid name that is used as default when prompting
+            for a user name
+    Raises:
+        KeyboardInterrupt if user hits Ctrl-C
+    Returns:
+        (username, password) or None
+    """
     if user is None:
-        default_user = getpass.getuser()
+        default_user = default_user or getpass.getuser()
         while user is None:
             user = compat.console_input("Enter username for {} [{}]: "
                                         .format(url, default_user))
             if user.strip() == "" and default_user:
                 user = default_user
     if user:
-        pw = getpass.getpass("Enter password for {}@{}: ".format(user, url))
-        if pw:
+        pw = getpass.getpass("Enter password for {}@{} (Ctrl+C to abort): "
+                             .format(user, url))
+        if pw or pw == "":
             return (user, pw)
     return None
 
 
-def get_credentials_for_url(url, allow_prompt):
+def get_credentials_for_url(url, opts):
     """
     @returns 2-tuple (username, password) or None
     """
     creds = None
+    verbose = int(opts.get("verbose"))
+    force_prompt = opts.get("prompt", False)
+    allow_prompt = not opts.get("no_prompt", True)
+    allow_keyring = not opts.get("no_keyring", False)
+    allow_netrc = not opts.get("no_netrc", False)
 
     # Lookup our own credential store
     # Parse a file in the user's home directory, formatted like:
@@ -168,8 +191,8 @@ def get_credentials_for_url(url, allow_prompt):
         raise RuntimeError("Custom password files are no longer supported. Consider deleting {}."
                            .format(file_path))
 
-    # Query
-    if creds is None and keyring:
+    # Query keyring database
+    if creds is None and keyring and allow_keyring:
         try:
             # Note: we pass the url as `username` and username:password as `password`
             c = keyring.get_password("pyftpsync", url)
@@ -177,14 +200,41 @@ def get_credentials_for_url(url, allow_prompt):
                 creds = c.split(":", 1)
                 write("Using credentials from keyring('pyftpsync', '{}'): {}:***."
                       .format(url, creds[0]))
+            else:
+                if verbose >= 4:
+                    write("No credentials found in keyring('pyftpsync', '{}')."
+                          .format(url))
 #        except keyring.errors.TransientKeyringError:
         except Exception as e:
-            write("Could not get password {}".format(e))
-            pass  # e.g. user clicked 'no'
+            # e.g. user clicked 'no'
+            write_error("Could not get password from keyring {}".format(e))
 
-    # Prompt
-    if creds is None and allow_prompt:
-        creds = prompt_for_password(url)
+    # Query .netrc file
+#     print(opts)
+    if creds is None and allow_netrc:
+        try:
+            authenticators = None
+            authenticators = netrc.netrc().authenticators(url)
+        except CompatFileNotFoundError:
+            if verbose >= 4:
+                write("Could not get password (no .netrc file).")
+        except Exception as e:
+            write_error("Could not read .netrc: {}.".format(e))
+
+        if authenticators:
+            creds = (authenticators[0], authenticators[2])
+            write("Using credentials from .netrc file: {}:***.".format(creds[0]))
+        else:
+            if verbose >= 4:
+                write("Could not find entry for '{}' in .netrc file.".format(url))
+
+    # Prompt for password if we don't have credentials yet, or --prompt was set.
+    if allow_prompt:
+        if creds is None:
+            creds = prompt_for_password(url)
+        elif force_prompt:
+            # --prompt was set but we can provide a default for the user name
+            creds = prompt_for_password(url, default_user=creds[0])
 
     return creds
 

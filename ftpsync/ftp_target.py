@@ -76,24 +76,24 @@ class FtpTarget(_Target):
         self.time_zone_ofs = None
         self.clock_ofs = None
         self.ftp_socket_connected = False
-        self.connected = False
+        # self.ftp_initialized = False
         self.support_set_time = False
-#        if connect:
-#            self.open()
 
     def __str__(self):
         return "<{} + {}>".format(self.get_base_name(),
-                                  relpath_url(self.cur_dir, self.root_dir))
+                                  relpath_url(self.cur_dir or "/", self.root_dir))
 
     def get_base_name(self):
         scheme = "ftps" if self.tls else "ftp"
         return "{}://{}{}".format(scheme, self.host, self.root_dir)
 
     def open(self):
-        assert not self.connected
+        assert not self.ftp_socket_connected
+        # assert not self.ftp_initialized
 
         super(FtpTarget, self).open()
 
+        options = self.get_options_dict()
         no_prompt = self.get_option("no_prompt", True)
         store_password = self.get_option("store_password", False)
 
@@ -112,22 +112,30 @@ class FtpTarget(_Target):
         self.ftp_socket_connected = True
 
         if self.username is None or self.password is None:
-            creds = get_credentials_for_url(self.host, allow_prompt=not no_prompt)
+            creds = get_credentials_for_url(self.host, options)
             if creds:
                 self.username, self.password = creds
 
-        try:
-            # Login (as 'anonymous' if self.username is undefined):
-            self.ftp.login(self.username, self.password)
-        except ftplib.error_perm as e:
-            # If credentials were passed, but authentication fails, prompt
-            # for new password
-            if not e.args[0].startswith("530"):
-                raise  # error other then '530 Login incorrect'
-            write(e)
-            if not no_prompt:
-                self.user, self.password = prompt_for_password(self.host, self.username)
+        while True:
+            try:
+                # Login (as 'anonymous' if self.username is undefined):
                 self.ftp.login(self.username, self.password)
+                if self.get_option("verbose", 3) >= 4:
+                    write("Login as '{}'."
+                          .format(self.username if self.username else "anonymous"))
+                break
+            except ftplib.error_perm as e:
+                # If credentials were passed, but authentication fails, prompt
+                # for new password
+                if not e.args[0].startswith("530"):
+                    raise  # error other then '530 Login incorrect'
+                write_error("Could not login to {}@{}: {}"
+                            .format(self.username, self.host, e))
+                if no_prompt or not self.username:
+                    raise
+                creds = prompt_for_password(self.host, self.username)
+                self.username, self.password = creds
+                # Continue while-loop
 
         if self.tls:
             # Upgrade data connection to TLS.
@@ -140,8 +148,8 @@ class FtpTarget(_Target):
             # for new password
             if not e.args[0].startswith("550"):
                 raise  # error other then 550 No such directory'
-            write("Could not change directory to {} ({}): missing permissions?"
-                  .format(self.root_dir, e))
+            write_error("Could not change directory to {} ({}): missing permissions?"
+                        .format(self.root_dir, e))
 
         pwd = self.ftp.pwd()
         if pwd != self.root_dir:
@@ -149,7 +157,8 @@ class FtpTarget(_Target):
                                .format(self.root_dir, pwd))
 
         self.cur_dir = pwd
-        self.connected = True
+
+        # self.ftp_initialized = True
         # Successfully authenticated: store password
         if store_password:
             save_password(self.host, self.username, self.password)
@@ -163,15 +172,17 @@ class FtpTarget(_Target):
         return
 
     def close(self):
-        if self.connected:
+        if self.lock_data:
             self._unlock(closing=True)
+
+        # if self.ftp_initialized:
+        #     self.ftp_initialized = False
 
         if self.ftp_socket_connected:
             self.ftp.quit()
             self.ftp_socket_connected = False
 
         super(FtpTarget, self).close()
-#         self.connected = False
 
     def _lock(self, break_existing=False):
         """Write a special file to the target root folder."""
@@ -187,8 +198,11 @@ class FtpTarget(_Target):
             errmsg = "{}".format(e)
             write_error("Could not write lock file: {}".format(errmsg))
             if errmsg.startswith("550") and self.ftp.passiveserver:
-                write_error("The server probably requires FTP Active mode. "
-                            "Try passing the --ftp-active option.")
+                try:
+                    self.ftp.makepasv()
+                except Exception:
+                    write_error("The server probably requires FTP Active mode. "
+                                "Try passing the --ftp-active option.")
 
             # Set to False, so we don't try to remove later
             self.lock_data = False
@@ -210,7 +224,8 @@ class FtpTarget(_Target):
                     return
 
             if self.lock_data is False:
-                write_error("Skip remove lock file (was not written)")
+                if self.get_option("verbose", 3) >= 4:
+                    write("Skip remove lock file (was not written).")
             else:
                 # direct delete, without updating metadata or checking for target access:
                 self.ftp.delete(DirMetadata.LOCK_FILE_NAME)
@@ -224,7 +239,7 @@ class FtpTarget(_Target):
     def _probe_lock_file(self, reported_mtime):
         """Called by get_dir"""
         delta = reported_mtime - self.lock_data["lock_time"]
-        if self.get_option("verbose", 2) >= 4:
+        if self.get_option("verbose", 3) >= 4:
             write("Server time offset: {0:.2f} seconds".format(delta))
 
     def get_id(self):
@@ -379,7 +394,7 @@ class FtpTarget(_Target):
                         #      or
                         #   2. the reported files size is different than the
                         #      size we stored in the meta-data
-                        if self.get_option("verbose", 2) >= 5:
+                        if self.get_option("verbose", 3) >= 5:
                             write(("META: Removing outdated meta entry {}\n" +
                                    "      modified after upload ({} > {}), or\n"
                                    "      cur. size ({}) != meta size ({})")
