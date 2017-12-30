@@ -13,6 +13,7 @@ from posixpath import join as join_url, normpath as normpath_url, relpath as rel
 import time
 from tempfile import SpooledTemporaryFile
 
+from ftpsync.compat import CompatConnectionError
 from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersion
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftpsync.targets import _Target
@@ -174,7 +175,10 @@ class FtpTarget(_Target):
             self._unlock(closing=True)
 
         if self.ftp_socket_connected:
-            self.ftp.quit()
+            try:
+                self.ftp.quit()
+            except compat.CompatConnectionError:
+                write_error("ftp.quit() failed: {}".format(e))
             self.ftp_socket_connected = False
 
         super(FtpTarget, self).close()
