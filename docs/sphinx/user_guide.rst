@@ -67,7 +67,8 @@ FTP targets often require authentication. There are multiple ways to handle this
      `pyftpsync` will now
 
      1. Try to lookup credentials for host ('example.com') in the system keyring storage.
-     2. Try to lookup credentials for host ('example.com') in the ``.netrc`` file.
+     2. Try to lookup credentials for host ('example.com') in the ``.netrc`` file in the
+        user's home directory.
      3. CLI will prompt for username and password.
      4. Assume anonymous access.
 
@@ -80,7 +81,8 @@ options.
 
 .. note::
 
-    On Windows, the `%HOME%` environment variable should be set: |br|
+    In order to use `.netrc` on Windows, the `%HOME%` environment variable should be set.
+    If not, try this: |br|
     ``> set HOME=%USERPROFILE%`` |br|
     (`see here <https://superuser.com/a/620146>`_).
 

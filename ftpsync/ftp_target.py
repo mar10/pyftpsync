@@ -177,7 +177,7 @@ class FtpTarget(_Target):
         if self.ftp_socket_connected:
             try:
                 self.ftp.quit()
-            except CompatConnectionError as e:
+            except (CompatConnectionError, EOFError) as e:
                 write_error("ftp.quit() failed: {}".format(e))
             self.ftp_socket_connected = False
 
