@@ -82,7 +82,7 @@ options.
 
     On Windows, the `%HOME%` environment variable should be set: |br|
     ``> set HOME=%USERPROFILE%`` |br|
-    ([see here](https://superuser.com/a/620146)).
+    (`see here <https://superuser.com/a/620146>`_).
 
 
 Matching and Filtering

@@ -17,8 +17,8 @@ be installed using `pip <http://www.pip-installer.org/>`_::
        $ pip install --pre pyftpsync
 
 .. note::
-   MS Windows users may prefer the
-   `MSI installer <https://github.com/mar10/pyftpsync/releases>`_ .
+   MS Windows users that only need the command line interface may prefer the
+   `MSI installer <https://github.com/mar10/pyftpsync/releases>`_.
 
 Now the ``pyftpsync`` command is available::
 
