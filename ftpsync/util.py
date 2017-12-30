@@ -182,7 +182,7 @@ def get_credentials_for_url(url, opts, force_user=None):
     allow_keyring = not opts.get("no_keyring", False) and not force_user
     allow_netrc = not opts.get("no_netrc", False) and not force_user
 
-    print("get_credentials_for_url", force_user, allow_prompt)
+    # print("get_credentials_for_url", force_user, allow_prompt)
     if force_user and not allow_prompt:
         raise RuntimeError(
             "Cannot get credentials for a distinct user ({}) from keyring or .netrc and "
