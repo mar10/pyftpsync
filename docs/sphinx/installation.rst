@@ -11,12 +11,6 @@ be installed using `pip <http://www.pip-installer.org/>`_::
   2.0.0
 
 .. note::
-   During the beta phase of 2.x, the module must be installed using the
-   ``--pre`` switch::
-
-       $ pip install --pre pyftpsync
-
-.. note::
    MS Windows users that only need the command line interface may prefer the
    `MSI installer <https://github.com/mar10/pyftpsync/releases>`_.
 

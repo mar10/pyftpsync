@@ -1,5 +1,6 @@
 -r requirements.txt
 
+check-manifest
 cx_Freeze
 flake8~=3.4
 pyftpdlib~=1.5

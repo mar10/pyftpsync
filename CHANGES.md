@@ -1,4 +1,8 @@
-2.0.0 (unreleased)
+2.0.1 (unreleased)
+------------------
+-
+
+2.0.0 (2018-01-01)
 ------------------
 **Note**: the command line options have changed:
 **Be careful with existing shell scripts after updating from v1.x!**

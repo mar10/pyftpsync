@@ -2,10 +2,9 @@
 User Guide
 ==========
 
-.. note::
-    This page describes release 2.x.
-
-    Run ``pyftpsync --help`` to get help on your current version.
+.. warning::
+  Version 2.0 introduces *breaking changes* to 1.x.
+  Make sure to adjust your scripts accordingly after update.
 
 
 Command Line Interface
@@ -181,7 +180,9 @@ Mirror current directory to remote folder::
   $ pyftpsync upload . ftp://example.com/target/folder --force --delete --resolve=local
 
 
-.. note:: Replace ``ftp://`` with ``ftps://`` to enable TLS encryption.
+.. note::
+
+    Replace ``ftp://`` with ``ftps://`` to enable TLS encryption.
 
 
 Synchronize Files Syntax
