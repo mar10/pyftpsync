@@ -8,9 +8,6 @@ import platform
 import unittest
 from unittest.case import SkipTest
 
-from ftpsync import targets
-from ftpsync.ftp_target import FtpTarget
-from ftpsync.synchronizers import DownloadSynchronizer
 from ftpsync.compat import urlparse
 from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL
 
@@ -42,19 +39,19 @@ class RegressionTest(unittest.TestCase):
             self.remote.close()
             self.remote = None
 
-    def test_issue_5(self):
-        """issue #5: Unable to navigate to working directory '' (Windows)"""
-        if not on_windows:
-            raise SkipTest("Windows only.")
-        local = targets.FsTarget("c:/temp")
-        remote = FtpTarget("/", "www.example.com", None, self.username, self.password)
-        opts = {
-            "resolve": "remote",
-            "verbose": 3,
-            "dry_run": True,
-            }
-        s = DownloadSynchronizer(local, remote, opts)
-        s.run()
+    # def test_issue_5(self):
+    #     """issue #5: Unable to navigate to working directory '' (Windows)"""
+    #     if not on_windows:
+    #         raise SkipTest("Windows only.")
+    #     local = targets.FsTarget("c:/temp")
+    #     remote = FtpTarget("/", "www.example.com", None, self.username, self.password)
+    #     opts = {
+    #         "resolve": "remote",
+    #         "verbose": 3,
+    #         "dry_run": True,
+    #         }
+    #     s = DownloadSynchronizer(local, remote, opts)
+    #     s.run()
 
 
 # ===============================================================================
