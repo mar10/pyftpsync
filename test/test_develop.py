@@ -1,18 +1,19 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 """
 Tests for pyftpsync
 """
 from __future__ import print_function
 
+import os
 import unittest
+from unittest.case import SkipTest
 
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer
+from ftpsync.targets import make_target
+from ftpsync.util import write, write_error
 from test.fixture_tools import _SyncTestBase, run_script, get_local_test_url,\
     get_remote_test_url, write_test_file, empty_folder, PYFTPSYNC_TEST_FOLDER,\
     get_test_file_size, is_test_file
-from unittest.case import SkipTest
-from ftpsync.targets import make_target
-import os
 
 
 # ===============================================================================
@@ -64,26 +65,20 @@ class TempDevelopTest(_SyncTestBase):
         assert not ("*cmd* 'PASV" in out or "*cmd* 'EPSV" in out)
 
     def test_logging(self):
-        pass
-        # import requests
-        # import logging
-        #
-        # # Enabling debugging at http.client level (requests->urllib3->http.client)
-        # # you will see the REQUEST, including HEADERS and DATA, and RESPONSE with HEADERS
-        # # but without DATA.
-        # # the only thing missing will be the response.body which is not logged.
-        # try: # for Python 3
-        #     from http.client import HTTPConnection
-        # except ImportError:
-        #     from httplib import HTTPConnection
-        # HTTPConnection.debuglevel = 1
-        #
-        # logging.basicConfig() # you need to initialize logging, otherwise you will not see
-        # anything from requests
-        # logging.getLogger().setLevel(logging.DEBUG)
-        # requests_log = logging.getLogger("requests.packages.urllib3")
-        # requests_log.setLevel(logging.DEBUG)
-        # requests_log.propagate = True
+        print("print")
+        write("write")
+        write_error("write_error")
+        import logging
+
+#         logging.basicConfig()
+#         logging.getLogger().setLevel(logging.DEBUG)
+        pyftpsync_logger = logging.getLogger("pyftpsync")
+        pyftpsync_logger.setLevel(logging.DEBUG)
+#         pyftpsync_logger.propagate = True
+        pyftpsync_logger.debug("pyftpsync_logger.debug")
+        pyftpsync_logger.info("pyftpsync_logger.info")
+        pyftpsync_logger.warn("pyftpsync_logger.warn")
+        pyftpsync_logger.error("pyftpsync_logger.error")
 
     def test_issue_24(self):
         if not self.use_ftp_target:
