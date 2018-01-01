@@ -21,7 +21,7 @@ from ftpsync.scan_command import add_scan_parser
 from ftpsync.synchronizers import UploadSynchronizer, \
     DownloadSynchronizer, BiDirSynchronizer
 from ftpsync.targets import make_target, FsTarget
-from ftpsync.util import namespace_to_dict, set_logger
+from ftpsync.util import namespace_to_dict, set_pyftpsync_logger
 
 
 def add_common_sub_args(parser):
@@ -46,7 +46,7 @@ def run():
     """CLI main entry point."""
 
     # Use print() instead of logging when running in CLI mode:
-    set_logger(None)
+    set_pyftpsync_logger(None)
 
     parser = argparse.ArgumentParser(
         description="Synchronize folders over FTP.",

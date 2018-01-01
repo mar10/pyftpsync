@@ -9,8 +9,9 @@ import unittest
 
 from ftpsync.ftp_target import FtpTarget
 from ftpsync.targets import DirMetadata, make_target
+from ftpsync.util import set_pyftpsync_logger, write, write_error
 from test.fixture_tools import is_test_file, get_test_folder, \
-    _SyncTestBase, get_metadata, PYFTPSYNC_TEST_FOLDER
+    _SyncTestBase, get_metadata, PYFTPSYNC_TEST_FOLDER, read_test_file
 
 
 # ===============================================================================
@@ -83,7 +84,7 @@ class PlainTest(unittest.TestCase):
         pass
 
     def test_make_target(self):
-        for scheme in ['ftp', 'ftps']:
+        for scheme in ["ftp", "ftps"]:
             tls = True if scheme == 'ftps' else False
 
             t = make_target(scheme + "://ftp.example.com/target/folder")
@@ -124,6 +125,38 @@ class PlainTest(unittest.TestCase):
         self.assertRaises(ValueError, make_target, "ftpa://ftp.example.com/test")
         self.assertRaises(ValueError, make_target, "http://example.com/test")
         self.assertRaises(ValueError, make_target, "https://example.com/test")
+
+    def test_logging(self):
+        import logging
+        import logging.handlers
+        import os
+
+        # Create and use a custom logger
+        custom_logger = logging.getLogger("pyftpsync_test")
+        path = os.path.join(PYFTPSYNC_TEST_FOLDER, "pyftpsync.log")
+        handler = logging.handlers.WatchedFileHandler(path)
+        # formatter = logging.Formatter(logging.BASIC_FORMAT)
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        handler.setFormatter(formatter)
+        custom_logger.addHandler(handler)
+        set_pyftpsync_logger(custom_logger)
+
+        custom_logger.setLevel(logging.DEBUG)
+        print("print 1")
+        write("write info 1")
+        write_error("write error 1")
+
+        custom_logger.setLevel(logging.WARNING)
+        write("write info 2")
+        write_error("write error 2")
+
+        handler.flush()
+        log_data = read_test_file("pyftpsync.log")
+        assert "print 1" not in log_data
+        assert "write info 1" in log_data
+        assert "write error 1" in log_data
+        assert "write info 2" not in log_data, "Loglevel honored"
+        assert "write error 2" in log_data
 
 
 # ===============================================================================

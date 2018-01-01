@@ -1,4 +1,4 @@
-# -*- coding: iso-8859-1 -*-
+# -*- coding: utf-8 -*-
 """
 (c) 2012-2018 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
@@ -18,6 +18,33 @@ from ftpsync.compat import CompatFileNotFoundError
 
 
 _logger = None
+
+
+def get_pyftpsync_logger():
+    return _logger
+
+
+def set_pyftpsync_logger(logger=True):
+    """Define target for common output.
+
+    Args:
+        logger (bool | None | logging.Logger):
+            Pass None to use `print()` to stdout instead of logging.
+            Pass True to create a simple standard logger.
+    """
+    global _logger
+    prev_logger = _logger
+    if logger is True:
+        logging.basicConfig(level=logging.INFO)
+        _logger = logging.getLogger("pyftpsync")
+        _logger.setLevel(logging.DEBUG)
+    else:
+        _logger = logger
+    return prev_logger
+
+
+# Init default logger
+set_pyftpsync_logger(True)
 
 
 def write(*args, **kwargs):
@@ -61,35 +88,6 @@ DRY_RUN_PREFIX = "(DRY-RUN) "
 IS_REDIRECTED = (os.fstat(0) != os.fstat(1))
 # DEFAULT_BLOCKSIZE = 8 * 1024
 VT_ERASE_LINE = "\x1b[2K"
-
-# DEBUG_FLAGS = set()
-#
-# def init_debug_flags(verbosity):
-#     if verbosity >= 3:
-#         DEBUG_FLAGS.add("runtime_stats")
-#     if verbosity >= 4:
-#         DEBUG_FLAGS.add("ftp_commands")
-
-
-def set_logger(logger=True):
-    """Define target for common output.
-
-    Args:
-        logger (bool|logging.Logger):
-            Pass None to use `print()` to stdout instead of logging.
-            Pass True to create a simple standard logger.
-    """
-    global _logger
-    if logger is True:
-        logging.basicConfig(level=logging.INFO)
-        _logger = logging.getLogger("pyftpsync")
-        _logger.setLevel(logging.DEBUG)
-    else:
-        _logger = logger
-
-
-# Init default logger
-set_logger()
 
 
 def namespace_to_dict(o):

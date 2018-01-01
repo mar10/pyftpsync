@@ -10,7 +10,6 @@ from unittest.case import SkipTest
 
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer
 from ftpsync.targets import make_target
-from ftpsync.util import write, write_error
 from test.fixture_tools import _SyncTestBase, run_script, get_local_test_url,\
     get_remote_test_url, write_test_file, empty_folder, PYFTPSYNC_TEST_FOLDER,\
     get_test_file_size, is_test_file
@@ -63,22 +62,6 @@ class TempDevelopTest(_SyncTestBase):
 #         print(out)
         assert "*cmd* 'PORT" in out or "*cmd* 'EPRT" in out
         assert not ("*cmd* 'PASV" in out or "*cmd* 'EPSV" in out)
-
-    def test_logging(self):
-        print("print")
-        write("write")
-        write_error("write_error")
-        import logging
-
-#         logging.basicConfig()
-#         logging.getLogger().setLevel(logging.DEBUG)
-        pyftpsync_logger = logging.getLogger("pyftpsync")
-        pyftpsync_logger.setLevel(logging.DEBUG)
-#         pyftpsync_logger.propagate = True
-        pyftpsync_logger.debug("pyftpsync_logger.debug")
-        pyftpsync_logger.info("pyftpsync_logger.info")
-        pyftpsync_logger.warn("pyftpsync_logger.warn")
-        pyftpsync_logger.error("pyftpsync_logger.error")
 
     def test_issue_24(self):
         if not self.use_ftp_target:
