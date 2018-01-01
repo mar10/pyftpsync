@@ -133,8 +133,8 @@ class PlainTest(unittest.TestCase):
 
         # Create and use a custom logger
         custom_logger = logging.getLogger("pyftpsync_test")
-        path = os.path.join(PYFTPSYNC_TEST_FOLDER, "pyftpsync.log")
-        handler = logging.handlers.WatchedFileHandler(path)
+        log_path = os.path.join(PYFTPSYNC_TEST_FOLDER, "pyftpsync.log")
+        handler = logging.handlers.WatchedFileHandler(log_path)
         # formatter = logging.Formatter(logging.BASIC_FORMAT)
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         handler.setFormatter(formatter)
@@ -157,6 +157,9 @@ class PlainTest(unittest.TestCase):
         assert "write error 1" in log_data
         assert "write info 2" not in log_data, "Loglevel honored"
         assert "write error 2" in log_data
+        # Cleanup properly (log file would be locked otherwise)
+        custom_logger.removeHandler(handler)
+        handler.close()
 
 
 # ===============================================================================
