@@ -49,6 +49,10 @@ def add_matcher_sub_args(parser):
                         default=",".join(DEFAULT_OMIT),
                         help="wildcard of files and directories to exclude "
                         "(applied after --match, default: '%(default)s')")
+    # parser.add_argument("--no-default-excludes",
+    #                     action="store_true",
+    #                     help="If set, ignore patterns will replace the default "
+    #                     "ignore list instead of adding to it")
     return
 
 

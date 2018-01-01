@@ -230,6 +230,10 @@ We allow anonymous access and use a custom port > 1024, so we don't need to sudo
 
   $ python -m pyftpdlib  -p 8021 -w -d /Users/USER/test_pyftpsync/remote
 
+or::
+
+  $ python -m test.ftp_server
+
 Also set the test options accordingly in ``.pyftpsyncrc``::
 
   [test]
