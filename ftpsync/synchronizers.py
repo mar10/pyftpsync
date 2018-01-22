@@ -164,7 +164,7 @@ class BaseSynchronizer(object):
         start = time.time()
 
         info_strings = self.get_info_strings()
-        if self.options["verbose"] >= 3:
+        if self.verbose >= 3:
             write("{} {}\n{:>20} {}".format(info_strings[0].capitalize(),
                                             self.local.get_base_name(),
                                             info_strings[1],
@@ -660,7 +660,7 @@ class BiDirSynchronizer(BaseSynchronizer):
             print("Cannot resolve using '{}' strategy: {}".format(resolve, pair))
             resolve = "ask" if self.is_script else "skip"
 
-        if resolve == "ask" or self.options["verbose"] >= 5:
+        if resolve == "ask" or self.verbose >= 5:
             self._print_pair_diff(pair)
 
         if resolve in ("local", "remote", "old", "new", "skip"):
@@ -925,11 +925,11 @@ class UploadSynchronizer(BiDirSynchronizer):
         assert resolve in ("local", "ask", "skip")
 
         if self.resolve_all:
-            if self.options["verbose"] >= 5:
+            if self.verbose >= 5:
                 self._print_pair_diff(pair)
             return self.resolve_all
 
-        if resolve == "ask" or self.options["verbose"] >= 5:
+        if resolve == "ask" or self.verbose >= 5:
             self._print_pair_diff(pair)
 
         if resolve in ("local", "skip"):
@@ -1054,14 +1054,14 @@ class DownloadSynchronizer(BiDirSynchronizer):
     def _interactive_resolve(self, pair):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
         if self.resolve_all:
-            if self.options["verbose"] >= 5:
+            if self.verbose >= 5:
                 self._print_pair_diff(pair)
             return self.resolve_all
 
         resolve = self.options.get("resolve", "skip")
         assert resolve in ("remote", "ask", "skip")
 
-        if resolve == "ask" or self.options["verbose"] >= 5:
+        if resolve == "ask" or self.verbose >= 5:
             self._print_pair_diff(pair)
 
         if resolve in ("remote", "skip"):
