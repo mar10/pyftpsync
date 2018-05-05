@@ -283,7 +283,7 @@ Code
 
         Failing tests or not follwing PEP 8 will break builds on
         `travis <https://travis-ci.org/mar10/pyftpsync>`_,
-        so run ``$ pytest`` and ``$ flake8`` frequently and before you commit!
+        so run ``$ pytest``, ``$ flake8``, and ``$ tox`` frequently and before you commit!
 
 
 Create a Pull Request

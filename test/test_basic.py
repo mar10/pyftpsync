@@ -85,7 +85,7 @@ class PlainTest(unittest.TestCase):
 
     def test_make_target(self):
         for scheme in ["ftp", "ftps"]:
-            tls = True if scheme == 'ftps' else False
+            tls = True if scheme == "ftps" else False
 
             t = make_target(scheme + "://ftp.example.com/target/folder")
             self.assertTrue(isinstance(t, FtpTarget))
@@ -103,7 +103,7 @@ class PlainTest(unittest.TestCase):
             self.assertEqual(t.tls, tls)
 
             # pass credentials with URL
-            url = 'user:secret@ftp.example.com/target/folder'
+            url = "user:secret@ftp.example.com/target/folder"
             t = make_target(scheme + "://" + url)
             self.assertTrue(isinstance(t, FtpTarget))
             self.assertEqual(t.host, "ftp.example.com")
@@ -112,7 +112,7 @@ class PlainTest(unittest.TestCase):
             self.assertEqual(t.root_dir, "/target/folder")
             self.assertEqual(t.tls, tls)
 
-            url = 'user@example.com:secret@ftp.example.com/target/folder'
+            url = "user@example.com:secret@ftp.example.com/target/folder"
             t = make_target(scheme + "://" + url)
             self.assertTrue(isinstance(t, FtpTarget))
             self.assertEqual(t.host, "ftp.example.com")

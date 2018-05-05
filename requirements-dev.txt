@@ -3,6 +3,7 @@
 check-manifest
 cx_Freeze
 flake8~=3.4
+flake8-quotes~=1.0
 pyftpdlib~=1.5
 pytest-cov~=2.5
 pytest~=3.1

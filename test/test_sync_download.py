@@ -2,6 +2,10 @@
 """
 Tests for pyftpsync
 """
+
+# Don't check for double quotes
+# flake8: noqa: Q000
+
 from __future__ import print_function
 
 import unittest
