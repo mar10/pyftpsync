@@ -14,7 +14,7 @@
 
 import sys
 import os
-import shlex
+# import shlex
 
 from recommonmark.parser import CommonMarkParser
 

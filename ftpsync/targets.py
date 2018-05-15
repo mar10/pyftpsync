@@ -4,8 +4,6 @@
 Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 """
 
-from __future__ import print_function
-
 import io
 import os
 from posixpath import join as join_url, normpath as normpath_url

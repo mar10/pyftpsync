@@ -245,13 +245,17 @@ Verbosity Level
 
 The verbosity level can have a value from 0 to 6::
 
-    0: quiet
-    1: show errors only
-    2: show conflicts and 1 line summary only
-    3: show write operations
-    4: show equal files
-    5: diff-info and benchmark summary
-    6: show FTP commands
+=========  ======  ===========  =============================================
+Verbosity  Option  Log level    Remarks
+=========  ======  ===========  =============================================
+  0        -qqq    CRITICAL     quiet
+  1        -qq     ERROR        show errors only
+  2        -q      WARN         show conflicts and 1 line summary only
+  3                INFO         show write operations
+  4        -v      DEBUG        show equal files
+  5        -vv     DEBUG        diff-info and benchmark summary
+  6        -vvv    DEBUG        show FTP commands
+=========  ======  ===========  =============================================
 
 
 Exit Codes

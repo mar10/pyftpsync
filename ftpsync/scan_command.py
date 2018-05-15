@@ -12,8 +12,8 @@ import time
 from ftpsync.cli_common import add_cli_sub_args, add_matcher_sub_args, add_credential_sub_args
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import DirectoryEntry
-from ftpsync.targets import make_target
 from ftpsync.synchronizers import process_options, match_path
+from ftpsync.targets import make_target
 from ftpsync.util import pretty_stamp, namespace_to_dict
 
 

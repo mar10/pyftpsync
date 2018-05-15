@@ -4,18 +4,16 @@
 Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
 """
 
-from __future__ import print_function
-
 import fnmatch
 import sys
 import time
 
+from ftpsync import compat
+from ftpsync.ftp_target import FtpTarget
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import FileEntry, DirectoryEntry, EntryPair, operation_map
 from ftpsync.util import IS_REDIRECTED, DRY_RUN_PREFIX, \
     ansi_code, VT_ERASE_LINE, byte_compare, eps_compare, pretty_stamp, write
-from ftpsync import compat
-from ftpsync.ftp_target import FtpTarget
 
 
 #: Default for --exclude CLI option
