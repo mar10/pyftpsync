@@ -51,9 +51,10 @@ class SphinxCommand(Command):
 
 
 try:
-    readme = open("readme_pypi.rst", "rt").read()
+    readme = open("README.md", "rt").read()
+    # readme = open("readme_pypi.rst", "rt").read()
 except IOError:
-    readme = "(readme_pypi.rst not found. Running from tox/setup.py test?)"
+    readme = "(readme not found. Running from tox/setup.py test?)"
 
 
 # 'setup.py upload' fails on Vista, because .pypirc is searched on 'HOME' path
@@ -138,7 +139,8 @@ setup(
     maintainer_email="pyftpsync@wwwendt.de",
     url="https://github.com/mar10/pyftpsync",
     description="Synchronize directories using FTP(S) or file system access.",
-    long_description=readme,  # + "\n\n" + changes,
+    long_description=readme,
+    long_description_content_type="text/markdown",
 
     # Development Status :: 2 - Pre-Alpha
     # Development Status :: 3 - Alpha
