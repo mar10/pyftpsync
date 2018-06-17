@@ -143,7 +143,7 @@ def run():
     args.verbose -= args.quiet
     del args.quiet
 
-    print("verbose", args.verbose)
+    # print("verbose", args.verbose)
 
     if args.version:
         if args.verbose >= 4:
@@ -153,7 +153,7 @@ def run():
         else:
             msg = "{}".format(__version__)
         print(msg)
-        sys.exit()
+        sys.exit(0)
 
     ftp_debug = 0
     if args.verbose >= 6:
