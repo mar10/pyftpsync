@@ -9,7 +9,7 @@ from __future__ import print_function
 from datetime import timedelta
 import time
 
-from ftpsync.cli_common import add_cli_sub_args, add_matcher_sub_args, add_credential_sub_args
+from ftpsync.cli_common import verbose_parser, common_parser, matcher_parser, creds_parser
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import DirectoryEntry
 from ftpsync.synchronizers import process_options, match_path
@@ -22,6 +22,7 @@ def add_scan_parser(subparsers):
 
     parser = subparsers.add_parser(
             "scan",
+            parents=[verbose_parser, common_parser, matcher_parser, creds_parser],
             help="repair, purge, or check targets")
 
     parser.add_argument("target",
@@ -41,10 +42,6 @@ def add_scan_parser(subparsers):
     parser.add_argument("--remove-locks",
                         action="store_true",
                         help="delete all {} files".format(DirMetadata.LOCK_FILE_NAME))
-
-    add_cli_sub_args(parser)
-    add_matcher_sub_args(parser)
-    add_credential_sub_args(parser)
 
     parser.set_defaults(command=scan_handler)
 

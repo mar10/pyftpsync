@@ -1,6 +1,7 @@
 2.0.1 (unreleased)
 ------------------
-- #26: Crash when not setting verbose option
+- Allow `-v` with `--version` option.
+- #26: Crash when not setting verbose option.
 
 2.0.0 (2018-01-01)
 ------------------

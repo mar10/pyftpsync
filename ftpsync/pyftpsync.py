@@ -16,27 +16,12 @@ from pprint import pprint
 import sys
 
 from ftpsync import __version__
-from ftpsync.cli_common import add_cli_sub_args, add_matcher_sub_args, add_credential_sub_args
+from ftpsync.cli_common import verbose_parser, common_parser, matcher_parser, creds_parser
 from ftpsync.scan_command import add_scan_parser
 from ftpsync.synchronizers import UploadSynchronizer, \
     DownloadSynchronizer, BiDirSynchronizer
 from ftpsync.targets import make_target, FsTarget
-from ftpsync.util import namespace_to_dict, set_pyftpsync_logger
-
-
-def add_common_sub_args(parser):
-    parser.add_argument("local",
-                        metavar="LOCAL",
-                        default=".",
-                        help="path to local folder (default: %(default)s)")
-    parser.add_argument("remote",
-                        metavar="REMOTE",
-                        help="path to remote folder")
-
-    add_cli_sub_args(parser)
-    add_matcher_sub_args(parser)
-    add_credential_sub_args(parser)
-    return
+from ftpsync.util import namespace_to_dict, set_pyftpsync_logger, PYTHON_VERSION
 
 
 # ===============================================================================
@@ -50,18 +35,32 @@ def run():
 
     parser = argparse.ArgumentParser(
         description="Synchronize folders over FTP.",
-        epilog="See also https://github.com/mar10/pyftpsync"
+        epilog="See also https://github.com/mar10/pyftpsync",
+        parents=[verbose_parser],
         )
 
-    parser.add_argument("-V", "--version", action="version", version="{}".format(__version__))
+    # parser.add_argument("-V", "--version", action="version", version="{}".format(__version__))
+    parser.add_argument("-V", "--version",
+                        action="store_true",
+                        help="print version info and exit (may be combined with --verbose)",
+                        )
 
     subparsers = parser.add_subparsers(help="sub-command help")
 
     # --- Create the parser for the "upload" command ---------------------------
 
-    sp = subparsers.add_parser("upload",
-                               help="copy new and modified files to remote folder")
+    sp = subparsers.add_parser(
+            "upload",
+            parents=[verbose_parser, common_parser, matcher_parser, creds_parser],
+            help="copy new and modified files to remote folder")
 
+    sp.add_argument("local",
+                    metavar="LOCAL",
+                    default=".",
+                    help="path to local folder (default: %(default)s)")
+    sp.add_argument("remote",
+                    metavar="REMOTE",
+                    help="path to remote folder")
     sp.add_argument("--force",
                     action="store_true",
                     help="overwrite remote files, even if the target is newer "
@@ -78,15 +77,22 @@ def run():
                     help="remove remote files if they don't exist locally "
                     "or don't match the current filter (implies '--delete' option)")
 
-    add_common_sub_args(sp)
     sp.set_defaults(command="upload")
 
     # --- Create the parser for the "download" command -------------------------
 
     sp = subparsers.add_parser(
             "download",
+            parents=[verbose_parser, common_parser, matcher_parser, creds_parser],
             help="copy new and modified files from remote folder to local target")
 
+    sp.add_argument("local",
+                    metavar="LOCAL",
+                    default=".",
+                    help="path to local folder (default: %(default)s)")
+    sp.add_argument("remote",
+                    metavar="REMOTE",
+                    help="path to remote folder")
     sp.add_argument("--force",
                     action="store_true",
                     help="overwrite local files, even if the target is newer "
@@ -103,21 +109,27 @@ def run():
                     help="remove local files if they don't exist on remote target "
                     "or don't match the current filter (implies '--delete' option)")
 
-    add_common_sub_args(sp)
     sp.set_defaults(command="download")
 
     # --- Create the parser for the "sync" command -----------------------------
 
     sp = subparsers.add_parser(
             "sync",
+            parents=[verbose_parser, common_parser, matcher_parser, creds_parser],
             help="synchronize new and modified files between remote folder and local target")
 
+    sp.add_argument("local",
+                    metavar="LOCAL",
+                    default=".",
+                    help="path to local folder (default: %(default)s)")
+    sp.add_argument("remote",
+                    metavar="REMOTE",
+                    help="path to remote folder")
     sp.add_argument("--resolve",
                     default="ask",
                     choices=["old", "new", "local", "remote", "skip", "ask"],
                     help="conflict resolving strategy (default: '%(default)s')")
 
-    add_common_sub_args(sp)
     sp.set_defaults(command="synchronize")
 
     # --- Create the parser for the "scan" command -----------------------------
@@ -130,6 +142,18 @@ def run():
 
     args.verbose -= args.quiet
     del args.quiet
+
+    print("verbose", args.verbose)
+
+    if args.version:
+        if args.verbose >= 4:
+            import platform
+            msg = "pyftpsync/{} Python/{} {}".format(
+                    __version__, PYTHON_VERSION, platform.platform())
+        else:
+            msg = "{}".format(__version__)
+        print(msg)
+        sys.exit()
 
     ftp_debug = 0
     if args.verbose >= 6:
@@ -199,4 +223,8 @@ def run():
 
 # Script entry point
 if __name__ == "__main__":
+    # Just in case...
+    from multiprocessing import freeze_support
+    freeze_support()
+
     run()

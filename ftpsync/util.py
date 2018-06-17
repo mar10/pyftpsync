@@ -20,6 +20,9 @@ from ftpsync.compat import CompatFileNotFoundError
 _logger = None
 
 
+PYTHON_VERSION = "{}.{}.{}".format(sys.version_info[0], sys.version_info[1], sys.version_info[2])
+
+
 def get_pyftpsync_logger():
     return _logger
 
