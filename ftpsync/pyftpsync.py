@@ -12,6 +12,7 @@ Usage examples:
 from __future__ import print_function
 
 import argparse
+import platform
 from pprint import pprint
 import sys
 
@@ -21,7 +22,7 @@ from ftpsync.scan_command import add_scan_parser
 from ftpsync.synchronizers import UploadSynchronizer, \
     DownloadSynchronizer, BiDirSynchronizer
 from ftpsync.targets import make_target, FsTarget
-from ftpsync.util import namespace_to_dict, set_pyftpsync_logger, PYTHON_VERSION
+from ftpsync.util import namespace_to_dict, set_pyftpsync_logger, PYTHON_VERSION, check_cli_verbose
 
 
 # ===============================================================================
@@ -39,11 +40,15 @@ def run():
         parents=[verbose_parser],
         )
 
-    # parser.add_argument("-V", "--version", action="version", version="{}".format(__version__))
-    parser.add_argument("-V", "--version",
-                        action="store_true",
-                        help="print version info and exit (may be combined with --verbose)",
-                        )
+    # Note: we want to allow --version to be combined with --verbose. However
+    # on Py2, argparse makes sub-commands mandatory, unless `action="version"` is used.
+    if check_cli_verbose(3) > 3:
+        version_info = "pyftpsync/{} Python/{} {}".format(
+                __version__, PYTHON_VERSION, platform.platform())
+    else:
+        version_info = "{}".format(__version__)
+
+    parser.add_argument("-V", "--version", action="version", version=version_info)
 
     subparsers = parser.add_subparsers(help="sub-command help")
 
@@ -144,16 +149,6 @@ def run():
     del args.quiet
 
     # print("verbose", args.verbose)
-
-    if args.version:
-        if args.verbose >= 4:
-            import platform
-            msg = "pyftpsync/{} Python/{} {}".format(
-                    __version__, PYTHON_VERSION, platform.platform())
-        else:
-            msg = "{}".format(__version__)
-        print(msg)
-        sys.exit(0)
 
     ftp_debug = 0
     if args.verbose >= 6:

@@ -137,6 +137,18 @@ def get_option(env_name, section, opt_name, default=None):
     return val
 
 
+def check_cli_verbose(default=3):
+    """Check for presence of `--verbose`/`--quiet` or `-v`/`-q` without using argparse."""
+    args = sys.argv[1:]
+    verbose = default + args.count("--verbose") - args.count("--quiet")
+
+    for arg in args:
+        if arg.startswith("-") and not arg.startswith("--"):
+            verbose += arg[1:].count("v")
+            verbose -= arg[1:].count("q")
+    return verbose
+
+
 # ===============================================================================
 #
 # ===============================================================================
