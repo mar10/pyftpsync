@@ -161,8 +161,19 @@ class FtpTarget(_Target):
             save_password(self.host, self.username, self.password)
 
         # TODO: case sensitivity?
-        # resp = self.ftp.sendcmd("system")
         # self.is_unix = "unix" in resp.lower() # not necessarily true, better check with r/w tests
+        if self.get_option("verbose", 3) >= 5:
+            try:
+                resp = self.ftp.sendcmd("SYST")
+                write("SYST: '{}'.".format(resp))
+            except Exception as e:
+                write("SYST command failed: '{}'.".format(e))
+
+            try:
+                resp = self.ftp.sendcmd("FEAT")
+                write("FEAT: '{}'.".format(resp))
+            except Exception as e:
+                write("FEAT command failed: '{}'.".format(e))
 
         self._lock()
 
