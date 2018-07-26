@@ -5,6 +5,7 @@ verify_ssl = true
 [dev-packages]
 flake8 = "*"
 flake8-quotes = "~=1.0"
+black = "*"
 
 [packages]
 colorama = "==0.3.9"
