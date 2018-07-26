@@ -7,8 +7,10 @@ import calendar
 import ftplib
 import json
 import os
-from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
 import time
+from posixpath import join as join_url
+from posixpath import normpath as normpath_url
+from posixpath import relpath as relpath_url
 from tempfile import SpooledTemporaryFile
 
 from ftpsync.compat import CompatConnectionError

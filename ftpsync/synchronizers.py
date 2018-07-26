@@ -11,18 +11,17 @@ import time
 from ftpsync import compat
 from ftpsync.ftp_target import FtpTarget
 from ftpsync.metadata import DirMetadata
-from ftpsync.resources import FileEntry, DirectoryEntry, EntryPair, operation_map
+from ftpsync.resources import DirectoryEntry, EntryPair, FileEntry, operation_map
 from ftpsync.util import (
-    IS_REDIRECTED,
     DRY_RUN_PREFIX,
-    ansi_code,
+    IS_REDIRECTED,
     VT_ERASE_LINE,
+    ansi_code,
     byte_compare,
     eps_compare,
     pretty_stamp,
     write,
 )
-
 
 #: Default for --exclude CLI option
 #: Note: DirMetadata.META_FILE_NAME and LOCK_FILE_NAME are always ignored

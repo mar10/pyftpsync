@@ -5,7 +5,7 @@ from __future__ import print_function
 import os
 import sys
 
-from setuptools import setup, Command
+from setuptools import Command, setup
 from setuptools.command.test import test as TestCommand
 
 from ftpsync import __version__

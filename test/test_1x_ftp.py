@@ -4,30 +4,30 @@ Tests for pyftpsync
 """
 from __future__ import print_function
 
-from ftplib import FTP
 import io
 import json
 import os
-from pprint import pprint
 import sys
 import unittest
+from ftplib import FTP
+from pprint import pprint
+from test.fixture_tools import (
+    PYFTPSYNC_TEST_FOLDER,
+    PYFTPSYNC_TEST_FTP_URL,
+    STAMP_20140101_120000,
+    get_test_file_date,
+    touch_test_file,
+)
+from test.test_1x import prepare_fixtures_1
 
 from ftpsync.compat import urlparse
 from ftpsync.metadata import DirMetadata
 from ftpsync.synchronizers import (
+    BiDirSynchronizer,
     DownloadSynchronizer,
     UploadSynchronizer,
-    BiDirSynchronizer,
 )
-from ftpsync.targets import make_target, FsTarget
-from test.fixture_tools import (
-    PYFTPSYNC_TEST_FTP_URL,
-    PYFTPSYNC_TEST_FOLDER,
-    get_test_file_date,
-    STAMP_20140101_120000,
-    touch_test_file,
-)
-from test.test_1x import prepare_fixtures_1
+from ftpsync.targets import FsTarget, make_target
 
 
 # ===============================================================================

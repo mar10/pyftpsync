@@ -7,7 +7,6 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 
 import sys
 
-
 PY2 = sys.version_info < (3, 0)
 PY3 = not PY2
 _filesystemencoding = sys.getfilesystemencoding()

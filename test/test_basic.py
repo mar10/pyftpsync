@@ -6,19 +6,18 @@ from __future__ import print_function
 
 import os
 import unittest
+from test.fixture_tools import (
+    PYFTPSYNC_TEST_FOLDER,
+    _SyncTestBase,
+    get_metadata,
+    get_test_folder,
+    is_test_file,
+    read_test_file,
+)
 
 from ftpsync.ftp_target import FtpTarget
 from ftpsync.targets import DirMetadata, make_target
 from ftpsync.util import set_pyftpsync_logger, write, write_error
-from test.fixture_tools import (
-    is_test_file,
-    get_test_folder,
-    _SyncTestBase,
-    get_metadata,
-    PYFTPSYNC_TEST_FOLDER,
-    read_test_file,
-)
-
 
 # ===============================================================================
 # FixtureTest

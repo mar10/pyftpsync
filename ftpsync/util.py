@@ -6,16 +6,15 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 
 from __future__ import print_function
 
-from datetime import datetime
 import getpass
+import logging
 import netrc
 import os
 import sys
-import logging
+from datetime import datetime
 
 from ftpsync import compat
 from ftpsync.compat import CompatFileNotFoundError
-
 
 _logger = None
 

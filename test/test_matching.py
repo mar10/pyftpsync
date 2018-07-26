@@ -10,7 +10,6 @@ from __future__ import print_function
 
 import re
 import unittest
-
 from test.fixture_tools import (
     _SyncTestBase,
     get_local_test_url,

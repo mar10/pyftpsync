@@ -6,15 +6,14 @@ from __future__ import print_function
 
 import re
 import unittest
-
-from ftpsync import __version__
 from test.fixture_tools import (
     _SyncTestBase,
-    run_script,
     get_local_test_url,
     get_remote_test_url,
+    run_script,
 )
 
+from ftpsync import __version__
 
 # ===============================================================================
 # CliTest

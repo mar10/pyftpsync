@@ -13,28 +13,28 @@ from __future__ import print_function
 
 import argparse
 import platform
-from pprint import pprint
 import sys
+from pprint import pprint
 
 from ftpsync import __version__
 from ftpsync.cli_common import (
-    verbose_parser,
     common_parser,
-    matcher_parser,
     creds_parser,
+    matcher_parser,
+    verbose_parser,
 )
 from ftpsync.scan_command import add_scan_parser
 from ftpsync.synchronizers import (
-    UploadSynchronizer,
-    DownloadSynchronizer,
     BiDirSynchronizer,
+    DownloadSynchronizer,
+    UploadSynchronizer,
 )
-from ftpsync.targets import make_target, FsTarget
+from ftpsync.targets import FsTarget, make_target
 from ftpsync.util import (
-    namespace_to_dict,
-    set_pyftpsync_logger,
     PYTHON_VERSION,
     check_cli_verbose,
+    namespace_to_dict,
+    set_pyftpsync_logger,
 )
 
 

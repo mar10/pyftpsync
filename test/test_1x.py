@@ -7,21 +7,21 @@ from __future__ import print_function
 import datetime
 import os
 import unittest
-
-from ftpsync.synchronizers import (
-    DownloadSynchronizer,
-    UploadSynchronizer,
-    BiDirSynchronizer,
-)
-from ftpsync.targets import FsTarget
 from test.fixture_tools import (
     PYFTPSYNC_TEST_FOLDER,
+    STAMP_20140101_120000,
     empty_folder,
     get_test_file_date,
-    STAMP_20140101_120000,
     touch_test_file,
     write_test_file,
 )
+
+from ftpsync.synchronizers import (
+    BiDirSynchronizer,
+    DownloadSynchronizer,
+    UploadSynchronizer,
+)
+from ftpsync.targets import FsTarget
 
 
 # ===============================================================================

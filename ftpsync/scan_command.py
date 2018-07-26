@@ -6,20 +6,20 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 
 from __future__ import print_function
 
-from datetime import timedelta
 import time
+from datetime import timedelta
 
 from ftpsync.cli_common import (
-    verbose_parser,
     common_parser,
-    matcher_parser,
     creds_parser,
+    matcher_parser,
+    verbose_parser,
 )
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import DirectoryEntry
-from ftpsync.synchronizers import process_options, match_path
+from ftpsync.synchronizers import match_path, process_options
 from ftpsync.targets import make_target
-from ftpsync.util import pretty_stamp, namespace_to_dict
+from ftpsync.util import namespace_to_dict, pretty_stamp
 
 
 def add_scan_parser(subparsers):

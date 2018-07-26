@@ -11,25 +11,24 @@ import calendar
 import copy
 import datetime
 import errno
-from ftplib import FTP, error_perm
 import io
 import json
 import os
-from pprint import pprint
 import shutil
 import sys
 import tempfile
 import time
 import unittest
+from ftplib import FTP, error_perm
+from pprint import pprint
 from unittest.case import SkipTest
 
 from ftpsync import pyftpsync
-from ftpsync.compat import to_native, to_bytes, urlparse, StringIO
+from ftpsync.compat import StringIO, to_bytes, to_native, urlparse
 from ftpsync.metadata import DirMetadata
 from ftpsync.synchronizers import BiDirSynchronizer
 from ftpsync.targets import FsTarget, make_target
 from ftpsync.util import get_option
-
 
 PYFTPSYNC_TEST_FOLDER = (
     get_option("PYFTPSYNC_TEST_FOLDER", "test", "folder") or tempfile.mkdtemp()

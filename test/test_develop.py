@@ -6,21 +6,21 @@ from __future__ import print_function
 
 import os
 import unittest
+from test.fixture_tools import (
+    PYFTPSYNC_TEST_FOLDER,
+    _SyncTestBase,
+    empty_folder,
+    get_local_test_url,
+    get_remote_test_url,
+    get_test_file_size,
+    is_test_file,
+    run_script,
+    write_test_file,
+)
 from unittest.case import SkipTest
 
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer
 from ftpsync.targets import make_target
-from test.fixture_tools import (
-    _SyncTestBase,
-    run_script,
-    get_local_test_url,
-    get_remote_test_url,
-    write_test_file,
-    empty_folder,
-    PYFTPSYNC_TEST_FOLDER,
-    get_test_file_size,
-    is_test_file,
-)
 
 
 # ===============================================================================

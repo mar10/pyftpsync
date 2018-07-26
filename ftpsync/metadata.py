@@ -8,8 +8,7 @@ import json
 import time
 
 from ftpsync import __version__
-from ftpsync.util import pretty_stamp, str_to_bool, get_option, write, write_error
-
+from ftpsync.util import get_option, pretty_stamp, str_to_bool, write, write_error
 
 PYFTPSYNC_VERBOSE_META = str_to_bool(
     get_option("PYFTPSYNC_VERBOSE_META", "debug", "verbose_meta", False)

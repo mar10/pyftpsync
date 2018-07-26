@@ -12,19 +12,18 @@ import os
 import sys
 import unittest
 
-# from ftpsync.ftp_target import *  # @UnusedWildImport
-from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer
-from ftpsync.targets import make_target, FsTarget
-
 # from ftpsync.targets import *  # @UnusedWildImport
 from test.fixture_tools import (
-    PYFTPSYNC_TEST_FTP_URL,
     PYFTPSYNC_TEST_FOLDER,
+    PYFTPSYNC_TEST_FTP_URL,
     empty_folder,
     write_test_file,
 )
 from test.test_1x import prepare_fixtures_1
 
+# from ftpsync.ftp_target import *  # @UnusedWildImport
+from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer
+from ftpsync.targets import FsTarget, make_target
 
 DO_BENCHMARKS = False  # True
 # slow = pytest.mark.skipif(not pytest.config.getoption("--runslow"), reason="need --runslow")

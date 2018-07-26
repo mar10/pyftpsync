@@ -6,9 +6,10 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 
 import io
 import os
-from posixpath import join as join_url, normpath as normpath_url
 import shutil
 import threading
+from posixpath import join as join_url
+from posixpath import normpath as normpath_url
 
 from ftpsync import compat
 from ftpsync.metadata import DirMetadata

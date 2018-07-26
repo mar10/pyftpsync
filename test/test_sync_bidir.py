@@ -8,15 +8,15 @@ Tests for pyftpsync
 from __future__ import print_function
 
 import unittest
+from test.fixture_tools import (
+    _SyncTestBase,
+    get_test_folder,
+    remove_test_folder,
+    write_test_file,
+)
 from unittest.case import SkipTest
 
 from ftpsync.synchronizers import BiDirSynchronizer
-from test.fixture_tools import (
-    write_test_file,
-    get_test_folder,
-    remove_test_folder,
-    _SyncTestBase,
-)
 
 
 # ===============================================================================

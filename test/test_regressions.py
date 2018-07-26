@@ -6,10 +6,10 @@ from __future__ import print_function
 
 import platform
 import unittest
+from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL
 from unittest.case import SkipTest
 
 from ftpsync.compat import urlparse
-from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL
 from ftpsync.synchronizers import UploadSynchronizer
 from ftpsync.targets import FsTarget
 
