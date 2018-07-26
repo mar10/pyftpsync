@@ -28,6 +28,7 @@ pip-log.txt
 # Unit test / coverage reports
 .cache/
 .coverage
+.idea
 .pytest_cache
 .tox
 nosetests.xml

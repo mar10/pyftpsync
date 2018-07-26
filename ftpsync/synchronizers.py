@@ -37,14 +37,20 @@ def process_options(opts):
     match = opts.get("match")
     if match and type(match) is str:
         opts["match"] = [pat.strip() for pat in match.split(",")]
+    elif match:
+        assert type(match) is list
     else:
         opts["match"] = []
 
     exclude = opts.get("exclude")
     if exclude and type(exclude) is str:
         opts["exclude"] = [pat.strip() for pat in exclude.split(",")]
+    elif exclude:
+        assert type(exclude) is list
     else:
+        # opts["exclude"] = DEFAULT_OMIT
         opts["exclude"] = []
+    # print(match, exclude, opts)
 
 
 def match_path(entry, opts):

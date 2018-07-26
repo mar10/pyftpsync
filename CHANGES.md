@@ -3,6 +3,7 @@
 - Allow `-v` with `--version` option.
 - Fix #26: Crash when not setting verbose option.
 - Print SYST and FEAT when -vv is passed
+- Accept list type options for `exclude` argument in CLI mode
 
 2.0.0 (2018-01-01)
 ------------------
