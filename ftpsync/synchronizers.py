@@ -12,17 +12,21 @@ from ftpsync import compat
 from ftpsync.ftp_target import FtpTarget
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import FileEntry, DirectoryEntry, EntryPair, operation_map
-from ftpsync.util import IS_REDIRECTED, DRY_RUN_PREFIX, \
-    ansi_code, VT_ERASE_LINE, byte_compare, eps_compare, pretty_stamp, write
+from ftpsync.util import (
+    IS_REDIRECTED,
+    DRY_RUN_PREFIX,
+    ansi_code,
+    VT_ERASE_LINE,
+    byte_compare,
+    eps_compare,
+    pretty_stamp,
+    write,
+)
 
 
 #: Default for --exclude CLI option
 #: Note: DirMetadata.META_FILE_NAME and LOCK_FILE_NAME are always ignored
-DEFAULT_OMIT = [".DS_Store",
-                ".git",
-                ".hg",
-                ".svn",
-                ]
+DEFAULT_OMIT = [".DS_Store", ".git", ".hg", ".svn"]
 
 # ===============================================================================
 # Helpers
@@ -101,50 +105,51 @@ class BaseSynchronizer(object):
 
         self.verbose = self.options.get("verbose", 3)
         self.dry_run = self.options.get("dry_run", False)
-#         self.local.synchronizer = self
-#         self.local.peer = remote
-#         self.remote.synchronizer = self
-#         self.remote.peer = local
-#         if self.dry_run:
-#             self.local.readonly = True
-#             self.local.dry_run = True
-#             self.remote.readonly = True
-#             self.remote.dry_run = True
+        #         self.local.synchronizer = self
+        #         self.local.peer = remote
+        #         self.remote.synchronizer = self
+        #         self.remote.peer = local
+        #         if self.dry_run:
+        #             self.local.readonly = True
+        #             self.local.dry_run = True
+        #             self.remote.readonly = True
+        #             self.remote.dry_run = True
         #: bool: True if this synchronizer is used by a command line script (e.g. pyftpsync.exe)
         self.is_script = None
         #: str: Conflict resolution strategy
         self.resolve_all = None
 
-        self._stats = {"bytes_written": 0,
-                       "conflict_files": 0,
-                       "conflict_files_skipped": 0,
-                       "dirs_created": 0,
-                       "dirs_deleted": 0,
-                       "download_bytes_written": 0,
-                       "download_files_written": 0,
-                       "elap_secs": None,
-                       "elap_str": None,
-                       "entries_seen": 0,
-                       "entries_touched": 0,
-                       "files_created": 0,
-                       "files_deleted": 0,
-                       "files_written": 0,
-                       "interactive_ask": 0,
-                       "local_dirs": 0,
-                       "local_files": 0,
-                       "meta_bytes_read": 0,
-                       "meta_bytes_written": 0,
-                       "remote_dirs": 0,
-                       "remote_files": 0,
-                       "result_code": None,
-                       "upload_bytes_written": 0,
-                       "upload_files_written": 0,
-                       }
+        self._stats = {
+            "bytes_written": 0,
+            "conflict_files": 0,
+            "conflict_files_skipped": 0,
+            "dirs_created": 0,
+            "dirs_deleted": 0,
+            "download_bytes_written": 0,
+            "download_files_written": 0,
+            "elap_secs": None,
+            "elap_str": None,
+            "entries_seen": 0,
+            "entries_touched": 0,
+            "files_created": 0,
+            "files_deleted": 0,
+            "files_written": 0,
+            "interactive_ask": 0,
+            "local_dirs": 0,
+            "local_files": 0,
+            "meta_bytes_read": 0,
+            "meta_bytes_written": 0,
+            "remote_dirs": 0,
+            "remote_files": 0,
+            "result_code": None,
+            "upload_bytes_written": 0,
+            "upload_files_written": 0,
+        }
 
-#         if not local.connected:
-#             local.open()
-#         if not remote.connected:
-#             remote.open()
+    #         if not local.connected:
+    #             local.open()
+    #         if not remote.connected:
+    #             remote.open()
 
     def __del__(self):
         self.close()
@@ -169,10 +174,14 @@ class BaseSynchronizer(object):
 
         info_strings = self.get_info_strings()
         if self.verbose >= 3:
-            write("{} {}\n{:>20} {}".format(info_strings[0].capitalize(),
-                                            self.local.get_base_name(),
-                                            info_strings[1],
-                                            self.remote.get_base_name()))
+            write(
+                "{} {}\n{:>20} {}".format(
+                    info_strings[0].capitalize(),
+                    self.local.get_base_name(),
+                    info_strings[1],
+                    self.remote.get_base_name(),
+                )
+            )
 
         try:
             self.local.synchronizer = self.remote.synchronizer = self
@@ -203,6 +212,7 @@ class BaseSynchronizer(object):
         def _add(rate, size, time):
             if stats.get(time) and stats.get(size):
                 stats[rate] = "%0.2f kB/sec" % (.001 * stats[size] / stats[time])
+
         _add("upload_rate_str", "upload_bytes_written", "upload_write_time")
         _add("download_rate_str", "download_bytes_written", "download_write_time")
         return res
@@ -215,12 +225,17 @@ class BaseSynchronizer(object):
             write("    Files cannot be compared ({} != {}).".format(local, remote))
             return False
         elif local.size != remote.size:
-            write("    Files are different (size {:,d} != {:,d}).".format(local.size, remote.size))
+            write(
+                "    Files are different (size {:,d} != {:,d}).".format(
+                    local.size, remote.size
+                )
+            )
             return False
 
-        with local.target.open_readable(local.name) as fp_src, \
-                remote.target.open_readable(remote.name) as fp_dest:
-                res, ofs = byte_compare(fp_src, fp_dest)
+        with local.target.open_readable(
+            local.name
+        ) as fp_src, remote.target.open_readable(remote.name) as fp_dest:
+            res, ofs = byte_compare(fp_src, fp_dest)
 
         if not res:
             write("    Files are different at offset {:,d}.".format(ofs))
@@ -238,14 +253,16 @@ class BaseSynchronizer(object):
         assert isinstance(file_entry, FileEntry)
         self._inc_stat("files_written")
         self._inc_stat("entries_touched")
-        is_upload = (dest is self.remote)
+        is_upload = dest is self.remote
         if is_upload:
             self._inc_stat("upload_files_written")
         else:
             self._inc_stat("download_files_written")
         self._tick()
         if self.dry_run:
-            return self._dry_run_action("copy file ({}, {} --> {})".format(file_entry, src, dest))
+            return self._dry_run_action(
+                "copy file ({}, {} --> {})".format(file_entry, src, dest)
+            )
         elif dest.readonly:
             raise RuntimeError("target is read-only: {}".format(dest))
 
@@ -290,8 +307,9 @@ class BaseSynchronizer(object):
         self._inc_stat("dirs_created")
         self._tick()
         if self.dry_run:
-            return self._dry_run_action("copy directory ({}, {} --> {})"
-                                        .format(dir_entry, src, dest))
+            return self._dry_run_action(
+                "copy directory ({}, {} --> {})".format(dir_entry, src, dest)
+            )
         elif dest.readonly:
             raise RuntimeError("target is read-only: {}".format(dest))
 
@@ -352,7 +370,9 @@ class BaseSynchronizer(object):
             return
 
         if len(symbol) > 1 and symbol[0] in (">", "<"):
-            symbol = " " + symbol  # make sure direction characters are aligned at 2nd column
+            symbol = (
+                " " + symbol
+            )  # make sure direction characters are aligned at 2nd column
 
         color = ""
         final = ""
@@ -396,7 +416,7 @@ class BaseSynchronizer(object):
         if entry.is_dir():
             name = "[{}]".format(name)
 
-#         write("{}{:<16} {:^3} {}".format(prefix, tag, symbol, name))
+        #         write("{}{:<16} {:^3} {}".format(prefix, tag, symbol, name))
         write("{}{}{:<16} {:^3} {}{}".format(prefix, color, tag, symbol, name, final))
 
     def _tick(self):
@@ -404,16 +424,20 @@ class BaseSynchronizer(object):
         if (self.verbose >= 3 and not IS_REDIRECTED) or self.options.get("progress"):
             stats = self.get_stats()
             prefix = DRY_RUN_PREFIX if self.dry_run else ""
-            sys.stdout.write("{}Touched {}/{} entries in {} directories...\r"
-                             .format(prefix,
-                                     stats["entries_touched"], stats["entries_seen"],
-                                     stats["local_dirs"]))
+            sys.stdout.write(
+                "{}Touched {}/{} entries in {} directories...\r".format(
+                    prefix,
+                    stats["entries_touched"],
+                    stats["entries_seen"],
+                    stats["local_dirs"],
+                )
+            )
         sys.stdout.flush()
         return
 
     def _dry_run_action(self, action):
         """"Called in dry-run mode after call to _log_action() and before exiting function."""
-#        write("dry-run", action)
+        #        write("dry-run", action)
         return
 
     def _test_match_or_print(self, entry):
@@ -617,6 +641,7 @@ class BiDirSynchronizer(BaseSynchronizer):
     In order to know if a file was modified, deleted, or created since last sync,
     we store a snapshot of the directory in the local directory.
     """
+
     def __init__(self, local, remote, options):
         super(BiDirSynchronizer, self).__init__(local, remote, options)
 
@@ -636,19 +661,29 @@ class BiDirSynchronizer(BaseSynchronizer):
         # print("pair.local", pair.local)
         # print("pair.remote", pair.remote)
 
-        write((VT_ERASE_LINE + RED +
-              "CONFLICT: {!r} was modified on both targets since last sync ({})." + R)
-              .format(any_entry.get_rel_path(), _ts(any_entry.get_sync_info("u"))))
+        write(
+            (
+                VT_ERASE_LINE
+                + RED
+                + "CONFLICT: {!r} was modified on both targets since last sync ({})."
+                + R
+            ).format(any_entry.get_rel_path(), _ts(any_entry.get_sync_info("u")))
+        )
         if has_meta:
-            write("    Original modification time: {}, size: {:,d} bytes."
-                  .format(_ts(any_entry.get_sync_info("m")), any_entry.get_sync_info("s")))
+            write(
+                "    Original modification time: {}, size: {:,d} bytes.".format(
+                    _ts(any_entry.get_sync_info("m")), any_entry.get_sync_info("s")
+                )
+            )
         else:
             write("    (No meta data available.)")
 
-        write("    Local:  {}"
-              .format(pair.local.as_string() if pair.local else "n.a."))
-        write("    Remote: {}"
-              .format(pair.remote.as_string(pair.local) if pair.remote else "n.a."))
+        write("    Local:  {}".format(pair.local.as_string() if pair.local else "n.a."))
+        write(
+            "    Remote: {}".format(
+                pair.remote.as_string(pair.local) if pair.remote else "n.a."
+            )
+        )
 
     def _interactive_resolve(self, pair):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
@@ -678,10 +713,37 @@ class BiDirSynchronizer(BaseSynchronizer):
         self._inc_stat("interactive_ask")
 
         while True:
-            prompt = "Use " + M + "L" + R + "ocal, " + M + "R" + R + "emote, " + \
-                M + "O" + R + "lder, " + M + "N" + R + "ewer, " + \
-                M + "S" + R + "kip, " + M + "B" + R + "inary compare, " + \
-                M + "H" + R + "elp ? "
+            prompt = (
+                "Use "
+                + M
+                + "L"
+                + R
+                + "ocal, "
+                + M
+                + "R"
+                + R
+                + "emote, "
+                + M
+                + "O"
+                + R
+                + "lder, "
+                + M
+                + "N"
+                + R
+                + "ewer, "
+                + M
+                + "S"
+                + R
+                + "kip, "
+                + M
+                + "B"
+                + R
+                + "inary compare, "
+                + M
+                + "H"
+                + R
+                + "elp ? "
+            )
 
             r = compat.console_input(prompt).strip()
 
@@ -693,8 +755,10 @@ class BiDirSynchronizer(BaseSynchronizer):
                 print("  'l': Use local file")
                 print("  'r': Use remote file")
                 print("  's': Skip this file (leave both targets unchanged)")
-                print("Hold Shift (upper case letters) to apply choice for all "
-                      "remaining conflicts.")
+                print(
+                    "Hold Shift (upper case letters) to apply choice for all "
+                    "remaining conflicts."
+                )
                 print("Hit Ctrl+C to abort.")
                 self._print_pair_diff(pair)
                 continue
@@ -792,7 +856,9 @@ class BiDirSynchronizer(BaseSynchronizer):
 
         elif c_pair == ("existing", "existing"):
             # Naive classification derived from file time and size
-            time_cmp = eps_compare(pair.local.mtime, pair.remote.mtime, FileEntry.EPS_TIME)
+            time_cmp = eps_compare(
+                pair.local.mtime, pair.remote.mtime, FileEntry.EPS_TIME
+            )
             if time_cmp < 0:
                 c_pair = ("unmodified", "modified")  # remote is newer
             elif time_cmp > 0:
@@ -804,7 +870,9 @@ class BiDirSynchronizer(BaseSynchronizer):
 
         elif c_pair == ("new", "new"):
             # Naive classification derived from file time and size
-            time_cmp = eps_compare(pair.local.mtime, pair.remote.mtime, FileEntry.EPS_TIME)
+            time_cmp = eps_compare(
+                pair.local.mtime, pair.remote.mtime, FileEntry.EPS_TIME
+            )
             if time_cmp == 0 and pair.local.size == pair.remote.size:
                 c_pair = ("unmodified", "unmodified")  # equal
             else:
@@ -816,13 +884,15 @@ class BiDirSynchronizer(BaseSynchronizer):
         pair.operation = operation_map.get(c_pair)
         # print("on_need_compare {} => {}".format(org_pair, pair))
         if not pair.operation:
-            raise RuntimeError("Undefined operation for pair classification {}".format(c_pair))
+            raise RuntimeError(
+                "Undefined operation for pair classification {}".format(c_pair)
+            )
         elif pair.operation == org_operation:
             raise RuntimeError("Could not re-classify  {}".format(org_pair))
 
         handler = getattr(self, "on_" + pair.operation, None)
         res = handler(pair)
-#         self._log_action("", "different", "?", pair.local, min_level=2)
+        #         self._log_action("", "different", "?", pair.local, min_level=2)
         return res
 
     def on_conflict(self, pair):
@@ -843,12 +913,18 @@ class BiDirSynchronizer(BaseSynchronizer):
         if pair.local and pair.remote:
             assert pair.local.is_file()
             is_newer = pair.local > pair.remote
-            if resolve == "local" or (is_newer and resolve == "new") or \
-                    (not is_newer and resolve == "old"):
+            if (
+                resolve == "local"
+                or (is_newer and resolve == "new")
+                or (not is_newer and resolve == "old")
+            ):
                 self._log_action("copy", "conflict", "*>*", pair.local)
                 self._copy_file(self.local, self.remote, pair.local)
-            elif resolve == "remote" or (is_newer and resolve == "old") or \
-                    (not is_newer and resolve == "new"):
+            elif (
+                resolve == "remote"
+                or (is_newer and resolve == "old")
+                or (not is_newer and resolve == "new")
+            ):
                 self._log_action("copy", "conflict", "*<*", pair.local)
                 self._copy_file(self.remote, self.local, pair.remote)
             else:
@@ -880,11 +956,12 @@ class BiDirSynchronizer(BaseSynchronizer):
 # UploadSynchronizer
 # ===============================================================================
 
-class UploadSynchronizer(BiDirSynchronizer):
 
+class UploadSynchronizer(BiDirSynchronizer):
     def __init__(self, local, remote, options):
         super(UploadSynchronizer, self).__init__(local, remote, options)
-#         local.readonly = True
+
+    #         local.readonly = True
 
     def get_info_strings(self):
         return ("upload", "to")
@@ -943,8 +1020,25 @@ class UploadSynchronizer(BiDirSynchronizer):
         self._inc_stat("interactive_ask")
 
         while True:
-            prompt = "Use " + M + "L" + R + "ocal, " + M + "S" + R + "kip, " + \
-                M + "B" + R + "inary compare, " + M + "H" + R + "elp ? "
+            prompt = (
+                "Use "
+                + M
+                + "L"
+                + R
+                + "ocal, "
+                + M
+                + "S"
+                + R
+                + "kip, "
+                + M
+                + "B"
+                + R
+                + "inary compare, "
+                + M
+                + "H"
+                + R
+                + "elp ? "
+            )
 
             r = compat.console_input(prompt).strip()
 
@@ -953,8 +1047,10 @@ class UploadSynchronizer(BiDirSynchronizer):
                 print("  'b': Binary compare")
                 print("  'l': Upload local file")
                 print("  's': Skip this file (leave both targets unchanged)")
-                print("Hold Shift (upper case letters) to apply choice for all "
-                      "remaining conflicts.")
+                print(
+                    "Hold Shift (upper case letters) to apply choice for all "
+                    "remaining conflicts."
+                )
                 print("Hit Ctrl+C to abort.")
                 continue
             elif r in ("B", "b"):
@@ -1015,12 +1111,15 @@ class UploadSynchronizer(BiDirSynchronizer):
 # DownloadSynchronizer
 # ===============================================================================
 
+
 class DownloadSynchronizer(BiDirSynchronizer):
     """
     """
+
     def __init__(self, local, remote, options):
         super(DownloadSynchronizer, self).__init__(local, remote, options)
-#         remote.readonly = True
+
+    #         remote.readonly = True
 
     def get_info_strings(self):
         return ("download to", "from")
@@ -1081,8 +1180,25 @@ class DownloadSynchronizer(BiDirSynchronizer):
         self._inc_stat("interactive_ask")
 
         while True:
-            prompt = "Use " + M + "R" + R + "emote, " + M + "S" + R + "kip, " + \
-                M + "B" + R + "inary compare, " + M + "H" + R + "elp? "
+            prompt = (
+                "Use "
+                + M
+                + "R"
+                + R
+                + "emote, "
+                + M
+                + "S"
+                + R
+                + "kip, "
+                + M
+                + "B"
+                + R
+                + "inary compare, "
+                + M
+                + "H"
+                + R
+                + "elp? "
+            )
 
             r = compat.console_input(prompt).strip()
             if r in ("h", "H", "?"):
@@ -1090,8 +1206,10 @@ class DownloadSynchronizer(BiDirSynchronizer):
                 print("  'b': Binary compare")
                 print("  'r': Download remote file")
                 print("  's': Skip this file (leave both targets unchanged)")
-                print("Hold Shift (upper case letters) to apply choice for all "
-                      "remaining conflicts.")
+                print(
+                    "Hold Shift (upper case letters) to apply choice for all "
+                    "remaining conflicts."
+                )
                 print("Hit Ctrl+C to abort.")
                 continue
             elif r in ("B", "b"):

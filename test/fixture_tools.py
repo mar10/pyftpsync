@@ -31,7 +31,9 @@ from ftpsync.targets import FsTarget, make_target
 from ftpsync.util import get_option
 
 
-PYFTPSYNC_TEST_FOLDER = get_option("PYFTPSYNC_TEST_FOLDER", "test", "folder") or tempfile.mkdtemp()
+PYFTPSYNC_TEST_FOLDER = (
+    get_option("PYFTPSYNC_TEST_FOLDER", "test", "folder") or tempfile.mkdtemp()
+)
 PYFTPSYNC_TEST_FTP_URL = get_option("PYFTPSYNC_TEST_FTP_URL", "test", "ftp_url")
 STAMP_20140101_120000 = 1388577600.0  # Wed, 01 Jan 2014 12:00:00 GMT
 
@@ -51,6 +53,7 @@ class CaptureStdout(list):
     output is some output is written to stdout or stderr, so we need to check both:
     https://stackoverflow.com/a/31715011/19166
     """
+
     def __init__(self, stdout=True, stderr=True):
         self._do_stdout = stdout
         self._do_stderr = stderr
@@ -124,11 +127,15 @@ def prepare_fixture():
 
     print("Created fixtures at {}".format(PYFTPSYNC_TEST_FOLDER))
     if use_ftp:
-        print("NOTE: The remote target is prepared for FTP access, using PYFTPSYNC_TEST_FTP_URL.")
+        print(
+            "NOTE: The remote target is prepared for FTP access, using PYFTPSYNC_TEST_FTP_URL."
+        )
         print("      Pass `--no-ftp` to prepare for file access.")
     else:
-        print("NOTE: The remote target is prepared for FILE SYSTEM access, because\n"
-              "      PYFTPSYNC_TEST_FTP_URL is invalid or no server is running.")
+        print(
+            "NOTE: The remote target is prepared for FILE SYSTEM access, because\n"
+            "      PYFTPSYNC_TEST_FTP_URL is invalid or no server is running."
+        )
 
 
 def write_test_file(name, size=None, content=None, dt=None, age=None):
@@ -239,7 +246,7 @@ def delete_metadata(folder_path, recursive=True):
 
 def get_test_folder(folder_name):
     """"Convert test folder content to dict for comparisons."""
-#     root_path = os.path.join(PYFTPSYNC_TEST_FOLDER, folder_name.replace("/", os.sep))
+    #     root_path = os.path.join(PYFTPSYNC_TEST_FOLDER, folder_name.replace("/", os.sep))
     file_map = {}
     root_folder = os.path.join(PYFTPSYNC_TEST_FOLDER, folder_name)
 
@@ -256,11 +263,12 @@ def get_test_folder(folder_name):
             dt = datetime.datetime.utcfromtimestamp(stat.st_mtime)
             rel_file_path = os.path.join(rel_folder_path, fn).replace(os.sep, "/")
             file_map[rel_file_path] = {
-                            "date": dt.strftime("%Y-%m-%d %H:%M:%S"),
-                            # "size": stat.st_size,
-                            }
+                "date": dt.strftime("%Y-%m-%d %H:%M:%S"),
+                # "size": stat.st_size,
+            }
             with open(abs_file_path, "rb") as fp:
                 file_map[rel_file_path]["content"] = to_native(fp.read())
+
     __scan("")
     return file_map
 
@@ -314,8 +322,9 @@ def check_ftp_test_connection(test_folder, ftp_url, keep_open=False):
         return True
 
     def _skip(msg):
-        msg = "Check for FTP server configuration failed:\n{}\n{}" \
-            .format(msg, MSG_FTP_TESTS_NOT_AVAILABLE)
+        msg = "Check for FTP server configuration failed:\n{}\n{}".format(
+            msg, MSG_FTP_TESTS_NOT_AVAILABLE
+        )
         print(msg, file=sys.stderr)
         # raise RuntimeError(msg)
         raise SkipTest(msg)
@@ -328,11 +337,11 @@ def check_ftp_test_connection(test_folder, ftp_url, keep_open=False):
         connected = False
         parts = urlparse(ftp_url, allow_fragments=False)
         assert parts.scheme.lower() in ("ftp", "ftps")
-#         print(ftp_url, "->", parts, ", ", parts.username, ":", parts.password)
-#         if "@" in parts.netloc:
-#             host = parts.netloc.rsplit("@", 1)[1]
-#         else:
-#             host = parts.netloc
+        #         print(ftp_url, "->", parts, ", ", parts.username, ":", parts.password)
+        #         if "@" in parts.netloc:
+        #             host = parts.netloc.rsplit("@", 1)[1]
+        #         else:
+        #             host = parts.netloc
         # self.PATH = parts.path
         ftp = FTP()
         # ftp.set_debuglevel(2)
@@ -355,13 +364,16 @@ def check_ftp_test_connection(test_folder, ftp_url, keep_open=False):
         probe_file = "pyftpsync_probe.txt"
         ftp.storbinary("STOR {}".format(probe_file), buf)
         # Check if the FTP target is identical to the FS path
-#         buf = ftp.retrbinary("RETR {}".format(probe_file))
+        #         buf = ftp.retrbinary("RETR {}".format(probe_file))
         try:
             data2 = read_test_file("remote/{}".format(probe_file))
         except OSError as e:  # FileNotFoundError is only available in Python 3
             if e.errno == errno.ENOENT:
-                _skip("FTP target path {} does not match `PYFTPSYNC_TEST_FOLDER/remote`"
-                      .format(parts.path))
+                _skip(
+                    "FTP target path {} does not match `PYFTPSYNC_TEST_FOLDER/remote`".format(
+                        parts.path
+                    )
+                )
             raise
 
         if data != data2:
@@ -405,72 +417,88 @@ def get_remote_test_url():
 # _SyncTestBase
 # ===============================================================================
 
+
 class _SyncTestBase(unittest.TestCase):
     """Test BiDirSynchronizer on file system targets with different resolve modes."""
+
     #: str: by default, the `remote` target is a file system folder
-#     remote_url = PYFTPSYNC_TEST_FOLDER
+    #     remote_url = PYFTPSYNC_TEST_FOLDER
     #: bool: Derived FTP-based testing classes will set this True. Default: False.
     use_ftp_target = False
 
     local_fixture_unmodified = {
-        'file1.txt':           {'content': 'local1',   'date': '2014-01-01 12:00:00'},
-        'file2.txt':           {'content': 'local2',   'date': '2014-01-01 12:00:00'},
-        'file3.txt':           {'content': 'local3',   'date': '2014-01-01 12:00:00'},
-        'file4.txt':           {'content': 'local4',   'date': '2014-01-01 12:00:00'},
-        'file5.txt':           {'content': 'local5',   'date': '2014-01-01 12:00:00'},
-        'file6.txt':           {'content': 'local6',   'date': '2014-01-01 12:00:00'},
-        'file7.txt':           {'content': 'local7',   'date': '2014-01-01 12:00:00'},
-        'file8.txt':           {'content': 'local8',   'date': '2014-01-01 12:00:00'},
-        'file9.txt':           {'content': 'local9',   'date': '2014-01-01 12:00:00'},
-        'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
-        'folder2/file2_1.txt': {'content': 'local2_1', 'date': '2014-01-01 12:00:00'},
-        'folder3/file3_1.txt': {'content': 'local3_1', 'date': '2014-01-01 12:00:00'},
-        'folder4/file4_1.txt': {'content': 'local4_1', 'date': '2014-01-01 12:00:00'},
-        'folder5/file5_1.txt': {'content': 'local5_1', 'date': '2014-01-01 12:00:00'},
-        'folder6/file6_1.txt': {'content': 'local6_1', 'date': '2014-01-01 12:00:00'},
-        'folder7/file7_1.txt': {'content': 'local7_1', 'date': '2014-01-01 12:00:00'},
-        }
+        "file1.txt": {"content": "local1", "date": "2014-01-01 12:00:00"},
+        "file2.txt": {"content": "local2", "date": "2014-01-01 12:00:00"},
+        "file3.txt": {"content": "local3", "date": "2014-01-01 12:00:00"},
+        "file4.txt": {"content": "local4", "date": "2014-01-01 12:00:00"},
+        "file5.txt": {"content": "local5", "date": "2014-01-01 12:00:00"},
+        "file6.txt": {"content": "local6", "date": "2014-01-01 12:00:00"},
+        "file7.txt": {"content": "local7", "date": "2014-01-01 12:00:00"},
+        "file8.txt": {"content": "local8", "date": "2014-01-01 12:00:00"},
+        "file9.txt": {"content": "local9", "date": "2014-01-01 12:00:00"},
+        "folder1/file1_1.txt": {"content": "local1_1", "date": "2014-01-01 12:00:00"},
+        "folder2/file2_1.txt": {"content": "local2_1", "date": "2014-01-01 12:00:00"},
+        "folder3/file3_1.txt": {"content": "local3_1", "date": "2014-01-01 12:00:00"},
+        "folder4/file4_1.txt": {"content": "local4_1", "date": "2014-01-01 12:00:00"},
+        "folder5/file5_1.txt": {"content": "local5_1", "date": "2014-01-01 12:00:00"},
+        "folder6/file6_1.txt": {"content": "local6_1", "date": "2014-01-01 12:00:00"},
+        "folder7/file7_1.txt": {"content": "local7_1", "date": "2014-01-01 12:00:00"},
+    }
 
     local_fixture_modified = {
-        'file1.txt':           {'content': 'local1',         'date': '2014-01-01 12:00:00'},
-        'file2.txt':           {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
-        'file4.txt':           {'content': 'local4',         'date': '2014-01-01 12:00:00'},
-        'file5.txt':           {'content': 'local5',         'date': '2014-01-01 12:00:00'},
-        'file6.txt':           {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
-        'file7.txt':           {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'},
-        'file9.txt':           {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
-        'folder1/file1_1.txt': {'content': 'local1_1',       'date': '2014-01-01 12:00:00'},
-        'folder2/file2_1.txt': {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
-        'folder5/file5_1.txt': {'content': 'local5_1',       'date': '2014-01-01 12:00:00'},
-        'folder6/file6_1.txt': {'content': 'local6_1',       'date': '2014-01-01 12:00:00'},
-        'folder7/file7_1.txt': {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
-        'new_file1.txt':       {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
-        'new_file3.txt':       {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
-        'new_file4.txt':       {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
-        'new_file5.txt':       {'content': 'local 13:00',    'date': '2014-01-01 13:00:00'},
-        'new_file6.txt':       {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'},
-        }
+        "file1.txt": {"content": "local1", "date": "2014-01-01 12:00:00"},
+        "file2.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+        "file4.txt": {"content": "local4", "date": "2014-01-01 12:00:00"},
+        "file5.txt": {"content": "local5", "date": "2014-01-01 12:00:00"},
+        "file6.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+        "file7.txt": {"content": "local 13:00:05", "date": "2014-01-01 13:00:05"},
+        "file9.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+        "folder1/file1_1.txt": {"content": "local1_1", "date": "2014-01-01 12:00:00"},
+        "folder2/file2_1.txt": {
+            "content": "local 13:00",
+            "date": "2014-01-01 13:00:00",
+        },
+        "folder5/file5_1.txt": {"content": "local5_1", "date": "2014-01-01 12:00:00"},
+        "folder6/file6_1.txt": {"content": "local6_1", "date": "2014-01-01 12:00:00"},
+        "folder7/file7_1.txt": {
+            "content": "local 13:00",
+            "date": "2014-01-01 13:00:00",
+        },
+        "new_file1.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+        "new_file3.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+        "new_file4.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+        "new_file5.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+        "new_file6.txt": {"content": "local 13:00:05", "date": "2014-01-01 13:00:05"},
+    }
 
     remote_fixture_modified = {
-        'file1.txt':           {'content': 'local1',          'date': '2014-01-01 12:00:00'},
-        'file2.txt':           {'content': 'local2',          'date': '2014-01-01 12:00:00'},
-        'file3.txt':           {'content': 'local3',          'date': '2014-01-01 12:00:00'},
-        'file4.txt':           {'content': 'remote 13:00',    'date': '2014-01-01 13:00:00'},
-        'file6.txt':           {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
-        'file7.txt':           {'content': 'remote 13:00',    'date': '2014-01-01 13:00:00'},
-        'file8.txt':           {'content': 'remote 13:00',    'date': '2014-01-01 13:00:00'},
-        'folder1/file1_1.txt': {'content': 'local1_1',        'date': '2014-01-01 12:00:00'},
-        'folder2/file2_1.txt': {'content': 'local2_1',        'date': '2014-01-01 12:00:00'},
-        'folder3/file3_1.txt': {'content': 'local3_1',        'date': '2014-01-01 12:00:00'},
-        'folder4/file4_1.txt': {'content': 'remote 13:00',    'date': '2014-01-01 13:00:00'},
-        'folder5/file5_1.txt': {'content': 'remote 13:00',    'date': '2014-01-01 13:00:00'},
-        'new_file2.txt':       {'content': 'remote 13:00',    'date': '2014-01-01 13:00:00'},
-        'new_file3.txt':       {'content': 'local 13:00',     'date': '2014-01-01 13:00:00'},
-        'new_file4.txt':       {'content': 'remote 13:00 with other content',
-                                                              'date': '2014-01-01 13:00:00'},
-        'new_file5.txt':       {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
-        'new_file6.txt':       {'content': 'remote 13:00',    'date': '2014-01-01 13:00:00'},
-        }
+        "file1.txt": {"content": "local1", "date": "2014-01-01 12:00:00"},
+        "file2.txt": {"content": "local2", "date": "2014-01-01 12:00:00"},
+        "file3.txt": {"content": "local3", "date": "2014-01-01 12:00:00"},
+        "file4.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+        "file6.txt": {"content": "remote 13:00:05", "date": "2014-01-01 13:00:05"},
+        "file7.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+        "file8.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+        "folder1/file1_1.txt": {"content": "local1_1", "date": "2014-01-01 12:00:00"},
+        "folder2/file2_1.txt": {"content": "local2_1", "date": "2014-01-01 12:00:00"},
+        "folder3/file3_1.txt": {"content": "local3_1", "date": "2014-01-01 12:00:00"},
+        "folder4/file4_1.txt": {
+            "content": "remote 13:00",
+            "date": "2014-01-01 13:00:00",
+        },
+        "folder5/file5_1.txt": {
+            "content": "remote 13:00",
+            "date": "2014-01-01 13:00:00",
+        },
+        "new_file2.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+        "new_file3.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+        "new_file4.txt": {
+            "content": "remote 13:00 with other content",
+            "date": "2014-01-01 13:00:00",
+        },
+        "new_file5.txt": {"content": "remote 13:00:05", "date": "2014-01-01 13:00:05"},
+        "new_file6.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+    }
 
     def setUp(self):
         if self.use_ftp_target:
@@ -510,15 +538,17 @@ class _SyncTestBase(unittest.TestCase):
           folder6/file6_1.txt     12:00           -
           folder7/file7_1.txt     12:00           -
         """
-        assert os.path.isdir(PYFTPSYNC_TEST_FOLDER), \
-            "Invalid folder: {}".format(PYFTPSYNC_TEST_FOLDER)
+        assert os.path.isdir(PYFTPSYNC_TEST_FOLDER), "Invalid folder: {}".format(
+            PYFTPSYNC_TEST_FOLDER
+        )
         # Reset all
         empty_folder(PYFTPSYNC_TEST_FOLDER)
         # Add some files to ../local/
         dt = "2014-01-01 12:00:00"
         for i in range(1, 10):
-            write_test_file("local/file{}.txt".format(i), dt=dt,
-                            content="local{}".format(i))
+            write_test_file(
+                "local/file{}.txt".format(i), dt=dt, content="local{}".format(i)
+            )
 
         write_test_file("local/folder1/file1_1.txt", dt=dt, content="local1_1")
         write_test_file("local/folder2/file2_1.txt", dt=dt, content="local2_1")
@@ -587,8 +617,10 @@ class _SyncTestBase(unittest.TestCase):
 
         # Use file system commands to copy local to remote (maintan 12:00:00 times)
         remove_test_folder("remote")
-        shutil.copytree(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"),
-                        os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
+        shutil.copytree(
+            os.path.join(PYFTPSYNC_TEST_FOLDER, "local"),
+            os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"),
+        )
 
     @classmethod
     def _prepare_modified_fixture(cls):
@@ -641,7 +673,10 @@ class _SyncTestBase(unittest.TestCase):
 
         if not cls.use_ftp_target:
             # On local targets, we can rely on mtimes:
-            assert get_test_file_date("remote/folder5/file5_1.txt") == STAMP_20140101_120000
+            assert (
+                get_test_file_date("remote/folder5/file5_1.txt")
+                == STAMP_20140101_120000
+            )
 
         # # If this method is run from an FTP-based instance, we cannot rely on mtimes.
         # meta = get_metadata("remote/folder5")
@@ -654,49 +689,99 @@ class _SyncTestBase(unittest.TestCase):
         #     assert get_test_file_date("remote/folder5/file5_1.txt") == STAMP_20140101_120000
 
         # Change, remove, and add local only
-        write_test_file("local/file2.txt", dt="2014-01-01 13:00:00", content="local 13:00")
+        write_test_file(
+            "local/file2.txt", dt="2014-01-01 13:00:00", content="local 13:00"
+        )
         remove_test_file("local/file3.txt")
-        write_test_file("remote/file4.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
+        write_test_file(
+            "remote/file4.txt", dt="2014-01-01 13:00:00", content="remote 13:00"
+        )
         remove_test_file("remote/file5.txt")
         # Conflict: changed local and remote, remote is newer
-        write_test_file("local/file6.txt", dt="2014-01-01 13:00:00", content="local 13:00")
-        write_test_file("remote/file6.txt", dt="2014-01-01 13:00:05", content="remote 13:00:05")
+        write_test_file(
+            "local/file6.txt", dt="2014-01-01 13:00:00", content="local 13:00"
+        )
+        write_test_file(
+            "remote/file6.txt", dt="2014-01-01 13:00:05", content="remote 13:00:05"
+        )
         # Conflict: changed local and remote, local is newer
-        write_test_file("local/file7.txt", dt="2014-01-01 13:00:05", content="local 13:00:05")
-        write_test_file("remote/file7.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
+        write_test_file(
+            "local/file7.txt", dt="2014-01-01 13:00:05", content="local 13:00:05"
+        )
+        write_test_file(
+            "remote/file7.txt", dt="2014-01-01 13:00:00", content="remote 13:00"
+        )
         # Conflict: removed local, but modified remote
         remove_test_file("local/file8.txt")
-        write_test_file("remote/file8.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
+        write_test_file(
+            "remote/file8.txt", dt="2014-01-01 13:00:00", content="remote 13:00"
+        )
         # Conflict: removed remote, but modified local
-        write_test_file("local/file9.txt", dt="2014-01-01 13:00:00", content="local 13:00")
+        write_test_file(
+            "local/file9.txt", dt="2014-01-01 13:00:00", content="local 13:00"
+        )
         remove_test_file("remote/file9.txt")
 
-        write_test_file("local/folder2/file2_1.txt", dt="2014-01-01 13:00:00", content="local 13:00")
+        write_test_file(
+            "local/folder2/file2_1.txt", dt="2014-01-01 13:00:00", content="local 13:00"
+        )
         remove_test_folder("local/folder3")
         # Conflict: Modify sub-folder item on remote, but remove parent folder on local
         remove_test_folder("local/folder4")
-        write_test_file("remote/folder4/file4_1.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
+        write_test_file(
+            "remote/folder4/file4_1.txt",
+            dt="2014-01-01 13:00:00",
+            content="remote 13:00",
+        )
 
-        write_test_file("remote/folder5/file5_1.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
+        write_test_file(
+            "remote/folder5/file5_1.txt",
+            dt="2014-01-01 13:00:00",
+            content="remote 13:00",
+        )
         remove_test_folder("remote/folder6")
         # Conflict: Modify sub-folder item on local, but remove parent folder on remote
-        write_test_file("local/folder7/file7_1.txt", dt="2014-01-01 13:00:00", content="local 13:00")
+        write_test_file(
+            "local/folder7/file7_1.txt", dt="2014-01-01 13:00:00", content="local 13:00"
+        )
         remove_test_folder("remote/folder7")
 
-        write_test_file("local/new_file1.txt", dt="2014-01-01 13:00:00", content="local 13:00")
-        write_test_file("remote/new_file2.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
+        write_test_file(
+            "local/new_file1.txt", dt="2014-01-01 13:00:00", content="local 13:00"
+        )
+        write_test_file(
+            "remote/new_file2.txt", dt="2014-01-01 13:00:00", content="remote 13:00"
+        )
         # Identical files on both sides (same time and size):
-        write_test_file("local/new_file3.txt", dt="2014-01-01 13:00:00", content="local 13:00")
-        write_test_file("remote/new_file3.txt", dt="2014-01-01 13:00:00", content="local 13:00")
+        write_test_file(
+            "local/new_file3.txt", dt="2014-01-01 13:00:00", content="local 13:00"
+        )
+        write_test_file(
+            "remote/new_file3.txt", dt="2014-01-01 13:00:00", content="local 13:00"
+        )
         # Identical files on both sides (same time but different size):
-        write_test_file("local/new_file4.txt", dt="2014-01-01 13:00:00", content="local 13:00")
-        write_test_file("remote/new_file4.txt", dt="2014-01-01 13:00:00", content="remote 13:00 with other content")
+        write_test_file(
+            "local/new_file4.txt", dt="2014-01-01 13:00:00", content="local 13:00"
+        )
+        write_test_file(
+            "remote/new_file4.txt",
+            dt="2014-01-01 13:00:00",
+            content="remote 13:00 with other content",
+        )
         # Two new files on both sides with same name but different time
-        write_test_file("local/new_file5.txt", dt="2014-01-01 13:00:00", content="local 13:00")
-        write_test_file("remote/new_file5.txt", dt="2014-01-01 13:00:05", content="remote 13:00:05")
+        write_test_file(
+            "local/new_file5.txt", dt="2014-01-01 13:00:00", content="local 13:00"
+        )
+        write_test_file(
+            "remote/new_file5.txt", dt="2014-01-01 13:00:05", content="remote 13:00:05"
+        )
         # Two new files on both sides with same name but different time
-        write_test_file("local/new_file6.txt", dt="2014-01-01 13:00:05", content="local 13:00:05")
-        write_test_file("remote/new_file6.txt", dt="2014-01-01 13:00:00", content="remote 13:00")
+        write_test_file(
+            "local/new_file6.txt", dt="2014-01-01 13:00:05", content="local 13:00:05"
+        )
+        write_test_file(
+            "remote/new_file6.txt", dt="2014-01-01 13:00:00", content="remote 13:00"
+        )
 
     @classmethod
     def _make_remote_target(cls):

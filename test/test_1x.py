@@ -8,12 +8,20 @@ import datetime
 import os
 import unittest
 
-from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer, \
-    BiDirSynchronizer
+from ftpsync.synchronizers import (
+    DownloadSynchronizer,
+    UploadSynchronizer,
+    BiDirSynchronizer,
+)
 from ftpsync.targets import FsTarget
-from test.fixture_tools import PYFTPSYNC_TEST_FOLDER, empty_folder, \
-    get_test_file_date, STAMP_20140101_120000, touch_test_file, \
-    write_test_file
+from test.fixture_tools import (
+    PYFTPSYNC_TEST_FOLDER,
+    empty_folder,
+    get_test_file_date,
+    STAMP_20140101_120000,
+    touch_test_file,
+    write_test_file,
+)
 
 
 # ===============================================================================
@@ -37,7 +45,7 @@ def prepare_fixtures_1():
     write_test_file("local/file3.txt", content="333", dt=dt)
     write_test_file("local/folder1/file1_1.txt", content="1.111", dt=dt)
     write_test_file("local/folder2/file2_1.txt", content="2.111", dt=dt)
-    write_test_file("local/big_file.txt", size=1024*16, dt=dt)
+    write_test_file("local/big_file.txt", size=1024 * 16, dt=dt)
     # Create empty ../remote/
     os.mkdir(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
 
@@ -46,8 +54,10 @@ def prepare_fixtures_1():
 # FilesystemTest
 # ===============================================================================
 
+
 class FilesystemTest(unittest.TestCase):
     """Test different synchronizers on file system targets."""
+
     def setUp(self):
         # raise SkipTest
         self.verbose = 3  # 4
@@ -64,7 +74,7 @@ class FilesystemTest(unittest.TestCase):
         s = DownloadSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
-#        pprint(stats)
+        #        pprint(stats)
         self.assertEqual(stats["local_dirs"], 0)
         self.assertEqual(stats["local_files"], 0)
         self.assertEqual(stats["remote_dirs"], 2)
@@ -77,7 +87,7 @@ class FilesystemTest(unittest.TestCase):
         s = DownloadSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
-#        pprint(stats)
+        #        pprint(stats)
         self.assertEqual(stats["local_dirs"], 2)
         self.assertEqual(stats["local_files"], 6)
         self.assertEqual(stats["remote_dirs"], 2)
@@ -96,7 +106,7 @@ class FilesystemTest(unittest.TestCase):
         s = UploadSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
-#        pprint(stats)
+        #        pprint(stats)
         self.assertEqual(stats["local_dirs"], 2)
         # currently files are not counted, when inside a *new* folder:
         self.assertEqual(stats["local_files"], 4)
@@ -116,7 +126,7 @@ class FilesystemTest(unittest.TestCase):
         s = BiDirSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
-#        pprint(stats)
+        #        pprint(stats)
         self.assertEqual(stats["local_dirs"], 2)
         # currently files are not counted, when inside a *new* folder:
         self.assertEqual(stats["local_files"], 4)
@@ -133,7 +143,7 @@ class FilesystemTest(unittest.TestCase):
         s = BiDirSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
-#        pprint(stats)
+        #        pprint(stats)
         self.assertEqual(stats["local_dirs"], 2)
         self.assertEqual(stats["local_files"], 6)
         self.assertEqual(stats["remote_dirs"], 2)
@@ -155,7 +165,7 @@ class FilesystemTest(unittest.TestCase):
         s = BiDirSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
-#        pprint(stats)
+        #        pprint(stats)
         self.assertEqual(stats["entries_seen"], 18)
         self.assertEqual(stats["entries_touched"], 2)
         self.assertEqual(stats["files_created"], 0)
@@ -187,9 +197,9 @@ class FilesystemTest(unittest.TestCase):
         touch_test_file("local/file1.txt", dt)
         dt = datetime.datetime.utcnow() - datetime.timedelta(seconds=10)
         touch_test_file("remote/file1.txt", dt=dt)
-#         path = os.path.join(PYFTPSYNC_TEST_FOLDER, "remote/file1.txt")
-#         stamp = time.time() - 10
-#         os.utime(path, (stamp, stamp))
+        #         path = os.path.join(PYFTPSYNC_TEST_FOLDER, "remote/file1.txt")
+        #         stamp = time.time() - 10
+        #         os.utime(path, (stamp, stamp))
 
         # conflict 2: remote is newer
         touch_test_file("remote/file2.txt")
@@ -199,7 +209,7 @@ class FilesystemTest(unittest.TestCase):
         s = BiDirSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
-#         pprint(stats)
+        #         pprint(stats)
         self.assertEqual(stats["entries_seen"], 18)
         self.assertEqual(stats["entries_touched"], 0)
         self.assertEqual(stats["bytes_written"], 0)

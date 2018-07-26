@@ -11,8 +11,12 @@ import unittest
 from unittest.case import SkipTest
 
 from ftpsync.synchronizers import BiDirSynchronizer
-from test.fixture_tools import write_test_file, get_test_folder, remove_test_folder,\
-    _SyncTestBase
+from test.fixture_tools import (
+    write_test_file,
+    get_test_folder,
+    remove_test_folder,
+    _SyncTestBase,
+)
 
 
 # ===============================================================================
@@ -31,7 +35,7 @@ class BidirSyncTest(_SyncTestBase):
         opts = {"verbose": self.verbose}  # default options, i.e. 'skip' conflicts
         # Default options: expect 4 unresolved conflicts
         stats = self.do_run_suite(BiDirSynchronizer, opts)
-#         self._dump_de_facto_results(stats)
+        #         self._dump_de_facto_results(stats)
 
         # We expect 7 conflicts, and leave them unresolved (i.e. skip them all)
 
@@ -43,39 +47,66 @@ class BidirSyncTest(_SyncTestBase):
         self.assertEqual(stats["conflict_files"], 7)
 
         expect_local = {
-            'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
-            'file2.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'file4.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'file6.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'file7.txt': {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'},
-            'file9.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
-            'folder2/file2_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'folder5/file5_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file2.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file3.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file4.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file5.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file6.txt': {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'},
-            }
+            "file1.txt": {"content": "local1", "date": "2014-01-01 12:00:00"},
+            "file2.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "file4.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+            "file6.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "file7.txt": {"content": "local 13:00:05", "date": "2014-01-01 13:00:05"},
+            "file9.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "folder1/file1_1.txt": {
+                "content": "local1_1",
+                "date": "2014-01-01 12:00:00",
+            },
+            "folder2/file2_1.txt": {
+                "content": "local 13:00",
+                "date": "2014-01-01 13:00:00",
+            },
+            "folder5/file5_1.txt": {
+                "content": "remote 13:00",
+                "date": "2014-01-01 13:00:00",
+            },
+            "new_file1.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file2.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file3.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file4.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file5.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file6.txt": {
+                "content": "local 13:00:05",
+                "date": "2014-01-01 13:00:05",
+            },
+        }
         expect_remote = {
-            'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
-            'file2.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'file4.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'file6.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
-            'file7.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'file8.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
-            'folder2/file2_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'folder5/file5_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file2.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file3.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file4.txt': {'content': 'remote 13:00 with other content', 'date': '2014-01-01 13:00:00'},
-            'new_file5.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
-            'new_file6.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            }
+            "file1.txt": {"content": "local1", "date": "2014-01-01 12:00:00"},
+            "file2.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "file4.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+            "file6.txt": {"content": "remote 13:00:05", "date": "2014-01-01 13:00:05"},
+            "file7.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+            "file8.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+            "folder1/file1_1.txt": {
+                "content": "local1_1",
+                "date": "2014-01-01 12:00:00",
+            },
+            "folder2/file2_1.txt": {
+                "content": "local 13:00",
+                "date": "2014-01-01 13:00:00",
+            },
+            "folder5/file5_1.txt": {
+                "content": "remote 13:00",
+                "date": "2014-01-01 13:00:00",
+            },
+            "new_file1.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file2.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file3.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file4.txt": {
+                "content": "remote 13:00 with other content",
+                "date": "2014-01-01 13:00:00",
+            },
+            "new_file5.txt": {
+                "content": "remote 13:00:05",
+                "date": "2014-01-01 13:00:05",
+            },
+            "new_file6.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+        }
         self.assert_test_folder_equal(get_test_folder("local"), expect_local)
         self.assert_test_folder_equal(get_test_folder("remote"), expect_remote)
 
@@ -95,22 +126,34 @@ class BidirSyncTest(_SyncTestBase):
         self.assertEqual(stats["conflict_files"], 7)
 
         expect_local = {
-            'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
-            'file2.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'file4.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'file6.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'file7.txt': {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'},
-            'file9.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
-            'folder2/file2_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'folder5/file5_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file2.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file3.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file4.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file5.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file6.txt': {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'},
-            }
+            "file1.txt": {"content": "local1", "date": "2014-01-01 12:00:00"},
+            "file2.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "file4.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+            "file6.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "file7.txt": {"content": "local 13:00:05", "date": "2014-01-01 13:00:05"},
+            "file9.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "folder1/file1_1.txt": {
+                "content": "local1_1",
+                "date": "2014-01-01 12:00:00",
+            },
+            "folder2/file2_1.txt": {
+                "content": "local 13:00",
+                "date": "2014-01-01 13:00:00",
+            },
+            "folder5/file5_1.txt": {
+                "content": "remote 13:00",
+                "date": "2014-01-01 13:00:00",
+            },
+            "new_file1.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file2.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file3.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file4.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file5.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file6.txt": {
+                "content": "local 13:00:05",
+                "date": "2014-01-01 13:00:05",
+            },
+        }
         self.assert_test_folder_equal(get_test_folder("local"), expect_local)
         self.assert_test_folder_equal(get_test_folder("remote"), expect_local)
 
@@ -131,41 +174,54 @@ class BidirSyncTest(_SyncTestBase):
         self.assertEqual(stats["conflict_files"], 7)
 
         expect_local = {
-            'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
-            'file2.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'file4.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'file6.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
-            'file7.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'file8.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
-            'folder2/file2_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'folder5/file5_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file2.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file3.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file4.txt': {'content': 'remote 13:00 with other content', 'date': '2014-01-01 13:00:00'},
-            'new_file5.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
-            'new_file6.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            }
+            "file1.txt": {"content": "local1", "date": "2014-01-01 12:00:00"},
+            "file2.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "file4.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+            "file6.txt": {"content": "remote 13:00:05", "date": "2014-01-01 13:00:05"},
+            "file7.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+            "file8.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+            "folder1/file1_1.txt": {
+                "content": "local1_1",
+                "date": "2014-01-01 12:00:00",
+            },
+            "folder2/file2_1.txt": {
+                "content": "local 13:00",
+                "date": "2014-01-01 13:00:00",
+            },
+            "folder5/file5_1.txt": {
+                "content": "remote 13:00",
+                "date": "2014-01-01 13:00:00",
+            },
+            "new_file1.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file2.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file3.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file4.txt": {
+                "content": "remote 13:00 with other content",
+                "date": "2014-01-01 13:00:00",
+            },
+            "new_file5.txt": {
+                "content": "remote 13:00:05",
+                "date": "2014-01-01 13:00:05",
+            },
+            "new_file6.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+        }
         self.assert_test_folder_equal(get_test_folder("local"), expect_local)
         self.assert_test_folder_equal(get_test_folder("remote"), expect_local)
 
     def test_dry_run(self):
-        opts = {
-            "verbose": self.verbose,
-            "resolve": "local",
-            "dry_run": True,
-            }
+        opts = {"verbose": self.verbose, "resolve": "local", "dry_run": True}
 
         stats = self.do_run_suite(BiDirSynchronizer, opts)
 
         # DRY-RUN: We expect no changes
         self.assertEqual(stats["bytes_written"], 0)
 
-        self.assert_test_folder_equal(get_test_folder("local"),
-                                      _SyncTestBase.local_fixture_modified)
-        self.assert_test_folder_equal(get_test_folder("remote"),
-                                      _SyncTestBase.remote_fixture_modified)
+        self.assert_test_folder_equal(
+            get_test_folder("local"), _SyncTestBase.local_fixture_modified
+        )
+        self.assert_test_folder_equal(
+            get_test_folder("remote"), _SyncTestBase.remote_fixture_modified
+        )
 
     def test_no_metadata(self):
         """Synchronize with absent .pyftpsync-meta.json."""
@@ -176,7 +232,7 @@ class BidirSyncTest(_SyncTestBase):
         opts = {"verbose": self.verbose}
 
         self.do_run_suite(BiDirSynchronizer, opts)
-#         self._dump_de_facto_results(stats)
+        #         self._dump_de_facto_results(stats)
 
         # NOTE:
         # Since we don't have meta data, the synchronizer treats missing files on
@@ -194,33 +250,65 @@ class BidirSyncTest(_SyncTestBase):
         # self.assertEqual(stats["conflict_files"], 1)
 
         expect_local = {
-            'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
-            'file2.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'file3.txt': {'content': 'local3', 'date': '2014-01-01 12:00:00'},
-            'file4.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'file5.txt': {'content': 'local5', 'date': '2014-01-01 12:00:00'},
-            'file6.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
-            'file7.txt': {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'},
-            'file8.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'file9.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'folder1/file1_1.txt': {'content': 'local1_1', 'date': '2014-01-01 12:00:00'},
-            'folder2/file2_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'folder3/file3_1.txt': {'content': 'local3_1', 'date': '2014-01-01 12:00:00'},
-            'folder4/file4_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'folder5/file5_1.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'folder6/file6_1.txt': {'content': 'local6_1', 'date': '2014-01-01 12:00:00'},
-            'folder7/file7_1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file1.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file2.txt': {'content': 'remote 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file3.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file4.txt': {'content': 'local 13:00', 'date': '2014-01-01 13:00:00'},
-            'new_file5.txt': {'content': 'remote 13:00:05', 'date': '2014-01-01 13:00:05'},
-            'new_file6.txt': {'content': 'local 13:00:05', 'date': '2014-01-01 13:00:05'},
-            }
+            "file1.txt": {"content": "local1", "date": "2014-01-01 12:00:00"},
+            "file2.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "file3.txt": {"content": "local3", "date": "2014-01-01 12:00:00"},
+            "file4.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+            "file5.txt": {"content": "local5", "date": "2014-01-01 12:00:00"},
+            "file6.txt": {"content": "remote 13:00:05", "date": "2014-01-01 13:00:05"},
+            "file7.txt": {"content": "local 13:00:05", "date": "2014-01-01 13:00:05"},
+            "file8.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+            "file9.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "folder1/file1_1.txt": {
+                "content": "local1_1",
+                "date": "2014-01-01 12:00:00",
+            },
+            "folder2/file2_1.txt": {
+                "content": "local 13:00",
+                "date": "2014-01-01 13:00:00",
+            },
+            "folder3/file3_1.txt": {
+                "content": "local3_1",
+                "date": "2014-01-01 12:00:00",
+            },
+            "folder4/file4_1.txt": {
+                "content": "remote 13:00",
+                "date": "2014-01-01 13:00:00",
+            },
+            "folder5/file5_1.txt": {
+                "content": "remote 13:00",
+                "date": "2014-01-01 13:00:00",
+            },
+            "folder6/file6_1.txt": {
+                "content": "local6_1",
+                "date": "2014-01-01 12:00:00",
+            },
+            "folder7/file7_1.txt": {
+                "content": "local 13:00",
+                "date": "2014-01-01 13:00:00",
+            },
+            "new_file1.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file2.txt": {"content": "remote 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file3.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file4.txt": {"content": "local 13:00", "date": "2014-01-01 13:00:00"},
+            "new_file5.txt": {
+                "content": "remote 13:00:05",
+                "date": "2014-01-01 13:00:05",
+            },
+            "new_file6.txt": {
+                "content": "local 13:00:05",
+                "date": "2014-01-01 13:00:05",
+            },
+        }
         expect_remote = expect_local.copy()
-        expect_remote.update({
-            'new_file4.txt': {'content': 'remote 13:00 with other content', 'date': '2014-01-01 13:00:00'},
-            })
+        expect_remote.update(
+            {
+                "new_file4.txt": {
+                    "content": "remote 13:00 with other content",
+                    "date": "2014-01-01 13:00:00",
+                }
+            }
+        )
         self.assert_test_folder_equal(get_test_folder("local"), expect_local)
         self.assert_test_folder_equal(get_test_folder("remote"), expect_remote)
 
@@ -228,6 +316,7 @@ class BidirSyncTest(_SyncTestBase):
 # ===============================================================================
 # FtpBidirResolveTest
 # ===============================================================================
+
 
 class FtpBidirSyncTest(BidirSyncTest):
     """Run the BidirSyncTest test suite against a local FTP server (ftp_target.FtpTarget)."""
@@ -239,8 +328,10 @@ class FtpBidirSyncTest(BidirSyncTest):
 # BidirSpecialTest
 # ===============================================================================
 
+
 class BidirSpecialTest(_SyncTestBase):
     """Test BiDirSynchronizer on file system targets."""
+
     def setUp(self):
         # Call self._prepare_initial_synced_fixture():
         super(BidirSpecialTest, self).setUp()
@@ -251,8 +342,9 @@ class BidirSpecialTest(_SyncTestBase):
     def test_folder_conflict(self):
         """Delete a folder on one side, but change content on other side."""
 
-        write_test_file("local/folder1/file1_1.txt", dt="2014-01-01 13:00:00",
-                        content="local 13:00")
+        write_test_file(
+            "local/folder1/file1_1.txt", dt="2014-01-01 13:00:00", content="local 13:00"
+        )
         remove_test_folder("remote/folder1")
 
         opts = {"verbose": self.verbose}
@@ -274,22 +366,40 @@ class BidirSpecialTest(_SyncTestBase):
         self.assertEqual(stats["conflict_files"], 1)
 
         expect_local = {
-            'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
-            'file2.txt': {'content': 'local2', 'date': '2014-01-01 12:00:00'},
-            'file3.txt': {'content': 'local3', 'date': '2014-01-01 12:00:00'},
-            'file4.txt': {'content': 'local4', 'date': '2014-01-01 12:00:00'},
-            'file5.txt': {'content': 'local5', 'date': '2014-01-01 12:00:00'},
-            'file6.txt': {'content': 'local6', 'date': '2014-01-01 12:00:00'},
-            'file7.txt': {'content': 'local7', 'date': '2014-01-01 12:00:00'},
-            'file8.txt': {'content': 'local8', 'date': '2014-01-01 12:00:00'},
-            'file9.txt': {'content': 'local9', 'date': '2014-01-01 12:00:00'},
-            'folder2/file2_1.txt': {'content': 'local2_1', 'date': '2014-01-01 12:00:00'},
-            'folder3/file3_1.txt': {'content': 'local3_1', 'date': '2014-01-01 12:00:00'},
-            'folder4/file4_1.txt': {'content': 'local4_1', 'date': '2014-01-01 12:00:00'},
-            'folder5/file5_1.txt': {'content': 'local5_1', 'date': '2014-01-01 12:00:00'},
-            'folder6/file6_1.txt': {'content': 'local6_1', 'date': '2014-01-01 12:00:00'},
-            'folder7/file7_1.txt': {'content': 'local7_1', 'date': '2014-01-01 12:00:00'},
-            }
+            "file1.txt": {"content": "local1", "date": "2014-01-01 12:00:00"},
+            "file2.txt": {"content": "local2", "date": "2014-01-01 12:00:00"},
+            "file3.txt": {"content": "local3", "date": "2014-01-01 12:00:00"},
+            "file4.txt": {"content": "local4", "date": "2014-01-01 12:00:00"},
+            "file5.txt": {"content": "local5", "date": "2014-01-01 12:00:00"},
+            "file6.txt": {"content": "local6", "date": "2014-01-01 12:00:00"},
+            "file7.txt": {"content": "local7", "date": "2014-01-01 12:00:00"},
+            "file8.txt": {"content": "local8", "date": "2014-01-01 12:00:00"},
+            "file9.txt": {"content": "local9", "date": "2014-01-01 12:00:00"},
+            "folder2/file2_1.txt": {
+                "content": "local2_1",
+                "date": "2014-01-01 12:00:00",
+            },
+            "folder3/file3_1.txt": {
+                "content": "local3_1",
+                "date": "2014-01-01 12:00:00",
+            },
+            "folder4/file4_1.txt": {
+                "content": "local4_1",
+                "date": "2014-01-01 12:00:00",
+            },
+            "folder5/file5_1.txt": {
+                "content": "local5_1",
+                "date": "2014-01-01 12:00:00",
+            },
+            "folder6/file6_1.txt": {
+                "content": "local6_1",
+                "date": "2014-01-01 12:00:00",
+            },
+            "folder7/file7_1.txt": {
+                "content": "local7_1",
+                "date": "2014-01-01 12:00:00",
+            },
+        }
         self.assert_test_folder_equal(get_test_folder("local"), expect_local)
         self.assert_test_folder_equal(get_test_folder("remote"), expect_local)
 

@@ -8,13 +8,18 @@ import re
 import unittest
 
 from ftpsync import __version__
-from test.fixture_tools import _SyncTestBase, run_script,  get_local_test_url,\
-    get_remote_test_url
+from test.fixture_tools import (
+    _SyncTestBase,
+    run_script,
+    get_local_test_url,
+    get_remote_test_url,
+)
 
 
 # ===============================================================================
 # CliTest
 # ===============================================================================
+
 
 class CliTest(_SyncTestBase):
     """Test command line script interface."""

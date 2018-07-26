@@ -10,9 +10,17 @@ from unittest.case import SkipTest
 
 from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer
 from ftpsync.targets import make_target
-from test.fixture_tools import _SyncTestBase, run_script, get_local_test_url,\
-    get_remote_test_url, write_test_file, empty_folder, PYFTPSYNC_TEST_FOLDER,\
-    get_test_file_size, is_test_file
+from test.fixture_tools import (
+    _SyncTestBase,
+    run_script,
+    get_local_test_url,
+    get_remote_test_url,
+    write_test_file,
+    empty_folder,
+    PYFTPSYNC_TEST_FOLDER,
+    get_test_file_size,
+    is_test_file,
+)
 
 
 # ===============================================================================
@@ -32,9 +40,7 @@ class TempDevelopTest(_SyncTestBase):
 
     def test_issue_20(self):
 
-        opts = {
-            "verbose": 5,
-            }
+        opts = {"verbose": 5}
 
         local_target = make_target(self.local_url)
         remote_target = make_target(self.remote_url)
@@ -42,24 +48,26 @@ class TempDevelopTest(_SyncTestBase):
         ftp_downloader = DownloadSynchronizer(local_target, remote_target, opts)
         ftp_uploader = UploadSynchronizer(local_target, remote_target, opts)
 
-        write_test_file("local/large1.txt", size=10*1000)
-        write_test_file("remote/large2.txt", size=10*1000)
+        write_test_file("local/large1.txt", size=10 * 1000)
+        write_test_file("remote/large2.txt", size=10 * 1000)
         ftp_downloader.run()
         ftp_uploader.run()
 
     def test_issue_21(self):
         if not self.use_ftp_target:
             raise SkipTest("Only FTP targets.")
-        write_test_file("local/large.txt", size=10*1000)
-        write_test_file("remote/large.txt", size=10*1000)
+        write_test_file("local/large.txt", size=10 * 1000)
+        write_test_file("remote/large.txt", size=10 * 1000)
 
         out = run_script("download", "-vvv", self.local_url, self.remote_url)
-#         print(out)
+        #         print(out)
         assert not ("*cmd* 'PORT" in out or "*cmd* 'EPRT" in out)
         assert "*cmd* 'PASV" in out or "*cmd* 'EPSV" in out
 
-        out = run_script("download", self.local_url, self.remote_url, "-vvv", "--ftp-active")
-#         print(out)
+        out = run_script(
+            "download", self.local_url, self.remote_url, "-vvv", "--ftp-active"
+        )
+        #         print(out)
         assert "*cmd* 'PORT" in out or "*cmd* 'EPRT" in out
         assert not ("*cmd* 'PASV" in out or "*cmd* 'EPSV" in out)
 
@@ -67,21 +75,18 @@ class TempDevelopTest(_SyncTestBase):
         if not self.use_ftp_target:
             raise SkipTest("Only FTP targets.")
 
-#         empty_folder()
+        #         empty_folder()
         empty_folder(os.path.join(PYFTPSYNC_TEST_FOLDER, "local"))
         empty_folder(os.path.join(PYFTPSYNC_TEST_FOLDER, "remote"))
 
         local_target = make_target(self.local_url)
         remote_target = make_target(self.remote_url)
 
-        SIZE = 1000*1000
+        SIZE = 1000 * 1000
         write_test_file("local/large1.txt", size=SIZE)
         write_test_file("remote/large2.txt", size=SIZE)
 
-        opts = {
-            "verbose": 5,
-            "match": "large*.txt",
-            }
+        opts = {"verbose": 5, "match": "large*.txt"}
         synchronizer = DownloadSynchronizer(local_target, remote_target, opts)
 
         assert is_test_file("local/large1.txt")
@@ -100,8 +105,10 @@ class TempDevelopTest(_SyncTestBase):
 # TempDevelopTest
 # ===============================================================================
 
+
 class FtpTempDevelopTest(TempDevelopTest):
     """Run the DownloadResolveTest test suite against a local FTP server (ftp_target.FtpTarget)."""
+
     use_ftp_target = True
 
 

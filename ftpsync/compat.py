@@ -16,6 +16,7 @@ _filesystemencoding = sys.getfilesystemencoding()
 try:  # py2
     import ConfigParser as configparser
     from cStringIO import StringIO
+
     BytesIO = StringIO
     import Queue as queue
 except ImportError:  # py3
@@ -92,7 +93,8 @@ if PY2:
             s = unicode(s, encoding)
         return s
 
-else:   # Python 3
+
+else:  # Python 3
 
     from base64 import decodebytes as base64_decodebytes
     from base64 import encodebytes as base64_encodebytes

@@ -15,8 +15,13 @@ from ftpsync.compat import CompatConnectionError
 from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersion
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftpsync.targets import _Target
-from ftpsync.util import get_credentials_for_url, prompt_for_password, \
-    save_password, write, write_error
+from ftpsync.util import (
+    get_credentials_for_url,
+    prompt_for_password,
+    save_password,
+    write,
+    write_error,
+)
 
 
 # ===============================================================================
@@ -35,10 +40,21 @@ class FtpTarget(_Target):
     """
 
     DEFAULT_BLOCKSIZE = 8 * 1024  # ftplib uses 8k chunks by default
-    MAX_SPOOL_MEM = 100 * 1024   # keep open_readable() buffer in memory if smaller than 100kB
+    MAX_SPOOL_MEM = (
+        100 * 1024
+    )  # keep open_readable() buffer in memory if smaller than 100kB
 
-    def __init__(self, path, host, port=0, username=None, password=None,
-                 tls=False, timeout=None, extra_opts=None):
+    def __init__(
+        self,
+        path,
+        host,
+        port=0,
+        username=None,
+        password=None,
+        tls=False,
+        timeout=None,
+        extra_opts=None,
+    ):
         """Create FTP target with host, initial path, optional credentials and options.
 
         Args:
@@ -78,8 +94,9 @@ class FtpTarget(_Target):
         self.support_set_time = False
 
     def __str__(self):
-        return "<{} + {}>".format(self.get_base_name(),
-                                  relpath_url(self.cur_dir or "/", self.root_dir))
+        return "<{} + {}>".format(
+            self.get_base_name(), relpath_url(self.cur_dir or "/", self.root_dir)
+        )
 
     def get_base_name(self):
         scheme = "ftps" if self.tls else "ftp"
@@ -109,7 +126,9 @@ class FtpTarget(_Target):
         self.ftp_socket_connected = True
 
         if self.username is None or self.password is None:
-            creds = get_credentials_for_url(self.host, options, force_user=self.username)
+            creds = get_credentials_for_url(
+                self.host, options, force_user=self.username
+            )
             if creds:
                 self.username, self.password = creds
 
@@ -118,16 +137,20 @@ class FtpTarget(_Target):
                 # Login (as 'anonymous' if self.username is undefined):
                 self.ftp.login(self.username, self.password)
                 if self.get_option("verbose", 3) >= 4:
-                    write("Login as '{}'."
-                          .format(self.username if self.username else "anonymous"))
+                    write(
+                        "Login as '{}'.".format(
+                            self.username if self.username else "anonymous"
+                        )
+                    )
                 break
             except ftplib.error_perm as e:
                 # If credentials were passed, but authentication fails, prompt
                 # for new password
                 if not e.args[0].startswith("530"):
                     raise  # error other then '530 Login incorrect'
-                write_error("Could not login to {}@{}: {}"
-                            .format(self.username, self.host, e))
+                write_error(
+                    "Could not login to {}@{}: {}".format(self.username, self.host, e)
+                )
                 if no_prompt or not self.username:
                     raise
                 creds = prompt_for_password(self.host, self.username)
@@ -145,13 +168,19 @@ class FtpTarget(_Target):
             # for new password
             if not e.args[0].startswith("550"):
                 raise  # error other then 550 No such directory'
-            write_error("Could not change directory to {} ({}): missing permissions?"
-                        .format(self.root_dir, e))
+            write_error(
+                "Could not change directory to {} ({}): missing permissions?".format(
+                    self.root_dir, e
+                )
+            )
 
         pwd = self.ftp.pwd()
         if pwd != self.root_dir:
-            raise RuntimeError("Unable to navigate to working directory {!r} (now at {!r})"
-                               .format(self.root_dir, pwd))
+            raise RuntimeError(
+                "Unable to navigate to working directory {!r} (now at {!r})".format(
+                    self.root_dir, pwd
+                )
+            )
 
         self.cur_dir = pwd
 
@@ -195,8 +224,7 @@ class FtpTarget(_Target):
     def _lock(self, break_existing=False):
         """Write a special file to the target root folder."""
         # write("_lock")
-        data = {"lock_time": time.time(),
-                "lock_holder": None}
+        data = {"lock_time": time.time(), "lock_holder": None}
 
         try:
             assert self.cur_dir == self.root_dir
@@ -209,8 +237,10 @@ class FtpTarget(_Target):
                 try:
                     self.ftp.makepasv()
                 except Exception:
-                    write_error("The server probably requires FTP Active mode. "
-                                "Try passing the --ftp-active option.")
+                    write_error(
+                        "The server probably requires FTP Active mode. "
+                        "Try passing the --ftp-active option."
+                    )
 
             # Set to False, so we don't try to remove later
             self.lock_data = False
@@ -223,12 +253,18 @@ class FtpTarget(_Target):
         try:
             if self.cur_dir != self.root_dir:
                 if closing:
-                    write("Changing to ftp root folder to remove lock file: {}"
-                          .format(self.root_dir))
+                    write(
+                        "Changing to ftp root folder to remove lock file: {}".format(
+                            self.root_dir
+                        )
+                    )
                     self.cwd(self.root_dir)
                 else:
-                    write_error("Could not remove lock file, because CWD != ftp root: {}"
-                                .format(self.cur_dir))
+                    write_error(
+                        "Could not remove lock file, because CWD != ftp root: {}".format(
+                            self.cur_dir
+                        )
+                    )
                     return
 
             if self.lock_data is False:
@@ -257,8 +293,9 @@ class FtpTarget(_Target):
         path = normpath_url(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
             # paranoic check to prevent that our sync tool goes berserk
-            raise RuntimeError("Tried to navigate outside root %r: %r"
-                               % (self.root_dir, path))
+            raise RuntimeError(
+                "Tried to navigate outside root %r: %r" % (self.root_dir, path)
+            )
         self.ftp.cwd(dir_name)
         self.cur_dir = path
         self.cur_dir_meta = None
@@ -294,13 +331,17 @@ class FtpTarget(_Target):
                         # try to delete this as a file
                         self.ftp.delete(name)
                     except ftplib.all_errors as _e:
-                        write("    ftp.delete({}) failed: {}, trying rmdir()...".format(name, _e))
+                        write(
+                            "    ftp.delete({}) failed: {}, trying rmdir()...".format(
+                                name, _e
+                            )
+                        )
                         # assume <name> is a folder
                         self.rmdir(name)
             finally:
                 if dir_name != ".":
                     self.ftp.cwd("..")
-#        write("ftp.rmd(%s)..." % (dir_name, ))
+        #        write("ftp.rmd(%s)..." % (dir_name, ))
         if not keep_root_folder:
             self.ftp.rmd(dir_name)
         return
@@ -331,9 +372,13 @@ class FtpTarget(_Target):
                     # Use calendar.timegm() instead of time.mktime(), because
                     # the date was returned as UTC
                     if "." in field_value:
-                        mtime = calendar.timegm(time.strptime(field_value, "%Y%m%d%H%M%S.%f"))
+                        mtime = calendar.timegm(
+                            time.strptime(field_value, "%Y%m%d%H%M%S.%f")
+                        )
                     else:
-                        mtime = calendar.timegm(time.strptime(field_value, "%Y%m%d%H%M%S"))
+                        mtime = calendar.timegm(
+                            time.strptime(field_value, "%Y%m%d%H%M%S")
+                        )
                 elif field_name == "unique":
                     unique = field_value
 
@@ -344,7 +389,9 @@ class FtpTarget(_Target):
                 if name == DirMetadata.META_FILE_NAME:
                     # the meta-data file is silently ignored
                     local_res["has_meta"] = True
-                elif name == DirMetadata.LOCK_FILE_NAME and self.cur_dir == self.root_dir:
+                elif (
+                    name == DirMetadata.LOCK_FILE_NAME and self.cur_dir == self.root_dir
+                ):
                     # this is the root lock file. compare reported mtime with
                     # local upload time
                     self._probe_lock_file(mtime)
@@ -353,7 +400,9 @@ class FtpTarget(_Target):
             elif res_type in ("cdir", "pdir"):
                 pass
             else:
-                raise NotImplementedError("MLSD returned unsupported type: {!r}".format(res_type))
+                raise NotImplementedError(
+                    "MLSD returned unsupported type: {!r}".format(res_type)
+                )
 
             if entry:
                 entry_map[name] = entry
@@ -365,7 +414,9 @@ class FtpTarget(_Target):
             # write_error("The FTP server responded with {}".format(e))
             # raises error_perm "500 Unknown command" if command is not supported
             if "500" in str(e.args):
-                raise RuntimeError("The FTP server does not support the 'MLSD' command.")
+                raise RuntimeError(
+                    "The FTP server does not support the 'MLSD' command."
+                )
             raise
 
         # load stored meta data if present
@@ -377,7 +428,9 @@ class FtpTarget(_Target):
             except IncompatibleMetadataVersion:
                 raise  # this should end the script (user should pass --migrate)
             except Exception as e:
-                write_error("Could not read meta info {}: {}" .format(self.cur_dir_meta, e))
+                write_error(
+                    "Could not read meta info {}: {}".format(self.cur_dir_meta, e)
+                )
 
             meta_files = self.cur_dir_meta.list
 
@@ -388,8 +441,10 @@ class FtpTarget(_Target):
                 if n in entry_map:
                     # We have a meta-data entry for this resource
                     upload_time = meta.get("u", 0)
-                    if(entry_map[n].size == meta.get("s") and
-                       FileEntry._eps_compare(entry_map[n].mtime, upload_time) <= 0):
+                    if (
+                        entry_map[n].size == meta.get("s")
+                        and FileEntry._eps_compare(entry_map[n].mtime, upload_time) <= 0
+                    ):
                         # Use meta-data mtime instead of the one reported by FTP server
                         entry_map[n].meta = meta
                         entry_map[n].mtime = meta["m"]
@@ -403,12 +458,19 @@ class FtpTarget(_Target):
                         #   2. the reported files size is different than the
                         #      size we stored in the meta-data
                         if self.get_option("verbose", 3) >= 5:
-                            write(("META: Removing outdated meta entry {}\n" +
-                                   "      modified after upload ({} > {}), or\n"
-                                   "      cur. size ({}) != meta size ({})")
-                                  .format(n, time.ctime(entry_map[n].mtime),
-                                          time.ctime(upload_time),
-                                          entry_map[n].size, meta.get("s")))
+                            write(
+                                (
+                                    "META: Removing outdated meta entry {}\n"
+                                    + "      modified after upload ({} > {}), or\n"
+                                    "      cur. size ({}) != meta size ({})"
+                                ).format(
+                                    n,
+                                    time.ctime(entry_map[n].mtime),
+                                    time.ctime(upload_time),
+                                    entry_map[n].size,
+                                    meta.get("s"),
+                                )
+                            )
                         missing.append(n)
                 else:
                     # File is stored in meta-data, but no longer exists on FTP server
@@ -432,7 +494,9 @@ class FtpTarget(_Target):
         """
         # print("FTP open_readable({})".format(name))
         out = SpooledTemporaryFile(max_size=self.MAX_SPOOL_MEM, mode="w+b")
-        self.ftp.retrbinary("RETR {}".format(name), out.write, FtpTarget.DEFAULT_BLOCKSIZE)
+        self.ftp.retrbinary(
+            "RETR {}".format(name), out.write, FtpTarget.DEFAULT_BLOCKSIZE
+        )
         out.seek(0)
         return out
 
@@ -460,13 +524,16 @@ class FtpTarget(_Target):
             callback (function, optional):
                 Called like `func(buf)` for every written chunk
         """
+
         def _write_to_file(data):
             # print("_write_to_file() {} bytes.".format(len(data)))
             fp_dest.write(data)
             if callback:
                 callback(data)
 
-        self.ftp.retrbinary("RETR {}".format(name), _write_to_file, FtpTarget.DEFAULT_BLOCKSIZE)
+        self.ftp.retrbinary(
+            "RETR {}".format(name), _write_to_file, FtpTarget.DEFAULT_BLOCKSIZE
+        )
 
     def remove_file(self, name):
         """Remove cur_dir/name."""
