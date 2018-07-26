@@ -8,8 +8,7 @@ import io
 import os
 import shutil
 import threading
-from posixpath import join as join_url
-from posixpath import normpath as normpath_url
+from posixpath import join as join_url, normpath as normpath_url
 
 from ftpsync import compat
 from ftpsync.metadata import DirMetadata

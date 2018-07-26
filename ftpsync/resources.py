@@ -5,9 +5,7 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 """
 import os
 from datetime import datetime
-from posixpath import join as join_url
-from posixpath import normpath as normpath_url
-from posixpath import relpath as relpath_url
+from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
 
 from ftpsync.util import eps_compare, write
 
