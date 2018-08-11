@@ -1,7 +1,9 @@
 2.0.1 (unreleased)
 ------------------
 - Allow `-v` with `--version` option.
-- #26: Crash when not setting verbose option.
+- Fix #26: Crash when not setting verbose option.
+- Print SYST and FEAT when -vv is passed
+- Accept list type options for `exclude` argument in CLI mode
 
 2.0.0 (2018-01-01)
 ------------------
