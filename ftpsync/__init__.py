@@ -3,15 +3,14 @@
 """
 Package version number.
 
-http://peak.telecommunity.com/DevCenter/setuptools#specifying-your-project-s-version
-http://peak.telecommunity.com/DevCenter/setuptools#tagging-and-daily-build-or-snapshot-releases
+See https://www.python.org/dev/peps/pep-0440
 
-Imported by ftpsync.__init__, so it can be accessed as 'ftpsync.__version__'.
-Accessed by setup.py using read().
-
-semver would be           '1.0.0-1'
-PyPI  would be            '1.0.0b1'
-cx_Freeze build need      '1.0.0.0'
-cx_Freeze bdist_msi  need '1.0.0'
+Examples
+    Pre-releases (alpha, beta, release candidate):
+        '3.0.0a1', '3.0.0b1', '3.0.0rc1'
+    Final release:
+        '3.0.0'
+    Developmental release (to mark 3.0.0 as 'used'. Don't publish this):
+        '3.0.0.dev1'
 """
-__version__ = "2.0.1.dev0"
+__version__ = "2.0.1.dev1"
