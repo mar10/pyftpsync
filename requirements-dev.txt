@@ -1,6 +1,7 @@
 -r requirements.txt
 
-black~=18.6
+# Black is beta and therefor requires --pre flag for installation unless we give the exact number
+black~=18.6b4
 check-manifest
 cx_Freeze
 flake8~=3.4
