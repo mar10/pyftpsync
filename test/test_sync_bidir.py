@@ -266,32 +266,32 @@ class BidirSpecialTest(_SyncTestBase):
 
         raise SkipTest("Currently we do NOT detect this kind of conflicts.")
 
-        self.assertEqual(stats["files_written"], 0)
-        self.assertEqual(stats["download_files_written"], 0)
-        self.assertEqual(stats["upload_files_written"], 0)
-        self.assertEqual(stats["files_deleted"], 0)
-        self.assertEqual(stats["dirs_deleted"], 0)
-        self.assertEqual(stats["conflict_files"], 1)
+        # self.assertEqual(stats["files_written"], 0)
+        # self.assertEqual(stats["download_files_written"], 0)
+        # self.assertEqual(stats["upload_files_written"], 0)
+        # self.assertEqual(stats["files_deleted"], 0)
+        # self.assertEqual(stats["dirs_deleted"], 0)
+        # self.assertEqual(stats["conflict_files"], 1)
 
-        expect_local = {
-            'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
-            'file2.txt': {'content': 'local2', 'date': '2014-01-01 12:00:00'},
-            'file3.txt': {'content': 'local3', 'date': '2014-01-01 12:00:00'},
-            'file4.txt': {'content': 'local4', 'date': '2014-01-01 12:00:00'},
-            'file5.txt': {'content': 'local5', 'date': '2014-01-01 12:00:00'},
-            'file6.txt': {'content': 'local6', 'date': '2014-01-01 12:00:00'},
-            'file7.txt': {'content': 'local7', 'date': '2014-01-01 12:00:00'},
-            'file8.txt': {'content': 'local8', 'date': '2014-01-01 12:00:00'},
-            'file9.txt': {'content': 'local9', 'date': '2014-01-01 12:00:00'},
-            'folder2/file2_1.txt': {'content': 'local2_1', 'date': '2014-01-01 12:00:00'},
-            'folder3/file3_1.txt': {'content': 'local3_1', 'date': '2014-01-01 12:00:00'},
-            'folder4/file4_1.txt': {'content': 'local4_1', 'date': '2014-01-01 12:00:00'},
-            'folder5/file5_1.txt': {'content': 'local5_1', 'date': '2014-01-01 12:00:00'},
-            'folder6/file6_1.txt': {'content': 'local6_1', 'date': '2014-01-01 12:00:00'},
-            'folder7/file7_1.txt': {'content': 'local7_1', 'date': '2014-01-01 12:00:00'},
-            }
-        self.assert_test_folder_equal(get_test_folder("local"), expect_local)
-        self.assert_test_folder_equal(get_test_folder("remote"), expect_local)
+        # expect_local = {
+        #     'file1.txt': {'content': 'local1', 'date': '2014-01-01 12:00:00'},
+        #     'file2.txt': {'content': 'local2', 'date': '2014-01-01 12:00:00'},
+        #     'file3.txt': {'content': 'local3', 'date': '2014-01-01 12:00:00'},
+        #     'file4.txt': {'content': 'local4', 'date': '2014-01-01 12:00:00'},
+        #     'file5.txt': {'content': 'local5', 'date': '2014-01-01 12:00:00'},
+        #     'file6.txt': {'content': 'local6', 'date': '2014-01-01 12:00:00'},
+        #     'file7.txt': {'content': 'local7', 'date': '2014-01-01 12:00:00'},
+        #     'file8.txt': {'content': 'local8', 'date': '2014-01-01 12:00:00'},
+        #     'file9.txt': {'content': 'local9', 'date': '2014-01-01 12:00:00'},
+        #     'folder2/file2_1.txt': {'content': 'local2_1', 'date': '2014-01-01 12:00:00'},
+        #     'folder3/file3_1.txt': {'content': 'local3_1', 'date': '2014-01-01 12:00:00'},
+        #     'folder4/file4_1.txt': {'content': 'local4_1', 'date': '2014-01-01 12:00:00'},
+        #     'folder5/file5_1.txt': {'content': 'local5_1', 'date': '2014-01-01 12:00:00'},
+        #     'folder6/file6_1.txt': {'content': 'local6_1', 'date': '2014-01-01 12:00:00'},
+        #     'folder7/file7_1.txt': {'content': 'local7_1', 'date': '2014-01-01 12:00:00'},
+        #     }
+        # self.assert_test_folder_equal(get_test_folder("local"), expect_local)
+        # self.assert_test_folder_equal(get_test_folder("remote"), expect_local)
 
 
 # ===============================================================================

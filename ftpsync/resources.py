@@ -12,18 +12,25 @@ from ftpsync.util import eps_compare, write
 
 PRINT_CLASSIFICATIONS = False
 
-ENTRY_CLASSIFICATIONS = frozenset([
-    "existing", "unmodified", "modified", "new", "deleted"
-    ])
+ENTRY_CLASSIFICATIONS = frozenset(
+    ["existing", "unmodified", "modified", "new", "deleted"]
+)
 
 # PAIR_CLASSIFICATIONS = frozenset([
 #     "conflict", "equal", "other"
 #     ])
 
-PAIR_OPERATIONS = frozenset([
-    "conflict", "copy_local", "copy_remote", "delete_local",
-    "delete_remote", "equal", "need_compare"
-    ])
+PAIR_OPERATIONS = frozenset(
+    [
+        "conflict",
+        "copy_local",
+        "copy_remote",
+        "delete_local",
+        "delete_remote",
+        "equal",
+        "need_compare",
+    ]
+)
 
 operation_map = {
     # (local, remote) => operation
@@ -32,36 +39,31 @@ operation_map = {
     ("missing", "unmodified"): "copy_remote",
     ("missing", "modified"): "copy_remote",
     ("missing", "deleted"): True,  # Nothing to do (only update metadata)
-
     ("new", "missing"): "copy_local",
     ("new", "new"): "need_compare",
     ("new", "unmodified"): "need_compare",
     ("new", "modified"): "need_compare",
     ("new", "deleted"): "conflict",
-
     ("unmodified", "missing"): "copy_local",
     ("unmodified", "new"): "need_compare",
     ("unmodified", "unmodified"): "equal",
     ("unmodified", "modified"): "copy_remote",
     ("unmodified", "deleted"): "delete_local",
-
     ("modified", "missing"): "copy_local",
     ("modified", "new"): "need_compare",
     ("modified", "unmodified"): "copy_local",
     ("modified", "modified"): "conflict",
     ("modified", "deleted"): "conflict",
-
     ("deleted", "missing"): True,  # Nothing to do (only update metadata)
     ("deleted", "new"): "conflict",
     ("deleted", "unmodified"): "delete_remote",
     ("deleted", "modified"): "conflict",
     ("deleted", "deleted"): True,  # Nothing to do (only update metadata)
-
     # No meta data available: treat as 'unmodified' in general:
     ("existing", "missing"): "copy_local",
     ("missing", "existing"): "copy_remote",
     ("existing", "existing"): "need_compare",
-    }
+}
 
 
 # ===============================================================================
@@ -69,6 +71,7 @@ operation_map = {
 # ===============================================================================
 class EntryPair(object):
     """"""
+
     def __init__(self, local, remote):
         self.local = local
         self.remote = remote
@@ -98,8 +101,10 @@ class EntryPair(object):
     def __str__(self):
         s = "<EntryPair({})>: ({}, {}) => {}".format(
             "[{}]".format(self.rel_path) if self.is_dir else self.rel_path,
-            self.local_classification, self.remote_classification,
-            self.operation)
+            self.local_classification,
+            self.remote_classification,
+            self.operation,
+        )
         return s
 
     @property
@@ -113,16 +118,24 @@ class EntryPair(object):
 
     def is_same_time(self):
         """Return True if local.mtime == remote.mtime."""
-        return (self.local and self.remote and
-                FileEntry._eps_compare(self.local.mtime, self.remote.mtime) == 0)
+        return (
+            self.local
+            and self.remote
+            and FileEntry._eps_compare(self.local.mtime, self.remote.mtime) == 0
+        )
 
     def override_operation(self, operation, reason):
         """Re-Classify entry pair."""
-        # prev = (self.local_classification, self.remote_classification)
+        prev_class = (self.local_classification, self.remote_classification)
         prev_op = self.operation
         assert operation != prev_op
         assert operation in PAIR_OPERATIONS
-        # write("override_operation({}, {}) -> {} ({})".format(prev, prev_op, operation, reason))
+        write(
+            "override_operation({}, {}) -> {} ({})".format(
+                prev_class, prev_op, operation, reason
+            ),
+            debug=True,
+        )
         self.operation = operation
         self.re_class_reason = reason
 
@@ -154,7 +167,9 @@ class EntryPair(object):
 
         self.operation = operation_map.get(c_pair)
         if not self.operation:
-            raise RuntimeError("Undefined operation for pair classification {}".format(c_pair))
+            raise RuntimeError(
+                "Undefined operation for pair classification {}".format(c_pair)
+            )
 
         if PRINT_CLASSIFICATIONS:
             write("classify {}".format(self))
@@ -169,6 +184,7 @@ class EntryPair(object):
 # ===============================================================================
 class _Resource(object):
     """Common base class for files and directories."""
+
     def __init__(self, target, rel_path, name, size, mtime, unique):
         """
 
@@ -217,9 +233,11 @@ class _Resource(object):
             res = "{}([{}])".format(self.__class__.__name__, path)
         else:
             res = "{}('{}', size:{}, modified:{})".format(
-                self.__class__.__name__, path,
+                self.__class__.__name__,
+                path,
                 "{:,}".format(self.size) if self.size is not None else self.size,
-                dt_modified)
+                dt_modified,
+            )
             # + " ## %s, %s" % (self.mtime, time.asctime(time.gmtime(self.mtime)))
         if self.classification:
             res += " => {}".format(self.classification)
@@ -287,8 +305,10 @@ class _Resource(object):
                 self.ps_size = peer_entry_meta.get("s")
                 self.ps_mtime = peer_entry_meta.get("m")
                 self.ps_utime = peer_entry_meta.get("u")
-                if self.size == self.ps_size and \
-                        FileEntry._eps_compare(self.mtime, self.ps_mtime) == 0:
+                if (
+                    self.size == self.ps_size
+                    and FileEntry._eps_compare(self.mtime, self.ps_mtime) == 0
+                ):
                     self.classification = "unmodified"
                 else:
                     self.classification = "modified"
@@ -319,7 +339,7 @@ class FileEntry(_Resource):
     # 2 seconds difference is considered equal.
     # mtime stamp resolution depends on filesystem: FAT32. 2 seconds, NTFS ms, OSX. 1 sec.
     EPS_TIME = 2.01
-#     EPS_TIME = 0.1
+    #     EPS_TIME = 0.1
 
     def __init__(self, target, rel_path, name, size, mtime, unique):
         super(FileEntry, self).__init__(target, rel_path, name, size, mtime, unique)
@@ -333,15 +353,22 @@ class FileEntry(_Resource):
 
     def __eq__(self, other):
         same_time = self._eps_compare(self.mtime, other.mtime) == 0
-        return (other and other.__class__ == self.__class__
-                and other.name == self.name and other.size == self.size
-                and same_time)
+        return (
+            other
+            and other.__class__ == self.__class__
+            and other.name == self.name
+            and other.size == self.size
+            and same_time
+        )
 
     def __gt__(self, other):
         time_greater = self._eps_compare(self.mtime, other.mtime) > 0
-        return (other and other.__class__ == self.__class__
-                and other.name == self.name
-                and time_greater)
+        return (
+            other
+            and other.__class__ == self.__class__
+            and other.name == self.name
+            and time_greater
+        )
 
     def get_sync_info(self, key=None):
         """Get mtime/size when this resource was last synchronized with remote."""
@@ -367,7 +394,9 @@ class FileEntry(_Resource):
 # ===============================================================================
 class DirectoryEntry(_Resource):
     def __init__(self, target, rel_path, name, size, mtime, unique):
-        super(DirectoryEntry, self).__init__(target, rel_path, name, size, mtime, unique)
+        super(DirectoryEntry, self).__init__(
+            target, rel_path, name, size, mtime, unique
+        )
         # Directories don't have a size (that we could reasonably use for classification)
         self.size = 0
 

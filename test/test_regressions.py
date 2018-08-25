@@ -10,8 +10,9 @@ from unittest.case import SkipTest
 
 from ftpsync.compat import urlparse
 from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL
-from ftpsync.synchronizers import UploadSynchronizer
-from ftpsync.targets import FsTarget
+
+# from ftpsync.synchronizers import UploadSynchronizer
+# from ftpsync.targets import FsTarget
 
 on_windows = platform.system() == "Windows"
 
@@ -21,12 +22,15 @@ on_windows = platform.system() == "Windows"
 # ===============================================================================
 class RegressionTest(unittest.TestCase):
     """Test basic ftplib.FTP functionality."""
+
     def setUp(self):
         # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"
         ftp_url = PYFTPSYNC_TEST_FTP_URL
         if not ftp_url:
-            raise SkipTest("Must configure an FTP target "
-                           "(environment variable PYFTPSYNC_TEST_FTP_URL)")
+            raise SkipTest(
+                "Must configure an FTP target "
+                "(environment variable PYFTPSYNC_TEST_FTP_URL)"
+            )
 
         parts = urlparse(ftp_url, allow_fragments=False)
         # self.assertIn(parts.scheme.lower(), ["ftp", "ftps"])
@@ -55,20 +59,20 @@ class RegressionTest(unittest.TestCase):
     #     s = DownloadSynchronizer(local, remote, opts)
     #     s.run()
 
-    def test_issue_31(self):
-        """issue #31: exclude files"""
-        local = FsTarget("/Users/martin/prj/git/pyftpsync")
-        remote = FsTarget("/Users/martin/prj/temp")
-        opts = {
-            # "resolve": "remote",
-            "verbose": 5,
-            "dry_run": True,
-            # "exclude": [".git", ".cache"],
-            # "exclude": ".git,.cache",
-            }
-        s = UploadSynchronizer(local, remote, opts)
-        s.run()
-        # raise
+    # def test_issue_31(self):
+    #     """issue #31: exclude files"""
+    #     local = FsTarget("/Users/martin/prj/git/pyftpsync")
+    #     remote = FsTarget("/Users/martin/prj/temp")
+    #     opts = {
+    #         # "resolve": "remote",
+    #         "verbose": 5,
+    #         "dry_run": True,
+    #         # "exclude": [".git", ".cache"],
+    #         # "exclude": ".git,.cache",
+    #         }
+    #     s = UploadSynchronizer(local, remote, opts)
+    #     s.run()
+    #     # raise
 
 
 # ===============================================================================

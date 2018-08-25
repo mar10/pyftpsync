@@ -99,38 +99,6 @@ def run_script(*args, **kw):
     return "\n".join(out).strip()
 
 
-def prepare_fixture():
-    """Helper for command line testing.
-
-    Example:
-        >>>python -m test.fixture_tools
-        Created fixtures at /Users/martin/prj/test/pyftpsync_test_folder
-        >>>ls /Users/martin/prj/test/pyftpsync_test_folder
-        local	remote
-    """
-    use_ftp = False
-    if "--no-ftp" not in sys.argv:
-        try:
-            check_ftp_test_connection(PYFTPSYNC_TEST_FOLDER, PYFTPSYNC_TEST_FTP_URL)
-            use_ftp = True
-        except SkipTest:
-            pass
-
-    class _DummySuite(_SyncTestBase):
-        use_ftp_target = use_ftp
-
-    _DummySuite._prepare_initial_synced_fixture()
-    _DummySuite._prepare_modified_fixture()
-
-    print("Created fixtures at {}".format(PYFTPSYNC_TEST_FOLDER))
-    if use_ftp:
-        print("NOTE: The remote target is prepared for FTP access, using PYFTPSYNC_TEST_FTP_URL.")
-        print("      Pass `--no-ftp` to prepare for file access.")
-    else:
-        print("NOTE: The remote target is prepared for FILE SYSTEM access, because\n"
-              "      PYFTPSYNC_TEST_FTP_URL is invalid or no server is running.")
-
-
 def write_test_file(name, size=None, content=None, dt=None, age=None):
     """Create a file inside the temporary folder, optionally creating subfolders.
 
@@ -724,7 +692,10 @@ class _SyncTestBase(unittest.TestCase):
         return s.get_stats()
 
     def do_run_suite(self, synchronizer_class, opts):
-        """Run a synchronizer with specific options against a defined fixture."""
+        """Run a synchronizer with specific options against a defined fixture.
+        
+        See _prepare_modified_fixture() for the definition of the start situation.
+        """
         self._prepare_modified_fixture()
         # Synchronize folders
         stats = self._sync_test_folders(synchronizer_class, opts)
@@ -755,6 +726,38 @@ class _SyncTestBase(unittest.TestCase):
         pprint(get_test_folder("local"), width=128)
         print("*** remote:")
         pprint(get_test_folder("remote"), width=128)
+
+
+def prepare_fixture():
+    """Helper for command line testing.
+
+    Example:
+        >>>python -m test.fixture_tools
+        Created fixtures at /Users/martin/prj/test/pyftpsync_test_folder
+        >>>ls /Users/martin/prj/test/pyftpsync_test_folder
+        local	remote
+    """
+    use_ftp = False
+    if "--no-ftp" not in sys.argv:
+        try:
+            check_ftp_test_connection(PYFTPSYNC_TEST_FOLDER, PYFTPSYNC_TEST_FTP_URL)
+            use_ftp = True
+        except SkipTest:
+            pass
+
+    class _DummySuite(_SyncTestBase):
+        use_ftp_target = use_ftp
+
+    _DummySuite._prepare_initial_synced_fixture()
+    _DummySuite._prepare_modified_fixture()
+
+    print("Created fixtures at {}".format(PYFTPSYNC_TEST_FOLDER))
+    if use_ftp:
+        print("NOTE: The remote target is prepared for FTP access, using PYFTPSYNC_TEST_FTP_URL.")
+        print("      Pass `--no-ftp` to prepare for file access.")
+    else:
+        print("NOTE: The remote target is prepared for FILE SYSTEM access, because\n"
+              "      PYFTPSYNC_TEST_FTP_URL is invalid or no server is running.")
 
 
 if __name__ == "__main__":
