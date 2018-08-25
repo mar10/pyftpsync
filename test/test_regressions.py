@@ -6,12 +6,13 @@ from __future__ import print_function
 
 import platform
 import unittest
-from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL
 from unittest.case import SkipTest
 
 from ftpsync.compat import urlparse
-from ftpsync.synchronizers import UploadSynchronizer
-from ftpsync.targets import FsTarget
+from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL
+
+# from ftpsync.synchronizers import UploadSynchronizer
+# from ftpsync.targets import FsTarget
 
 on_windows = platform.system() == "Windows"
 
@@ -58,20 +59,20 @@ class RegressionTest(unittest.TestCase):
     #     s = DownloadSynchronizer(local, remote, opts)
     #     s.run()
 
-    def test_issue_31(self):
-        """issue #31: exclude files"""
-        local = FsTarget("/Users/martin/prj/git/pyftpsync")
-        remote = FsTarget("/Users/martin/prj/temp")
-        opts = {
-            # "resolve": "remote",
-            "verbose": 5,
-            "dry_run": True,
-            # "exclude": [".git", ".cache"],
-            # "exclude": ".git,.cache",
-        }
-        s = UploadSynchronizer(local, remote, opts)
-        s.run()
-        # raise
+    # def test_issue_31(self):
+    #     """issue #31: exclude files"""
+    #     local = FsTarget("/Users/martin/prj/git/pyftpsync")
+    #     remote = FsTarget("/Users/martin/prj/temp")
+    #     opts = {
+    #         # "resolve": "remote",
+    #         "verbose": 5,
+    #         "dry_run": True,
+    #         # "exclude": [".git", ".cache"],
+    #         # "exclude": ".git,.cache",
+    #         }
+    #     s = UploadSynchronizer(local, remote, opts)
+    #     s.run()
+    #     # raise
 
 
 # ===============================================================================

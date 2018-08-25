@@ -153,6 +153,9 @@ class BaseSynchronizer(object):
     def __del__(self):
         self.close()
 
+    def get_info_strings(self):
+        raise NotImplementedError
+
     def close(self):
         if self.local.connected:
             self.local.close()
@@ -243,7 +246,7 @@ class BaseSynchronizer(object):
         return res
 
     def _copy_file(self, src, dest, file_entry):
-        # TODO: save replace:
+        # TODO: safe replace:
         # 1. remove temp file
         # 2. copy to target.temp
         # 3. use loggingFile for feedback
@@ -409,7 +412,8 @@ class BaseSynchronizer(object):
         if action and status:
             tag = ("{} {}".format(action, status)).upper()
         else:
-            tag = ("{}".format(action, status)).upper()
+            assert status
+            tag = ("{}".format(status)).upper()
 
         name = entry.get_rel_path()
         if entry.is_dir():
@@ -568,7 +572,7 @@ class BaseSynchronizer(object):
                     self.local.cwd("..")
                     self.remote.cwd("..")
 
-        return
+        return True
 
     def re_classify_pair(self, pair):
         """Allow derrived classes to override default classification and operation.
@@ -576,7 +580,7 @@ class BaseSynchronizer(object):
         Returns:
             False to prevent default operation.
         """
-        pass
+        return True
 
     def on_mismatch(self, pair):
         """Called for pairs that don't match `match` and `exclude` filters."""
@@ -967,17 +971,15 @@ class UploadSynchronizer(BiDirSynchronizer):
 
     def re_classify_pair(self, pair):
         force = self.options.get("force")
-        delete = self.options.get("delete")
+        # delete = self.options.get("delete")
         is_file = not pair.is_dir
 
         classification = (pair.local_classification, pair.remote_classification)
 
         # print("re_classify_pair", pair)
-        if delete:
-            if classification == ("missing", "new"):
-                assert pair.operation == "copy_remote"
-                pair.override_operation("delete_remote", "restore")
-                # return
+        if classification == ("missing", "new"):
+            assert pair.operation == "copy_remote"
+            pair.override_operation("delete_remote", "restore")
 
         if force:
             if is_file and classification == ("new", "new"):
@@ -989,11 +991,7 @@ class UploadSynchronizer(BiDirSynchronizer):
             elif classification == ("unmodified", "deleted"):
                 pair.override_operation("copy_local", "restore")
 
-        # if delete and pair.operation == "copy_remote" and not pair.local:
-        #     print("delete: Re-classify copy_remote => delete_remote")
-        #     pair.operation = "delete_remote"
-        #     return
-        return
+        return True
 
     def _interactive_resolve(self, pair):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
@@ -1096,7 +1094,14 @@ class UploadSynchronizer(BiDirSynchronizer):
 
     def on_delete_local(self, pair):
         # Uploads does not modify local target
-        self._log_action("skip", "delete", "X< ", pair.local)
+        self._log_action("skip", "local del.", "X< ", pair.local)
+
+    def on_delete_remote(self, pair):
+        # Upload does not delete unless --delete was given
+        if not self.options.get("delete"):
+            self._log_action("skip", "remote del.", " >X", pair.remote)
+            return
+        return super(UploadSynchronizer, self).on_delete_remote(pair)
 
     # def on_need_compare(self, pair):
     #     self._log_action("", "different", "?", pair.local, min_level=2)
@@ -1125,17 +1130,15 @@ class DownloadSynchronizer(BiDirSynchronizer):
 
     def re_classify_pair(self, pair):
         force = self.options.get("force")
-        delete = self.options.get("delete")
+        # delete = self.options.get("delete")
         is_file = not pair.is_dir
 
         classification = (pair.local_classification, pair.remote_classification)
 
-        # write("re_classify_pair", pair)
-        if delete:
-            if classification == ("new", "missing"):
-                assert pair.operation == "copy_local"
-                pair.override_operation("delete_local", "restore")
-                # return
+        # write("re_classify_pair: {}".format(pair))
+        if classification == ("new", "missing"):
+            assert pair.operation == "copy_local"
+            pair.override_operation("delete_local", "restore")
 
         if force:
             if is_file and classification == ("new", "new"):
@@ -1147,11 +1150,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
             elif classification == ("deleted", "unmodified"):
                 pair.override_operation("copy_remote", "restore")
 
-        # if delete and pair.operation == "copy_remote" and not pair.local:
-        #     write("delete: Re-classify copy_remote => delete_remote")
-        #     pair.operation = "delete_remote"
-        #     return
-        return
+        return True
 
     def _interactive_resolve(self, pair):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
@@ -1254,9 +1253,16 @@ class DownloadSynchronizer(BiDirSynchronizer):
         # status = pair.remote.classification if pair.remote else "missing"
         self._log_action("skip", "upload", ">", pair.local)
 
+    def on_delete_local(self, pair):
+        # Download does not delete unless --delete was given
+        if not self.options.get("delete"):
+            self._log_action("skip", "local del.", "X< ", pair.local)
+            return
+        return super(DownloadSynchronizer, self).on_delete_local(pair)
+
     def on_delete_remote(self, pair):
         # Download does not modify remote target
-        self._log_action("skip", "delete", " >X", pair.remote)
+        self._log_action("skip", "remote del.", " >X", pair.remote)
 
     # def on_need_compare(self, pair):
     #     self._log_action("", "different", "?", pair.local, min_level=2)

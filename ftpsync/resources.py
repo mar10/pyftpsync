@@ -125,11 +125,16 @@ class EntryPair(object):
 
     def override_operation(self, operation, reason):
         """Re-Classify entry pair."""
-        # prev = (self.local_classification, self.remote_classification)
+        prev_class = (self.local_classification, self.remote_classification)
         prev_op = self.operation
         assert operation != prev_op
         assert operation in PAIR_OPERATIONS
-        # write("override_operation({}, {}) -> {} ({})".format(prev, prev_op, operation, reason))
+        write(
+            "override_operation({}, {}) -> {} ({})".format(
+                prev_class, prev_op, operation, reason
+            ),
+            debug=True,
+        )
         self.operation = operation
         self.re_class_reason = reason
 

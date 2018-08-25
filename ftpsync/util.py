@@ -53,10 +53,14 @@ set_pyftpsync_logger(True)
 
 def write(*args, **kwargs):
     """Redirectable wrapper for print statements."""
+    debug = kwargs.pop("debug", None)
     if _logger:
         kwargs.pop("end", None)
         kwargs.pop("file", None)
-        _logger.info(*args, **kwargs)
+        if debug:
+            _logger.debug(*args, **kwargs)
+        else:
+            _logger.info(*args, **kwargs)
     else:
         print(*args, **kwargs)
 
@@ -279,7 +283,7 @@ def save_password(url, username, password):
     if keyring:
         if ":" in username:
             raise RuntimeError(
-                "Unable to store credentials if username contains a ':' ({}).".formta(
+                "Unable to store credentials if username contains a ':' ({}).".format(
                     username
                 )
             )
