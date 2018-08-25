@@ -52,6 +52,7 @@ class CaptureStdout(list):
     output is some output is written to stdout or stderr, so we need to check both:
     https://stackoverflow.com/a/31715011/19166
     """
+
     def __init__(self, stdout=True, stderr=True):
         self._do_stdout = stdout
         self._do_stderr = stderr
@@ -832,11 +833,15 @@ def prepare_fixture():
 
     print("Created fixtures at {}".format(PYFTPSYNC_TEST_FOLDER))
     if use_ftp:
-        print("NOTE: The remote target is prepared for FTP access, using PYFTPSYNC_TEST_FTP_URL.")
+        print(
+            "NOTE: The remote target is prepared for FTP access, using PYFTPSYNC_TEST_FTP_URL."
+        )
         print("      Pass `--no-ftp` to prepare for file access.")
     else:
-        print("NOTE: The remote target is prepared for FILE SYSTEM access, because\n"
-              "      PYFTPSYNC_TEST_FTP_URL is invalid or no server is running.")
+        print(
+            "NOTE: The remote target is prepared for FILE SYSTEM access, because\n"
+            "      PYFTPSYNC_TEST_FTP_URL is invalid or no server is running."
+        )
 
 
 if __name__ == "__main__":
