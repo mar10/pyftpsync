@@ -8,11 +8,11 @@ import json
 import time
 
 from ftpsync import __version__
-from ftpsync.util import pretty_stamp, str_to_bool, get_option, write, write_error
-
+from ftpsync.util import get_option, pretty_stamp, str_to_bool, write, write_error
 
 PYFTPSYNC_VERBOSE_META = str_to_bool(
-    get_option("PYFTPSYNC_VERBOSE_META", "debug", "verbose_meta", False))
+    get_option("PYFTPSYNC_VERBOSE_META", "debug", "verbose_meta", False)
+)
 
 
 class IncompatibleMetadataVersion(RuntimeError):
@@ -26,19 +26,20 @@ class DirMetadata(object):
     """
 
     """
+
     META_FILE_NAME = ".pyftpsync-meta.json"
     LOCK_FILE_NAME = ".pyftpsync-lock.json"
-    PRETTY = PYFTPSYNC_VERBOSE_META  # False: Reduce file size to 35% (like 3759 -> 1375 bytes)
-    VERSION = 2    # Increment if format changes. Old files will be discarded then!
+    PRETTY = (
+        PYFTPSYNC_VERBOSE_META
+    )  # False: Reduce file size to 35% (like 3759 -> 1375 bytes)
+    VERSION = 2  # Increment if format changes. Old files will be discarded then!
 
     def __init__(self, target):
         self.target = target
         self.path = target.cur_dir
         self.list = {}
         self.peer_sync = {}
-        self.dir = {"mtimes": self.list,
-                    "peer_sync": self.peer_sync,
-                    }
+        self.dir = {"mtimes": self.list, "peer_sync": self.peer_sync}
         #: str: ".pyftpsync-meta.json"
         self.filename = self.META_FILE_NAME
         #: bool: True if a least one FTP file entry time was changed since last read/write
@@ -63,15 +64,11 @@ class DirMetadata(object):
         changed by other means and we have to discard our meta data.
         """
         ut = time.time()  # UTC time stamp
-        self.list[filename] = {"m": mtime,
-                               "s": size,
-                               "u": ut,
-                               }
+        self.list[filename] = {"m": mtime, "s": size, "u": ut}
         if self.PRETTY:
-            self.list[filename].update({
-                "mtime_str": pretty_stamp(mtime),
-                "uploaded_str": pretty_stamp(ut),
-                })
+            self.list[filename].update(
+                {"mtime_str": pretty_stamp(mtime), "uploaded_str": pretty_stamp(ut)}
+            )
         self.modified_list = True
 
     def set_sync_info(self, filename, mtime, size):
@@ -86,12 +83,11 @@ class DirMetadata(object):
         ps = self.dir["peer_sync"].setdefault(remote_target.get_id(), {})
         ut = time.time()  # UTC time stamp
         ps[":last_sync"] = ut  # this is an invalid file name to avoid conflicts
-        pse = ps[filename] = {"m": mtime,
-                              "s": size,
-                              "u": ut,
-                              }
+        pse = ps[filename] = {"m": mtime, "s": size, "u": ut}
         if self.PRETTY:
-            ps[":last_sync_str"] = pretty_stamp(ut)  # use an invalid file name to avoid conflicts
+            ps[":last_sync_str"] = pretty_stamp(
+                ut
+            )  # use an invalid file name to avoid conflicts
             pse["mtime_str"] = pretty_stamp(mtime) if mtime else "(directory)"
             pse["uploaded_str"] = pretty_stamp(ut)
         self.modified_sync = True
@@ -105,7 +101,9 @@ class DirMetadata(object):
                 remote_target = self.target.peer
                 if remote_target.get_id() in self.dir["peer_sync"]:
                     rid = remote_target.get_id()
-                    self.modified_sync = bool(self.dir["peer_sync"][rid].pop(filename, None))
+                    self.modified_sync = bool(
+                        self.dir["peer_sync"][rid].pop(filename, None)
+                    )
         return
 
     def read(self):
@@ -137,11 +135,16 @@ class DirMetadata(object):
             if not self.target or not self.target.get_option("migrate"):
                 raise IncompatibleMetadataVersion(
                     "Invalid meta data version: {} (expected {}).\n"
-                    "Consider passing --migrate to discard old data."
-                    .format(self.dir.get("_file_version"), self.VERSION))
+                    "Consider passing --migrate to discard old data.".format(
+                        self.dir.get("_file_version"), self.VERSION
+                    )
+                )
             #
-            write("Migrating meta data version from {} to {} (discarding old): {}"
-                  .format(self.dir.get("_file_version"), self.VERSION, self.filename))
+            write(
+                "Migrating meta data version from {} to {} (discarding old): {}".format(
+                    self.dir.get("_file_version"), self.VERSION, self.filename
+                )
+            )
             self.list = {}
             self.peer_sync = {}
 
@@ -150,9 +153,9 @@ class DirMetadata(object):
     def flush(self):
         """Write self to .pyftpsync-meta.json."""
         # We DO write meta files even on read-only targets, but not in dry-run mode
-#         if self.target.readonly:
-#             write("DirMetadata.flush(%s): read-only; nothing to do" % self.target)
-#             return
+        #         if self.target.readonly:
+        #             write("DirMetadata.flush(%s): read-only; nothing to do" % self.target)
+        #             return
         assert self.path == self.target.cur_dir
         if self.target.dry_run:
             # write("DirMetadata.flush(%s): dry-run; nothing to do" % self.target)
@@ -176,7 +179,7 @@ class DirMetadata(object):
                 s = json.dumps(self.dir, indent=4, sort_keys=True)
             else:
                 s = json.dumps(self.dir, sort_keys=True)
-#             write("DirMetadata.flush(%s)" % (self.target, ))#, s)
+            #             write("DirMetadata.flush(%s)" % (self.target, ))#, s)
             self.target.write_text(self.filename, s)
             if self.target.synchronizer:
                 self.target.synchronizer._inc_stat("meta_bytes_written", len(s))

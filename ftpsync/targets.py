@@ -6,9 +6,9 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 
 import io
 import os
-from posixpath import join as join_url, normpath as normpath_url
 import shutil
 import threading
+from posixpath import join as join_url, normpath as normpath_url
 
 from ftpsync import compat
 from ftpsync.metadata import DirMetadata
@@ -32,7 +32,7 @@ def make_target(url, extra_opts=None):
     Returns:
         :class:`_Target`
     """
-#    debug = extra_opts.get("debug", 1)
+    #    debug = extra_opts.get("debug", 1)
     parts = compat.urlparse(url, allow_fragments=False)
     # scheme is case-insensitive according to http://tools.ietf.org/html/rfc3986
     scheme = parts.scheme.lower()
@@ -40,10 +40,17 @@ def make_target(url, extra_opts=None):
         creds = parts.username, parts.password
         tls = scheme == "ftps"
         from ftpsync import ftp_target
-        target = ftp_target.FtpTarget(parts.path, parts.hostname, parts.port,
-                                      username=creds[0], password=creds[1],
-                                      tls=tls, timeout=None,
-                                      extra_opts=extra_opts)
+
+        target = ftp_target.FtpTarget(
+            parts.path,
+            parts.hostname,
+            parts.port,
+            username=creds[0],
+            password=creds[1],
+            tls=tls,
+            timeout=None,
+            extra_opts=extra_opts,
+        )
     else:
         target = FsTarget(url, extra_opts)
 
@@ -55,6 +62,7 @@ def make_target(url, extra_opts=None):
 # ===============================================================================
 class _Target(object):
     """Base class for :class:`FsTarget`, :class:`FtpTarget`, etc."""
+
     DEFAULT_BLOCKSIZE = 16 * 1024  # shutil.copyobj() uses 16k blocks by default
 
     def __init__(self, root_dir, extra_opts):
@@ -83,12 +91,12 @@ class _Target(object):
         # TODO: http://pydev.blogspot.de/2015/01/creating-safe-cyclic-reference.html
         self.close()
 
-#     def __enter__(self):
-#         self.open()
-#         return self
-#
-#     def __exit__(self, exc_type, exc_value, traceback):
-#         self.close()
+    #     def __enter__(self):
+    #         self.open()
+    #         return self
+    #
+    #     def __exit__(self, exc_type, exc_value, traceback):
+    #         self.close()
 
     def get_base_name(self):
         return "{}".format(self.root_dir)
@@ -130,7 +138,10 @@ class _Target(object):
 
     def check_write(self, name):
         """Raise exception if writing cur_dir/name is not allowed."""
-        if self.readonly and name not in (DirMetadata.META_FILE_NAME, DirMetadata.LOCK_FILE_NAME):
+        if self.readonly and name not in (
+            DirMetadata.META_FILE_NAME,
+            DirMetadata.LOCK_FILE_NAME,
+        ):
             raise RuntimeError("Target is read-only: {} + {} / ".format(self, name))
 
     def get_id(self):
@@ -216,10 +227,10 @@ class _Target(object):
         """Read text string from cur_dir/name using open_readable()."""
         with self.open_readable(name) as fp:
             res = fp.read()  # StringIO or file object
-#             try:
-#                 res = fp.getvalue()  # StringIO returned by FtpTarget
-#             except AttributeError:
-#                 res = fp.read()  # file object returned by FsTarget
+            #             try:
+            #                 res = fp.getvalue()  # StringIO returned by FtpTarget
+            #             except AttributeError:
+            #                 res = fp.read()  # file object returned by FsTarget
             res = res.decode("utf8")
             return res
 
@@ -268,6 +279,7 @@ class _Target(object):
 # FsTarget
 # ===============================================================================
 
+
 class FsTarget(_Target):
 
     DEFAULT_BLOCKSIZE = 16 * 1024  # shutil.copyobj() uses 16k blocks by default
@@ -281,7 +293,9 @@ class FsTarget(_Target):
         self.support_set_time = True
 
     def __str__(self):
-        return "<FS:{} + {}>".format(self.root_dir, os.path.relpath(self.cur_dir, self.root_dir))
+        return "<FS:{} + {}>".format(
+            self.root_dir, os.path.relpath(self.cur_dir, self.root_dir)
+        )
 
     def open(self):
         super(FsTarget, self).open()
@@ -293,7 +307,9 @@ class FsTarget(_Target):
     def cwd(self, dir_name):
         path = normpath_url(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
-            raise RuntimeError("Tried to navigate outside root %r: %r" % (self.root_dir, path))
+            raise RuntimeError(
+                "Tried to navigate outside root %r: %r" % (self.root_dir, path)
+            )
         self.cur_dir_meta = None
         self.cur_dir = path
         return self.cur_dir
@@ -310,7 +326,7 @@ class FsTarget(_Target):
         """Remove cur_dir/name."""
         self.check_write(dir_name)
         path = normpath_url(join_url(self.cur_dir, dir_name))
-#         write("REMOVE %r" % path)
+        #         write("REMOVE %r" % path)
         shutil.rmtree(path)
 
     def flush_meta(self):
@@ -320,34 +336,44 @@ class FsTarget(_Target):
 
     def get_dir(self):
         res = []
-#        self.cur_dir_meta = None
+        #        self.cur_dir_meta = None
         self.cur_dir_meta = DirMetadata(self)
         for name in os.listdir(self.cur_dir):
             path = os.path.join(self.cur_dir, name)
             stat = os.lstat(path)
-#            write(name)
-#            write("    mt : %s" % stat.st_mtime)
-#            write("    lc : %s" % (time.localtime(stat.st_mtime),))
-#            write("       : %s" % time.asctime(time.localtime(stat.st_mtime)))
-#            write("    gmt: %s" % (time.gmtime(stat.st_mtime),))
-#            write("       : %s" % time.asctime(time.gmtime(stat.st_mtime)))
-#
-#            utc_stamp = st_mtime_to_utc(stat.st_mtime)
-#            write("    utc: %s" % utc_stamp)
-#            write("    diff: %s" % ((utc_stamp - stat.st_mtime) / (60*60)))
+            #            write(name)
+            #            write("    mt : %s" % stat.st_mtime)
+            #            write("    lc : %s" % (time.localtime(stat.st_mtime),))
+            #            write("       : %s" % time.asctime(time.localtime(stat.st_mtime)))
+            #            write("    gmt: %s" % (time.gmtime(stat.st_mtime),))
+            #            write("       : %s" % time.asctime(time.gmtime(stat.st_mtime)))
+            #
+            #            utc_stamp = st_mtime_to_utc(stat.st_mtime)
+            #            write("    utc: %s" % utc_stamp)
+            #            write("    diff: %s" % ((utc_stamp - stat.st_mtime) / (60*60)))
             # stat.st_mtime is returned as UTC
             mtime = stat.st_mtime
             if os.path.isdir(path):
-                res.append(DirectoryEntry(self, self.cur_dir, name, stat.st_size,
-                                          mtime,
-                                          str(stat.st_ino)))
+                res.append(
+                    DirectoryEntry(
+                        self, self.cur_dir, name, stat.st_size, mtime, str(stat.st_ino)
+                    )
+                )
             elif os.path.isfile(path):
                 if name == DirMetadata.META_FILE_NAME:
                     self.cur_dir_meta.read()
                 # elif not name in (DirMetadata.DEBUG_META_FILE_NAME, ):
                 else:
-                    res.append(FileEntry(self, self.cur_dir, name, stat.st_size,
-                                         mtime, str(stat.st_ino)))
+                    res.append(
+                        FileEntry(
+                            self,
+                            self.cur_dir,
+                            name,
+                            stat.st_size,
+                            mtime,
+                            str(stat.st_ino),
+                        )
+                    )
         return res
 
     def open_readable(self, name):

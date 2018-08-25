@@ -12,14 +12,18 @@ import os
 import sys
 import unittest
 
-# from ftpsync.ftp_target import *  # @UnusedWildImport
-from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer
-from ftpsync.targets import make_target, FsTarget
 # from ftpsync.targets import *  # @UnusedWildImport
-from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL, \
-    PYFTPSYNC_TEST_FOLDER, empty_folder, write_test_file
+from test.fixture_tools import (
+    PYFTPSYNC_TEST_FOLDER,
+    PYFTPSYNC_TEST_FTP_URL,
+    empty_folder,
+    write_test_file,
+)
 from test.test_1x import prepare_fixtures_1
 
+# from ftpsync.ftp_target import *  # @UnusedWildImport
+from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer
+from ftpsync.targets import FsTarget, make_target
 
 DO_BENCHMARKS = False  # True
 # slow = pytest.mark.skipif(not pytest.config.getoption("--runslow"), reason="need --runslow")
@@ -30,16 +34,21 @@ DO_BENCHMARKS = False  # True
 # ===============================================================================
 class BenchmarkTest(unittest.TestCase):
     """Test ftp_target.FtpTarget functionality."""
+
     def setUp(self):
         if not DO_BENCHMARKS:
             self.skipTest("DO_BENCHMARKS is not set.")
         # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"
         ftp_url = PYFTPSYNC_TEST_FTP_URL
         if not ftp_url:
-            self.skipTest("Must configure an FTP target "
-                          "(environment variable PYFTPSYNC_TEST_FTP_URL)")
-        self.assertTrue("/test" in ftp_url or "/temp" in ftp_url,
-                        "FTP target path must include '/test' or '/temp'")
+            self.skipTest(
+                "Must configure an FTP target "
+                "(environment variable PYFTPSYNC_TEST_FTP_URL)"
+            )
+        self.assertTrue(
+            "/test" in ftp_url or "/temp" in ftp_url,
+            "FTP target path must include '/test' or '/temp'",
+        )
 
         # Create temp/local folder with files and empty temp/remote folder
         prepare_fixtures_1()
@@ -69,14 +78,17 @@ class BenchmarkTest(unittest.TestCase):
         s = UploadSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
-#        pprint(stats)
+        #        pprint(stats)
 
         self.assertEqual(stats["files_written"], count)
         self.assertEqual(stats["bytes_written"], count * size)
-#        pprint(stats)
-        print("Upload {} x {} bytes took {}: {}"
-              .format(count, size, stats["upload_write_time"], stats["upload_rate_str"]),
-              file=sys.stderr)
+        #        pprint(stats)
+        print(
+            "Upload {} x {} bytes took {}: {}".format(
+                count, size, stats["upload_write_time"], stats["upload_rate_str"]
+            ),
+            file=sys.stderr,
+        )
 
         # Download all of remote to temp/remote
 
@@ -86,23 +98,26 @@ class BenchmarkTest(unittest.TestCase):
         s = DownloadSynchronizer(local, remote, opts)
         s.run()
         stats = s.get_stats()
-#        pprint(stats)
+        #        pprint(stats)
 
         self.assertEqual(stats["files_written"], count)
         self.assertEqual(stats["bytes_written"], count * size)
 
-#        pprint(stats)
-        print("Download {} x {} bytes took {}: {}"
-              .format(count, size, stats["download_write_time"], stats["download_rate_str"]),
-              file=sys.stderr)
+        #        pprint(stats)
+        print(
+            "Download {} x {} bytes took {}: {}".format(
+                count, size, stats["download_write_time"], stats["download_rate_str"]
+            ),
+            file=sys.stderr,
+        )
 
     def test_transfer_small_files(self):
         """Transfer 20 KiB in many small files."""
-        self._transfer_files(count=10, size=2*1024)
+        self._transfer_files(count=10, size=2 * 1024)
 
     def test_transfer_large_files(self):
         """Transfer 20 KiB in one large file."""
-        self._transfer_files(count=1, size=20*1024)
+        self._transfer_files(count=1, size=20 * 1024)
 
 
 # ===============================================================================

@@ -1,8 +1,11 @@
 -r requirements.txt
 
+# Black is beta and therefor requires --pre flag for installation unless we give the exact number
+black~=18.6b4
 check-manifest
 cx_Freeze
 flake8~=3.4
+flake8-bugbear~=18.2
 flake8-quotes~=1.0
 pyftpdlib~=1.5
 pytest-cov~=2.5

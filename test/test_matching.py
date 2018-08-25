@@ -10,9 +10,12 @@ from __future__ import print_function
 
 import re
 import unittest
-
-from test.fixture_tools import _SyncTestBase, get_local_test_url, get_remote_test_url,\
-    run_script
+from test.fixture_tools import (
+    _SyncTestBase,
+    get_local_test_url,
+    get_remote_test_url,
+    run_script,
+)
 
 
 # ===============================================================================
@@ -52,79 +55,94 @@ class MatchTest(_SyncTestBase):
 
     def test_match_all(self):
         out = run_script("scan", self.local, "--list", "--recursive")
-        self.assert_scan_equal(out, [
-            'file1.txt',
-            'file2.txt',
-            'file3.txt',
-            'file4.txt',
-            'file5.txt',
-            'file6.txt',
-            'file7.txt',
-            'file8.txt',
-            'file9.txt',
-            '[folder1]',
-            'file1_1.txt',
-            '[folder2]',
-            'file2_1.txt',
-            '[folder3]',
-            'file3_1.txt',
-            '[folder4]',
-            'file4_1.txt',
-            '[folder5]',
-            'file5_1.txt',
-            '[folder6]',
-            'file6_1.txt',
-            '[folder7]',
-            'file7_1.txt',
-            ])
+        self.assert_scan_equal(
+            out,
+            [
+                "file1.txt",
+                "file2.txt",
+                "file3.txt",
+                "file4.txt",
+                "file5.txt",
+                "file6.txt",
+                "file7.txt",
+                "file8.txt",
+                "file9.txt",
+                "[folder1]",
+                "file1_1.txt",
+                "[folder2]",
+                "file2_1.txt",
+                "[folder3]",
+                "file3_1.txt",
+                "[folder4]",
+                "file4_1.txt",
+                "[folder5]",
+                "file5_1.txt",
+                "[folder6]",
+                "file6_1.txt",
+                "[folder7]",
+                "file7_1.txt",
+            ],
+        )
 
     def test_match_flat(self):
         out = run_script("scan", self.local, "--list")
-        self.assert_scan_equal(out, [
-            'file1.txt',
-            'file2.txt',
-            'file3.txt',
-            'file4.txt',
-            'file5.txt',
-            'file6.txt',
-            'file7.txt',
-            'file8.txt',
-            'file9.txt',
-            '[folder1]',
-            '[folder2]',
-            '[folder3]',
-            '[folder4]',
-            '[folder5]',
-            '[folder6]',
-            '[folder7]',
-            ])
+        self.assert_scan_equal(
+            out,
+            [
+                "file1.txt",
+                "file2.txt",
+                "file3.txt",
+                "file4.txt",
+                "file5.txt",
+                "file6.txt",
+                "file7.txt",
+                "file8.txt",
+                "file9.txt",
+                "[folder1]",
+                "[folder2]",
+                "[folder3]",
+                "[folder4]",
+                "[folder5]",
+                "[folder6]",
+                "[folder7]",
+            ],
+        )
 
     def test_match_5(self):
-        out = run_script("scan", self.local, "--list", "--recursive",
-                         "--match", "*5*")
-        self.assert_scan_equal(out, [
-            'file5.txt',
-            '[folder1]',
-            '[folder2]',
-            '[folder3]',
-            '[folder4]',
-            '[folder5]',
-            'file5_1.txt',
-            '[folder6]',
-            '[folder7]',
-            ])
+        out = run_script("scan", self.local, "--list", "--recursive", "--match", "*5*")
+        self.assert_scan_equal(
+            out,
+            [
+                "file5.txt",
+                "[folder1]",
+                "[folder2]",
+                "[folder3]",
+                "[folder4]",
+                "[folder5]",
+                "file5_1.txt",
+                "[folder6]",
+                "[folder7]",
+            ],
+        )
 
     def test_match_5b(self):
-        out = run_script("scan", self.local, "--list", "--recursive",
-                         "--match", "*5*", "--exclude", "folder?")
-        self.assert_scan_equal(out, [
-            'file5.txt',
-            ])
+        out = run_script(
+            "scan",
+            self.local,
+            "--list",
+            "--recursive",
+            "--match",
+            "*5*",
+            "--exclude",
+            "folder?",
+        )
+        self.assert_scan_equal(out, ["file5.txt"])
 
 
 # ===============================================================================
 # FtpMatchTest
 # ===============================================================================
+
 
 class FtpMatchTest(MatchTest):
     """Run the BidirSyncTest test suite against a local FTP server (ftp_target.FtpTarget)."""

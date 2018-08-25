@@ -8,10 +8,9 @@ Tests for pyftpsync
 from __future__ import print_function
 
 import unittest
+from test.fixture_tools import _SyncTestBase, get_test_folder
 
 from ftpsync.synchronizers import UploadSynchronizer
-from test.fixture_tools import get_test_folder, _SyncTestBase
-
 
 # ===============================================================================
 # UploadResolveTest

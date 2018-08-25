@@ -3,6 +3,7 @@
 [![Latest Version](https://img.shields.io/pypi/v/pyftpsync.svg)](https://pypi.python.org/pypi/pyftpsync/)
 [![License](https://img.shields.io/pypi/l/pyftpsync.svg)](https://github.com/mar10/pyftpsync/blob/master/LICENSE.txt)
 [![Documentation Status](https://readthedocs.org/projects/pyftpsync/badge/?version=latest)](http://pyftpsync.readthedocs.io/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
 > Synchronize directories using FTP(S) or file system access.
 

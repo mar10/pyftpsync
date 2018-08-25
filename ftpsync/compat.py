@@ -7,7 +7,6 @@ Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.p
 
 import sys
 
-
 PY2 = sys.version_info < (3, 0)
 PY3 = not PY2
 _filesystemencoding = sys.getfilesystemencoding()
@@ -16,6 +15,7 @@ _filesystemencoding = sys.getfilesystemencoding()
 try:  # py2
     import ConfigParser as configparser
     from cStringIO import StringIO
+
     BytesIO = StringIO
     import Queue as queue
 except ImportError:  # py3
@@ -92,7 +92,8 @@ if PY2:
             s = unicode(s, encoding)
         return s
 
-else:   # Python 3
+
+else:  # Python 3
 
     from base64 import decodebytes as base64_decodebytes
     from base64 import encodebytes as base64_encodebytes
