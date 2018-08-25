@@ -1,4 +1,8 @@
-2.1.0 (unreleased)
+2.1.1 (unreleased)
+------------------
+- 
+
+2.1.0 (2018-08-25)
 ------------------
 - Allow `-v` with `--version` option.
 - Fix #26: Crash when not setting verbose option.
