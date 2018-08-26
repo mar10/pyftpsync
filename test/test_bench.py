@@ -56,7 +56,7 @@ class BenchmarkTest(unittest.TestCase):
         self.remote = make_target(ftp_url)
         self.remote.open()
         # Delete all files in remote target folder
-        self.remote._rmdir_impl(".", keep_root=True)
+        self.remote._rmdir_impl(".", keep_root_folder=True)
 
     def tearDown(self):
         self.remote.close()

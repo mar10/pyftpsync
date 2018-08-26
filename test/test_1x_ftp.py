@@ -143,7 +143,7 @@ class FtpTargetTest(unittest.TestCase):
         )
 
     def tearDown(self):
-        # self.remote._rmdir_impl(".", keep_root=True)
+        # self.remote._rmdir_impl(".", keep_root_folder=True)
         self.remote.close()
         del self.remote
 

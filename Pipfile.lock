@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "23e188ed7feae77ed694622b4a04cb70b1f50009abca62e19b60984341eb37a2"
+            "sha256": "d4d0199594df2afe3654750b59f758c44bffa8a64f19d6906c4fca7b48baa42e"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -62,6 +62,13 @@
                 "sha256:c7841163e2b576d435799169b78703ad6ac1bbb0f199994fc05f700b2a90ea37"
             ],
             "version": "==3.5.0"
+        },
+        "flake8-bugbear": {
+            "hashes": [
+                "sha256:07b6e769d7f4e168d590f7088eae40f6ddd9fa4952bed31602def65842682c83",
+                "sha256:0ccf56975f4db1d69dc1cf3598c99d768ebf95d0cad27d76087954aa399b515a"
+            ],
+            "version": "==18.8.0"
         },
         "flake8-quotes": {
             "hashes": [
