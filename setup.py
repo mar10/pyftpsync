@@ -11,6 +11,9 @@ from setuptools.command.test import test as TestCommand
 from ftpsync import __version__
 
 
+version = __version__
+
+
 # Override 'setup.py test' command
 class ToxCommand(TestCommand):
     def finalize_options(self):
@@ -82,6 +85,14 @@ for cmd in ["bdist_msi"]:
         break
 
 if use_cx_freeze:
+    # Since we included pywin32 extensions, cx_Freeze tries to create a
+    # version resource. This only supports the 'a.b.c[.d]' format:
+    try:
+        int_version = list(map(int, version.split(".")))
+    except ValueError:
+        # version = "0.0.0.{}".format(datetime.now().strftime("%Y%m%d"))
+        version = "0.0.0"
+
     try:
         from cx_Freeze import setup, Executable  # noqa re-import setup
 
@@ -134,7 +145,7 @@ bdist_msi_options = {
 
 setup(
     name="pyftpsync",
-    version=__version__,
+    version=version,
     author="Martin Wendt",
     author_email="pyftpsync@wwwendt.de",
     # copyright="(c) 2012-2018 Martin Wendt",
