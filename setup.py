@@ -104,7 +104,7 @@ if use_cx_freeze:
                 targetName="pyftpsync.exe",
                 # icon="docs/logo.ico",
                 shortcutName="pyftpsync",
-                # copyright="(c) 2012-2018 Martin Wendt",  # requires cx_Freeze PR#94
+                # copyright="(c) 2012-2019 Martin Wendt",  # requires cx_Freeze PR#94
                 # trademarks="...",
             )
         ]
@@ -130,7 +130,7 @@ build_exe_options = {
     # "init_script": "Console",
     "includes": install_requires,
     "packages": ["keyring.backends"],  # loaded dynamically
-    "constants": "BUILD_COPYRIGHT='(c) 2012-2018 Martin Wendt'",
+    "constants": "BUILD_COPYRIGHT='(c) 2012-2019 Martin Wendt'",
 }
 
 bdist_msi_options = {
@@ -148,7 +148,7 @@ setup(
     version=version,
     author="Martin Wendt",
     author_email="pyftpsync@wwwendt.de",
-    # copyright="(c) 2012-2018 Martin Wendt",
+    # copyright="(c) 2012-2019 Martin Wendt",
     maintainer="Martin Wendt",
     maintainer_email="pyftpsync@wwwendt.de",
     url="https://github.com/mar10/pyftpsync",
@@ -172,6 +172,7 @@ setup(
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Utilities",
     ],

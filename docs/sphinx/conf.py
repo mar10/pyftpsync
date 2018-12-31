@@ -89,7 +89,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'pyftpsync'
-copyright = u'2012-2018, Martin Wendt'
+copyright = u'2012-2019, Martin Wendt'
 author = u'Martin Wendt'
 
 # The version info for the project you're documenting, acts as replacement for
