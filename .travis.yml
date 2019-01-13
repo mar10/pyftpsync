@@ -1,5 +1,6 @@
 sudo: false
 language: python
+dist: xenial  # Ubuntu 16, required for Python 3.7+
 python:
     - "2.7"
 #    - "3.3"  # End-of-life September 2017
@@ -7,7 +8,6 @@ python:
     - "3.5"
     - "3.6"
     - "3.7"
-      dist: xenial
 install:
   - pip install tox-travis
   - pip install flake8
