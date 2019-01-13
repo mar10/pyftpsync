@@ -213,7 +213,7 @@ class BaseSynchronizer(object):
 
         def _add(rate, size, time):
             if stats.get(time) and stats.get(size):
-                stats[rate] = "%0.2f kB/sec" % (.001 * stats[size] / stats[time])
+                stats[rate] = "%0.2f kB/sec" % (0.001 * stats[size] / stats[time])
 
         _add("upload_rate_str", "upload_bytes_written", "upload_write_time")
         _add("download_rate_str", "download_bytes_written", "download_write_time")
