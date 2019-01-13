@@ -6,7 +6,8 @@ python:
     - "3.4"
     - "3.5"
     - "3.6"
-#    - "3.7"  # Planned for 2018-06
+    - "3.7"
+      dist: xenial
 install:
   - pip install tox-travis
   - pip install flake8
