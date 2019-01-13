@@ -45,7 +45,7 @@ class CliTest(_SyncTestBase):
         out = run_script("scan", self.local, "--list")
         # We expect "file1.txt [spaces] 2014-01-01 13:00:00"
         # but the time zone may be different on the travis server, so we relax:
-        assert re.search("file1.txt\s+2014-01-01 \d\d:00:00", out)
+        assert re.search(r"file1.txt\s+2014-01-01 \d\d:00:00", out)
 
     def test_sync(self):
         out = run_script("sync", self.local, self.remote, "--dry-run")
