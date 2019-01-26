@@ -18,6 +18,7 @@ from ftpsync.util import (
     VT_ERASE_LINE,
     ansi_code,
     byte_compare,
+    colorama,
     eps_compare,
     pretty_stamp,
     write,
@@ -404,7 +405,11 @@ class BaseSynchronizer(object):
 
             final = ansi_code("Style.RESET_ALL")
 
-        final += " " * 10
+        if colorama:
+            # Clear line"ESC [ mode K" mode 0:to-right, 2:all
+            final += colorama.ansi.clear_line(0)
+        else:
+            final += " " * 10
         prefix = ""
         if self.dry_run:
             prefix = DRY_RUN_PREFIX
