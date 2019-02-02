@@ -1,6 +1,7 @@
 2.1.1 (unreleased)
 ------------------
 - Remove trailing garbage from output lines
+- #30
 
 2.1.0 (2018-08-25)
 ------------------

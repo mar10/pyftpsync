@@ -424,7 +424,6 @@ class BaseSynchronizer(object):
         if entry.is_dir():
             name = "[{}]".format(name)
 
-        #         write("{}{:<16} {:^3} {}".format(prefix, tag, symbol, name))
         write("{}{}{:<16} {:^3} {}{}".format(prefix, color, tag, symbol, name, final))
 
     def _tick(self):
@@ -445,7 +444,7 @@ class BaseSynchronizer(object):
 
     def _dry_run_action(self, action):
         """"Called in dry-run mode after call to _log_action() and before exiting function."""
-        #        write("dry-run", action)
+        # write("dry-run", action)
         return
 
     def _test_match_or_print(self, entry):
@@ -542,7 +541,11 @@ class BaseSynchronizer(object):
                 handler = getattr(self, "on_" + pair.operation, None)
                 # print(handler)
                 if handler:
-                    res = handler(pair)
+                    try:
+                        res = handler(pair)
+                    except Exception as e:
+                        if self.on_error(e, pair) is not True:
+                            raise
                 else:
                     # write("NO HANDLER")
                     raise NotImplementedError("No handler for {}".format(pair))
@@ -586,6 +589,18 @@ class BaseSynchronizer(object):
             False to prevent default operation.
         """
         return True
+
+    def on_error(self, e, pair):
+        """Called for pairs that don't match `match` and `exclude` filters."""
+        RED = ansi_code("Fore.LIGHTRED_EX")
+        R = ansi_code("Style.RESET_ALL")
+        # any_entry = pair.any_entry
+        write((RED + "ERROR: {}\n    {}" + R).format(e, pair) )
+        # Return True to ignore this error (instead of raising and terminating the app)
+        if "[Errno 92] Illegal byte sequence" in "{}".format(e) and compat.PY2:
+            write(RED + "This _may_ be solved by using Python 3." + R)
+            # return True
+        return False
 
     def on_mismatch(self, pair):
         """Called for pairs that don't match `match` and `exclude` filters."""

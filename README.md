@@ -9,6 +9,7 @@
 
 [ ![sample](teaser.png?raw=true) ](https://github.com/mar10/pyftpsync "Live demo")
 
+
 ## Summary
 
 Synchronize directories using FTP(S) or file system access.
@@ -32,6 +33,9 @@ Make sure to adjust your scripts accordingly after update.
 $ pip install pyftpsync --upgrade
 $ pyftpsync --help
 ```
+
+**Note:** Windows users may prefer the 
+[MSI Installer](https://github.com/mar10/pyftpsync/releases/latest).
 
 
 ## Documentation

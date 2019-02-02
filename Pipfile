@@ -8,6 +8,7 @@ flake8-bugbear = "~=18.2"
 flake8-quotes = "~=1.0"
 black = "*"
 isort = "*"
+pylint = "*"
 
 [packages]
 colorama = "==0.3.9"
