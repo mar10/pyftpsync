@@ -14,12 +14,12 @@ Synchronize directories using FTP(S) or file system access.
     Version 2.0 introduces *breaking changes* to 1.x.
     Make sure to adjust your scripts accordingly after update.
 
-Requires `Python <http://www.python.org/download/>`_ 2.7+ or 3.4+.
+Requires `Python <https://www.python.org/download/>`_ 2.7+ or 3.4+.
 
 A Windows `MSI installer is also available on GitHub <https://github.com/mar10/pyftpsync/releases>`_.
 
 See also https://github.com/mar10/pyftpsync for details
-and `Read the Docs <http://pyftpsync.readthedocs.io/>`_.
+and `Read the Docs <https://pyftpsync.readthedocs.io/>`_.
 
 Change Log
 ----------

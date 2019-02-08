@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/mar10/pyftpsync.svg?branch=master)](https://travis-ci.org/mar10/pyftpsync)
 [![Latest Version](https://img.shields.io/pypi/v/pyftpsync.svg)](https://pypi.python.org/pypi/pyftpsync/)
 [![License](https://img.shields.io/pypi/l/pyftpsync.svg)](https://github.com/mar10/pyftpsync/blob/master/LICENSE.txt)
-[![Documentation Status](https://readthedocs.org/projects/pyftpsync/badge/?version=latest)](http://pyftpsync.readthedocs.io/)
+[![Documentation Status](https://readthedocs.org/projects/pyftpsync/badge/?version=latest)](https://pyftpsync.readthedocs.io/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
 > Synchronize directories using FTP(S) or file system access.
@@ -26,7 +26,7 @@ Make sure to adjust your scripts accordingly after update.
 
 ## Quickstart
 
-[Python](http://www.python.org/download/Python) 2.7+ or 3.4+ is required,
+[Python](https://www.python.org/download/Python) 2.7+ or 3.4+ is required,
 [pip](http://www.pip-installer.org/) recommended:
 
 ```bash
@@ -40,4 +40,4 @@ $ pyftpsync --help
 
 ## Documentation
 
-[Read the Docs](http://pyftpsync.readthedocs.io/) for details.
+[Read the Docs](https://pyftpsync.readthedocs.io/) for details.

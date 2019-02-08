@@ -62,7 +62,7 @@ Features
 
 .. note:: Known Limitations
 
-  * The FTP server must support the `MLSD command <http://tools.ietf.org/html/rfc3659>`_.
+  * The FTP server must support the `MLSD command <https://tools.ietf.org/html/rfc3659>`_.
   * pyftpsync uses file size and modification dates to detect file changes.
     This is efficient, but not as robust as CRC checksums could be.
   * pyftpsync tries to detect conflicts (i.e. simultaneous modifications of
@@ -107,5 +107,5 @@ be installed using `pip <http://www.pip-installer.org/>`_::
    :target: https://github.com/mar10/pyftpsync/blob/master/LICENSE.txt
 
 .. |rtd_badge| image:: https://readthedocs.org/projects/pyftpsync/badge/?version=latest
-   :target: http://pyftpsync.readthedocs.io/
+   :target: https://pyftpsync.readthedocs.io/
    :alt: Documentation Status
