@@ -4,9 +4,11 @@
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 
+import codecs
 import io
 import os
 import shutil
+import sys
 import threading
 from posixpath import join as join_url, normpath as normpath_url
 
@@ -86,6 +88,10 @@ class _Target(object):
         self.support_set_time = None  # Derived class knows
         self.cur_dir_meta = DirMetadata(self)
         self.meta_stack = []
+        #: Optionally define an encoding for this target
+        self.encoding = self.get_option("encoding", None)
+        if self.encoding:
+            self.encoding = codecs.lookup(self.encoding).name
 
     def __del__(self):
         # TODO: http://pydev.blogspot.de/2015/01/creating-safe-cyclic-reference.html
@@ -279,7 +285,6 @@ class _Target(object):
 # FsTarget
 # ===============================================================================
 
-
 class FsTarget(_Target):
 
     DEFAULT_BLOCKSIZE = 16 * 1024  # shutil.copyobj() uses 16k blocks by default
@@ -291,6 +296,9 @@ class FsTarget(_Target):
         if not os.path.isdir(root_dir):
             raise ValueError("{} is not a directory.".format(root_dir))
         self.support_set_time = True
+        #: Optionally define an encoding for this target
+        encoding = self.get_option("encoding", sys.getfilesystemencoding())
+        self.encoding = codecs.lookup(encoding).name if encoding else None
 
     def __str__(self):
         return "<FS:{} + {}>".format(

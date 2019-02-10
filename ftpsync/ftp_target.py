@@ -4,6 +4,7 @@
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 import calendar
+import codecs
 import ftplib
 import json
 import os
@@ -11,6 +12,7 @@ import time
 from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
 from tempfile import SpooledTemporaryFile
 
+from ftpsync import compat
 from ftpsync.compat import CompatConnectionError
 from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersion
 from ftpsync.resources import DirectoryEntry, FileEntry
@@ -18,6 +20,7 @@ from ftpsync.targets import _Target
 from ftpsync.util import (
     get_credentials_for_url,
     prompt_for_password,
+    re_encode_binary_to_utf8,
     save_password,
     write,
     write_error,
@@ -92,6 +95,9 @@ class FtpTarget(_Target):
         self.clock_ofs = None
         self.ftp_socket_connected = False
         self.support_set_time = False
+        #: Optionally define an encoding for this server
+        encoding = self.get_option("encoding", "utf-8")
+        self.encoding = codecs.lookup(encoding).name
 
     def __str__(self):
         return "<{} + {}>".format(
@@ -272,8 +278,19 @@ class FtpTarget(_Target):
                     write("Skip remove lock file (was not written).")
             else:
                 # direct delete, without updating metadata or checking for target access:
-                self.ftp.delete(DirMetadata.LOCK_FILE_NAME)
-                # self.remove_file(DirMetadata.LOCK_FILE_NAME)
+                try:
+                    self.ftp.delete(DirMetadata.LOCK_FILE_NAME)
+                    # self.remove_file(DirMetadata.LOCK_FILE_NAME)
+                except Exception as e:
+                    # I have seen '226 Closing data connection' responses here,
+                    # probably when a previous command threw another error.
+                    # However here, 2xx response should be Ok(?):
+                    # A 226 reply code is sent by the server before closing the
+                    # data connection after successfully processing the previous client command
+                    if e.args[0][:3] == "226":
+                        write_error("Ignoring 226 response for ftp.delete() lockfile")
+                    else:
+                        raise
 
             self.lock_data = None
         except Exception as e:
@@ -355,7 +372,23 @@ class FtpTarget(_Target):
         local_res = {"has_meta": False}  # pass local variables outside func scope
 
         def _addline(line):
+            # The FTP server returns the names as bytes.
+            # We (and the server) don't have a clue, what encoding was used,
+            # but we assume UTF-8 and fall back to CP-1252
+            assert compat.is_bytes(line)
+
             data, _, name = line.partition("; ")
+
+            # TODO: we should consider `self.encoding` somehow
+            status, u_name = re_encode_binary_to_utf8(name, fallback="cp1252", raise_error=False)
+            # print(status, name, u_name)
+            if status == 1:
+                write("WARNING: File name seems not to be UTF-8; re-encoding from CP-1252:", name, "=>", u_name)
+                name = u_name
+            elif status == 2:
+                write_error("File name is neither UTF-8 nor CP-1252 encoded:", name)
+            # print name
+
             res_type = size = mtime = unique = None
             fields = data.split(";")
             # https://tools.ietf.org/html/rfc3659#page-23

@@ -29,10 +29,13 @@ class DirMetadata(object):
 
     META_FILE_NAME = ".pyftpsync-meta.json"
     LOCK_FILE_NAME = ".pyftpsync-lock.json"
-    PRETTY = (
-        PYFTPSYNC_VERBOSE_META
-    )  # False: Reduce file size to 35% (like 3759 -> 1375 bytes)
-    VERSION = 2  # Increment if format changes. Old files will be discarded then!
+    # False: Reduce file size to 35% (like 3759 -> 1375 bytes)
+    PRETTY = PYFTPSYNC_VERBOSE_META
+    # Increment file version if format changes. Old files will be discarded then!
+    # v1: Initial version
+    # v2: Since v2.0: Change data structure
+    # v3: Since v3.0: Use utf-8 with ensure_ascii=False
+    VERSION = 3
 
     def __init__(self, target):
         self.target = target
@@ -175,11 +178,40 @@ class DirMetadata(object):
             self.dir["_file_version"] = self.VERSION
             self.dir["_version"] = __version__
             self.dir["_time"] = time.mktime(time.gmtime())
+
+            # We always save utf-8 encoded.
+            # `ensure_ascii` would escape all bytes >127 as `\x12` or `\u1234`,
+            # so we set it to false.
+            # `sort_keys` converts binary keys to unicode using utf-8, so we
+            # must make sure that we don't pass cp1225 or other encoded data.
+
+            # Note that in Python 2.7 json.dumps(...,  ensure_ascii=False) is
+            # broken, so we use io.open() (see https://stackoverflow.com/a/18337754/19166)
+
+            # TODO:
+            # with io.open('filename', 'w', encoding='utf8') as json_file:
+            #     data = json.dumps(u"ברי צקלה", ensure_ascii=False)
+            #     # unicode(data) auto-decodes data to unicode if str
+            #     json_file.write(unicode(data))
+
+            # The `encoding` arg defaults to utf-8 on Py2 and was removed in Py3
+
             if self.PRETTY:
-                s = json.dumps(self.dir, indent=4, sort_keys=True)
-            else:
-                s = json.dumps(self.dir, sort_keys=True)
-            #             write("DirMetadata.flush(%s)" % (self.target, ))#, s)
+                s = json.dumps(
+                    self.dir,
+                    indent=4,
+                    sort_keys=True,
+                    ensure_ascii=False,
+                )
+            else:  # compact
+                s = json.dumps(
+                    self.dir,
+                    separators=(",", ":"),
+                    sort_keys=True,
+                    ensure_ascii=False,
+                )
+
+            # write("DirMetadata.flush(%s)" % (self.target, ))#, s)
             self.target.write_text(self.filename, s)
             if self.target.synchronizer:
                 self.target.synchronizer._inc_stat("meta_bytes_written", len(s))

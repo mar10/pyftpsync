@@ -185,6 +185,12 @@ class BaseSynchronizer(object):
                     self.remote.get_base_name(),
                 )
             )
+            write(
+                "Encoding local: {}, remote: {}".format(
+                    self.local.encoding,
+                    self.remote.encoding,
+                )
+            )
 
         try:
             self.local.synchronizer = self.remote.synchronizer = self
