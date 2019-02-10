@@ -1,7 +1,0 @@
-# This file format is DEPRECATED since pyftpsync 1.x
-
-# Passwords for pyftpsync (https://github.com/mar10/pyftpsync)
-# Rename this file to 'pyftpsync.pw' and put it into your user's home directory.
-# Syntax: 'HOSTNAME = USER:PASSWORD'
-
-ftp.example.com = joe:secret

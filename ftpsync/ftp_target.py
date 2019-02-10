@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 (c) 2012-2019 Martin Wendt; see https://github.com/mar10/pyftpsync
-Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 import calendar
 import ftplib
@@ -358,7 +358,7 @@ class FtpTarget(_Target):
             data, _, name = line.partition("; ")
             res_type = size = mtime = unique = None
             fields = data.split(";")
-            # http://tools.ietf.org/html/rfc3659#page-23
+            # https://tools.ietf.org/html/rfc3659#page-23
             # "Size" / "Modify" / "Create" / "Type" / "Unique" / "Perm" / "Lang"
             #   / "Media-Type" / "CharSet" / os-depend-fact / local-fact
             for field in fields:

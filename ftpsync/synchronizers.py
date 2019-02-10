@@ -595,7 +595,7 @@ class BaseSynchronizer(object):
         RED = ansi_code("Fore.LIGHTRED_EX")
         R = ansi_code("Style.RESET_ALL")
         # any_entry = pair.any_entry
-        write((RED + "ERROR: {}\n    {}" + R).format(e, pair) )
+        write((RED + "ERROR: {}\n    {}" + R).format(e, pair))
         # Return True to ignore this error (instead of raising and terminating the app)
         if "[Errno 92] Illegal byte sequence" in "{}".format(e) and compat.PY2:
             write(RED + "This _may_ be solved by using Python 3." + R)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 (c) 2012-2019 Martin Wendt; see https://github.com/mar10/pyftpsync
-Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 
 from __future__ import print_function
@@ -199,7 +199,8 @@ def prompt_for_password(url, user=None, default_user=None):
 
 def get_credentials_for_url(url, opts, force_user=None):
     """
-    @returns 2-tuple (username, password) or None
+    Returns:
+        2-tuple (username, password) or None
     """
     creds = None
     verbose = int(opts.get("verbose"))
@@ -336,7 +337,8 @@ def ansi_code(name):
 def byte_compare(stream_a, stream_b):
     """Byte compare two files (early out on first difference).
 
-    @return: (bool, int): offset of first mismatch or 0 if equal
+    Returns:
+        (bool, int): offset of first mismatch or 0 if equal
     """
     bufsize = 16 * 1024
     equal = True

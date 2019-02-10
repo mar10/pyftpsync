@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 (c) 2012-2019 Martin Wendt; see https://github.com/mar10/pyftpsync
-Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 
 import json
@@ -153,9 +153,9 @@ class DirMetadata(object):
     def flush(self):
         """Write self to .pyftpsync-meta.json."""
         # We DO write meta files even on read-only targets, but not in dry-run mode
-        #         if self.target.readonly:
-        #             write("DirMetadata.flush(%s): read-only; nothing to do" % self.target)
-        #             return
+        # if self.target.readonly:
+        #     write("DirMetadata.flush(%s): read-only; nothing to do" % self.target)
+        #     return
         assert self.path == self.target.cur_dir
         if self.target.dry_run:
             # write("DirMetadata.flush(%s): dry-run; nothing to do" % self.target)

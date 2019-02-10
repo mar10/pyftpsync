@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 (c) 2012-2019 Martin Wendt; see https://github.com/mar10/pyftpsync
-Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 
 import io
@@ -32,9 +32,9 @@ def make_target(url, extra_opts=None):
     Returns:
         :class:`_Target`
     """
-    #    debug = extra_opts.get("debug", 1)
+    # debug = extra_opts.get("debug", 1)
     parts = compat.urlparse(url, allow_fragments=False)
-    # scheme is case-insensitive according to http://tools.ietf.org/html/rfc3986
+    # scheme is case-insensitive according to https://tools.ietf.org/html/rfc3986
     scheme = parts.scheme.lower()
     if scheme in ["ftp", "ftps"]:
         creds = parts.username, parts.password
@@ -91,12 +91,12 @@ class _Target(object):
         # TODO: http://pydev.blogspot.de/2015/01/creating-safe-cyclic-reference.html
         self.close()
 
-    #     def __enter__(self):
-    #         self.open()
-    #         return self
-    #
-    #     def __exit__(self, exc_type, exc_value, traceback):
-    #         self.close()
+    # def __enter__(self):
+    #     self.open()
+    #     return self
+
+    # def __exit__(self, exc_type, exc_value, traceback):
+    #     self.close()
 
     def get_base_name(self):
         return "{}".format(self.root_dir)
@@ -227,11 +227,11 @@ class _Target(object):
         """Read text string from cur_dir/name using open_readable()."""
         with self.open_readable(name) as fp:
             res = fp.read()  # StringIO or file object
-            #             try:
-            #                 res = fp.getvalue()  # StringIO returned by FtpTarget
-            #             except AttributeError:
-            #                 res = fp.read()  # file object returned by FsTarget
-            res = res.decode("utf8")
+            # try:
+            #     res = fp.getvalue()  # StringIO returned by FtpTarget
+            # except AttributeError:
+            #     res = fp.read()  # file object returned by FsTarget
+            res = res.decode("utf-8")
             return res
 
     def copy_to_file(self, name, fp_dest, callback=None):
@@ -326,7 +326,7 @@ class FsTarget(_Target):
         """Remove cur_dir/name."""
         self.check_write(dir_name)
         path = normpath_url(join_url(self.cur_dir, dir_name))
-        #         write("REMOVE %r" % path)
+        # write("REMOVE %r" % path)
         shutil.rmtree(path)
 
     def flush_meta(self):
@@ -336,21 +336,21 @@ class FsTarget(_Target):
 
     def get_dir(self):
         res = []
-        #        self.cur_dir_meta = None
+        # self.cur_dir_meta = None
         self.cur_dir_meta = DirMetadata(self)
         for name in os.listdir(self.cur_dir):
             path = os.path.join(self.cur_dir, name)
             stat = os.lstat(path)
-            #            write(name)
-            #            write("    mt : %s" % stat.st_mtime)
-            #            write("    lc : %s" % (time.localtime(stat.st_mtime),))
-            #            write("       : %s" % time.asctime(time.localtime(stat.st_mtime)))
-            #            write("    gmt: %s" % (time.gmtime(stat.st_mtime),))
-            #            write("       : %s" % time.asctime(time.gmtime(stat.st_mtime)))
-            #
-            #            utc_stamp = st_mtime_to_utc(stat.st_mtime)
-            #            write("    utc: %s" % utc_stamp)
-            #            write("    diff: %s" % ((utc_stamp - stat.st_mtime) / (60*60)))
+            # write(name)
+            # write("    mt : %s" % stat.st_mtime)
+            # write("    lc : %s" % (time.localtime(stat.st_mtime),))
+            # write("       : %s" % time.asctime(time.localtime(stat.st_mtime)))
+            # write("    gmt: %s" % (time.gmtime(stat.st_mtime),))
+            # write("       : %s" % time.asctime(time.gmtime(stat.st_mtime)))
+
+            # utc_stamp = st_mtime_to_utc(stat.st_mtime)
+            # write("    utc: %s" % utc_stamp)
+            # write("    diff: %s" % ((utc_stamp - stat.st_mtime) / (60*60)))
             # stat.st_mtime is returned as UTC
             mtime = stat.st_mtime
             if os.path.isdir(path):
