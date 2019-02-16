@@ -2,8 +2,10 @@
 ------------------
 - Remove trailing garbage from output lines
 - #30: Fallback to CP-1252 encoding when FTP server returns non-UTF-8
+  Generally more robust handling concerning path encoding problems.
 **Breaking Changes:**
 - Modified format of `.pyftpsync-meta.json`: File names are now stored as UTF-8.
+  (was the unmodified binary format of the targte platform before)
 
 2.1.0 (2018-08-25)
 ------------------

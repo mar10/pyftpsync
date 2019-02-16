@@ -45,10 +45,11 @@ Features
   * Recursive synchronisation of folders on file system and/or FTP targets.
   * Upload, download, and bi-directional synchronization mode.
   * Configurable conflict resolution strategies.
-  * Unlike naive implementations, pyftpsync maintains additional meta data to detect
-    conflicts and decide wether to replicate deletions or additions.
-  * Unlike more complex implementations, pyftpsync does not require a database or
-    a service running on the targets.
+  * Unlike naive implementations, pyftpsync maintains additional meta data to
+    detect conflicts and decide whether to replicate a missing file as deletion
+    or addition.
+  * Unlike more complex implementations, pyftpsync does not require a database
+    or a service running on the targets.
   * Optional FTPS (TLS) support.
   * Architecture is open to add other target types.
 
