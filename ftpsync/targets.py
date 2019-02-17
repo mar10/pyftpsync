@@ -84,8 +84,13 @@ class _Target(object):
         self.connected = False
         self.save_mode = True
         self.case_sensitive = None  # TODO: don't know yet
-        self.time_ofs = None  # TODO: see _probe_lock_file()
-        self.support_set_time = None  # Derived class knows
+        #: Time difference between <local upload time> and the mtime that the server reports afterwards.
+        #: The value is added to the 'u' time stored in meta data. 
+        #: (This is only a rough estimation, derived from the lock-file.)
+        self.server_time_ofs = None
+        #: Maximum allowed difference between a reported mtime and the last known update time,
+        #: before we classify the entry as 'modified externally'  
+        self.mtime_compare_eps = FileEntry.EPS_TIME
         self.cur_dir_meta = DirMetadata(self)
         self.meta_stack = []
         #: Optionally define an encoding for this target

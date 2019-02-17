@@ -67,11 +67,17 @@ class DirMetadata(object):
         changed by other means and we have to discard our meta data.
         """
         ut = time.time()  # UTC time stamp
+        if self.target.server_time_ofs:
+            # We add the estimated time offset, so the stored 'u' time stamp matches
+            # better the mtime value that the server will generate for that file 
+            ut += self.target.server_time_ofs
+
         self.list[filename] = {"m": mtime, "s": size, "u": ut}
         if self.PRETTY:
             self.list[filename].update(
                 {"mtime_str": pretty_stamp(mtime), "uploaded_str": pretty_stamp(ut)}
             )
+        print("set_mtime", self.list[filename])
         self.modified_list = True
 
     def set_sync_info(self, filename, mtime, size):
@@ -165,7 +171,7 @@ class DirMetadata(object):
             pass
 
         elif self.was_read and len(self.list) == 0 and len(self.peer_sync) == 0:
-            # write("DirMetadata.flush(%s): DELETE" % self.target)
+            write("Remove empty meta data file: {}".format(self.target))
             self.target.remove_file(self.filename)
 
         elif not self.modified_list and not self.modified_sync:
@@ -181,7 +187,7 @@ class DirMetadata(object):
 
             # We always save utf-8 encoded.
             # `ensure_ascii` would escape all bytes >127 as `\x12` or `\u1234`,
-            # so we set it to false.
+            # which makes it hard to read, so we set it to false.
             # `sort_keys` converts binary keys to unicode using utf-8, so we
             # must make sure that we don't pass cp1225 or other encoded data.
 
