@@ -201,7 +201,7 @@ class DirMetadata(object):
             if compat.PY2:
                 # The `encoding` arg defaults to utf-8 on Py2 and was removed in Py3
                 # opts["encoding"] = "utf-8"
-                # Python 2 has problems with mixed keys (str/unicode‚)
+                # Python 2 has problems with mixed keys (str/unicode)
                 data = decode_dict_keys(data, "utf-8")
 
             if not self.PRETTY:

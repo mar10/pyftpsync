@@ -97,7 +97,7 @@ class FtpTarget(_Target):
         #: True if server reports FEAT UTF8
         self.support_utf8 = None
         #: Time difference between <local upload time> and the mtime that the server reports afterwards.
-        #: The value is added to the 'u' time stored in meta data. 
+        #: The value is added to the 'u' time stored in meta data.
         #: (This is only a rough estimation, derived from the lock-file.)
         self.server_time_ofs = None
         self.ftp_socket_connected = False
@@ -198,11 +198,11 @@ class FtpTarget(_Target):
                 if self.encoding == "utf-8":
                     if not self.support_utf8:
                         write("Server does not list utf-8 as supported feature (using it anyway).", warning=True)
-                        
+
                     try:
                         # Announce our wish to use UTF-8 to the server as proposed here:
                         # See https://tools.ietf.org/html/draft-ietf-ftpext-utf-8-option-00
-                        # Note: this failed on Strato 
+                        # Note: this failed on Strato
                         self.ftp.sendcmd("OPTS UTF-8")
                         write("Sent 'OPTS UTF-8'.")
                     except Exception as e:
@@ -211,12 +211,12 @@ class FtpTarget(_Target):
                     try:
                         # Announce our wish to use UTF-8 to the server as proposed here:
                         # See https://tools.ietf.org/html/rfc2389
-                        # Note: this was accepted on Strato 
+                        # Note: this was accepted on Strato
                         self.ftp.sendcmd("OPTS UTF8 ON")
                         write("Sent 'OPTS UTF8 ON'.")
                     except Exception as e:
                         write("Could not send 'OPTS UTF8 ON': '{}'".format(e), warning=True)
-                        
+
                 write("Setting FTP encoding to {} (was {}).".format(self.encoding, self.ftp.encoding))
                 self.ftp.encoding = self.encoding
 
@@ -339,11 +339,11 @@ class FtpTarget(_Target):
     def _probe_lock_file(self, reported_mtime):
         """Called by get_dir"""
         delta = reported_mtime - self.lock_data["lock_time"]
-        delta2 = reported_mtime - self.lock_write_time
+        # delta2 = reported_mtime - self.lock_write_time
         self.server_time_ofs = delta
         if self.get_option("verbose", 3) >= 4:
-            write("Server time offset: {:.2f} seconds".format(delta))
-            write("Server time offset2: {:.2f} seconds".format(delta2))
+            write("Server time offset: {:.2f} seconds.".format(delta))
+            # write("Server time offset2: {:.2f} seconds.".format(delta2))
 
     def get_id(self):
         return self.host + self.root_dir
