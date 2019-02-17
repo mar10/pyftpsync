@@ -54,11 +54,14 @@ set_pyftpsync_logger(True)
 def write(*args, **kwargs):
     """Redirectable wrapper for print statements."""
     debug = kwargs.pop("debug", None)
+    warning = kwargs.pop("warning", None)
     if _logger:
         kwargs.pop("end", None)
         kwargs.pop("file", None)
         if debug:
             _logger.debug(*args, **kwargs)
+        elif warning:
+            _logger.warning(*args, **kwargs)
         else:
             _logger.info(*args, **kwargs)
     else:

@@ -90,14 +90,22 @@ class FtpTarget(_Target):
         #: dict: written to ftp target root folder before synchronization starts.
         #: set to False, if write failed. Default: None
         self.lock_data = None
+        self.lock_write_time = None
+        self.feat_response = None
+        self.syst_response = None
         self.is_unix = None
-        self.time_zone_ofs = None
-        self.clock_ofs = None
+        #: True if server reports FEAT UTF8
+        self.support_utf8 = None
+        #: Time difference between <local upload time> and the mtime that the server reports afterwards.
+        #: The value is added to the 'u' time stored in meta data. 
+        #: (This is only a rough estimation, derived from the lock-file.)
+        self.server_time_ofs = None
         self.ftp_socket_connected = False
         self.support_set_time = False
         #: Optionally define an encoding for this server
         encoding = self.get_option("encoding", "utf-8")
         self.encoding = codecs.lookup(encoding).name
+        return
 
     def __str__(self):
         return "<{} + {}>".format(
@@ -168,6 +176,51 @@ class FtpTarget(_Target):
             self.ftp.prot_p()
 
         try:
+            self.syst_response = self.ftp.sendcmd("SYST")
+            # self.is_unix = "unix" in resp.lower() # not necessarily true, better check with r/w tests
+            # TODO: case sensitivity?
+        except Exception as e:
+            write("SYST command failed: '{}'".format(e))
+
+        try:
+            self.feat_response = self.ftp.sendcmd("FEAT")
+            self.support_utf8 = "UTF8" in self.feat_response
+        except Exception as e:
+            write("FEAT command failed: '{}'".format(e))
+
+        if self.get_option("verbose", 3) >= 5:
+            write("SYST: '{}'.".format(self.syst_response))
+            write("FEAT: '{}'.".format(self.feat_response))
+
+        if hasattr(self.ftp, "encoding"):
+            # Python 3 encodes using latin-1 by default(!)
+            if self.encoding != codecs.lookup(self.ftp.encoding).name:
+                if self.encoding == "utf-8":
+                    if not self.support_utf8:
+                        write("Server does not list utf-8 as supported feature (using it anyway).", warning=True)
+                        
+                    try:
+                        # Announce our wish to use UTF-8 to the server as proposed here:
+                        # See https://tools.ietf.org/html/draft-ietf-ftpext-utf-8-option-00
+                        # Note: this failed on Strato 
+                        self.ftp.sendcmd("OPTS UTF-8")
+                        write("Sent 'OPTS UTF-8'.")
+                    except Exception as e:
+                        write("Could not send 'OPTS UTF-8': '{}'".format(e), warning=True)
+
+                    try:
+                        # Announce our wish to use UTF-8 to the server as proposed here:
+                        # See https://tools.ietf.org/html/rfc2389
+                        # Note: this was accepted on Strato 
+                        self.ftp.sendcmd("OPTS UTF8 ON")
+                        write("Sent 'OPTS UTF8 ON'.")
+                    except Exception as e:
+                        write("Could not send 'OPTS UTF8 ON': '{}'".format(e), warning=True)
+                        
+                write("Setting FTP encoding to {} (was {}).".format(self.encoding, self.ftp.encoding))
+                self.ftp.encoding = self.encoding
+
+        try:
             self.ftp.cwd(self.root_dir)
         except ftplib.error_perm as e:
             # If credentials were passed, but authentication fails, prompt
@@ -195,21 +248,6 @@ class FtpTarget(_Target):
         if store_password:
             save_password(self.host, self.username, self.password)
 
-        # TODO: case sensitivity?
-        # self.is_unix = "unix" in resp.lower() # not necessarily true, better check with r/w tests
-        if self.get_option("verbose", 3) >= 5:
-            try:
-                resp = self.ftp.sendcmd("SYST")
-                write("SYST: '{}'.".format(resp))
-            except Exception as e:
-                write("SYST command failed: '{}'.".format(e))
-
-            try:
-                resp = self.ftp.sendcmd("FEAT")
-                write("FEAT: '{}'.".format(resp))
-            except Exception as e:
-                write("FEAT command failed: '{}'.".format(e))
-
         self._lock()
 
         return
@@ -236,6 +274,7 @@ class FtpTarget(_Target):
             assert self.cur_dir == self.root_dir
             self.write_text(DirMetadata.LOCK_FILE_NAME, json.dumps(data))
             self.lock_data = data
+            self.lock_write_time = time.time()
         except Exception as e:
             errmsg = "{}".format(e)
             write_error("Could not write lock file: {}".format(errmsg))
@@ -300,8 +339,11 @@ class FtpTarget(_Target):
     def _probe_lock_file(self, reported_mtime):
         """Called by get_dir"""
         delta = reported_mtime - self.lock_data["lock_time"]
+        delta2 = reported_mtime - self.lock_write_time
+        self.server_time_ofs = delta
         if self.get_option("verbose", 3) >= 4:
-            write("Server time offset: {0:.2f} seconds".format(delta))
+            write("Server time offset: {:.2f} seconds".format(delta))
+            write("Server time offset2: {:.2f} seconds".format(delta2))
 
     def get_id(self):
         return self.host + self.root_dir
@@ -372,22 +414,24 @@ class FtpTarget(_Target):
         local_res = {"has_meta": False}  # pass local variables outside func scope
 
         def _addline(line):
-            # The FTP server returns the names as bytes.
-            # We (and the server) don't have a clue, what encoding was used,
-            # but we assume UTF-8 and fall back to CP-1252
-            assert compat.is_bytes(line)
-
-            data, _, name = line.partition("; ")
-
-            # TODO: we should consider `self.encoding` somehow
-            status, u_name = re_encode_binary_to_utf8(name, fallback="cp1252", raise_error=False)
-            # print(status, name, u_name)
-            if status == 1:
-                write("WARNING: File name seems not to be UTF-8; re-encoding from CP-1252:", name, "=>", u_name)
-                name = u_name
-            elif status == 2:
-                write_error("File name is neither UTF-8 nor CP-1252 encoded:", name)
-            # print name
+            if compat.is_bytes(line):
+                # Python 2: The FTP server returns the names as bytes.
+                # We (and the server) don't have a clue, what encoding was used,
+                # but we assume UTF-8 and fall back to CP-1252
+                data, _, name = line.partition("; ")
+                status, u_name = re_encode_binary_to_utf8(name, fallback="cp1252", raise_error=False)
+                # print(status, name, u_name)
+                if status == 1:
+                    write("WARNING: File name seems not to be UTF-8; re-encoding from CP-1252:", name, "=>", u_name)
+                    name = u_name
+                elif status == 2:
+                    write_error("File name is neither UTF-8 nor CP-1252 encoded:", name)
+                # print name
+            else:
+                # Python 3: The FTP server returns the names as unicode `str`.
+                # It already decoded using `ftp.encoding` which we set in the constructor.
+                data, _, name = line.partition("; ")
+                # name = name.encode(self.encoding)
 
             res_type = size = mtime = unique = None
             fields = data.split(";")
@@ -474,37 +518,28 @@ class FtpTarget(_Target):
                 if n in entry_map:
                     # We have a meta-data entry for this resource
                     upload_time = meta.get("u", 0)
-                    if (
-                        entry_map[n].size == meta.get("s")
-                        and FileEntry._eps_compare(entry_map[n].mtime, upload_time) <= 0
-                    ):
+
+                    # Discard stored meta-data if
+                    #   1. the reported files size is different than the
+                    #      size we stored in the meta-data
+                    #      or
+                    #   2. the the mtime reported by the FTP server is later
+                    #      than the stored upload time (which indicates
+                    #      that the file was modified directly on the server)
+                    if entry_map[n].size != meta.get("s"):
+                        if self.get_option("verbose", 3) >= 5:
+                            write("Removing meta entry {} (size changed from {} to {})."
+                                  .format(n, entry_map[n].size, meta.get("s")))
+                        missing.append(n)
+                    elif (entry_map[n].mtime - upload_time) > self.mtime_compare_eps:
+                        if self.get_option("verbose", 3) >= 5:
+                            write("Removing meta entry {} (modified {} > {})."
+                                  .format(n, time.ctime(entry_map[n].mtime), time.ctime(upload_time)))
+                        missing.append(n)
+                    else:
                         # Use meta-data mtime instead of the one reported by FTP server
                         entry_map[n].meta = meta
                         entry_map[n].mtime = meta["m"]
-                        # entry_map[n].dt_modified = datetime.fromtimestamp(meta["m"])
-                    else:
-                        # Discard stored meta-data if
-                        #   1. the the mtime reported by the FTP server is later
-                        #      than the stored upload time (which indicates
-                        #      that the file was modified directly on the server)
-                        #      or
-                        #   2. the reported files size is different than the
-                        #      size we stored in the meta-data
-                        if self.get_option("verbose", 3) >= 5:
-                            write(
-                                (
-                                    "META: Removing outdated meta entry {}\n"
-                                    + "      modified after upload ({} > {}), or\n"
-                                    "      cur. size ({}) != meta size ({})"
-                                ).format(
-                                    n,
-                                    time.ctime(entry_map[n].mtime),
-                                    time.ctime(upload_time),
-                                    entry_map[n].size,
-                                    meta.get("s"),
-                                )
-                            )
-                        missing.append(n)
                 else:
                     # File is stored in meta-data, but no longer exists on FTP server
                     # write("META: Removing missing meta entry %s" % n)
