@@ -8,7 +8,8 @@ import json
 import time
 
 from ftpsync import __version__
-from ftpsync.util import get_option, pretty_stamp, str_to_bool, write, write_error
+from ftpsync import compat
+from ftpsync.util import get_option, pretty_stamp, str_to_bool, write, write_error, decode_dict_keys
 
 PYFTPSYNC_VERBOSE_META = str_to_bool(
     get_option("PYFTPSYNC_VERBOSE_META", "debug", "verbose_meta", False)
@@ -69,7 +70,7 @@ class DirMetadata(object):
         ut = time.time()  # UTC time stamp
         if self.target.server_time_ofs:
             # We add the estimated time offset, so the stored 'u' time stamp matches
-            # better the mtime value that the server will generate for that file 
+            # better the mtime value that the server will generate for that file
             ut += self.target.server_time_ofs
 
         self.list[filename] = {"m": mtime, "s": size, "u": ut}
@@ -190,34 +191,25 @@ class DirMetadata(object):
             # which makes it hard to read, so we set it to false.
             # `sort_keys` converts binary keys to unicode using utf-8, so we
             # must make sure that we don't pass cp1225 or other encoded data.
+            data = self.dir
+            opts = {
+                "indent": 4,
+                "sort_keys": True,
+                "ensure_ascii": False,
+            }
 
-            # Note that in Python 2.7 json.dumps(...,  ensure_ascii=False) is
-            # broken, so we use io.open() (see https://stackoverflow.com/a/18337754/19166)
+            if compat.PY2:
+                # The `encoding` arg defaults to utf-8 on Py2 and was removed in Py3
+                # opts["encoding"] = "utf-8"
+                # Python 2 has problems with mixed keys (str/unicode‚)
+                data = decode_dict_keys(data, "utf-8")
 
-            # TODO:
-            # with io.open('filename', 'w', encoding='utf8') as json_file:
-            #     data = json.dumps(u"ברי צקלה", ensure_ascii=False)
-            #     # unicode(data) auto-decodes data to unicode if str
-            #     json_file.write(unicode(data))
+            if not self.PRETTY:
+                opts["indent"] = None
+                opts["separators"] = (",", ":")
 
-            # The `encoding` arg defaults to utf-8 on Py2 and was removed in Py3
+            s = json.dumps(data, **opts)
 
-            if self.PRETTY:
-                s = json.dumps(
-                    self.dir,
-                    indent=4,
-                    sort_keys=True,
-                    ensure_ascii=False,
-                )
-            else:  # compact
-                s = json.dumps(
-                    self.dir,
-                    separators=(",", ":"),
-                    sort_keys=True,
-                    ensure_ascii=False,
-                )
-
-            # write("DirMetadata.flush(%s)" % (self.target, ))#, s)
             self.target.write_text(self.filename, s)
             if self.target.synchronizer:
                 self.target.synchronizer._inc_stat("meta_bytes_written", len(s))

@@ -364,6 +364,15 @@ def byte_compare(stream_a, stream_b):
     return (equal, ofs)
 
 
+def decode_dict_keys(d, coding="utf-8"):
+    res = {}
+    for k, v in d.iteritems():
+        if type(k) is str:
+            k = k.decode(coding)
+        if type(v) is dict:
+            v = decode_dict_keys(v, coding)
+        res[k] = v
+    return res
 # def decode_utf8_safe(s, fallback="cp1252", raise_error=True):
 #     """Try to decode a binary string using UTF-8 but fall back to CP-1252.
 
