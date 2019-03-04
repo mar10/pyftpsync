@@ -116,6 +116,7 @@ def namespace_to_dict(o):
 
 
 def eps_compare(f1, f2, eps):
+    """Return true if |f1-f2| <= eps."""
     res = f1 - f2
     if abs(res) <= eps:  # '<=',so eps == 0 works as expected
         return 0
@@ -128,8 +129,6 @@ def pretty_stamp(stamp):
     """Convert timestamp to verbose string (strip fractions of seconds)."""
     if stamp is None:
         return "n.a."
-    # return time.ctime(stamp)
-    # return datetime.fromtimestamp(stamp).isoformat(" ")
     return datetime.fromtimestamp(stamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
@@ -201,7 +200,10 @@ def prompt_for_password(url, user=None, default_user=None):
 
 
 def get_credentials_for_url(url, opts, force_user=None):
-    """
+    """Lookup credentials for a given target in keyring and .netrc.
+
+    Optionally prompts for credentials if not found.
+
     Returns:
         2-tuple (username, password) or None
     """
@@ -284,6 +286,7 @@ def get_credentials_for_url(url, opts, force_user=None):
 
 
 def save_password(url, username, password):
+    """Store credentials in keyring."""
     if keyring:
         if ":" in username:
             raise RuntimeError(
@@ -314,7 +317,7 @@ def save_password(url, username, password):
 
 
 def str_to_bool(val):
-    """Return a boolean for '0', 'false', 'on', ...."""
+    """Return a boolean for '0', 'false', 'on', ..."""
     val = str(val).lower().strip()
     if val in ("1", "true", "on", "yes"):
         return True
@@ -365,9 +368,10 @@ def byte_compare(stream_a, stream_b):
 
 
 def decode_dict_keys(d, coding="utf-8"):
+    """Convert all keys to unicde (recursively)."""
     assert compat.PY2
     res = {}
-    for k, v in d.items():
+    for k, v in d.items():  #
         if type(k) is str:
             k = k.decode(coding)
         if type(v) is dict:
@@ -403,11 +407,13 @@ def re_encode_binary_to_utf8(s, fallback="cp1252", raise_error=True):
     Returns:
         (state, bytes): 2-tuple.
             state: 0:success, 1:fallback worked, 2:failed
+    Raises:
+        UnicodeDecodeError if enocde failed and raise_error was true
     """
     assert compat.is_bytes(s)
 
     try:
-        # We decode for testing only, then dicarf the result
+        # We decode for testing only, then discard the result
         s.decode("utf-8")
         return 0, s
     except UnicodeDecodeError:

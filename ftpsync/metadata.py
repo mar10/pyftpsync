@@ -125,10 +125,12 @@ class DirMetadata(object):
             is_valid_file = False
 
             s = self.target.read_text(self.filename)
+            print("s", s)
             if self.target.synchronizer:
                 self.target.synchronizer._inc_stat("meta_bytes_read", len(s))
             self.was_read = True  # True if a file exists (even invalid)
             self.dir = json.loads(s)
+            print("dir", self.dir)
             self.list = self.dir["mtimes"]
             self.peer_sync = self.dir["peer_sync"]
             is_valid_file = True

@@ -85,11 +85,11 @@ class _Target(object):
         self.save_mode = True
         self.case_sensitive = None  # TODO: don't know yet
         #: Time difference between <local upload time> and the mtime that the server reports afterwards.
-        #: The value is added to the 'u' time stored in meta data. 
+        #: The value is added to the 'u' time stored in meta data.
         #: (This is only a rough estimation, derived from the lock-file.)
         self.server_time_ofs = None
         #: Maximum allowed difference between a reported mtime and the last known update time,
-        #: before we classify the entry as 'modified externally'  
+        #: before we classify the entry as 'modified externally'
         self.mtime_compare_eps = FileEntry.EPS_TIME
         self.cur_dir_meta = DirMetadata(self)
         self.meta_stack = []
@@ -117,6 +117,12 @@ class _Target(object):
 
     def is_unbound(self):
         return self.synchronizer is None
+
+    def to_bytes(self, s):
+        return compat.to_bytes(s, self.encoding)
+
+    def to_unicode(self, s):
+        return compat.to_unicode(s, self.encoding)
 
     def get_options_dict(self):
         """Return options from synchronizer (possibly overridden by own extra_opts)."""

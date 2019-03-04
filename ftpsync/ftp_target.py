@@ -177,6 +177,8 @@ class FtpTarget(_Target):
 
         try:
             self.syst_response = self.ftp.sendcmd("SYST")
+            if self.get_option("verbose", 3) >= 5:
+                write("SYST: '{}'.".format(self.syst_response.replace("\n", " ")))
             # self.is_unix = "unix" in resp.lower() # not necessarily true, better check with r/w tests
             # TODO: case sensitivity?
         except Exception as e:
@@ -185,46 +187,43 @@ class FtpTarget(_Target):
         try:
             self.feat_response = self.ftp.sendcmd("FEAT")
             self.support_utf8 = "UTF8" in self.feat_response
+            if self.get_option("verbose", 3) >= 5:
+                write("FEAT: '{}'.".format(self.feat_response.replace("\n", " ")))
         except Exception as e:
             write("FEAT command failed: '{}'".format(e))
 
-        if self.get_option("verbose", 3) >= 5:
-            write("SYST: '{}'.".format(self.syst_response))
-            write("FEAT: '{}'.".format(self.feat_response))
+        if self.encoding == "utf-8":
+            if not self.support_utf8:
+                write("Server does not list utf-8 as supported feature (using it anyway).", warning=True)
+
+            try:
+                # Announce our wish to use UTF-8 to the server as proposed here:
+                # See https://tools.ietf.org/html/draft-ietf-ftpext-utf-8-option-00
+                # Note: this failed on Strato
+                self.ftp.sendcmd("OPTS UTF-8")
+                write("Sent 'OPTS UTF-8'.")
+            except Exception as e:
+                write("Could not send 'OPTS UTF-8': '{}'".format(e), warning=True)
+
+            try:
+                # Announce our wish to use UTF-8 to the server as proposed here:
+                # See https://tools.ietf.org/html/rfc2389
+                # Note: this was accepted on Strato
+                self.ftp.sendcmd("OPTS UTF8 ON")
+                write("Sent 'OPTS UTF8 ON'.")
+            except Exception as e:
+                write("Could not send 'OPTS UTF8 ON': '{}'".format(e), warning=True)
 
         if hasattr(self.ftp, "encoding"):
             # Python 3 encodes using latin-1 by default(!)
+            # (In Python 2 ftp.encoding does not exist, but ascii is used)
             if self.encoding != codecs.lookup(self.ftp.encoding).name:
-                if self.encoding == "utf-8":
-                    if not self.support_utf8:
-                        write("Server does not list utf-8 as supported feature (using it anyway).", warning=True)
-
-                    try:
-                        # Announce our wish to use UTF-8 to the server as proposed here:
-                        # See https://tools.ietf.org/html/draft-ietf-ftpext-utf-8-option-00
-                        # Note: this failed on Strato
-                        self.ftp.sendcmd("OPTS UTF-8")
-                        write("Sent 'OPTS UTF-8'.")
-                    except Exception as e:
-                        write("Could not send 'OPTS UTF-8': '{}'".format(e), warning=True)
-
-                    try:
-                        # Announce our wish to use UTF-8 to the server as proposed here:
-                        # See https://tools.ietf.org/html/rfc2389
-                        # Note: this was accepted on Strato
-                        self.ftp.sendcmd("OPTS UTF8 ON")
-                        write("Sent 'OPTS UTF8 ON'.")
-                    except Exception as e:
-                        write("Could not send 'OPTS UTF8 ON': '{}'".format(e), warning=True)
-
                 write("Setting FTP encoding to {} (was {}).".format(self.encoding, self.ftp.encoding))
                 self.ftp.encoding = self.encoding
 
         try:
-            self.ftp.cwd(self.root_dir)
+            self.ftp.cwd(self.to_bytes(self.root_dir))
         except ftplib.error_perm as e:
-            # If credentials were passed, but authentication fails, prompt
-            # for new password
             if not e.args[0].startswith("550"):
                 raise  # error other then 550 No such directory'
             write_error(
@@ -365,6 +364,7 @@ class FtpTarget(_Target):
 
     def mkdir(self, dir_name):
         self.check_write(dir_name)
+        dir_name = self.to_bytes(dir_name)
         self.ftp.mkd(dir_name)
 
     def _rmdir_impl(self, dir_name, keep_root_folder=False, predicate=None):
@@ -423,9 +423,11 @@ class FtpTarget(_Target):
                 # print(status, name, u_name)
                 if status == 1:
                     write("WARNING: File name seems not to be UTF-8; re-encoding from CP-1252:", name, "=>", u_name)
-                    name = u_name
+                    name = u_name.decode("utf-8")
                 elif status == 2:
                     write_error("File name is neither UTF-8 nor CP-1252 encoded:", name)
+                else:
+                    name = name.decode("utf-8")
                 # print name
             else:
                 # Python 3: The FTP server returns the names as unicode `str`.
