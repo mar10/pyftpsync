@@ -9,7 +9,14 @@ import time
 
 from ftpsync import __version__
 from ftpsync import compat
-from ftpsync.util import get_option, pretty_stamp, str_to_bool, write, write_error, decode_dict_keys
+from ftpsync.util import (
+    get_option,
+    pretty_stamp,
+    str_to_bool,
+    write,
+    write_error,
+    decode_dict_keys,
+)
 
 PYFTPSYNC_VERBOSE_META = str_to_bool(
     get_option("PYFTPSYNC_VERBOSE_META", "debug", "verbose_meta", False)
@@ -194,11 +201,7 @@ class DirMetadata(object):
             # `sort_keys` converts binary keys to unicode using utf-8, so we
             # must make sure that we don't pass cp1225 or other encoded data.
             data = self.dir
-            opts = {
-                "indent": 4,
-                "sort_keys": True,
-                "ensure_ascii": False,
-            }
+            opts = {"indent": 4, "sort_keys": True, "ensure_ascii": False}
 
             if compat.PY2:
                 # The `encoding` arg defaults to utf-8 on Py2 and was removed in Py3

@@ -187,8 +187,7 @@ class BaseSynchronizer(object):
             )
             write(
                 "Encoding local: {}, remote: {}".format(
-                    self.local.encoding,
-                    self.remote.encoding,
+                    self.local.encoding, self.remote.encoding
                 )
             )
 

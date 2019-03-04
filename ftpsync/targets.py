@@ -296,6 +296,7 @@ class _Target(object):
 # FsTarget
 # ===============================================================================
 
+
 class FsTarget(_Target):
 
     DEFAULT_BLOCKSIZE = 16 * 1024  # shutil.copyobj() uses 16k blocks by default

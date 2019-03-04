@@ -194,7 +194,10 @@ class FtpTarget(_Target):
 
         if self.encoding == "utf-8":
             if not self.support_utf8:
-                write("Server does not list utf-8 as supported feature (using it anyway).", warning=True)
+                write(
+                    "Server does not list utf-8 as supported feature (using it anyway).",
+                    warning=True,
+                )
 
             try:
                 # Announce our wish to use UTF-8 to the server as proposed here:
@@ -218,7 +221,11 @@ class FtpTarget(_Target):
             # Python 3 encodes using latin-1 by default(!)
             # (In Python 2 ftp.encoding does not exist, but ascii is used)
             if self.encoding != codecs.lookup(self.ftp.encoding).name:
-                write("Setting FTP encoding to {} (was {}).".format(self.encoding, self.ftp.encoding))
+                write(
+                    "Setting FTP encoding to {} (was {}).".format(
+                        self.encoding, self.ftp.encoding
+                    )
+                )
                 self.ftp.encoding = self.encoding
 
         try:
@@ -419,10 +426,17 @@ class FtpTarget(_Target):
                 # We (and the server) don't have a clue, what encoding was used,
                 # but we assume UTF-8 and fall back to CP-1252
                 data, _, name = line.partition("; ")
-                status, u_name = re_encode_binary_to_utf8(name, fallback="cp1252", raise_error=False)
+                status, u_name = re_encode_binary_to_utf8(
+                    name, fallback="cp1252", raise_error=False
+                )
                 # print(status, name, u_name)
                 if status == 1:
-                    write("WARNING: File name seems not to be UTF-8; re-encoding from CP-1252:", name, "=>", u_name)
+                    write(
+                        "WARNING: File name seems not to be UTF-8; re-encoding from CP-1252:",
+                        name,
+                        "=>",
+                        u_name,
+                    )
                     name = u_name.decode("utf-8")
                 elif status == 2:
                     write_error("File name is neither UTF-8 nor CP-1252 encoded:", name)
@@ -530,13 +544,21 @@ class FtpTarget(_Target):
                     #      that the file was modified directly on the server)
                     if entry_map[n].size != meta.get("s"):
                         if self.get_option("verbose", 3) >= 5:
-                            write("Removing meta entry {} (size changed from {} to {})."
-                                  .format(n, entry_map[n].size, meta.get("s")))
+                            write(
+                                "Removing meta entry {} (size changed from {} to {}).".format(
+                                    n, entry_map[n].size, meta.get("s")
+                                )
+                            )
                         missing.append(n)
                     elif (entry_map[n].mtime - upload_time) > self.mtime_compare_eps:
                         if self.get_option("verbose", 3) >= 5:
-                            write("Removing meta entry {} (modified {} > {})."
-                                  .format(n, time.ctime(entry_map[n].mtime), time.ctime(upload_time)))
+                            write(
+                                "Removing meta entry {} (modified {} > {}).".format(
+                                    n,
+                                    time.ctime(entry_map[n].mtime),
+                                    time.ctime(upload_time),
+                                )
+                            )
                         missing.append(n)
                     else:
                         # Use meta-data mtime instead of the one reported by FTP server
