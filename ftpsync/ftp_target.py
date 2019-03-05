@@ -18,9 +18,9 @@ from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersion
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftpsync.targets import _Target, _get_encoding_opt
 from ftpsync.util import (
-    decode_utf8_safe,
     get_credentials_for_url,
     prompt_for_password,
+    re_encode_binary_to_utf8,
     save_password,
     write,
     write_error,
@@ -433,9 +433,8 @@ class FtpTarget(_Target):
                 # We (and the server) don't have a clue, what encoding was used,
                 # but we assume UTF-8 and fall back to CP-1252
                 data, _, name = line.partition("; ")
-                # status, u_name = re_encode_binary_to_utf8(
                 if self.encoding == "utf-8":
-                    status, u_name = decode_utf8_safe(
+                    status, u_name = re_encode_binary_to_utf8(
                         name, fallback="cp1252", raise_error=False
                     )
                 else:
@@ -457,7 +456,6 @@ class FtpTarget(_Target):
                 # else:
                 #     name = name.decode("utf-8")
                 name = u_name  # u_name.decode("utf-8")
-                # print("name:", name)
             else:
                 # Python 3: The FTP server returns the names as unicode `str`.
                 # It already decoded using `ftp.encoding` which we set in the constructor.
