@@ -35,8 +35,8 @@ class DirMetadata(object):
 
     """
 
-    META_FILE_NAME = ".pyftpsync-meta.json"
-    LOCK_FILE_NAME = ".pyftpsync-lock.json"
+    META_FILE_NAME = u".pyftpsync-meta.json"
+    LOCK_FILE_NAME = u".pyftpsync-lock.json"
     # False: Reduce file size to 35% (like 3759 -> 1375 bytes)
     PRETTY = PYFTPSYNC_VERBOSE_META
     # Increment file version if format changes. Old files will be discarded then!
@@ -132,12 +132,12 @@ class DirMetadata(object):
             is_valid_file = False
 
             s = self.target.read_text(self.filename)
-            print("s", s)
+            # print("s", s)
             if self.target.synchronizer:
                 self.target.synchronizer._inc_stat("meta_bytes_read", len(s))
             self.was_read = True  # True if a file exists (even invalid)
             self.dir = json.loads(s)
-            print("dir", self.dir)
+            # print("dir", self.dir)
             self.list = self.dir["mtimes"]
             self.peer_sync = self.dir["peer_sync"]
             is_valid_file = True

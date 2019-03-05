@@ -380,25 +380,25 @@ def decode_dict_keys(d, coding="utf-8"):
     return res
 
 
-# def decode_utf8_safe(s, fallback="cp1252", raise_error=True):
-#     """Try to decode a binary string using UTF-8 but fall back to CP-1252.
+def decode_utf8_safe(s, fallback="cp1252", raise_error=True):
+    """Try to decode a binary string using UTF-8 but fall back to CP-1252.
 
-#     Returns:
-#         (state, unicode): 2-tuple.
-#             state: 0:success, 1:fallback worked, 2:failed
-#     """
-#     if compat.is_unicode(s):
-#         return s
+    Returns:
+        (state, unicode): 2-tuple.
+            state: 0:success, 1:fallback worked, 2:failed
+    """
+    if compat.is_unicode(s):
+        return s
 
-#     try:
-#         return (0, s.decode("utf-8"))
-#     except UnicodeDecodeError:
-#         try:
-#             return (1, s.decode(fallback))
-#         except UnicodeDecodeError:
-#             if raise_error:
-#                 raise
-#     return (2, None)
+    try:
+        return (0, s.decode("utf-8"))
+    except UnicodeDecodeError:
+        try:
+            return (1, s.decode(fallback))
+        except UnicodeDecodeError:
+            if raise_error:
+                raise
+    return (2, None)
 
 
 def re_encode_binary_to_utf8(s, fallback="cp1252", raise_error=True):

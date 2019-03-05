@@ -59,6 +59,20 @@ def make_target(url, extra_opts=None):
     return target
 
 
+def _get_encoding_opt(synchronizer, extra_opts, default):
+    """Helper to figure out encoding setting inside constructors."""
+    encoding = default
+    # if synchronizer and "encoding" in synchronizer.options:
+    #     encoding = synchronizer.options.get("encoding")
+    if extra_opts and "encoding" in extra_opts:
+        encoding = extra_opts.get("encoding")
+    if encoding:
+        # Normalize name (e.g. 'UTF8' => 'utf-8')
+        encoding = codecs.lookup(encoding).name
+    # print("_get_encoding_opt", encoding)
+    return encoding or None
+
+
 # ===============================================================================
 # _Target
 # ===============================================================================
@@ -68,11 +82,14 @@ class _Target(object):
     DEFAULT_BLOCKSIZE = 16 * 1024  # shutil.copyobj() uses 16k blocks by default
 
     def __init__(self, root_dir, extra_opts):
-        if root_dir != "/":
+        # All internal paths should use unicode.
+        # (We cannot convert here, since we don't know the target encoding.)
+        assert compat.is_unicode(root_dir)
+        if root_dir != u"/":
             root_dir = root_dir.rstrip("/")
         # This target is not thread safe
         self._rlock = threading.RLock()
-        #:
+        #: The target's top-level folder
         self.root_dir = root_dir
         self.extra_opts = extra_opts or {}
         self.readonly = False
@@ -93,10 +110,12 @@ class _Target(object):
         self.mtime_compare_eps = FileEntry.EPS_TIME
         self.cur_dir_meta = DirMetadata(self)
         self.meta_stack = []
-        #: Optionally define an encoding for this target
-        self.encoding = self.get_option("encoding", None)
-        if self.encoding:
-            self.encoding = codecs.lookup(self.encoding).name
+        # Optionally define an encoding for this target, but don't override
+        # derived class's setting
+        if not hasattr(self, "encoding"):
+            #: Assumed encoding for this target. Used to decode binary paths.
+            self.encoding = _get_encoding_opt(None, extra_opts, None)
+        return
 
     def __del__(self):
         # TODO: http://pydev.blogspot.de/2015/01/creating-safe-cyclic-reference.html
@@ -119,10 +138,24 @@ class _Target(object):
         return self.synchronizer is None
 
     def to_bytes(self, s):
+        """Convert `s` to bytes, using this target's encoding (does nothing if `s` is already bytes)."""
         return compat.to_bytes(s, self.encoding)
 
     def to_unicode(self, s):
+        """Convert `s` to unicode, using this target's encoding (does nothing if `s` is already unicode)."""
         return compat.to_unicode(s, self.encoding)
+
+    def to_native(self, s):
+        """Convert `s` to native, using this target's encoding (does nothing if `s` is already native)."""
+        return compat.to_native(s, self.encoding)
+
+    # def re_encode_to_utf8(self, s):
+    #     """Return UTF-8 byte string, assuming `s` in own encoding."""
+    #     if compat.is_bytes(s):
+    #         if self.encoding == "utf-8":
+    #             return s
+    #         s = s.decode(self.encoding)
+    #     return s.encode("utf-8")
 
     def get_options_dict(self):
         """Return options from synchronizer (possibly overridden by own extra_opts)."""
@@ -155,6 +188,7 @@ class _Target(object):
 
     def check_write(self, name):
         """Raise exception if writing cur_dir/name is not allowed."""
+        assert compat.is_unicode(name)
         if self.readonly and name not in (
             DirMetadata.META_FILE_NAME,
             DirMetadata.LOCK_FILE_NAME,
@@ -260,6 +294,7 @@ class _Target(object):
             callback (function, optional):
                 Called like `func(buf)` for every written chunk
         """
+        raise NotImplementedError
 
     def write_file(self, name, fp_src, blocksize=DEFAULT_BLOCKSIZE, callback=None):
         """Write binary data from file-like to cur_dir/name."""
@@ -302,18 +337,20 @@ class FsTarget(_Target):
     DEFAULT_BLOCKSIZE = 16 * 1024  # shutil.copyobj() uses 16k blocks by default
 
     def __init__(self, root_dir, extra_opts=None):
+        self.encoding = _get_encoding_opt(None, extra_opts, sys.getfilesystemencoding())
+        root_dir = self.to_unicode(root_dir)
         root_dir = os.path.expanduser(root_dir)
         root_dir = os.path.abspath(root_dir)
         super(FsTarget, self).__init__(root_dir, extra_opts)
         if not os.path.isdir(root_dir):
-            raise ValueError("{} is not a directory.".format(root_dir))
+            raise ValueError(u"{} is not a directory.".format(root_dir))
         self.support_set_time = True
-        #: Optionally define an encoding for this target
-        encoding = self.get_option("encoding", sys.getfilesystemencoding())
-        self.encoding = codecs.lookup(encoding).name if encoding else None
+        # #: Optionally define an encoding for this target
+        # encoding = self.get_option("encoding", sys.getfilesystemencoding())
+        # self.encoding = codecs.lookup(encoding).name if encoding else None
 
     def __str__(self):
-        return "<FS:{} + {}>".format(
+        return u"<FS:{} + {}>".format(
             self.root_dir, os.path.relpath(self.cur_dir, self.root_dir)
         )
 
@@ -328,7 +365,7 @@ class FsTarget(_Target):
         path = normpath_url(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
             raise RuntimeError(
-                "Tried to navigate outside root %r: %r" % (self.root_dir, path)
+                u"Tried to navigate outside root %r: %r" % (self.root_dir, path)
             )
         self.cur_dir_meta = None
         self.cur_dir = path
