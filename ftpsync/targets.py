@@ -84,8 +84,8 @@ class _Target(object):
     def __init__(self, root_dir, extra_opts):
         # All internal paths should use unicode.
         # (We cannot convert here, since we don't know the target encoding.)
-        assert compat.is_unicode(root_dir)
-        if root_dir != u"/":
+        assert compat.is_native(root_dir)
+        if root_dir != "/":
             root_dir = root_dir.rstrip("/")
         # This target is not thread safe
         self._rlock = threading.RLock()
@@ -137,25 +137,37 @@ class _Target(object):
     def is_unbound(self):
         return self.synchronizer is None
 
-    def to_bytes(self, s):
-        """Convert `s` to bytes, using this target's encoding (does nothing if `s` is already bytes)."""
-        return compat.to_bytes(s, self.encoding)
+    # def to_bytes(self, s):
+    #     """Convert `s` to bytes, using this target's encoding (does nothing if `s` is already bytes)."""
+    #     return compat.to_bytes(s, self.encoding)
 
-    def to_unicode(self, s):
-        """Convert `s` to unicode, using this target's encoding (does nothing if `s` is already unicode)."""
-        return compat.to_unicode(s, self.encoding)
+    # def to_unicode(self, s):
+    #     """Convert `s` to unicode, using this target's encoding (does nothing if `s` is already unic)."""
+    #     return compat.to_unicode(s, self.encoding)
 
-    def to_native(self, s):
-        """Convert `s` to native, using this target's encoding (does nothing if `s` is already native)."""
-        return compat.to_native(s, self.encoding)
+    # def to_native(self, s):
+    #     """Convert `s` to native, using this target's encoding (does nothing if `s` is already native)."""
+    #     return compat.to_native(s, self.encoding)
 
-    # def re_encode_to_utf8(self, s):
-    #     """Return UTF-8 byte string, assuming `s` in own encoding."""
-    #     if compat.is_bytes(s):
-    #         if self.encoding == "utf-8":
-    #             return s
-    #         s = s.decode(self.encoding)
-    #     return s.encode("utf-8")
+    def re_encode_to_native(self, s):
+        """Return `s` in `str` format, assuming target.encoding.
+
+        On Python 2 return a binary `str`:
+            Encode unicode to UTF-8 binary str
+            Re-encode binary str from self.encoding to UTF-8
+        On Python 3 return unicode `str`:
+            Leave unicode unmodified
+            Decode binary str using self.encoding
+        """
+        if compat.PY2:
+            if isinstance(s, unicode):  # noqa
+                s = s.encode("utf-8")
+            elif self.encoding != "utf-8":
+                s = s.decode(self.encoding)
+                s = s.encode("utf-8")
+        elif not isinstance(s, str):
+            s = s.decode(self.encoding)
+        return s
 
     def get_options_dict(self):
         """Return options from synchronizer (possibly overridden by own extra_opts)."""
@@ -188,7 +200,7 @@ class _Target(object):
 
     def check_write(self, name):
         """Raise exception if writing cur_dir/name is not allowed."""
-        assert compat.is_unicode(name)
+        assert compat.is_native(name)
         if self.readonly and name not in (
             DirMetadata.META_FILE_NAME,
             DirMetadata.LOCK_FILE_NAME,
@@ -338,19 +350,19 @@ class FsTarget(_Target):
 
     def __init__(self, root_dir, extra_opts=None):
         self.encoding = _get_encoding_opt(None, extra_opts, sys.getfilesystemencoding())
-        root_dir = self.to_unicode(root_dir)
+        # root_dir = self.to_unicode(root_dir)
         root_dir = os.path.expanduser(root_dir)
         root_dir = os.path.abspath(root_dir)
         super(FsTarget, self).__init__(root_dir, extra_opts)
         if not os.path.isdir(root_dir):
-            raise ValueError(u"{} is not a directory.".format(root_dir))
+            raise ValueError("{} is not a directory.".format(root_dir))
         self.support_set_time = True
         # #: Optionally define an encoding for this target
         # encoding = self.get_option("encoding", sys.getfilesystemencoding())
         # self.encoding = codecs.lookup(encoding).name if encoding else None
 
     def __str__(self):
-        return u"<FS:{} + {}>".format(
+        return "<FS:{} + {}>".format(
             self.root_dir, os.path.relpath(self.cur_dir, self.root_dir)
         )
 
@@ -365,7 +377,7 @@ class FsTarget(_Target):
         path = normpath_url(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
             raise RuntimeError(
-                u"Tried to navigate outside root %r: %r" % (self.root_dir, path)
+                "Tried to navigate outside root %r: %r" % (self.root_dir, path)
             )
         self.cur_dir_meta = None
         self.cur_dir = path

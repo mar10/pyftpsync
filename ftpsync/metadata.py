@@ -35,8 +35,8 @@ class DirMetadata(object):
 
     """
 
-    META_FILE_NAME = u".pyftpsync-meta.json"
-    LOCK_FILE_NAME = u".pyftpsync-lock.json"
+    META_FILE_NAME = ".pyftpsync-meta.json"
+    LOCK_FILE_NAME = ".pyftpsync-lock.json"
     # False: Reduce file size to 35% (like 3759 -> 1375 bytes)
     PRETTY = PYFTPSYNC_VERBOSE_META
     # Increment file version if format changes. Old files will be discarded then!

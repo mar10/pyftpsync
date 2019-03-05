@@ -71,9 +71,9 @@ class FtpTarget(_Target):
             extra_opts (dict):
         """
         self.encoding = _get_encoding_opt(None, extra_opts, "utf-8")
-        path = self.to_unicode(path)
+        # path = self.to_unicode(path)
         path = path or "/"
-        assert compat.is_unicode(path)
+        assert compat.is_native(path)
         super(FtpTarget, self).__init__(path, extra_opts)
         if tls:
             try:
@@ -232,9 +232,7 @@ class FtpTarget(_Target):
                 self.ftp.encoding = self.encoding
 
         try:
-            # We store unicode internally. For Py2 we will convert to binary,
-            # while Py3 can handle unicode.
-            self.ftp.cwd(self.to_native(self.root_dir))
+            self.ftp.cwd(self.root_dir)
         except ftplib.error_perm as e:
             if not e.args[0].startswith("550"):
                 raise  # error other then 550 No such directory'
@@ -245,7 +243,7 @@ class FtpTarget(_Target):
             )
 
         pwd = self.ftp.pwd()
-        pwd = self.to_unicode(pwd)
+        # pwd = self.to_unicode(pwd)
         if pwd != self.root_dir:
             raise RuntimeError(
                 "Unable to navigate to working directory {!r} (now at {!r})".format(
@@ -361,7 +359,7 @@ class FtpTarget(_Target):
         return self.host + self.root_dir
 
     def cwd(self, dir_name):
-        assert compat.is_unicode(dir_name)
+        assert compat.is_native(dir_name)
         path = normpath_url(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
             # paranoic check to prevent that our sync tool goes berserk
@@ -374,23 +372,22 @@ class FtpTarget(_Target):
         return self.cur_dir
 
     def pwd(self):
-        return self.to_unicode(self.ftp.pwd())
+        return self.re_encode_to_native(self.ftp.pwd())
 
     def mkdir(self, dir_name):
-        assert compat.is_unicode(dir_name)
+        assert compat.is_native(dir_name)
         self.check_write(dir_name)
-        dir_name = self.to_native(dir_name)
         self.ftp.mkd(dir_name)
 
     def _rmdir_impl(self, dir_name, keep_root_folder=False, predicate=None):
         # FTP does not support deletion of non-empty directories.
-        assert compat.is_unicode(dir_name)
+        assert compat.is_native(dir_name)
         self.check_write(dir_name)
         names = []
         nlst_res = self.ftp.nlst(dir_name)
         # write("rmdir(%s): %s" % (dir_name, nlst_res))
         for name in nlst_res:
-            name = self.to_unicode(name)
+            name = self.re_encode_to_native(name)
             if "/" in name:
                 name = os.path.basename(name)
             if name in (".", ".."):
@@ -400,12 +397,12 @@ class FtpTarget(_Target):
             names.append(name)
 
         if len(names) > 0:
-            self.ftp.cwd(self.to_native(dir_name))
+            self.ftp.cwd(dir_name)
             try:
                 for name in names:
                     try:
                         # try to delete this as a file
-                        self.ftp.delete(self.to_native(name))
+                        self.ftp.delete(name)
                     except ftplib.all_errors as _e:
                         write(
                             "    ftp.delete({}) failed: {}, trying rmdir()...".format(
@@ -419,7 +416,7 @@ class FtpTarget(_Target):
                     self.ftp.cwd("..")
         #        write("ftp.rmd(%s)..." % (dir_name, ))
         if not keep_root_folder:
-            self.ftp.rmd(self.to_native(dir_name))
+            self.ftp.rmd(dir_name)
         return
 
     def rmdir(self, dir_name):
@@ -444,7 +441,7 @@ class FtpTarget(_Target):
                 else:
                     # If an explicit encoding was set for this target, use it
                     # exclusively
-                    status, u_name = 0, self.to_unicode(name)
+                    status, u_name = 0, self.re_encode_to_native(name)
                 # print(status, name, u_name)
                 if status == 1:
                     write(
@@ -460,14 +457,14 @@ class FtpTarget(_Target):
                 # else:
                 #     name = name.decode("utf-8")
                 name = u_name  # u_name.decode("utf-8")
-                print("name:", name)
+                # print("name:", name)
             else:
                 # Python 3: The FTP server returns the names as unicode `str`.
                 # It already decoded using `ftp.encoding` which we set in the constructor.
                 data, _, name = line.partition("; ")
                 # name = name.encode(self.encoding)
 
-            assert compat.is_unicode(name)
+            assert compat.is_native(name)
             res_type = size = mtime = unique = None
             fields = data.split(";")
             # https://tools.ietf.org/html/rfc3659#page-23
@@ -604,8 +601,7 @@ class FtpTarget(_Target):
             file-like (must support read() method)
         """
         # print("FTP open_readable({})".format(name))
-        assert compat.is_unicode(name)
-        name = self.to_native(name)
+        assert compat.is_native(name)
         out = SpooledTemporaryFile(max_size=self.MAX_SPOOL_MEM, mode="w+b")
         self.ftp.retrbinary(
             "RETR {}".format(name), out.write, FtpTarget.DEFAULT_BLOCKSIZE
@@ -624,8 +620,7 @@ class FtpTarget(_Target):
                 Called like `func(buf)` for every written chunk
         """
         # print("FTP write_file({})".format(name), blocksize)
-        assert compat.is_unicode(name)
-        name = self.to_native(name)
+        assert compat.is_native(name)
         self.check_write(name)
         self.ftp.storbinary("STOR {}".format(name), fp_src, blocksize, callback)
         # TODO: check result
@@ -639,8 +634,7 @@ class FtpTarget(_Target):
             callback (function, optional):
                 Called like `func(buf)` for every written chunk
         """
-        assert compat.is_unicode(name)
-        name = self.to_native(name)
+        assert compat.is_native(name)
 
         def _write_to_file(data):
             # print("_write_to_file() {} bytes.".format(len(data)))
@@ -654,16 +648,14 @@ class FtpTarget(_Target):
 
     def remove_file(self, name):
         """Remove cur_dir/name."""
-        assert compat.is_unicode(name)
-        name = self.to_native(name)
+        assert compat.is_native(name)
         self.check_write(name)
         # self.cur_dir_meta.remove(name)
         self.ftp.delete(name)
         self.remove_sync_info(name)
 
     def set_mtime(self, name, mtime, size):
-        assert compat.is_unicode(name)
-        name = self.to_native(name)
+        assert compat.is_native(name)
         self.check_write(name)
         # write("META set_mtime(%s): %s" % (name, time.ctime(mtime)))
         # We cannot set the mtime on FTP servers, so we store this as additional
