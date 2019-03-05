@@ -1,5 +1,7 @@
 3.0.0 (unreleased)
 ------------------
+This release addresses known encoding-related issues.
+
 - Remove trailing garbage from output lines
 - #30: Fallback to CP-1252 encoding when FTP server returns non-UTF-8
   Generally more robust handling concerning path encoding problems.

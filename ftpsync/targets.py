@@ -349,7 +349,10 @@ class FsTarget(_Target):
     DEFAULT_BLOCKSIZE = 16 * 1024  # shutil.copyobj() uses 16k blocks by default
 
     def __init__(self, root_dir, extra_opts=None):
-        self.encoding = _get_encoding_opt(None, extra_opts, sys.getfilesystemencoding())
+        def_enc = sys.getfilesystemencoding()
+        if not def_enc:
+            def_enc = "utf-8"
+        self.encoding = _get_encoding_opt(None, extra_opts, def_enc)
         # root_dir = self.to_unicode(root_dir)
         root_dir = os.path.expanduser(root_dir)
         root_dir = os.path.abspath(root_dir)
@@ -357,9 +360,6 @@ class FsTarget(_Target):
         if not os.path.isdir(root_dir):
             raise ValueError("{} is not a directory.".format(root_dir))
         self.support_set_time = True
-        # #: Optionally define an encoding for this target
-        # encoding = self.get_option("encoding", sys.getfilesystemencoding())
-        # self.encoding = codecs.lookup(encoding).name if encoding else None
 
     def __str__(self):
         return "<FS:{} + {}>".format(
@@ -407,7 +407,10 @@ class FsTarget(_Target):
         res = []
         # self.cur_dir_meta = None
         self.cur_dir_meta = DirMetadata(self)
-        for name in os.listdir(self.cur_dir):
+        # List directory. Pass in unicode on Py2, so we get unicode in return
+        unicode_cur_dir = compat.to_unicode(self.cur_dir)
+        for name in os.listdir(unicode_cur_dir):
+            name = compat.to_native(name)
             path = os.path.join(self.cur_dir, name)
             stat = os.lstat(path)
             # write(name)
