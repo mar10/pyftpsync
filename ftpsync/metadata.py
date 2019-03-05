@@ -16,6 +16,7 @@ from ftpsync.util import (
     write,
     write_error,
     decode_dict_keys,
+    make_native_dict_keys,
 )
 
 PYFTPSYNC_VERBOSE_META = str_to_bool(
@@ -85,7 +86,7 @@ class DirMetadata(object):
             self.list[filename].update(
                 {"mtime_str": pretty_stamp(mtime), "uploaded_str": pretty_stamp(ut)}
             )
-        print("set_mtime", self.list[filename])
+        # print("set_mtime", self.list[filename])
         self.modified_list = True
 
     def set_sync_info(self, filename, mtime, size):
@@ -137,7 +138,11 @@ class DirMetadata(object):
                 self.target.synchronizer._inc_stat("meta_bytes_read", len(s))
             self.was_read = True  # True if a file exists (even invalid)
             self.dir = json.loads(s)
-            # print("dir", self.dir)
+            # import pprint
+            # print("dir")
+            # print(pprint.pformat(self.dir))
+            self.dir = make_native_dict_keys(self.dir)
+            # print(pprint.pformat(self.dir))
             self.list = self.dir["mtimes"]
             self.peer_sync = self.dir["peer_sync"]
             is_valid_file = True

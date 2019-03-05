@@ -380,6 +380,17 @@ def decode_dict_keys(d, coding="utf-8"):
     return res
 
 
+def make_native_dict_keys(d):
+    """Convert all keys to native `str` type (recursively)."""
+    res = {}
+    for k, v in d.items():  #
+        k = compat.to_native(k)
+        if type(v) is dict:
+            v = make_native_dict_keys(v)
+        res[k] = v
+    return res
+
+
 def decode_utf8_safe(s, fallback="cp1252", raise_error=True):
     """Try to decode a binary string using UTF-8 but fall back to CP-1252.
 
