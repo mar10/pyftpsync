@@ -164,10 +164,10 @@ class FtpTargetTest(unittest.TestCase):
         if sys.version_info[0] < 3:
             # 'abc_äöü_ß¿€'
             b = "abc_\xc3\xa4\xc3\xb6\xc3\xbc_\xc3\x9f\xc2\xbf\xe2\x82\xac"
-            u = b.decode("utf8")
+            u = b.decode("utf-8")
         else:
             u = "abc_äöü_¿ß"
-        s = u.encode("utf8")
+        s = u.encode("utf-8")
 
         remote.write_text("write_test_u.txt", u)
         self.assertEqual(remote.read_text("write_test_u.txt"), u)
@@ -196,7 +196,7 @@ class FtpTargetTest(unittest.TestCase):
                 print("%r" % s)
             buf.seek(0)
             print(buf.getvalue())
-            b = io.BytesIO(bytes(buf.getvalue(), "utf8"))
+            b = io.BytesIO(bytes(buf.getvalue(), "utf-8"))
         res = remote.ftp.storlines("STOR " + "meta.json", b)
         print(res)
 

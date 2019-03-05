@@ -31,7 +31,7 @@ class ToxCommand(TestCommand):
 
 # Add custom command 'setup.py sphinx'
 # See https://dankeder.com/posts/adding-custom-commands-to-setup-py/
-# and http://stackoverflow.com/a/22273180/19166
+# and https://stackoverflow.com/a/22273180/19166
 class SphinxCommand(Command):
     user_options = []
     description = "Build docs using Sphinx"
@@ -139,7 +139,7 @@ bdist_msi_options = {
     # TODO: configure target dir
     # "initial_target_dir": r"[ProgramFilesFolder]\%s\%s" % (company_name, product_name),
     # TODO: configure shortcuts:
-    # http://stackoverflow.com/a/15736406/19166
+    # https://stackoverflow.com/a/15736406/19166
 }
 
 

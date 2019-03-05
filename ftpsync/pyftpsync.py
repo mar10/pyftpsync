@@ -3,7 +3,7 @@
 Simple folder synchronization using FTP.
 
 (c) 2012-2019 Martin Wendt; see https://github.com/mar10/pyftpsync
-Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 
 Usage examples:
   > pyftpsync.py --help

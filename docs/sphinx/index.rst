@@ -45,10 +45,11 @@ Features
   * Recursive synchronisation of folders on file system and/or FTP targets.
   * Upload, download, and bi-directional synchronization mode.
   * Configurable conflict resolution strategies.
-  * Unlike naive implementations, pyftpsync maintains additional meta data to detect
-    conflicts and decide wether to replicate deletions or additions.
-  * Unlike more complex implementations, pyftpsync does not require a database or
-    a service running on the targets.
+  * Unlike naive implementations, pyftpsync maintains additional meta data to
+    detect conflicts and decide whether to replicate a missing file as deletion
+    or addition.
+  * Unlike more complex implementations, pyftpsync does not require a database
+    or a service running on the targets.
   * Optional FTPS (TLS) support.
   * Architecture is open to add other target types.
 
@@ -62,7 +63,7 @@ Features
 
 .. note:: Known Limitations
 
-  * The FTP server must support the `MLSD command <http://tools.ietf.org/html/rfc3659>`_.
+  * The FTP server must support the `MLSD command <https://tools.ietf.org/html/rfc3659>`_.
   * pyftpsync uses file size and modification dates to detect file changes.
     This is efficient, but not as robust as CRC checksums could be.
   * pyftpsync tries to detect conflicts (i.e. simultaneous modifications of
@@ -107,5 +108,5 @@ be installed using `pip <http://www.pip-installer.org/>`_::
    :target: https://github.com/mar10/pyftpsync/blob/master/LICENSE.txt
 
 .. |rtd_badge| image:: https://readthedocs.org/projects/pyftpsync/badge/?version=latest
-   :target: http://pyftpsync.readthedocs.io/
+   :target: https://pyftpsync.readthedocs.io/
    :alt: Documentation Status

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 (c) 2012-2019 Martin Wendt; see https://github.com/mar10/pyftpsync
-Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 # flake8: noqa
 
@@ -75,7 +75,7 @@ if PY2:
         """Return True for unicode strings, i.e. for unicode on Py2 and str on Py3."""
         return isinstance(s, unicode)
 
-    def to_bytes(s, encoding="utf8"):
+    def to_bytes(s, encoding="utf-8"):
         """Convert unicode (text strings) to binary data, i.e. str on Py2 and bytes on Py3."""
         if type(s) is unicode:
             s = s.encode(encoding)
@@ -86,7 +86,7 @@ if PY2:
     to_native = to_bytes
     """Convert data to native str type, i.e. bytestring on Py2 and unicode on Py3."""
 
-    def to_unicode(s, encoding="utf8"):
+    def to_unicode(s, encoding="utf-8"):
         """Convert data to unicode text, i.e. unicode on Py2 and str on Py3."""
         if type(s) is not unicode:
             s = unicode(s, encoding)
@@ -115,13 +115,13 @@ else:  # Python 3
         """Return True for unicode strings, i.e. for unicode on Py2 and str on Py3."""
         return isinstance(s, str)
 
-    def to_bytes(s, encoding="utf8"):
+    def to_bytes(s, encoding="utf-8"):
         """Convert a text string (unicode) to bytestring, i.e. str on Py2 and bytes on Py3."""
         if type(s) is not bytes:
             s = bytes(s, encoding)
         return s
 
-    def to_native(s, encoding="utf8"):
+    def to_native(s, encoding="utf-8"):
         """Convert data to native str type, i.e. bytestring on Py2 and unicode on Py3."""
         if type(s) is bytes:
             s = str(s, encoding)

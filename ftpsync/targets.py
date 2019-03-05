@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 (c) 2012-2019 Martin Wendt; see https://github.com/mar10/pyftpsync
-Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 
+import codecs
 import io
 import os
 import shutil
+import sys
 import threading
 from posixpath import join as join_url, normpath as normpath_url
 
@@ -32,9 +34,9 @@ def make_target(url, extra_opts=None):
     Returns:
         :class:`_Target`
     """
-    #    debug = extra_opts.get("debug", 1)
+    # debug = extra_opts.get("debug", 1)
     parts = compat.urlparse(url, allow_fragments=False)
-    # scheme is case-insensitive according to http://tools.ietf.org/html/rfc3986
+    # scheme is case-insensitive according to https://tools.ietf.org/html/rfc3986
     scheme = parts.scheme.lower()
     if scheme in ["ftp", "ftps"]:
         creds = parts.username, parts.password
@@ -57,6 +59,20 @@ def make_target(url, extra_opts=None):
     return target
 
 
+def _get_encoding_opt(synchronizer, extra_opts, default):
+    """Helper to figure out encoding setting inside constructors."""
+    encoding = default
+    # if synchronizer and "encoding" in synchronizer.options:
+    #     encoding = synchronizer.options.get("encoding")
+    if extra_opts and "encoding" in extra_opts:
+        encoding = extra_opts.get("encoding")
+    if encoding:
+        # Normalize name (e.g. 'UTF8' => 'utf-8')
+        encoding = codecs.lookup(encoding).name
+    # print("_get_encoding_opt", encoding)
+    return encoding or None
+
+
 # ===============================================================================
 # _Target
 # ===============================================================================
@@ -66,11 +82,14 @@ class _Target(object):
     DEFAULT_BLOCKSIZE = 16 * 1024  # shutil.copyobj() uses 16k blocks by default
 
     def __init__(self, root_dir, extra_opts):
+        # All internal paths should use unicode.
+        # (We cannot convert here, since we don't know the target encoding.)
+        assert compat.is_native(root_dir)
         if root_dir != "/":
             root_dir = root_dir.rstrip("/")
         # This target is not thread safe
         self._rlock = threading.RLock()
-        #:
+        #: The target's top-level folder
         self.root_dir = root_dir
         self.extra_opts = extra_opts or {}
         self.readonly = False
@@ -82,21 +101,32 @@ class _Target(object):
         self.connected = False
         self.save_mode = True
         self.case_sensitive = None  # TODO: don't know yet
-        self.time_ofs = None  # TODO: see _probe_lock_file()
-        self.support_set_time = None  # Derived class knows
+        #: Time difference between <local upload time> and the mtime that the server reports afterwards.
+        #: The value is added to the 'u' time stored in meta data.
+        #: (This is only a rough estimation, derived from the lock-file.)
+        self.server_time_ofs = None
+        #: Maximum allowed difference between a reported mtime and the last known update time,
+        #: before we classify the entry as 'modified externally'
+        self.mtime_compare_eps = FileEntry.EPS_TIME
         self.cur_dir_meta = DirMetadata(self)
         self.meta_stack = []
+        # Optionally define an encoding for this target, but don't override
+        # derived class's setting
+        if not hasattr(self, "encoding"):
+            #: Assumed encoding for this target. Used to decode binary paths.
+            self.encoding = _get_encoding_opt(None, extra_opts, None)
+        return
 
     def __del__(self):
         # TODO: http://pydev.blogspot.de/2015/01/creating-safe-cyclic-reference.html
         self.close()
 
-    #     def __enter__(self):
-    #         self.open()
-    #         return self
-    #
-    #     def __exit__(self, exc_type, exc_value, traceback):
-    #         self.close()
+    # def __enter__(self):
+    #     self.open()
+    #     return self
+
+    # def __exit__(self, exc_type, exc_value, traceback):
+    #     self.close()
 
     def get_base_name(self):
         return "{}".format(self.root_dir)
@@ -106,6 +136,38 @@ class _Target(object):
 
     def is_unbound(self):
         return self.synchronizer is None
+
+    # def to_bytes(self, s):
+    #     """Convert `s` to bytes, using this target's encoding (does nothing if `s` is already bytes)."""
+    #     return compat.to_bytes(s, self.encoding)
+
+    # def to_unicode(self, s):
+    #     """Convert `s` to unicode, using this target's encoding (does nothing if `s` is already unic)."""
+    #     return compat.to_unicode(s, self.encoding)
+
+    # def to_native(self, s):
+    #     """Convert `s` to native, using this target's encoding (does nothing if `s` is already native)."""
+    #     return compat.to_native(s, self.encoding)
+
+    def re_encode_to_native(self, s):
+        """Return `s` in `str` format, assuming target.encoding.
+
+        On Python 2 return a binary `str`:
+            Encode unicode to UTF-8 binary str
+            Re-encode binary str from self.encoding to UTF-8
+        On Python 3 return unicode `str`:
+            Leave unicode unmodified
+            Decode binary str using self.encoding
+        """
+        if compat.PY2:
+            if isinstance(s, unicode):  # noqa
+                s = s.encode("utf-8")
+            elif self.encoding != "utf-8":
+                s = s.decode(self.encoding)
+                s = s.encode("utf-8")
+        elif not isinstance(s, str):
+            s = s.decode(self.encoding)
+        return s
 
     def get_options_dict(self):
         """Return options from synchronizer (possibly overridden by own extra_opts)."""
@@ -138,6 +200,7 @@ class _Target(object):
 
     def check_write(self, name):
         """Raise exception if writing cur_dir/name is not allowed."""
+        assert compat.is_native(name)
         if self.readonly and name not in (
             DirMetadata.META_FILE_NAME,
             DirMetadata.LOCK_FILE_NAME,
@@ -227,11 +290,11 @@ class _Target(object):
         """Read text string from cur_dir/name using open_readable()."""
         with self.open_readable(name) as fp:
             res = fp.read()  # StringIO or file object
-            #             try:
-            #                 res = fp.getvalue()  # StringIO returned by FtpTarget
-            #             except AttributeError:
-            #                 res = fp.read()  # file object returned by FsTarget
-            res = res.decode("utf8")
+            # try:
+            #     res = fp.getvalue()  # StringIO returned by FtpTarget
+            # except AttributeError:
+            #     res = fp.read()  # file object returned by FsTarget
+            res = res.decode("utf-8")
             return res
 
     def copy_to_file(self, name, fp_dest, callback=None):
@@ -243,6 +306,7 @@ class _Target(object):
             callback (function, optional):
                 Called like `func(buf)` for every written chunk
         """
+        raise NotImplementedError
 
     def write_file(self, name, fp_src, blocksize=DEFAULT_BLOCKSIZE, callback=None):
         """Write binary data from file-like to cur_dir/name."""
@@ -285,6 +349,11 @@ class FsTarget(_Target):
     DEFAULT_BLOCKSIZE = 16 * 1024  # shutil.copyobj() uses 16k blocks by default
 
     def __init__(self, root_dir, extra_opts=None):
+        def_enc = sys.getfilesystemencoding()
+        if not def_enc:
+            def_enc = "utf-8"
+        self.encoding = _get_encoding_opt(None, extra_opts, def_enc)
+        # root_dir = self.to_unicode(root_dir)
         root_dir = os.path.expanduser(root_dir)
         root_dir = os.path.abspath(root_dir)
         super(FsTarget, self).__init__(root_dir, extra_opts)
@@ -326,7 +395,7 @@ class FsTarget(_Target):
         """Remove cur_dir/name."""
         self.check_write(dir_name)
         path = normpath_url(join_url(self.cur_dir, dir_name))
-        #         write("REMOVE %r" % path)
+        # write("REMOVE %r" % path)
         shutil.rmtree(path)
 
     def flush_meta(self):
@@ -336,21 +405,24 @@ class FsTarget(_Target):
 
     def get_dir(self):
         res = []
-        #        self.cur_dir_meta = None
+        # self.cur_dir_meta = None
         self.cur_dir_meta = DirMetadata(self)
-        for name in os.listdir(self.cur_dir):
+        # List directory. Pass in unicode on Py2, so we get unicode in return
+        unicode_cur_dir = compat.to_unicode(self.cur_dir)
+        for name in os.listdir(unicode_cur_dir):
+            name = compat.to_native(name)
             path = os.path.join(self.cur_dir, name)
             stat = os.lstat(path)
-            #            write(name)
-            #            write("    mt : %s" % stat.st_mtime)
-            #            write("    lc : %s" % (time.localtime(stat.st_mtime),))
-            #            write("       : %s" % time.asctime(time.localtime(stat.st_mtime)))
-            #            write("    gmt: %s" % (time.gmtime(stat.st_mtime),))
-            #            write("       : %s" % time.asctime(time.gmtime(stat.st_mtime)))
-            #
-            #            utc_stamp = st_mtime_to_utc(stat.st_mtime)
-            #            write("    utc: %s" % utc_stamp)
-            #            write("    diff: %s" % ((utc_stamp - stat.st_mtime) / (60*60)))
+            # write(name)
+            # write("    mt : %s" % stat.st_mtime)
+            # write("    lc : %s" % (time.localtime(stat.st_mtime),))
+            # write("       : %s" % time.asctime(time.localtime(stat.st_mtime)))
+            # write("    gmt: %s" % (time.gmtime(stat.st_mtime),))
+            # write("       : %s" % time.asctime(time.gmtime(stat.st_mtime)))
+
+            # utc_stamp = st_mtime_to_utc(stat.st_mtime)
+            # write("    utc: %s" % utc_stamp)
+            # write("    diff: %s" % ((utc_stamp - stat.st_mtime) / (60*60)))
             # stat.st_mtime is returned as UTC
             mtime = stat.st_mtime
             if os.path.isdir(path):

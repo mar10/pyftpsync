@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 (c) 2012-2019 Martin Wendt; see https://github.com/mar10/pyftpsync
-Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 
 import fnmatch
@@ -18,6 +18,7 @@ from ftpsync.util import (
     VT_ERASE_LINE,
     ansi_code,
     byte_compare,
+    colorama,
     eps_compare,
     pretty_stamp,
     write,
@@ -182,6 +183,11 @@ class BaseSynchronizer(object):
                     self.local.get_base_name(),
                     info_strings[1],
                     self.remote.get_base_name(),
+                )
+            )
+            write(
+                "Encoding local: {}, remote: {}".format(
+                    self.local.encoding, self.remote.encoding
                 )
             )
 
@@ -404,7 +410,11 @@ class BaseSynchronizer(object):
 
             final = ansi_code("Style.RESET_ALL")
 
-        final += " " * 10
+        if colorama:
+            # Clear line"ESC [ mode K" mode 0:to-right, 2:all
+            final += colorama.ansi.clear_line(0)
+        else:
+            final += " " * 10
         prefix = ""
         if self.dry_run:
             prefix = DRY_RUN_PREFIX
@@ -419,7 +429,6 @@ class BaseSynchronizer(object):
         if entry.is_dir():
             name = "[{}]".format(name)
 
-        #         write("{}{:<16} {:^3} {}".format(prefix, tag, symbol, name))
         write("{}{}{:<16} {:^3} {}{}".format(prefix, color, tag, symbol, name, final))
 
     def _tick(self):
@@ -440,7 +449,7 @@ class BaseSynchronizer(object):
 
     def _dry_run_action(self, action):
         """"Called in dry-run mode after call to _log_action() and before exiting function."""
-        #        write("dry-run", action)
+        # write("dry-run", action)
         return
 
     def _test_match_or_print(self, entry):
@@ -512,6 +521,10 @@ class BaseSynchronizer(object):
             if remote_entry.name not in local_entry_map:
                 entry_pair = EntryPair(None, remote_entry)
                 entry_pair_list.append(entry_pair)
+                # print("NOT IN LOCAL")
+                # print(remote_entry.name)
+                # print(local_entry_map.keys())
+                # print(self.local.cur_dir_meta.peer_sync.get(self.remote.get_id()))
 
         # 3. Classify all entries and pairs.
         #    We pass the additional meta data here
@@ -537,7 +550,11 @@ class BaseSynchronizer(object):
                 handler = getattr(self, "on_" + pair.operation, None)
                 # print(handler)
                 if handler:
-                    res = handler(pair)
+                    try:
+                        res = handler(pair)
+                    except Exception as e:
+                        if self.on_error(e, pair) is not True:
+                            raise
                 else:
                     # write("NO HANDLER")
                     raise NotImplementedError("No handler for {}".format(pair))
@@ -581,6 +598,18 @@ class BaseSynchronizer(object):
             False to prevent default operation.
         """
         return True
+
+    def on_error(self, e, pair):
+        """Called for pairs that don't match `match` and `exclude` filters."""
+        RED = ansi_code("Fore.LIGHTRED_EX")
+        R = ansi_code("Style.RESET_ALL")
+        # any_entry = pair.any_entry
+        write((RED + "ERROR: {}\n    {}" + R).format(e, pair))
+        # Return True to ignore this error (instead of raising and terminating the app)
+        if "[Errno 92] Illegal byte sequence" in "{}".format(e) and compat.PY2:
+            write(RED + "This _may_ be solved by using Python 3." + R)
+            # return True
+        return False
 
     def on_mismatch(self, pair):
         """Called for pairs that don't match `match` and `exclude` filters."""

@@ -258,7 +258,7 @@ MSG_FTP_TESTS_NOT_AVAILABLE = """\
     Skipping FTP tests.
     Seems that the `PYFTPSYNC_TEST_FTP_URL` environment variable is missing, invalid, or
     the FTP server is not runing.
-    See http://pyftpsync.readthedocs.io/en/latest/development.html for details.
+    See https://pyftpsync.readthedocs.io/en/latest/development.html for details.
     """
 
 #: bool:
