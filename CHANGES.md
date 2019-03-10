@@ -1,7 +1,23 @@
-2.1.1 (unreleased)
+3.0.0 (unreleased)
 ------------------
+- This release addresses some known encoding-related issues:
+  - The internal path format are now native strings (i.e. unicode on Python 3 
+    or UTF-8 bytes on Python 2)
+  - FTP targets are now assumed to support UTF-8.
+    **TODO:** pass `--remote-encoding` to override this.
+  - #30: Fallback to CP-1252 encoding when FTP server returns non-UTF-8
+  - Local filesystem targets now consider the OS encoding.
+  - Modified format of `.pyftpsync-meta.json`: File names are now stored as UTF-8
+    (was the unmodified binary format of the target platform before).
+  - See also the 'encoding' section in the 
+    [spec](https://github.com/mar10/pyftpsync/blob/master/docs/sphinx/pyftpsync-spec.pdf).
+
 - Remove trailing garbage from output lines
-- #30
+
+**Breaking Changes:**
+  - Modified format of `.pyftpsync-meta.json`.
+    Pass `--migrate` option to convert from a prvious version (note that this
+    cannot be undone)
 
 2.1.0 (2018-08-25)
 ------------------

@@ -4,9 +4,11 @@
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 
+import codecs
 import io
 import os
 import shutil
+import sys
 import threading
 from posixpath import join as join_url, normpath as normpath_url
 
@@ -57,6 +59,20 @@ def make_target(url, extra_opts=None):
     return target
 
 
+def _get_encoding_opt(synchronizer, extra_opts, default):
+    """Helper to figure out encoding setting inside constructors."""
+    encoding = default
+    # if synchronizer and "encoding" in synchronizer.options:
+    #     encoding = synchronizer.options.get("encoding")
+    if extra_opts and "encoding" in extra_opts:
+        encoding = extra_opts.get("encoding")
+    if encoding:
+        # Normalize name (e.g. 'UTF8' => 'utf-8')
+        encoding = codecs.lookup(encoding).name
+    # print("_get_encoding_opt", encoding)
+    return encoding or None
+
+
 # ===============================================================================
 # _Target
 # ===============================================================================
@@ -66,11 +82,14 @@ class _Target(object):
     DEFAULT_BLOCKSIZE = 16 * 1024  # shutil.copyobj() uses 16k blocks by default
 
     def __init__(self, root_dir, extra_opts):
+        # All internal paths should use unicode.
+        # (We cannot convert here, since we don't know the target encoding.)
+        assert compat.is_native(root_dir)
         if root_dir != "/":
             root_dir = root_dir.rstrip("/")
         # This target is not thread safe
         self._rlock = threading.RLock()
-        #:
+        #: The target's top-level folder
         self.root_dir = root_dir
         self.extra_opts = extra_opts or {}
         self.readonly = False
@@ -82,10 +101,21 @@ class _Target(object):
         self.connected = False
         self.save_mode = True
         self.case_sensitive = None  # TODO: don't know yet
-        self.time_ofs = None  # TODO: see _probe_lock_file()
-        self.support_set_time = None  # Derived class knows
+        #: Time difference between <local upload time> and the mtime that the server reports afterwards.
+        #: The value is added to the 'u' time stored in meta data.
+        #: (This is only a rough estimation, derived from the lock-file.)
+        self.server_time_ofs = None
+        #: Maximum allowed difference between a reported mtime and the last known update time,
+        #: before we classify the entry as 'modified externally'
+        self.mtime_compare_eps = FileEntry.EPS_TIME
         self.cur_dir_meta = DirMetadata(self)
         self.meta_stack = []
+        # Optionally define an encoding for this target, but don't override
+        # derived class's setting
+        if not hasattr(self, "encoding"):
+            #: Assumed encoding for this target. Used to decode binary paths.
+            self.encoding = _get_encoding_opt(None, extra_opts, None)
+        return
 
     def __del__(self):
         # TODO: http://pydev.blogspot.de/2015/01/creating-safe-cyclic-reference.html
@@ -106,6 +136,38 @@ class _Target(object):
 
     def is_unbound(self):
         return self.synchronizer is None
+
+    # def to_bytes(self, s):
+    #     """Convert `s` to bytes, using this target's encoding (does nothing if `s` is already bytes)."""
+    #     return compat.to_bytes(s, self.encoding)
+
+    # def to_unicode(self, s):
+    #     """Convert `s` to unicode, using this target's encoding (does nothing if `s` is already unic)."""
+    #     return compat.to_unicode(s, self.encoding)
+
+    # def to_native(self, s):
+    #     """Convert `s` to native, using this target's encoding (does nothing if `s` is already native)."""
+    #     return compat.to_native(s, self.encoding)
+
+    def re_encode_to_native(self, s):
+        """Return `s` in `str` format, assuming target.encoding.
+
+        On Python 2 return a binary `str`:
+            Encode unicode to UTF-8 binary str
+            Re-encode binary str from self.encoding to UTF-8
+        On Python 3 return unicode `str`:
+            Leave unicode unmodified
+            Decode binary str using self.encoding
+        """
+        if compat.PY2:
+            if isinstance(s, unicode):  # noqa
+                s = s.encode("utf-8")
+            elif self.encoding != "utf-8":
+                s = s.decode(self.encoding)
+                s = s.encode("utf-8")
+        elif not isinstance(s, str):
+            s = s.decode(self.encoding)
+        return s
 
     def get_options_dict(self):
         """Return options from synchronizer (possibly overridden by own extra_opts)."""
@@ -138,6 +200,7 @@ class _Target(object):
 
     def check_write(self, name):
         """Raise exception if writing cur_dir/name is not allowed."""
+        assert compat.is_native(name)
         if self.readonly and name not in (
             DirMetadata.META_FILE_NAME,
             DirMetadata.LOCK_FILE_NAME,
@@ -243,6 +306,7 @@ class _Target(object):
             callback (function, optional):
                 Called like `func(buf)` for every written chunk
         """
+        raise NotImplementedError
 
     def write_file(self, name, fp_src, blocksize=DEFAULT_BLOCKSIZE, callback=None):
         """Write binary data from file-like to cur_dir/name."""
@@ -285,6 +349,11 @@ class FsTarget(_Target):
     DEFAULT_BLOCKSIZE = 16 * 1024  # shutil.copyobj() uses 16k blocks by default
 
     def __init__(self, root_dir, extra_opts=None):
+        def_enc = sys.getfilesystemencoding()
+        if not def_enc:
+            def_enc = "utf-8"
+        self.encoding = _get_encoding_opt(None, extra_opts, def_enc)
+        # root_dir = self.to_unicode(root_dir)
         root_dir = os.path.expanduser(root_dir)
         root_dir = os.path.abspath(root_dir)
         super(FsTarget, self).__init__(root_dir, extra_opts)
@@ -338,7 +407,10 @@ class FsTarget(_Target):
         res = []
         # self.cur_dir_meta = None
         self.cur_dir_meta = DirMetadata(self)
-        for name in os.listdir(self.cur_dir):
+        # List directory. Pass in unicode on Py2, so we get unicode in return
+        unicode_cur_dir = compat.to_unicode(self.cur_dir)
+        for name in os.listdir(unicode_cur_dir):
+            name = compat.to_native(name)
             path = os.path.join(self.cur_dir, name)
             stat = os.lstat(path)
             # write(name)

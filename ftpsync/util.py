@@ -54,11 +54,14 @@ set_pyftpsync_logger(True)
 def write(*args, **kwargs):
     """Redirectable wrapper for print statements."""
     debug = kwargs.pop("debug", None)
+    warning = kwargs.pop("warning", None)
     if _logger:
         kwargs.pop("end", None)
         kwargs.pop("file", None)
         if debug:
             _logger.debug(*args, **kwargs)
+        elif warning:
+            _logger.warning(*args, **kwargs)
         else:
             _logger.info(*args, **kwargs)
     else:
@@ -113,6 +116,7 @@ def namespace_to_dict(o):
 
 
 def eps_compare(f1, f2, eps):
+    """Return true if |f1-f2| <= eps."""
     res = f1 - f2
     if abs(res) <= eps:  # '<=',so eps == 0 works as expected
         return 0
@@ -125,8 +129,6 @@ def pretty_stamp(stamp):
     """Convert timestamp to verbose string (strip fractions of seconds)."""
     if stamp is None:
         return "n.a."
-    # return time.ctime(stamp)
-    # return datetime.fromtimestamp(stamp).isoformat(" ")
     return datetime.fromtimestamp(stamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
@@ -198,7 +200,10 @@ def prompt_for_password(url, user=None, default_user=None):
 
 
 def get_credentials_for_url(url, opts, force_user=None):
-    """
+    """Lookup credentials for a given target in keyring and .netrc.
+
+    Optionally prompts for credentials if not found.
+
     Returns:
         2-tuple (username, password) or None
     """
@@ -281,6 +286,7 @@ def get_credentials_for_url(url, opts, force_user=None):
 
 
 def save_password(url, username, password):
+    """Store credentials in keyring."""
     if keyring:
         if ":" in username:
             raise RuntimeError(
@@ -311,7 +317,7 @@ def save_password(url, username, password):
 
 
 def str_to_bool(val):
-    """Return a boolean for '0', 'false', 'on', ...."""
+    """Return a boolean for '0', 'false', 'on', ..."""
     val = str(val).lower().strip()
     if val in ("1", "true", "on", "yes"):
         return True
@@ -359,3 +365,73 @@ def byte_compare(stream_a, stream_b):
         if not b1:  # both buffers empty
             break
     return (equal, ofs)
+
+
+def decode_dict_keys(d, coding="utf-8"):
+    """Convert all keys to unicde (recursively)."""
+    assert compat.PY2
+    res = {}
+    for k, v in d.items():  #
+        if type(k) is str:
+            k = k.decode(coding)
+        if type(v) is dict:
+            v = decode_dict_keys(v, coding)
+        res[k] = v
+    return res
+
+
+def make_native_dict_keys(d):
+    """Convert all keys to native `str` type (recursively)."""
+    res = {}
+    for k, v in d.items():  #
+        k = compat.to_native(k)
+        if type(v) is dict:
+            v = make_native_dict_keys(v)
+        res[k] = v
+    return res
+
+
+def decode_utf8_safe(s, fallback="cp1252", raise_error=True):
+    """Try to decode a binary string using UTF-8 but fall back to CP-1252.
+
+    Returns:
+        (state, unicode): 2-tuple.
+            state: 0:success, 1:fallback worked, 2:failed
+    """
+    if compat.is_unicode(s):
+        return s
+
+    try:
+        return (0, s.decode("utf-8"))
+    except UnicodeDecodeError:
+        try:
+            return (1, s.decode(fallback))
+        except UnicodeDecodeError:
+            if raise_error:
+                raise
+    return (2, None)
+
+
+def re_encode_binary_to_utf8(s, fallback="cp1252", raise_error=True):
+    """Check if a binary string is UTF-8 compatible, and if not try to re-encode using CP-1252.
+
+    Returns:
+        (state, bytes): 2-tuple.
+            state: 0:success, 1:fallback worked, 2:failed
+    Raises:
+        UnicodeDecodeError if enocde failed and raise_error was true
+    """
+    assert compat.is_bytes(s)
+
+    try:
+        # We decode for testing only, then discard the result
+        s.decode("utf-8")
+        return 0, s
+    except UnicodeDecodeError:
+        try:
+            return (1, s.decode(fallback).encode("utf-8"))
+        except UnicodeDecodeError:
+            if not raise_error:
+                return (2, None)
+    # This will raise the UnicodeDecodeError error again:
+    s.decode("utf-8")

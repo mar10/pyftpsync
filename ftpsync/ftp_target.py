@@ -4,6 +4,7 @@
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 import calendar
+import codecs
 import ftplib
 import json
 import os
@@ -11,13 +12,15 @@ import time
 from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
 from tempfile import SpooledTemporaryFile
 
+from ftpsync import compat
 from ftpsync.compat import CompatConnectionError
 from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersion
 from ftpsync.resources import DirectoryEntry, FileEntry
-from ftpsync.targets import _Target
+from ftpsync.targets import _Target, _get_encoding_opt
 from ftpsync.util import (
     get_credentials_for_url,
     prompt_for_password,
+    re_encode_binary_to_utf8,
     save_password,
     write,
     write_error,
@@ -67,7 +70,10 @@ class FtpTarget(_Target):
             timeout (int): the timeout to set against the ftp socket (seconds)
             extra_opts (dict):
         """
+        self.encoding = _get_encoding_opt(None, extra_opts, "utf-8")
+        # path = self.to_unicode(path)
         path = path or "/"
+        assert compat.is_native(path)
         super(FtpTarget, self).__init__(path, extra_opts)
         if tls:
             try:
@@ -87,11 +93,22 @@ class FtpTarget(_Target):
         #: dict: written to ftp target root folder before synchronization starts.
         #: set to False, if write failed. Default: None
         self.lock_data = None
+        self.lock_write_time = None
+        self.feat_response = None
+        self.syst_response = None
         self.is_unix = None
-        self.time_zone_ofs = None
-        self.clock_ofs = None
+        #: True if server reports FEAT UTF8
+        self.support_utf8 = None
+        #: Time difference between <local upload time> and the mtime that the server reports afterwards.
+        #: The value is added to the 'u' time stored in meta data.
+        #: (This is only a rough estimation, derived from the lock-file.)
+        self.server_time_ofs = None
         self.ftp_socket_connected = False
         self.support_set_time = False
+        # #: Optionally define an encoding for this server
+        # encoding = self.get_option("encoding", "utf-8")
+        # self.encoding = codecs.lookup(encoding).name
+        # return
 
     def __str__(self):
         return "<{} + {}>".format(
@@ -162,10 +179,61 @@ class FtpTarget(_Target):
             self.ftp.prot_p()
 
         try:
+            self.syst_response = self.ftp.sendcmd("SYST")
+            if self.get_option("verbose", 3) >= 5:
+                write("SYST: '{}'.".format(self.syst_response.replace("\n", " ")))
+            # self.is_unix = "unix" in resp.lower() # not necessarily true, better check with r/w tests
+            # TODO: case sensitivity?
+        except Exception as e:
+            write("SYST command failed: '{}'".format(e))
+
+        try:
+            self.feat_response = self.ftp.sendcmd("FEAT")
+            self.support_utf8 = "UTF8" in self.feat_response
+            if self.get_option("verbose", 3) >= 5:
+                write("FEAT: '{}'.".format(self.feat_response.replace("\n", " ")))
+        except Exception as e:
+            write("FEAT command failed: '{}'".format(e))
+
+        if self.encoding == "utf-8":
+            if not self.support_utf8:
+                write(
+                    "Server does not list utf-8 as supported feature (using it anyway).",
+                    warning=True,
+                )
+
+            try:
+                # Announce our wish to use UTF-8 to the server as proposed here:
+                # See https://tools.ietf.org/html/draft-ietf-ftpext-utf-8-option-00
+                # Note: this failed on Strato
+                self.ftp.sendcmd("OPTS UTF-8")
+                write("Sent 'OPTS UTF-8'.")
+            except Exception as e:
+                write("Could not send 'OPTS UTF-8': '{}'".format(e), warning=True)
+
+            try:
+                # Announce our wish to use UTF-8 to the server as proposed here:
+                # See https://tools.ietf.org/html/rfc2389
+                # Note: this was accepted on Strato
+                self.ftp.sendcmd("OPTS UTF8 ON")
+                write("Sent 'OPTS UTF8 ON'.")
+            except Exception as e:
+                write("Could not send 'OPTS UTF8 ON': '{}'".format(e), warning=True)
+
+        if hasattr(self.ftp, "encoding"):
+            # Python 3 encodes using latin-1 by default(!)
+            # (In Python 2 ftp.encoding does not exist, but ascii is used)
+            if self.encoding != codecs.lookup(self.ftp.encoding).name:
+                write(
+                    "Setting FTP encoding to {} (was {}).".format(
+                        self.encoding, self.ftp.encoding
+                    )
+                )
+                self.ftp.encoding = self.encoding
+
+        try:
             self.ftp.cwd(self.root_dir)
         except ftplib.error_perm as e:
-            # If credentials were passed, but authentication fails, prompt
-            # for new password
             if not e.args[0].startswith("550"):
                 raise  # error other then 550 No such directory'
             write_error(
@@ -175,6 +243,7 @@ class FtpTarget(_Target):
             )
 
         pwd = self.ftp.pwd()
+        # pwd = self.to_unicode(pwd)
         if pwd != self.root_dir:
             raise RuntimeError(
                 "Unable to navigate to working directory {!r} (now at {!r})".format(
@@ -188,21 +257,6 @@ class FtpTarget(_Target):
         # Successfully authenticated: store password
         if store_password:
             save_password(self.host, self.username, self.password)
-
-        # TODO: case sensitivity?
-        # self.is_unix = "unix" in resp.lower() # not necessarily true, better check with r/w tests
-        if self.get_option("verbose", 3) >= 5:
-            try:
-                resp = self.ftp.sendcmd("SYST")
-                write("SYST: '{}'.".format(resp))
-            except Exception as e:
-                write("SYST command failed: '{}'.".format(e))
-
-            try:
-                resp = self.ftp.sendcmd("FEAT")
-                write("FEAT: '{}'.".format(resp))
-            except Exception as e:
-                write("FEAT command failed: '{}'.".format(e))
 
         self._lock()
 
@@ -230,6 +284,7 @@ class FtpTarget(_Target):
             assert self.cur_dir == self.root_dir
             self.write_text(DirMetadata.LOCK_FILE_NAME, json.dumps(data))
             self.lock_data = data
+            self.lock_write_time = time.time()
         except Exception as e:
             errmsg = "{}".format(e)
             write_error("Could not write lock file: {}".format(errmsg))
@@ -272,8 +327,19 @@ class FtpTarget(_Target):
                     write("Skip remove lock file (was not written).")
             else:
                 # direct delete, without updating metadata or checking for target access:
-                self.ftp.delete(DirMetadata.LOCK_FILE_NAME)
-                # self.remove_file(DirMetadata.LOCK_FILE_NAME)
+                try:
+                    self.ftp.delete(DirMetadata.LOCK_FILE_NAME)
+                    # self.remove_file(DirMetadata.LOCK_FILE_NAME)
+                except Exception as e:
+                    # I have seen '226 Closing data connection' responses here,
+                    # probably when a previous command threw another error.
+                    # However here, 2xx response should be Ok(?):
+                    # A 226 reply code is sent by the server before closing the
+                    # data connection after successfully processing the previous client command
+                    if e.args[0][:3] == "226":
+                        write_error("Ignoring 226 response for ftp.delete() lockfile")
+                    else:
+                        raise
 
             self.lock_data = None
         except Exception as e:
@@ -283,13 +349,17 @@ class FtpTarget(_Target):
     def _probe_lock_file(self, reported_mtime):
         """Called by get_dir"""
         delta = reported_mtime - self.lock_data["lock_time"]
+        # delta2 = reported_mtime - self.lock_write_time
+        self.server_time_ofs = delta
         if self.get_option("verbose", 3) >= 4:
-            write("Server time offset: {0:.2f} seconds".format(delta))
+            write("Server time offset: {:.2f} seconds.".format(delta))
+            # write("Server time offset2: {:.2f} seconds.".format(delta2))
 
     def get_id(self):
         return self.host + self.root_dir
 
     def cwd(self, dir_name):
+        assert compat.is_native(dir_name)
         path = normpath_url(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
             # paranoic check to prevent that our sync tool goes berserk
@@ -302,19 +372,26 @@ class FtpTarget(_Target):
         return self.cur_dir
 
     def pwd(self):
-        return self.ftp.pwd()
+        # TODO: on Python 3 this may raise a UnicodeDecode error if
+        # we have a Cp1252 formatted path?
+        # We could try and fall back here, similar to ftp_retrlines_binary()
+        path = self.ftp.pwd()
+        return self.re_encode_to_native(path)
 
     def mkdir(self, dir_name):
+        assert compat.is_native(dir_name)
         self.check_write(dir_name)
         self.ftp.mkd(dir_name)
 
     def _rmdir_impl(self, dir_name, keep_root_folder=False, predicate=None):
         # FTP does not support deletion of non-empty directories.
+        assert compat.is_native(dir_name)
         self.check_write(dir_name)
         names = []
         nlst_res = self.ftp.nlst(dir_name)
         # write("rmdir(%s): %s" % (dir_name, nlst_res))
         for name in nlst_res:
+            name = self.re_encode_to_native(name)
             if "/" in name:
                 name = os.path.basename(name)
             if name in (".", ".."):
@@ -355,7 +432,42 @@ class FtpTarget(_Target):
         local_res = {"has_meta": False}  # pass local variables outside func scope
 
         def _addline(line):
-            data, _, name = line.partition("; ")
+            # ftp_retrlines_binary() made sure that we always get binary lines,
+            # even on Python 3. This allows us to do our own decoding with
+            # optional fall back.
+            assert compat.is_bytes(line)
+
+            # Python 2: The FTP server returns the names as bytes.
+            # We (and the server) don't have a clue, what encoding was used,
+            # but we assume UTF-8 and fall back to CP-1252
+            data, _, name = line.partition(b"; ")
+            if self.encoding == "utf-8":
+                status, u_name = re_encode_binary_to_utf8(
+                    name, fallback="cp1252", raise_error=False
+                )
+            else:
+                # If an explicit encoding was set for this target, use it
+                # exclusively
+                status, u_name = 0, name.decode(self.encoding).encode("utf-8")
+                # status, u_name = 0, self.re_encode_to_native(name)
+            # print(status, name, u_name)
+            if status == 1:
+                write(
+                    "WARNING: File name seems not to be UTF-8; re-encoded from CP-1252:",
+                    name,
+                    "=>",
+                    u_name,
+                )
+            elif status == 2:
+                write_error("File name is neither UTF-8 nor CP-1252 encoded:", name)
+                u_name = name
+
+            name = u_name
+
+            # For Python 3 we want to work with `str` as well
+            name = compat.to_native(name)
+            data = compat.to_native(data)
+
             res_type = size = mtime = unique = None
             fields = data.split(";")
             # https://tools.ietf.org/html/rfc3659#page-23
@@ -409,7 +521,10 @@ class FtpTarget(_Target):
                 entry_list.append(entry)
 
         try:
-            self.ftp.retrlines("MLSD", _addline)
+            # We use a custom wrapper here, so we get lines in bytes, even
+            # on Python 3:
+            ftp_retrlines_binary(self.ftp, "MLSD", _addline)
+            # self.ftp.retrlines("MLSD", _addline)
         except ftplib.error_perm as e:
             # write_error("The FTP server responded with {}".format(e))
             # raises error_perm "500 Unknown command" if command is not supported
@@ -441,37 +556,36 @@ class FtpTarget(_Target):
                 if n in entry_map:
                     # We have a meta-data entry for this resource
                     upload_time = meta.get("u", 0)
-                    if (
-                        entry_map[n].size == meta.get("s")
-                        and FileEntry._eps_compare(entry_map[n].mtime, upload_time) <= 0
-                    ):
-                        # Use meta-data mtime instead of the one reported by FTP server
-                        entry_map[n].meta = meta
-                        entry_map[n].mtime = meta["m"]
-                        # entry_map[n].dt_modified = datetime.fromtimestamp(meta["m"])
-                    else:
-                        # Discard stored meta-data if
-                        #   1. the the mtime reported by the FTP server is later
-                        #      than the stored upload time (which indicates
-                        #      that the file was modified directly on the server)
-                        #      or
-                        #   2. the reported files size is different than the
-                        #      size we stored in the meta-data
+
+                    # Discard stored meta-data if
+                    #   1. the reported files size is different than the
+                    #      size we stored in the meta-data
+                    #      or
+                    #   2. the the mtime reported by the FTP server is later
+                    #      than the stored upload time (which indicates
+                    #      that the file was modified directly on the server)
+                    if entry_map[n].size != meta.get("s"):
                         if self.get_option("verbose", 3) >= 5:
                             write(
-                                (
-                                    "META: Removing outdated meta entry {}\n"
-                                    + "      modified after upload ({} > {}), or\n"
-                                    "      cur. size ({}) != meta size ({})"
-                                ).format(
-                                    n,
-                                    time.ctime(entry_map[n].mtime),
-                                    time.ctime(upload_time),
-                                    entry_map[n].size,
-                                    meta.get("s"),
+                                "Removing meta entry {} (size changed from {} to {}).".format(
+                                    n, entry_map[n].size, meta.get("s")
                                 )
                             )
                         missing.append(n)
+                    elif (entry_map[n].mtime - upload_time) > self.mtime_compare_eps:
+                        if self.get_option("verbose", 3) >= 5:
+                            write(
+                                "Removing meta entry {} (modified {} > {}).".format(
+                                    n,
+                                    time.ctime(entry_map[n].mtime),
+                                    time.ctime(upload_time),
+                                )
+                            )
+                        missing.append(n)
+                    else:
+                        # Use meta-data mtime instead of the one reported by FTP server
+                        entry_map[n].meta = meta
+                        entry_map[n].mtime = meta["m"]
                 else:
                     # File is stored in meta-data, but no longer exists on FTP server
                     # write("META: Removing missing meta entry %s" % n)
@@ -493,6 +607,7 @@ class FtpTarget(_Target):
             file-like (must support read() method)
         """
         # print("FTP open_readable({})".format(name))
+        assert compat.is_native(name)
         out = SpooledTemporaryFile(max_size=self.MAX_SPOOL_MEM, mode="w+b")
         self.ftp.retrbinary(
             "RETR {}".format(name), out.write, FtpTarget.DEFAULT_BLOCKSIZE
@@ -510,8 +625,9 @@ class FtpTarget(_Target):
             callback (function, optional):
                 Called like `func(buf)` for every written chunk
         """
-        self.check_write(name)
         # print("FTP write_file({})".format(name), blocksize)
+        assert compat.is_native(name)
+        self.check_write(name)
         self.ftp.storbinary("STOR {}".format(name), fp_src, blocksize, callback)
         # TODO: check result
 
@@ -524,6 +640,7 @@ class FtpTarget(_Target):
             callback (function, optional):
                 Called like `func(buf)` for every written chunk
         """
+        assert compat.is_native(name)
 
         def _write_to_file(data):
             # print("_write_to_file() {} bytes.".format(len(data)))
@@ -537,15 +654,52 @@ class FtpTarget(_Target):
 
     def remove_file(self, name):
         """Remove cur_dir/name."""
+        assert compat.is_native(name)
         self.check_write(name)
         # self.cur_dir_meta.remove(name)
         self.ftp.delete(name)
         self.remove_sync_info(name)
 
     def set_mtime(self, name, mtime, size):
+        assert compat.is_native(name)
         self.check_write(name)
         # write("META set_mtime(%s): %s" % (name, time.ctime(mtime)))
         # We cannot set the mtime on FTP servers, so we store this as additional
         # meta data in the same directory
         # TODO: try "SITE UTIME", "MDTM (set version)", or "SRFT" command
         self.cur_dir_meta.set_mtime(name, mtime, size)
+
+
+def ftp_retrlines_binary(ftp, command, callback):
+    """A re-implementaion of ftp.retrlines that returns lines as binray strings.
+
+    This is used on Python 3, where `ftp.retrlines()` returns unicode `str`
+    by decoding the incoming command response using `ftp.encoding`.
+    This would fail for the whole request if a single line of the MLSD listing
+    cannot be decoded.
+    FtpTarget wants to fall back to Cp1252 if UTF-8 fails, so we need the raw
+    original binary input lines.
+    """
+    if compat.PY2:
+        return ftp.retrlines(command, callback)
+
+    LF = b"\n"
+    buffer = b""
+    store = {"buffer": buffer}
+
+    def _on_read_chunk(chunk):
+        buffer = store["buffer"]
+        # print("read_c()", chunk, buffer)
+        chunk = chunk.replace(b"\r\n", LF)
+        try:
+            while True:
+                item, chunk = chunk.split(LF, 1)
+                callback(item)  # + LF)
+        except ValueError:
+            buffer += chunk
+            # print("Add chunk ", chunk, "to buffer", buffer)
+
+    ftp.retrbinary(command, _on_read_chunk)
+
+    if buffer:
+        callback(buffer)
