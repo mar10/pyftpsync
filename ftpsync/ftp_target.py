@@ -433,7 +433,7 @@ class FtpTarget(_Target):
 
         def _addline(line):
             # ftp_retrlines_binary() made sure that we always get binary lines,
-            # even on Python 3. This allows us to do our own decoding with 
+            # even on Python 3. This allows us to do our own decoding with
             # optional fall back.
             assert compat.is_bytes(line)
 
@@ -463,7 +463,7 @@ class FtpTarget(_Target):
                 u_name = name
 
             name = u_name
-            
+
             # For Python 3 we want to work with `str` as well
             name = compat.to_native(name)
             data = compat.to_native(data)
