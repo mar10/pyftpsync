@@ -372,7 +372,11 @@ class FtpTarget(_Target):
         return self.cur_dir
 
     def pwd(self):
-        return self.re_encode_to_native(self.ftp.pwd())
+        # TODO: on Python 3 this may raise a UnicodeDecode error if
+        # we have a Cp1252 formatted path?
+        # We could try and fall back here, similar to ftp_retrlines_binary()
+        path = self.ftp.pwd()
+        return self.re_encode_to_native(path)
 
     def mkdir(self, dir_name):
         assert compat.is_native(dir_name)
@@ -428,41 +432,42 @@ class FtpTarget(_Target):
         local_res = {"has_meta": False}  # pass local variables outside func scope
 
         def _addline(line):
-            if compat.is_bytes(line):
-                # Python 2: The FTP server returns the names as bytes.
-                # We (and the server) don't have a clue, what encoding was used,
-                # but we assume UTF-8 and fall back to CP-1252
-                data, _, name = line.partition("; ")
-                if self.encoding == "utf-8":
-                    status, u_name = re_encode_binary_to_utf8(
-                        name, fallback="cp1252", raise_error=False
-                    )
-                else:
-                    # If an explicit encoding was set for this target, use it
-                    # exclusively
-                    status, u_name = 0, self.re_encode_to_native(name)
-                # print(status, name, u_name)
-                if status == 1:
-                    write(
-                        "WARNING: File name seems not to be UTF-8; re-encoded from CP-1252:",
-                        name,
-                        "=>",
-                        u_name,
-                    )
-                    # name = u_name.decode("utf-8")
-                elif status == 2:
-                    write_error("File name is neither UTF-8 nor CP-1252 encoded:", name)
-                    u_name = name
-                # else:
-                #     name = name.decode("utf-8")
-                name = u_name  # u_name.decode("utf-8")
-            else:
-                # Python 3: The FTP server returns the names as unicode `str`.
-                # It already decoded using `ftp.encoding` which we set in the constructor.
-                data, _, name = line.partition("; ")
-                # name = name.encode(self.encoding)
+            # ftp_retrlines_binary() made sure that we always get binary lines,
+            # even on Python 3. This allows us to do our own decoding with 
+            # optional fall back.
+            assert compat.is_bytes(line)
 
-            assert compat.is_native(name)
+            # Python 2: The FTP server returns the names as bytes.
+            # We (and the server) don't have a clue, what encoding was used,
+            # but we assume UTF-8 and fall back to CP-1252
+            data, _, name = line.partition(b"; ")
+            if self.encoding == "utf-8":
+                status, u_name = re_encode_binary_to_utf8(
+                    name, fallback="cp1252", raise_error=False
+                )
+            else:
+                # If an explicit encoding was set for this target, use it
+                # exclusively
+                status, u_name = 0, name.decode(self.encoding).encode("utf-8")
+                # status, u_name = 0, self.re_encode_to_native(name)
+            # print(status, name, u_name)
+            if status == 1:
+                write(
+                    "WARNING: File name seems not to be UTF-8; re-encoded from CP-1252:",
+                    name,
+                    "=>",
+                    u_name,
+                )
+            elif status == 2:
+                write_error("File name is neither UTF-8 nor CP-1252 encoded:", name)
+                u_name = name
+
+            name = u_name
+            
+            # For Python 3 we want to work with `str` as well
+            name = compat.to_native(name)
+            data = compat.to_native(data)
+
             res_type = size = mtime = unique = None
             fields = data.split(";")
             # https://tools.ietf.org/html/rfc3659#page-23
@@ -516,7 +521,10 @@ class FtpTarget(_Target):
                 entry_list.append(entry)
 
         try:
-            self.ftp.retrlines("MLSD", _addline)
+            # We use a custom wrapper here, so we get lines in bytes, even
+            # on Python 3:
+            ftp_retrlines_binary(self.ftp, "MLSD", _addline)
+            # self.ftp.retrlines("MLSD", _addline)
         except ftplib.error_perm as e:
             # write_error("The FTP server responded with {}".format(e))
             # raises error_perm "500 Unknown command" if command is not supported
@@ -660,3 +668,38 @@ class FtpTarget(_Target):
         # meta data in the same directory
         # TODO: try "SITE UTIME", "MDTM (set version)", or "SRFT" command
         self.cur_dir_meta.set_mtime(name, mtime, size)
+
+
+def ftp_retrlines_binary(ftp, command, callback):
+    """A re-implementaion of ftp.retrlines that returns lines as binray strings.
+
+    This is used on Python 3, where `ftp.retrlines()` returns unicode `str`
+    by decoding the incoming command response using `ftp.encoding`.
+    This would fail for the whole request if a single line of the MLSD listing
+    cannot be decoded.
+    FtpTarget wants to fall back to Cp1252 if UTF-8 fails, so we need the raw
+    original binary input lines.
+    """
+    if compat.PY2:
+        return ftp.retrlines(command, callback)
+
+    LF = b"\n"
+    buffer = b""
+    store = {"buffer": buffer}
+
+    def _on_read_chunk(chunk):
+        buffer = store["buffer"]
+        # print("read_c()", chunk, buffer)
+        chunk = chunk.replace(b"\r\n", LF)
+        try:
+            while True:
+                item, chunk = chunk.split(LF, 1)
+                callback(item)  # + LF)
+        except ValueError:
+            buffer += chunk
+            # print("Add chunk ", chunk, "to buffer", buffer)
+
+    ftp.retrbinary(command, _on_read_chunk)
+
+    if buffer:
+        callback(buffer)
