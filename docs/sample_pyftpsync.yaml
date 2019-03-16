@@ -1,0 +1,8 @@
+# This command is used by `pyftpsync run` if no task is passed as argument
+default_task: sync_all
+#
+tasks:
+    sync_all:
+        command: sync
+        remote: ftp://example.com/folder1
+        # force_root: /

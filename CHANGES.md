@@ -13,6 +13,8 @@
     [spec](https://github.com/mar10/pyftpsync/blob/master/docs/sphinx/pyftpsync-spec.pdf).
 
 - Remove trailing garbage from output lines
+- New `run` command reads and executes settings from a configuration file
+  `.pyftpsync.yaml`
 
 **Breaking Changes:**
   - Modified format of `.pyftpsync-meta.json`.

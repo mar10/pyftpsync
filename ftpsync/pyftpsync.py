@@ -23,6 +23,7 @@ from ftpsync.cli_common import (
     matcher_parser,
     verbose_parser,
 )
+from ftpsync.run_command import add_run_parser
 from ftpsync.scan_command import add_scan_parser
 from ftpsync.synchronizers import (
     BiDirSynchronizer,
@@ -172,6 +173,10 @@ def run():
 
     sp.set_defaults(command="synchronize")
 
+    # --- Create the parser for the "run" command -----------------------------
+
+    add_run_parser(subparsers)
+
     # --- Create the parser for the "scan" command -----------------------------
 
     add_scan_parser(subparsers)
@@ -198,7 +203,7 @@ def run():
 
     elif not hasattr(args, "command"):
         parser.error(
-            "missing command (choose from 'upload', 'download', 'sync', 'scan')"
+            "missing command (choose from 'upload', 'download', 'run', 'sync', 'scan')"
         )
 
     # Post-process and check arguments
