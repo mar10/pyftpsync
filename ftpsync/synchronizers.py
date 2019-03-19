@@ -523,6 +523,7 @@ class BaseSynchronizer(object):
                 entry_pair_list.append(entry_pair)
                 # print("NOT IN LOCAL")
                 # print(remote_entry.name)
+                # print(self.remote.get_id())
                 # print(local_entry_map.keys())
                 # print(self.local.cur_dir_meta.peer_sync.get(self.remote.get_id()))
 
