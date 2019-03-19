@@ -391,47 +391,47 @@ def make_native_dict_keys(d):
     return res
 
 
-def decode_utf8_safe(s, fallback="cp1252", raise_error=True):
-    """Try to decode a binary string using UTF-8 but fall back to CP-1252.
+# def decode_utf8_safe(s, fallback="cp1252", raise_error=True):
+#     """Try to decode a binary string using UTF-8 but fall back to CP-1252.
 
-    Returns:
-        (state, unicode): 2-tuple.
-            state: 0:success, 1:fallback worked, 2:failed
-    """
-    if compat.is_unicode(s):
-        return s
+#     Returns:
+#         (state, unicode): 2-tuple.
+#             state: 0:success, 1:fallback worked, 2:failed
+#     """
+#     if compat.is_unicode(s):
+#         return s
 
-    try:
-        return (0, s.decode("utf-8"))
-    except UnicodeDecodeError:
-        try:
-            return (1, s.decode(fallback))
-        except UnicodeDecodeError:
-            if raise_error:
-                raise
-    return (2, None)
+#     try:
+#         return (0, s.decode("utf-8"))
+#     except UnicodeDecodeError:
+#         try:
+#             return (1, s.decode(fallback))
+#         except UnicodeDecodeError:
+#             if raise_error:
+#                 raise
+#     return (2, None)
 
 
-def re_encode_binary_to_utf8(s, fallback="cp1252", raise_error=True):
-    """Check if a binary string is UTF-8 compatible, and if not try to re-encode using CP-1252.
+# def re_encode_binary_to_utf8(s, fallback="cp1252", raise_error=True):
+#     """Check if a binary string is UTF-8 compatible, and if not try to re-encode using CP-1252.
 
-    Returns:
-        (state, bytes): 2-tuple.
-            state: 0:success, 1:fallback worked, 2:failed
-    Raises:
-        UnicodeDecodeError if enocde failed and raise_error was true
-    """
-    assert compat.is_bytes(s)
+#     Returns:
+#         (state, bytes): 2-tuple.
+#             state: 0:success, 1:fallback worked, 2:failed
+#     Raises:
+#         UnicodeDecodeError if enocde failed and raise_error was true
+#     """
+#     assert compat.is_bytes(s)
 
-    try:
-        # We decode for testing only, then discard the result
-        s.decode("utf-8")
-        return 0, s
-    except UnicodeDecodeError:
-        try:
-            return (1, s.decode(fallback).encode("utf-8"))
-        except UnicodeDecodeError:
-            if not raise_error:
-                return (2, None)
-    # This will raise the UnicodeDecodeError error again:
-    s.decode("utf-8")
+#     try:
+#         # We decode for testing only, then discard the result
+#         s.decode("utf-8")
+#         return 0, s
+#     except UnicodeDecodeError:
+#         try:
+#             return (1, s.decode(fallback).encode("utf-8"))
+#         except UnicodeDecodeError:
+#             if not raise_error:
+#                 return (2, None)
+#     # This will raise the UnicodeDecodeError error again:
+#     s.decode("utf-8")

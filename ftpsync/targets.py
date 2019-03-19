@@ -149,25 +149,25 @@ class _Target(object):
     #     """Convert `s` to native, using this target's encoding (does nothing if `s` is already native)."""
     #     return compat.to_native(s, self.encoding)
 
-    def re_encode_to_native(self, s):
-        """Return `s` in `str` format, assuming target.encoding.
+    # def re_encode_to_native(self, s):
+    #     """Return `s` in `str` format, assuming target.encoding.
 
-        On Python 2 return a binary `str`:
-            Encode unicode to UTF-8 binary str
-            Re-encode binary str from self.encoding to UTF-8
-        On Python 3 return unicode `str`:
-            Leave unicode unmodified
-            Decode binary str using self.encoding
-        """
-        if compat.PY2:
-            if isinstance(s, unicode):  # noqa
-                s = s.encode("utf-8")
-            elif self.encoding != "utf-8":
-                s = s.decode(self.encoding)
-                s = s.encode("utf-8")
-        elif not isinstance(s, str):
-            s = s.decode(self.encoding)
-        return s
+    #     On Python 2 return a binary `str`:
+    #         Encode unicode to UTF-8 binary str
+    #         Re-encode binary str from self.encoding to UTF-8
+    #     On Python 3 return unicode `str`:
+    #         Leave unicode unmodified
+    #         Decode binary str using self.encoding
+    #     """
+    #     if compat.PY2:
+    #         if isinstance(s, unicode):  # noqa
+    #             s = s.encode("utf-8")
+    #         elif self.encoding != "utf-8":
+    #             s = s.decode(self.encoding)
+    #             s = s.encode("utf-8")
+    #     elif not isinstance(s, str):
+    #         s = s.decode(self.encoding)
+    #     return s
 
     def get_options_dict(self):
         """Return options from synchronizer (possibly overridden by own extra_opts)."""
