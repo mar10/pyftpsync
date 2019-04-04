@@ -58,7 +58,7 @@ def add_scan_parser(subparsers):
     return parser
 
 
-def scan_handler(args):
+def scan_handler(parser, args):
     """Implement `scan` sub-command."""
     opts = namespace_to_dict(args)
     opts.update({"ftp_debug": args.verbose >= 6})

@@ -24,9 +24,16 @@ from ftpsync.util import (
     write,
 )
 
+CONFIG_FILE_NAME = ".pyftpsync.yaml"
+
 #: Default for --exclude CLI option
 #: Note: DirMetadata.META_FILE_NAME and LOCK_FILE_NAME are always ignored
 DEFAULT_OMIT = [".DS_Store", ".git", ".hg", ".svn"]
+ALWAYS_OMIT = (
+    CONFIG_FILE_NAME,
+    DirMetadata.META_FILE_NAME,
+    DirMetadata.LOCK_FILE_NAME,
+)
 
 # ===============================================================================
 # Helpers
@@ -59,7 +66,7 @@ def process_options(opts):
 
 def match_path(entry, opts):
     """Return True if `path` matches `match` and `exclude` options."""
-    if entry.name in (DirMetadata.META_FILE_NAME, DirMetadata.LOCK_FILE_NAME):
+    if entry.name in ALWAYS_OMIT:
         return False
     # TODO: currently we use fnmatch syntax and match against names.
     # We also might allow glob syntax and match against the whole relative path instead
