@@ -37,6 +37,7 @@ KNOWN_TASK_ARGS = set((
     "exclude",
     "force",
     "ftp_active",
+    "here",
     "match",
     "no_color",
     "no_keyring",
@@ -45,7 +46,20 @@ KNOWN_TASK_ARGS = set((
     "progress",
     "prompt",
     "resolve",
+    "root",
     "verbose",
+))
+
+# Flag-style arguments that default to False
+OVERRIDABLE_BOOL_ARGS = set((
+    "dry_run",
+    "force",
+    "no_color",
+    "no_keyring",
+    "no_netrc",
+    "no_prompt",
+    "progress",
+    # "resolve",
 ))
 
 
@@ -84,15 +98,16 @@ def add_run_parser(subparsers):
 
 def handle_run_command(parser, args):
     """Implement `run` sub-command."""
-    MAX_LEVELS = 10
+    MAX_LEVELS = 15
 
-    # Look for `pyftpsync.yaml` in current folder and parents
+    # --- Look for `pyftpsync.yaml` in current folder and parents ---
+
     cur_level = 0
     cur_folder = os.getcwd()
     config_path = None
     while cur_level < MAX_LEVELS:
         path = os.path.join(cur_folder, CONFIG_FILE_NAME)
-        print("Searching for {}...".format(path))
+        # print("Searching for {}...".format(path))
         if os.path.isfile(path):
             config_path = path
             break
@@ -109,21 +124,8 @@ def handle_run_command(parser, args):
             )
         )
 
-    if cur_level > 0:
-        if args.here:
-            local_path = os.path.dirname(config_path)
-            path_ofs = os.path.relpath(cur_folder, local_path)
-        elif args.root:
-            local_path = os.path.dirname(config_path)
-            path_ofs = ""
-        else:
-            parser.error(
-                "Config file was found above current directory. "
-                "Pass --here or --root  to clarify.".format(
-                )
-            )
+    # --- Parse `pyftpsync.yaml` and set `args` attributes ---
 
-    # Parse `pyftpsync.yaml` and set `args` attributes
     try:
         with open(config_path, "rb") as f:
             config = yaml.safe_load(f)
@@ -132,22 +134,25 @@ def handle_run_command(parser, args):
         # write_error("Error parsing {}: {}".format(config_path, e))
         # raise
 
-    print(config)
+    # print(config)
     if "tasks" not in config:
         parser.error("Missing option `tasks` in {}".format(config_path))
 
-    default_config = config.get("config", {})
+    common_config = config.get("common_config", {})
 
     default_task = config.get("default_task", "default")
     task_name = args.task or default_task
     if task_name not in config["tasks"]:
         parser.error("Missing option `tasks.{}` in {}".format(task_name, config_path))
     task = config["tasks"][task_name]
+
     write("Using task '{}' from {}".format(task_name, config_path))
 
-    default_config.update (task)
-    task = default_config
-    print(task)
+    common_config.update (task)
+    task = common_config
+    # write("task", task)
+
+    # --- Check task syntax ---
 
     task_args = set(task.keys())
 
@@ -160,15 +165,56 @@ def handle_run_command(parser, args):
     if invalid_args:
         parser.error("Invalid options: tasks.{}.{}".format(task_name, ", ".join(invalid_args)))
 
+    # write("args", args)
+
     for name in allowed_args:
         val = task.get(name, None)  # default)
+
         if val is None:
-            continue
-        if name == "remote" and path_ofs:
-            val = os.path.join(val, path_ofs)
+            continue  # option not specified in yaml
+
+        # Override yaml entry by command line
+        cmd_val = getattr(args, name, None)
+
+        # write("check --{}: {} => {}".format(name, val, cmd_val))
+
+        if cmd_val != val:
+            override = False
+            if name in OVERRIDABLE_BOOL_ARGS and cmd_val:
+                override = True
+            elif name in {"here", "root"} and (args.here or args.root):
+                override = True
+            elif name == "verbose" and cmd_val != 3:
+                override = True
+
+            if override:
+                write("Yaml entry overriden by --{}: {} => {}".format(name, val, cmd_val))
+                continue
+
         setattr(args, name, val)
 
-    args.local = local_path
+    # --- Figure out local target path ---
+
+    cur_folder = os.getcwd()
+    root_folder = os.path.dirname(config_path)
+    path_ofs = os.path.relpath(os.getcwd(), root_folder)
+
+    if cur_level == 0 or args.root:
+        path_ofs = ""
+        args.local = root_folder
+    elif args.here:
+        write("Using sub-branch {sub} of {root}".format(root=root_folder, sub=path_ofs))
+        args.local = cur_folder
+        args.remote = os.path.join(args.remote, path_ofs)
+    else:
+        parser.error(
+            "`.pyftpsync.yaml` configuration was found in a parent directory. "
+            "Please pass addtional option to clarify:\n"
+            "  --root: synchronize whole project ({root})\n"
+            "  --here: synchronize sub branch ({root}/{sub})".format(
+            root=root_folder,
+            sub=path_ofs)
+        )
 
     # opts = namespace_to_dict(args)
     # opts.update({"ftp_debug": args.verbose >= 6})
@@ -179,7 +225,7 @@ def handle_run_command(parser, args):
     # dir_count = 1
     # file_count = 0
     # processed_files = set()
-    print(args)
+    # print(args)
     # opts = namespace_to_dict(args)
     # process_options(opts)
 
