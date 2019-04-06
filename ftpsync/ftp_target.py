@@ -494,6 +494,7 @@ class FtpTarget(_Target):
             elif res_type in ("cdir", "pdir"):
                 pass
             else:
+                write_error("Could not parse '{}'".format(line))
                 raise NotImplementedError(
                     "MLSD returned unsupported type: {!r}".format(res_type)
                 )
@@ -719,6 +720,7 @@ class FtpTarget(_Target):
 
         def _on_read_line(line):
             # Line is a byte string
+            # print("  line ", line)
             status = 2  # fault
             line_decoded = None
             try:
@@ -731,7 +733,6 @@ class FtpTarget(_Target):
                         status = 1  # used fallback encoding
                     except UnicodeDecodeError:
                         raise
-                        # pass  # fault
 
             if compat.PY2:
                 # line is a native binary `str`.
@@ -748,17 +749,19 @@ class FtpTarget(_Target):
 
         def _on_read_chunk(chunk):
             buffer = local_var["buffer"]
-            # print("read_c()", chunk, buffer)
             # Normalize line endings
             chunk = chunk.replace(b"\r\n", LF)
             chunk = chunk.replace(b"\r", LF)
+            chunk = buffer + chunk
             try:
+                # print("Add chunk ", chunk, "to buffer", buffer)
                 while True:
                     item, chunk = chunk.split(LF, 1)
                     _on_read_line(item)  # + LF)
             except ValueError:
-                buffer += chunk
-                # print("Add chunk ", chunk, "to buffer", buffer)
+                pass
+            # print("Rest chunk", chunk)
+            local_var["buffer"] = chunk
 
         self.ftp.retrbinary(command, _on_read_chunk)
 
