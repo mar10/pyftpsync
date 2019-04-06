@@ -201,7 +201,7 @@ def run():
     if callable(getattr(args, "command", None)):
         # scan_handler
         try:
-            return getattr(args, "command")(parser, args)
+            return args.command(parser, args)
         except KeyboardInterrupt:
             print("\nAborted by user.", file=sys.stderr)
             sys.exit(3)
