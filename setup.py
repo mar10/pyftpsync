@@ -68,7 +68,7 @@ if "HOME" not in os.environ and "HOMEPATH" in os.environ:
     os.environ.setdefault("HOME", os.environ.get("HOMEPATH", ""))
     print("Initializing HOME environment variable to '{}'".format(os.environ["HOME"]))
 
-install_requires = ["colorama", "keyring"]
+install_requires = ["colorama", "keyring", "PyYAML"]
 # The Windows MSI Setup should include some extras?
 # if "bdist_msi" in sys.argv:
 #     install_requires.extend([])
@@ -95,6 +95,12 @@ if use_cx_freeze:
 
     try:
         from cx_Freeze import setup, Executable  # noqa re-import setup
+
+        # cx_Freeze seems to be confused by module name 'PyYAML' which
+        # must be imported as 'yaml', so we rename here. However it must
+        # be listed as 'PyYAML' in the requirements.txt and be installed!
+        install_requires.remove("PyYAML")
+        install_requires.append("yaml")
 
         executables = [
             Executable(

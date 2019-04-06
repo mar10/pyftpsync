@@ -442,8 +442,10 @@ class FtpTarget(_Target):
             # print(status, name, u_name)
             if status == 1:
                 write(
-                    "WARNING: File name seems not to be {}; re-encoded from CP-1252:".format(encoding),
-                    name
+                    "WARNING: File name seems not to be {}; re-encoded from CP-1252:".format(
+                        encoding
+                    ),
+                    name,
                 )
             elif status == 2:
                 write_error("File name is neither UTF-8 nor CP-1252 encoded:", name)

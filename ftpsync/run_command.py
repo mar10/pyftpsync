@@ -7,60 +7,51 @@ Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.
 from __future__ import print_function
 
 import os
-import time
-from datetime import timedelta
 
 import yaml
 
-from ftpsync.cli_common import (
-    common_parser,
-    creds_parser,
-    matcher_parser,
-    verbose_parser,
+from ftpsync.cli_common import common_parser, creds_parser, verbose_parser
+from ftpsync.synchronizers import CONFIG_FILE_NAME
+from ftpsync.util import write
+
+
+MANDATORY_TASK_ARGS = set(("command", "remote"))
+
+KNOWN_TASK_ARGS = set(
+    (
+        "delete",
+        "delete_unmatched",
+        "dry_run",
+        "exclude",
+        "force",
+        "ftp_active",
+        "here",
+        "match",
+        "no_color",
+        "no_keyring",
+        "no_netrc",
+        "no_prompt",
+        "progress",
+        "prompt",
+        "resolve",
+        "root",
+        "verbose",
+    )
 )
-from ftpsync.metadata import DirMetadata
-from ftpsync.resources import DirectoryEntry
-from ftpsync.synchronizers import match_path, process_options, CONFIG_FILE_NAME
-from ftpsync.targets import make_target
-from ftpsync.util import namespace_to_dict, pretty_stamp, write, write_error
-
-
-MANDATORY_TASK_ARGS = set((
-    "command",
-    "remote",
-))
-
-KNOWN_TASK_ARGS = set((
-    "delete",
-    "delete_unmatched",
-    "dry_run",
-    "exclude",
-    "force",
-    "ftp_active",
-    "here",
-    "match",
-    "no_color",
-    "no_keyring",
-    "no_netrc",
-    "no_prompt",
-    "progress",
-    "prompt",
-    "resolve",
-    "root",
-    "verbose",
-))
 
 # Flag-style arguments that default to False
-OVERRIDABLE_BOOL_ARGS = set((
-    "dry_run",
-    "force",
-    "no_color",
-    "no_keyring",
-    "no_netrc",
-    "no_prompt",
-    "progress",
-    # "resolve",
-))
+OVERRIDABLE_BOOL_ARGS = set(
+    (
+        "dry_run",
+        "force",
+        "no_color",
+        "no_keyring",
+        "no_netrc",
+        "no_prompt",
+        "progress",
+        # "resolve",
+    )
+)
 
 
 def add_run_parser(subparsers):
@@ -148,7 +139,7 @@ def handle_run_command(parser, args):
 
     write("Using task '{}' from {}".format(task_name, config_path))
 
-    common_config.update (task)
+    common_config.update(task)
     task = common_config
     # write("task", task)
 
@@ -158,12 +149,18 @@ def handle_run_command(parser, args):
 
     missing_args = MANDATORY_TASK_ARGS.difference(task_args)
     if missing_args:
-        parser.error("Missing mandatory options: tasks.{}.{}".format(task_name, ", ".join(missing_args)))
+        parser.error(
+            "Missing mandatory options: tasks.{}.{}".format(
+                task_name, ", ".join(missing_args)
+            )
+        )
 
     allowed_args = KNOWN_TASK_ARGS.union(MANDATORY_TASK_ARGS)
     invalid_args = task_args.difference(allowed_args)
     if invalid_args:
-        parser.error("Invalid options: tasks.{}.{}".format(task_name, ", ".join(invalid_args)))
+        parser.error(
+            "Invalid options: tasks.{}.{}".format(task_name, ", ".join(invalid_args))
+        )
 
     # write("args", args)
 
@@ -188,7 +185,9 @@ def handle_run_command(parser, args):
                 override = True
 
             if override:
-                write("Yaml entry overriden by --{}: {} => {}".format(name, val, cmd_val))
+                write(
+                    "Yaml entry overriden by --{}: {} => {}".format(name, val, cmd_val)
+                )
                 continue
 
         setattr(args, name, val)
@@ -212,25 +211,6 @@ def handle_run_command(parser, args):
             "Please pass addtional option to clarify:\n"
             "  --root: synchronize whole project ({root})\n"
             "  --here: synchronize sub branch ({root}/{sub})".format(
-            root=root_folder,
-            sub=path_ofs)
+                root=root_folder, sub=path_ofs
+            )
         )
-
-    # opts = namespace_to_dict(args)
-    # opts.update({"ftp_debug": args.verbose >= 6})
-    # target = make_target(args.target, opts)
-    # target.readonly = True
-    # root_depth = target.root_dir.count("/")
-    # start = time.time()
-    # dir_count = 1
-    # file_count = 0
-    # processed_files = set()
-    # print(args)
-    # opts = namespace_to_dict(args)
-    # process_options(opts)
-
-    # print(
-    #     "Scanning {:,} files in {:,} directories took {:02.2f} seconds.".format(
-    #         file_count, dir_count, time.time() - start
-    #     )
-    # )

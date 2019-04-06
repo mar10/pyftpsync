@@ -15,12 +15,10 @@ tasks:
     sync_all:
         command: sync
         remote: ftp://example.com/my_project
-        # force_root: /
+
     deploy:
         command: upload
         remote: ftp://example.com/my_project
         progress: true
         exclude: build,node_modules,.*,_*
         delete_unmatched: true
-        # This option will force --root
-        # root: true
