@@ -23,6 +23,7 @@ from ftpsync.cli_common import (
     matcher_parser,
     verbose_parser,
 )
+from ftpsync.run_command import add_run_parser, handle_run_command
 from ftpsync.scan_command import add_scan_parser
 from ftpsync.synchronizers import (
     BiDirSynchronizer,
@@ -170,7 +171,11 @@ def run():
         help="conflict resolving strategy (default: '%(default)s')",
     )
 
-    sp.set_defaults(command="synchronize")
+    sp.set_defaults(command="sync")
+
+    # --- Create the parser for the "run" command -----------------------------
+
+    add_run_parser(subparsers)
 
     # --- Create the parser for the "scan" command -----------------------------
 
@@ -189,16 +194,21 @@ def run():
     if args.verbose >= 6:
         ftp_debug = 1
 
+    # Modify the `args` from the `pyftpsync.yaml` config:
+    if getattr(args, "command", None) == "run":
+        handle_run_command(parser, args)
+
     if callable(getattr(args, "command", None)):
+        # scan_handler
         try:
-            return getattr(args, "command")(args)
+            return getattr(args, "command")(parser, args)
         except KeyboardInterrupt:
             print("\nAborted by user.", file=sys.stderr)
             sys.exit(3)
 
     elif not hasattr(args, "command"):
         parser.error(
-            "missing command (choose from 'upload', 'download', 'sync', 'scan')"
+            "missing command (choose from 'upload', 'download', 'run', 'sync', 'scan')"
         )
 
     # Post-process and check arguments
@@ -221,10 +231,10 @@ def run():
         s = UploadSynchronizer(args.local_target, args.remote_target, opts)
     elif args.command == "download":
         s = DownloadSynchronizer(args.local_target, args.remote_target, opts)
-    elif args.command == "synchronize":
+    elif args.command == "sync":
         s = BiDirSynchronizer(args.local_target, args.remote_target, opts)
     else:
-        parser.error("unknown command {}".format(args.command))
+        parser.error("unknown command '{}'".format(args.command))
 
     s.is_script = True
 

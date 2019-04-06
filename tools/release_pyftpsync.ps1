@@ -9,6 +9,8 @@ $ProjectRoot = "C:\Prj\git\pyftpsync";
 $BuildEnvRoot = "C:\prj\env\pyftpsync_build_3.6";
 # $BuildEnvRoot = "C:\prj\env\pyftpsync_build_3.7";
 
+$BuildFolder = "$ProjectRoot\build";
+
 
 $IGNORE_UNSTAGED_CHANGES = 0;
 $IGNORE_NON_MASTER_BRANCH = 0;
