@@ -914,6 +914,8 @@ class BiDirSynchronizer(BaseSynchronizer):
             else:
                 c_pair = ("modified", "modified")  # conflict!
 
+        # elif c_pair == ("unmodified", "unmodified"):
+
         pair.local_classification = c_pair[0]
         pair.remote_classification = c_pair[1]
 
@@ -1021,6 +1023,8 @@ class UploadSynchronizer(BiDirSynchronizer):
                 pair.override_operation("copy_local", "force")
             elif is_file and classification == ("unmodified", "modified"):
                 pair.override_operation("copy_local", "restore")
+            elif is_file and classification == ("existing", "existing"):
+                pair.override_operation("copy_local", "force")
             elif classification == ("unmodified", "deleted"):
                 pair.override_operation("copy_local", "restore")
 
@@ -1179,6 +1183,8 @@ class DownloadSynchronizer(BiDirSynchronizer):
             elif is_file and classification == ("modified", "unmodified"):
                 pair.override_operation("copy_remote", "restore")
             elif is_file and classification == ("modified", "modified"):
+                pair.override_operation("copy_remote", "force")
+            elif is_file and classification == ("existing", "existing"):
                 pair.override_operation("copy_remote", "force")
             elif classification == ("deleted", "unmodified"):
                 pair.override_operation("copy_remote", "restore")
