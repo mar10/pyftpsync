@@ -33,7 +33,8 @@ Pyftpsync
 
 
 .. warning::
-  Version 2.0 introduces *breaking changes* to 1.x.
+  Major version updates (1.0 => 2.0, 2.0 => 3.0, ...) introduce
+  *breaking changes* to the previous versions.
   Make sure to adjust your scripts accordingly after update.
 
 
