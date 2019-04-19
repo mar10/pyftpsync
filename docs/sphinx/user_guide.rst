@@ -42,6 +42,7 @@ Use the ``--help`` or ``-h`` argument to get help::
 
 `run` command
 -------------
+
 In addition to the direct invocation of `upload`, `download`, or `sync`
 commands, version 3.x allows to define a :doc:`sample_pyftpsync_yaml` file
 in your project's root folder which then can be executed like so::
@@ -54,12 +55,6 @@ optionally, default settings can be overidden::
     $ pyftpsync run TASK
 
 See the :doc:`sample_pyftpsync_yaml` example for details.
-
-..
-    :download:`Download Sample Configuration<../sample_pyftpsync.conf>`.
-
-    .. literalinclude:: ../../sample_pyftpsync.yaml
-        :linenos:
 
 
 Target URLs

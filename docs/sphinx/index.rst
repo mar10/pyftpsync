@@ -42,7 +42,7 @@ Features
 
   * This is a command line tool...
   * ... and a library for use in custom Python projects.
-  * Recursive synchronisation of folders on file system and/or FTP targets.
+  * Recursive synchronization of folders on file system and/or FTP targets.
   * Upload, download, and bi-directional synchronization mode.
   * Configurable conflict resolution strategies.
   * Unlike naive implementations, pyftpsync maintains additional meta data to

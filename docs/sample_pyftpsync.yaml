@@ -8,6 +8,7 @@ default_task: deploy
 # Default settings shared by all tasks:
 common_config:
     verbose: 4
+    progress: true
     # Make --root default (can be overridden by --here):
     root: true
 
@@ -22,7 +23,6 @@ tasks:
         remote: ftp://example.com/my_project
         delete_unmatched: true
         exclude: build,node_modules,.*,_*
-        progress: true
 
     deploy_force:
         command: upload
@@ -32,5 +32,3 @@ tasks:
         exclude: build,node_modules,.*,_*
         force: true
         resolve: local
-        dry_run: true
-        progress: true
