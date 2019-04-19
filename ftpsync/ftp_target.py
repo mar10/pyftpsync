@@ -703,8 +703,8 @@ class FtpTarget(_Target):
                 Called for every line with these args:
                     status (int): 0:ok 1:fallback used, 2:decode failed
                     line (str): result line decoded using `encoding`.
-                                If `encoding` is 'utf-8', a fallback to cp1252
-                                is accepted.
+                        If `encoding` is 'utf-8', a fallback to cp1252
+                        is accepted.
             encoding (str):
                 Coding that is used to convert the FTP response to `str`.
         Returns:

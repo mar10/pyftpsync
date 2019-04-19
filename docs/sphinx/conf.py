@@ -68,6 +68,9 @@ rst_epilog = """
 .. |nbsp| unicode:: 0xA0
    :trim:
 
+.. role:: bash(code)
+   :language: bash
+
 """
 
 # Add any paths that contain templates here, relative to this directory.

@@ -20,7 +20,7 @@ Synchronize directories using FTP(S) or file system access.
   * Allows FTP-to-FTP and Filesystem-to-Filesystem synchronization as well.
   * Architecture is open to add other target types.
 
-**Note:** Version 2.0 introduces *breaking changes* to 1.x.
+**Note:** Version 3.0 introduces *breaking changes* to 2.x.
 Make sure to adjust your scripts accordingly after update.
 
 

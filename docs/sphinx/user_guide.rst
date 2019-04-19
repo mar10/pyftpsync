@@ -3,7 +3,8 @@ User Guide
 ==========
 
 .. warning::
-  Version 2.0 introduces *breaking changes* to 1.x.
+  Major version updates (1.0 => 2.0, 2.0 => 3.0, ...) introduce
+  *breaking changes* to 1.x.
   Make sure to adjust your scripts accordingly after update.
 
 
@@ -13,26 +14,52 @@ Command Line Interface
 Use the ``--help`` or ``-h`` argument to get help::
 
     $ pyftpsync --help
-    usage: pyftpsync [-h] [-V] {upload,download,sync,scan} ...
+    usage: pyftpsync [-h] [-v | -q] [-V] {upload,download,sync,run,scan} ...
 
     Synchronize folders over FTP.
 
     positional arguments:
-      {upload,download,sync,scan}
+    {upload,download,sync,run,scan}
                             sub-command help
         upload              copy new and modified files to remote folder
         download            copy new and modified files from remote folder to
                             local target
         sync                synchronize new and modified files between remote
                             folder and local target
+        run                 run pyftpsync with configuration from
+                            `.pyftpsync.yaml` in current or parent folder
         scan                repair, purge, or check targets
 
     optional arguments:
-      -h, --help            show this help message and exit
-      -V, --version         show program's version number and exit
+    -h, --help            show this help message and exit
+    -v, --verbose         increment verbosity by one (default: 3, range: 0..5)
+    -q, --quiet           decrement verbosity by one
+    -V, --version         show program's version number and exit
 
     See also https://github.com/mar10/pyftpsync
     $
+
+
+`run` command
+-------------
+In addition to the direct invocation of `upload`, `download`, or `sync`
+commands, version 3.x allows to define a :doc:`sample_pyftpsync_yaml` file
+in your project's root folder which then can be executed like so::
+
+    $ pyftpsync run
+
+optionally, default settings can be overidden::
+
+    $ pyftpsync run --dry-run
+    $ pyftpsync run TASK
+
+See the :doc:`sample_pyftpsync_yaml` example for details.
+
+..
+    :download:`Download Sample Configuration<../sample_pyftpsync.conf>`.
+
+    .. literalinclude:: ../../sample_pyftpsync.yaml
+        :linenos:
 
 
 Target URLs
