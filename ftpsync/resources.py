@@ -129,12 +129,13 @@ class EntryPair(object):
         prev_op = self.operation
         assert operation != prev_op
         assert operation in PAIR_OPERATIONS
-        write(
-            "override_operation({}, {}) -> {} ({})".format(
-                prev_class, prev_op, operation, reason
-            ),
-            debug=True,
-        )
+        if self.any_entry.target.synchronizer.verbose > 3:
+            write(
+                "override_operation({}, {}) -> {} ({})".format(
+                    prev_class, prev_op, operation, reason
+                ),
+                debug=True,
+            )
         self.operation = operation
         self.re_class_reason = reason
 

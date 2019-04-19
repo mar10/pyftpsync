@@ -126,6 +126,8 @@ class FtpTarget(_Target):
         options = self.get_options_dict()
         no_prompt = self.get_option("no_prompt", True)
         store_password = self.get_option("store_password", False)
+        verbose = self.get_option("verbose", 3)
+
 
         self.ftp.set_debuglevel(self.get_option("ftp_debug", 0))
 
@@ -152,7 +154,7 @@ class FtpTarget(_Target):
             try:
                 # Login (as 'anonymous' if self.username is undefined):
                 self.ftp.login(self.username, self.password)
-                if self.get_option("verbose", 3) >= 4:
+                if verbose >= 4:
                     write(
                         "Login as '{}'.".format(
                             self.username if self.username else "anonymous"
@@ -179,7 +181,7 @@ class FtpTarget(_Target):
 
         try:
             self.syst_response = self.ftp.sendcmd("SYST")
-            if self.get_option("verbose", 3) >= 5:
+            if verbose >= 5:
                 write("SYST: '{}'.".format(self.syst_response.replace("\n", " ")))
             # self.is_unix = "unix" in resp.lower() # not necessarily true, better check with r/w tests
             # TODO: case sensitivity?
@@ -189,13 +191,13 @@ class FtpTarget(_Target):
         try:
             self.feat_response = self.ftp.sendcmd("FEAT")
             self.support_utf8 = "UTF8" in self.feat_response
-            if self.get_option("verbose", 3) >= 5:
+            if verbose >= 5:
                 write("FEAT: '{}'.".format(self.feat_response.replace("\n", " ")))
         except Exception as e:
             write("FEAT command failed: '{}'".format(e))
 
         if self.encoding == "utf-8":
-            if not self.support_utf8:
+            if not self.support_utf8 and verbose >= 4:
                 write(
                     "Server does not list utf-8 as supported feature (using it anyway).",
                     warning=True,
@@ -206,9 +208,11 @@ class FtpTarget(_Target):
                 # See https://tools.ietf.org/html/draft-ietf-ftpext-utf-8-option-00
                 # Note: this RFC is inactive, expired, and failed on Strato
                 self.ftp.sendcmd("OPTS UTF-8")
-                write("Sent 'OPTS UTF-8'.")
+                if verbose >= 4:
+                    write("Sent 'OPTS UTF-8'.")
             except Exception as e:
-                write("Could not send 'OPTS UTF-8': '{}'".format(e), warning=True)
+                if verbose >= 4:
+                    write("Could not send 'OPTS UTF-8': '{}'".format(e), warning=True)
 
             try:
                 # Announce our wish to use UTF-8 to the server as proposed here:
@@ -216,7 +220,8 @@ class FtpTarget(_Target):
                 # https://www.cerberusftp.com/phpBB3/viewtopic.php?t=2608
                 # Note: this was accepted on Strato
                 self.ftp.sendcmd("OPTS UTF8 ON")
-                write("Sent 'OPTS UTF8 ON'.")
+                if verbose >= 4:
+                    write("Sent 'OPTS UTF8 ON'.")
             except Exception as e:
                 write("Could not send 'OPTS UTF8 ON': '{}'".format(e), warning=True)
 
