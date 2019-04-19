@@ -16,11 +16,13 @@ Algorithm
 ..
     See `pyftpsync-spec.pdf <https://raw.githubusercontent.com/mar10/pyftpsync/master/docs/pyftpsync-spec.pdf>`_
     for some explanations.
+    See also the `Pyftpsync specification <_downloads/pyftpsync-spec.pdf>`_
 
     NOTE: we need a :download: reference, otherwise the file will not be copied to dist folder
 
 .. seealso::
-   See also the `Pyftpsync specification <_downloads/pyftpsync-spec.pdf>`_
+   See also the
+   `pyftpsync-spec.pdf <https://raw.githubusercontent.com/mar10/pyftpsync/master/docs/pyftpsync-spec.pdf>`_
    (:download:`download <pyftpsync-spec.pdf>`) for details about the
    algorithm and implementation.
 
