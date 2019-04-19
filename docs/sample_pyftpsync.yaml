@@ -7,7 +7,7 @@ default_task: deploy
 
 # Default settings shared by all tasks:
 common_config:
-    verbose: 4
+    # verbose: 4
     progress: true
     # Make --root default (can be overridden by --here):
     root: true

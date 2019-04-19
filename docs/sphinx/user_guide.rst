@@ -2,6 +2,13 @@
 User Guide
 ==========
 
+..
+    .. toctree::
+    :hidden:
+
+    sample_pyftpsync_yaml
+
+
 .. warning::
   Major version updates (1.0 => 2.0, 2.0 => 3.0, ...) introduce
   *breaking changes* to the previous versions.
@@ -69,14 +76,16 @@ FTP URLs may contain credentials::
 
     $ pyftpsync upload ~/temp ftp://joe:secret@example.com/target/folder
 
-Note that `pyftpsync` also supports prompting for passwords and storing passwords
+Note that `pyftpsync` also supports prompting for passwords and storing
+passwords
 in the system keyring.
 
 
 Authentication
 --------------
 
-FTP targets often require authentication. There are multiple ways to handle this:
+FTP targets often require authentication. There are multiple ways to handle
+this:
 
   1. Pass credentials with the target URL: |br|
      ``ftp://user:password@example.com/target/folder``
@@ -87,18 +96,21 @@ FTP targets often require authentication. There are multiple ways to handle this
      ``ftp://example.com/target/folder`` |br|
      `pyftpsync` will now
 
-     1. Try to lookup credentials for host ('example.com') in the system keyring storage.
-     2. Try to lookup credentials for host ('example.com') in the ``.netrc`` file in the
+     1. Try to lookup credentials for host ('example.com') in the system
+        keyring storage.
+     2. Try to lookup credentials for host ('example.com') in the ``.netrc``
+        file in the
         user's home directory.
      3. CLI will prompt for username and password.
      4. Assume anonymous access.
 
   4. If authentication fails, the CLI will prompt for a password again.
 
-Credential discovery can be controlled by ``--no-keyring``, ``--no-netrc``, and ``--no-prompt``
-options.
+Credential discovery can be controlled by ``--no-keyring``, ``--no-netrc``,
+and ``--no-prompt`` options.
 ``--prompt`` will force prompting, even if lookup is possible.
-``--store-password`` will save credentials to the system keyring storage upon successful login.
+``--store-password`` will save credentials to the system keyring storage upon
+successful login.
 
 .. note::
 
@@ -115,8 +127,8 @@ The ``--match`` option filters processed files using on or more patterns
 (using the `fnmatch syntax <https://docs.python.org/3/library/fnmatch.html#module-fnmatch>`_). |br|
 **Note:**  These patterns are only applied to files, not directories.
 
-The ``--exclude`` option is applied after `--match` and removes entries from processing. Unlike `--match`,
-these patterns are also applied to directories.
+The ``--exclude`` option is applied after `--match` and removes entries from
+processing. Unlike `--match`, these patterns are also applied to directories.
 
 Example::
 
@@ -188,8 +200,8 @@ don't exist locally::
 
   $ pyftpsync upload ~/temp ftp://example.com/target/folder --delete
 
-Add the ``--dry-run`` option to switch to DRY-RUN mode, i.e. run in test mode without
-modifying files::
+Add the ``--dry-run`` option to switch to DRY-RUN mode, i.e. run in test mode
+without modifying files::
 
   $ pyftpsync upload ~/temp ftp://example.com/target/folder --delete --dry-run
 
@@ -265,7 +277,7 @@ Note that ``ftps:`` protocol was specified to enable TLS.
 Verbosity Level
 ---------------
 
-The verbosity level can have a value from 0 to 6::
+The verbosity level can have a value from 0 to 6:
 
 =========  ======  ===========  =============================================
 Verbosity  Option  Log level    Remarks
@@ -297,7 +309,8 @@ Script Examples
 ===============
 
 All options that are available for command line, can also be passed to
-the synchronizers. For example ``--delete-unmatched`` becomes ``"delete_unmatched": True``.
+the synchronizers. For example ``--delete-unmatched`` becomes
+``"delete_unmatched": True``.
 
 Upload modified files from local folder to FTP server::
 
