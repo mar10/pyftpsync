@@ -1,4 +1,7 @@
-3.0.0 (unreleased)
+3.0.1 (unreleased)
+------------------
+
+3.0.0 (2019-04-20)
 ------------------
 - This release addresses some known **encoding-related issues**:
   - The internal path format are now native strings (i.e. unicode on Python 3 
