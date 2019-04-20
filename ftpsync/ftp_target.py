@@ -128,7 +128,6 @@ class FtpTarget(_Target):
         store_password = self.get_option("store_password", False)
         verbose = self.get_option("verbose", 3)
 
-
         self.ftp.set_debuglevel(self.get_option("ftp_debug", 0))
 
         # Optionally use FTP active mode (default: PASV) (issue #21)
