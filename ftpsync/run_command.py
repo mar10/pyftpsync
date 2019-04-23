@@ -137,7 +137,7 @@ def handle_run_command(parser, args):
         parser.error("Missing option `tasks.{}` in {}".format(task_name, config_path))
     task = config["tasks"][task_name]
 
-    write("Using task '{}' from {}".format(task_name, config_path))
+    write("Running task '{}' from {}".format(task_name, config_path))
 
     common_config.update(task)
     task = common_config
@@ -208,7 +208,7 @@ def handle_run_command(parser, args):
     else:
         parser.error(
             "`.pyftpsync.yaml` configuration was found in a parent directory. "
-            "Please pass addtional option to clarify:\n"
+            "Please pass an additional argument to clarify:\n"
             "  --root: synchronize whole project ({root})\n"
             "  --here: synchronize sub branch ({root}/{sub})".format(
                 root=root_folder, sub=path_ofs
