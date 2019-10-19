@@ -377,8 +377,10 @@ class FtpTarget(_Target):
 
     def pwd(self):
         """Return current working dir as native `str` (uses fallback-encoding)."""
-        return self._ftp_pwd()
-        # return self.ftp.pwd()
+        pwd = self._ftp_pwd()
+        if pwd != "/":  # #38
+            pwd = pwd.rstrip("/")
+        return pwd
 
     def mkdir(self, dir_name):
         assert compat.is_native(dir_name)
