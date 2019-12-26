@@ -1,5 +1,6 @@
 3.0.1 (unreleased)
 ------------------
+- Fix #38 Remove trailing '/' before checking PWD response
 
 3.0.0 (2019-04-20)
 ------------------
