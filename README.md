@@ -26,7 +26,7 @@ Make sure to adjust your scripts accordingly after update.
 
 ## Quickstart
 
-[Python](https://www.python.org/download/Python) 2.7+ or 3.4+ is required,
+[Python](https://www.python.org/download/Python) 2.7+ or 3.5+ is required,
 [pip](http://www.pip-installer.org/) recommended:
 
 ```bash

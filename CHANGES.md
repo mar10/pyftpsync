@@ -1,5 +1,10 @@
-3.0.1 (unreleased)
+3.1.1 (unreleased)
 ------------------
+
+3.1.0 (2020-12-26)
+------------------
+- Drop support for Python 3.4 (end-of-life: 2019-03-18)
+- Add support for Python 3.8
 - Fix #38 Remove trailing '/' before checking PWD response
 
 3.0.0 (2019-04-20)
