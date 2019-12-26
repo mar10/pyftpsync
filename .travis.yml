@@ -1,17 +1,22 @@
 sudo: false
 language: python
-python:
-    - "2.7"
-#     - "3.3"  # End-of-life September 2017
-#     - "3.4" # End-of-life March 2019
-    - "3.5"
-    - "3.6"
-    - "3.7"
-      dist: xenial  # Ubuntu 16, required for Python 3.7
-    - "3.8"
+matrix:
+  include:
+      - python: "2.7"
+        env: TOXENV=py27
+#      - python: "3.4"  # EOL 2019-03-18
+#        env: TOXENV=py34
+      - python: "3.5"
+        env: TOXENV=py35
+      - python: "3.6"
+        env: TOXENV=py36
+      - python: "3.7"
+        env: TOXENV=py37
+        dist: xenial
+      - python: "3.8"
+        env: TOXENV=py38
 install:
   - pip install tox-travis
   - pip install flake8
 script:
   - tox
-#  - flake8 .  # Now part of tox.ini
