@@ -1,7 +1,8 @@
 3.1.1 (unreleased)
 ------------------
+- Fix #26: Crash when not setting verbose option
 
-3.1.0 (2020-12-26)
+3.1.0 (2019-12-26)
 ------------------
 - Drop support for Python 3.4 (end-of-life: 2019-03-18)
 - Add support for Python 3.8

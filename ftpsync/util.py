@@ -208,7 +208,7 @@ def get_credentials_for_url(url, opts, force_user=None):
         2-tuple (username, password) or None
     """
     creds = None
-    verbose = int(opts.get("verbose"))
+    verbose = int(opts.get("verbose", 3))
     force_prompt = opts.get("prompt", False)
     allow_prompt = not opts.get("no_prompt", True)
     allow_keyring = not opts.get("no_keyring", False) and not force_user
