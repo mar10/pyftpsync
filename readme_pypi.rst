@@ -1,4 +1,4 @@
-Copyright (c) 2012-2019 Martin Wendt
+Copyright (c) 2012-2020 Martin Wendt
 
 Summary
 -------
