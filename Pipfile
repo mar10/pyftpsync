@@ -3,12 +3,12 @@ url = "https://pypi.python.org/simple"
 verify_ssl = true
 
 [dev-packages]
-black = "*"
+black = "==19.10b0"
 check-manifest = "*"
 cx_Freeze = "*"
-flake8 = "*"
-flake8-bugbear = "~=18.2"
-flake8-quotes = "~=1.0"
+flake8 = "~=3.7"
+flake8-bugbear = "~=20.1"
+flake8-quotes = "~=3.0"
 isort = "*"
 pyftpsync = {editable = true,path = "."}
 pylint = "*"
@@ -26,6 +26,9 @@ wheel = "*"
 colorama = "==0.4.3"
 keyring = "==18.0.1"
 PyYAML = "==5.2"
+
+[requires]
+python_version = "3.7"
 
 [pipenv]
 allow_prereleases = true
