@@ -2,8 +2,6 @@
 """
 Tests for pyftpsync
 """
-from __future__ import print_function
-
 import io
 import json
 import os
@@ -19,8 +17,8 @@ from test.fixture_tools import (
     touch_test_file,
 )
 from test.test_1x import prepare_fixtures_1
+from urllib.parse import urlparse
 
-from ftpsync.compat import urlparse
 from ftpsync.metadata import DirMetadata
 from ftpsync.synchronizers import (
     BiDirSynchronizer,

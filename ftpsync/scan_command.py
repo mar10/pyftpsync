@@ -4,8 +4,6 @@
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 
-from __future__ import print_function
-
 import time
 from datetime import timedelta
 

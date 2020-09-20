@@ -5,8 +5,6 @@ Tests for pyftpsync
 # Allow long lines for readabilty
 # flake8: noqa: E501
 
-from __future__ import print_function
-
 import unittest
 from test.fixture_tools import (
     _SyncTestBase,

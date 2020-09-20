@@ -2,13 +2,11 @@
 """
 Tests for pyftpsync
 """
-from __future__ import print_function
-
 import platform
 import unittest
 from unittest.case import SkipTest
+from urllib.parse import urlparse
 
-from ftpsync.compat import urlparse
 from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL
 
 # from ftpsync.synchronizers import UploadSynchronizer

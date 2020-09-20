@@ -12,13 +12,12 @@ import time
 from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
 from tempfile import SpooledTemporaryFile
 
-from ftpsync import compat
-from ftpsync.compat import CompatConnectionError
 from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersion
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftpsync.targets import _Target, _get_encoding_opt
 from ftpsync.util import (
     get_credentials_for_url,
+    is_native,
     prompt_for_password,
     save_password,
     write,
@@ -72,7 +71,7 @@ class FtpTarget(_Target):
         self.encoding = _get_encoding_opt(None, extra_opts, "utf-8")
         # path = self.to_unicode(path)
         path = path or "/"
-        assert compat.is_native(path)
+        assert is_native(path)
         super(FtpTarget, self).__init__(path, extra_opts)
         if tls:
             try:
@@ -273,7 +272,7 @@ class FtpTarget(_Target):
         if self.ftp_socket_connected:
             try:
                 self.ftp.quit()
-            except (CompatConnectionError, EOFError) as e:
+            except (ConnectionError, EOFError) as e:
                 write_error("ftp.quit() failed: {}".format(e))
             self.ftp_socket_connected = False
 
@@ -305,9 +304,7 @@ class FtpTarget(_Target):
             self.lock_data = False
 
     def _unlock(self, closing=False):
-        """Remove lock file to the target root folder.
-
-        """
+        """Remove lock file to the target root folder."""
         # write("_unlock", closing)
         try:
             if self.cur_dir != self.root_dir:
@@ -363,7 +360,7 @@ class FtpTarget(_Target):
         return self.host + self.root_dir
 
     def cwd(self, dir_name):
-        assert compat.is_native(dir_name)
+        assert is_native(dir_name)
         path = normpath_url(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
             # paranoic check to prevent that our sync tool goes berserk
@@ -383,13 +380,13 @@ class FtpTarget(_Target):
         return pwd
 
     def mkdir(self, dir_name):
-        assert compat.is_native(dir_name)
+        assert is_native(dir_name)
         self.check_write(dir_name)
         self.ftp.mkd(dir_name)
 
     def _rmdir_impl(self, dir_name, keep_root_folder=False, predicate=None):
         # FTP does not support deletion of non-empty directories.
-        assert compat.is_native(dir_name)
+        assert is_native(dir_name)
         self.check_write(dir_name)
         names = []
         nlst_res = self._ftp_nlst(dir_name)
@@ -441,7 +438,7 @@ class FtpTarget(_Target):
         def _addline(status, line):
             # _ftp_retrlines_native() made sure that we always get `str` type  lines
             assert status in (0, 1, 2)
-            assert compat.is_native(line)
+            assert is_native(line)
 
             data, _, name = line.partition("; ")
 
@@ -595,7 +592,7 @@ class FtpTarget(_Target):
             file-like (must support read() method)
         """
         # print("FTP open_readable({})".format(name))
-        assert compat.is_native(name)
+        assert is_native(name)
         out = SpooledTemporaryFile(max_size=self.MAX_SPOOL_MEM, mode="w+b")
         self.ftp.retrbinary(
             "RETR {}".format(name), out.write, FtpTarget.DEFAULT_BLOCKSIZE
@@ -614,7 +611,7 @@ class FtpTarget(_Target):
                 Called like `func(buf)` for every written chunk
         """
         # print("FTP write_file({})".format(name), blocksize)
-        assert compat.is_native(name)
+        assert is_native(name)
         self.check_write(name)
         self.ftp.storbinary("STOR {}".format(name), fp_src, blocksize, callback)
         # TODO: check result
@@ -628,7 +625,7 @@ class FtpTarget(_Target):
             callback (function, optional):
                 Called like `func(buf)` for every written chunk
         """
-        assert compat.is_native(name)
+        assert is_native(name)
 
         def _write_to_file(data):
             # print("_write_to_file() {} bytes.".format(len(data)))
@@ -642,14 +639,14 @@ class FtpTarget(_Target):
 
     def remove_file(self, name):
         """Remove cur_dir/name."""
-        assert compat.is_native(name)
+        assert is_native(name)
         self.check_write(name)
         # self.cur_dir_meta.remove(name)
         self.ftp.delete(name)
         self.remove_sync_info(name)
 
     def set_mtime(self, name, mtime, size):
-        assert compat.is_native(name)
+        assert is_native(name)
         self.check_write(name)
         # write("META set_mtime(%s): %s" % (name, time.ctime(mtime)))
         # We cannot set the mtime on FTP servers, so we store this as additional
@@ -666,7 +663,7 @@ class FtpTarget(_Target):
         try:
             return self.ftp.pwd()
         except UnicodeEncodeError:
-            if compat.PY2 or self.ftp.encoding != "utf-8":
+            if self.ftp.encoding != "utf-8":
                 raise  # should not happen, since Py2 does not try to encode
             # TODO: this is NOT THREAD-SAFE!
             prev_encoding = self.ftp.encoding
@@ -678,7 +675,7 @@ class FtpTarget(_Target):
 
     def _ftp_nlst(self, dir_name):
         """Variant of `self.ftp.nlst()` that supports encoding-fallback."""
-        assert compat.is_native(dir_name)
+        assert is_native(dir_name)
         lines = []
 
         def _add_line(status, line):
@@ -740,16 +737,16 @@ class FtpTarget(_Target):
                     except UnicodeDecodeError:
                         raise
 
-            if compat.PY2:
-                # line is a native binary `str`.
-                if status == 1:
-                    # We used a fallback: re-encode
-                    callback(status, line_decoded.encode(encoding))
-                else:
-                    callback(status, line)
-            else:
-                # line_decoded is a native text `str`.
-                callback(status, line_decoded)
+            # if compat.PY2:
+            #     # line is a native binary `str`.
+            #     if status == 1:
+            #         # We used a fallback: re-encode
+            #         callback(status, line_decoded.encode(encoding))
+            #     else:
+            #         callback(status, line)
+            # else:
+            # line_decoded is a native text `str`.
+            callback(status, line_decoded)
 
         # on_read_line = _on_read_line_py2 if compat.PY2 else _on_read_line_py3
 

@@ -4,9 +4,6 @@ Tests for pyftpsync
 """
 # Allow long lines for readabilty
 # flake8: noqa: E501
-
-from __future__ import print_function
-
 import calendar
 import copy
 import datetime
@@ -22,13 +19,13 @@ import unittest
 from ftplib import FTP, error_perm
 from pprint import pprint
 from unittest.case import SkipTest
+from urllib.parse import urlparse
 
 from ftpsync import pyftpsync
-from ftpsync.compat import StringIO, to_bytes, to_native, urlparse
 from ftpsync.metadata import DirMetadata
 from ftpsync.synchronizers import BiDirSynchronizer
 from ftpsync.targets import FsTarget, make_target
-from ftpsync.util import get_option
+from ftpsync.util import get_option, to_bytes, to_native
 
 PYFTPSYNC_TEST_FOLDER = (
     get_option("PYFTPSYNC_TEST_FOLDER", "test", "folder") or tempfile.mkdtemp()
@@ -60,7 +57,7 @@ class CaptureStdout(list):
     def __enter__(self):
         self._stdout = sys.stdout
         self._stderr = sys.stderr
-        self._stringio = StringIO()
+        self._stringio = io.StringIO()
         if self._do_stdout:
             sys.stdout = self._stringio
         if self._do_stderr:
@@ -532,23 +529,23 @@ class _SyncTestBase(unittest.TestCase):
     def _prepare_initial_synced_fixture(cls):
         """Create two folders that have already been sync'ed (so meta data is available).
 
-                                  Local           Remote
-          file1.txt               12:00           12:00
-          file2.txt               12:00           12:00
-          file3.txt               12:00           12:00
-          file4.txt               12:00           12:00
-          file5.txt               12:00           12:00
-          file6.txt               12:00           12:00
-          file7.txt               12:00           12:00
-          file8.txt               12:00           12:00
-          file9.txt               12:00           12:00
-          folder1/file1_1.txt     12.00           12:00
-          folder2/file2_1.txt     12:00           12:00
-          folder3/file3_1.txt     12:00           12:00
-          folder4/file4_1.txt     12:00           12:00
-          folder5/file5_1.txt     12:00           12:00
-          folder6/file6_1.txt     12:00           12:00
-          folder7/file7_1.txt     12:00           12:00
+                                Local           Remote
+        file1.txt               12:00           12:00
+        file2.txt               12:00           12:00
+        file3.txt               12:00           12:00
+        file4.txt               12:00           12:00
+        file5.txt               12:00           12:00
+        file6.txt               12:00           12:00
+        file7.txt               12:00           12:00
+        file8.txt               12:00           12:00
+        file9.txt               12:00           12:00
+        folder1/file1_1.txt     12.00           12:00
+        folder2/file2_1.txt     12:00           12:00
+        folder3/file3_1.txt     12:00           12:00
+        folder4/file4_1.txt     12:00           12:00
+        folder5/file5_1.txt     12:00           12:00
+        folder6/file6_1.txt     12:00           12:00
+        folder7/file7_1.txt     12:00           12:00
         """
         cls._prepare_initial_local_fixture()
 
@@ -815,7 +812,7 @@ def prepare_fixture():
         >>>python -m test.fixture_tools
         Created fixtures at /Users/martin/prj/test/pyftpsync_test_folder
         >>>ls /Users/martin/prj/test/pyftpsync_test_folder
-        local	remote
+        local  remote
     """
     use_ftp = False
     if "--no-ftp" not in sys.argv:

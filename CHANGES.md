@@ -1,3 +1,8 @@
+4.0.0 (unreleased)
+------------------
+- Drop Python 2.x
+- TODO: Add SFTP support
+
 3.1.1 (unreleased)
 ------------------
 - Fix #26: Crash when not setting verbose option

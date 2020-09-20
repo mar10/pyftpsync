@@ -20,13 +20,12 @@ Synchronize directories using FTP(S) or file system access.
   * Allows FTP-to-FTP and Filesystem-to-Filesystem synchronization as well.
   * Architecture is open to add other target types.
 
-**Note:** Version 3.0 introduces *breaking changes* to 2.x.
-Make sure to adjust your scripts accordingly after update.
+**Note:** Version 4.0 drops support for Python 2.
 
 
 ## Quickstart
 
-[Python](https://www.python.org/download/Python) 2.7+ or 3.5+ is required,
+[Python](https://www.python.org/download/Python) 3.5+ is required,
 [pip](http://www.pip-installer.org/) recommended:
 
 ```bash

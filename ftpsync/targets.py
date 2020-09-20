@@ -11,11 +11,11 @@ import shutil
 import sys
 import threading
 from posixpath import join as join_url, normpath as normpath_url
+from urllib.parse import urlparse
 
-from ftpsync import compat
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import DirectoryEntry, FileEntry
-from ftpsync.util import write
+from ftpsync.util import is_native, to_bytes, to_native, to_unicode, write
 
 
 # ===============================================================================
@@ -35,7 +35,7 @@ def make_target(url, extra_opts=None):
         :class:`_Target`
     """
     # debug = extra_opts.get("debug", 1)
-    parts = compat.urlparse(url, allow_fragments=False)
+    parts = urlparse(url, allow_fragments=False)
     # scheme is case-insensitive according to https://tools.ietf.org/html/rfc3986
     scheme = parts.scheme.lower()
     if scheme in ["ftp", "ftps"]:
@@ -84,7 +84,7 @@ class _Target(object):
     def __init__(self, root_dir, extra_opts):
         # All internal paths should use unicode.
         # (We cannot convert here, since we don't know the target encoding.)
-        assert compat.is_native(root_dir)
+        assert is_native(root_dir)
         if root_dir != "/":
             root_dir = root_dir.rstrip("/")
         # This target is not thread safe
@@ -200,7 +200,7 @@ class _Target(object):
 
     def check_write(self, name):
         """Raise exception if writing cur_dir/name is not allowed."""
-        assert compat.is_native(name)
+        assert is_native(name)
         if self.readonly and name not in (
             DirMetadata.META_FILE_NAME,
             DirMetadata.LOCK_FILE_NAME,
@@ -314,7 +314,7 @@ class _Target(object):
 
     def write_text(self, name, s):
         """Write string data to cur_dir/name using write_file()."""
-        buf = io.BytesIO(compat.to_bytes(s))
+        buf = io.BytesIO(to_bytes(s))
         self.write_file(name, buf)
 
     def remove_file(self, name):
@@ -408,9 +408,9 @@ class FsTarget(_Target):
         # self.cur_dir_meta = None
         self.cur_dir_meta = DirMetadata(self)
         # List directory. Pass in unicode on Py2, so we get unicode in return
-        unicode_cur_dir = compat.to_unicode(self.cur_dir)
+        unicode_cur_dir = to_unicode(self.cur_dir)
         for name in os.listdir(unicode_cur_dir):
-            name = compat.to_native(name)
+            name = to_native(name)
             path = os.path.join(self.cur_dir, name)
             stat = os.lstat(path)
             # write(name)

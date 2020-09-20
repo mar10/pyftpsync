@@ -37,6 +37,9 @@ Pyftpsync
   *breaking changes* to the previous versions.
   Make sure to adjust your scripts accordingly after update.
 
+.. info::
+  Version 4.0 drops support for Python 2.
+
 
 Features
 ========

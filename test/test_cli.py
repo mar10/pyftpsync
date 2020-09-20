@@ -2,8 +2,6 @@
 """
 Tests for pyftpsync
 """
-from __future__ import print_function
-
 import re
 import unittest
 from test.fixture_tools import (

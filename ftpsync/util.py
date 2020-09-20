@@ -3,9 +3,7 @@
 (c) 2012-2020 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
-
-from __future__ import print_function
-
+import configparser
 import getpass
 import logging
 import netrc
@@ -13,15 +11,57 @@ import os
 import sys
 from datetime import datetime
 
-from ftpsync import compat
-from ftpsync.compat import CompatFileNotFoundError
-
 _logger = None
 
 
 PYTHON_VERSION = "{}.{}.{}".format(
     sys.version_info[0], sys.version_info[1], sys.version_info[2]
 )
+
+
+# def is_basestring(s):
+#     """Return True for any string type, i.e. for str/unicode on Py2 and bytes/str on Py3."""
+#     return isinstance(s, (str, bytes))
+
+
+# def is_bytes(s):
+#     """Return True for bytestrings, i.e. for str on Py2 and bytes on Py3."""
+#     return isinstance(s, bytes)
+
+
+def is_native(s):
+    """Return True for native strings, i.e. for str on Py2 and Py3."""
+    return isinstance(s, str)
+
+
+# def is_unicode(s):
+#     """Return True for unicode strings, i.e. for unicode on Py2 and str on Py3."""
+#     return isinstance(s, str)
+
+
+def to_bytes(s, encoding="utf-8"):
+    """Convert a text string (unicode) to bytestring, i.e. str on Py2 and bytes on Py3."""
+    if type(s) is not bytes:
+        s = bytes(s, encoding)
+    return s
+
+
+def to_native(s, encoding="utf-8"):
+    """Convert data to native str type, i.e. bytestring on Py2 and unicode on Py3."""
+    if type(s) is bytes:
+        s = str(s, encoding)
+    elif type(s) is not str:
+        s = str(s)
+    return s
+
+
+to_unicode = to_native
+"""Convert binary data to unicode (text strings) on Python 2 and 3."""
+
+# Binary Strings
+
+# b_empty = to_bytes("")
+# b_slash = to_bytes("/")
 
 
 def get_pyftpsync_logger():
@@ -132,7 +172,7 @@ def pretty_stamp(stamp):
     return datetime.fromtimestamp(stamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
-_pyftpsyncrc_parser = compat.configparser.RawConfigParser()
+_pyftpsyncrc_parser = configparser.RawConfigParser()
 _pyftpsyncrc_parser.read(os.path.expanduser("~/.pyftpsyncrc"))
 
 
@@ -142,7 +182,7 @@ def get_option(env_name, section, opt_name, default=None):
     if val is None:
         try:
             val = _pyftpsyncrc_parser.get(section, opt_name)
-        except (compat.configparser.NoSectionError, compat.configparser.NoOptionError):
+        except (configparser.NoSectionError, configparser.NoOptionError):
             pass
     if val is None:
         val = default
@@ -185,9 +225,7 @@ def prompt_for_password(url, user=None, default_user=None):
     if user is None:
         default_user = default_user or getpass.getuser()
         while user is None:
-            user = compat.console_input(
-                "Enter username for {} [{}]: ".format(url, default_user)
-            )
+            user = input("Enter username for {} [{}]: ".format(url, default_user))
             if user.strip() == "" and default_user:
                 user = default_user
     if user:
@@ -261,7 +299,7 @@ def get_credentials_for_url(url, opts, force_user=None):
         try:
             authenticators = None
             authenticators = netrc.netrc().authenticators(url)
-        except CompatFileNotFoundError:
+        except FileNotFoundError:
             if verbose >= 4:
                 write("Could not get password (no .netrc file).")
         except Exception as e:
@@ -367,24 +405,24 @@ def byte_compare(stream_a, stream_b):
     return (equal, ofs)
 
 
-def decode_dict_keys(d, coding="utf-8"):
-    """Convert all keys to unicde (recursively)."""
-    assert compat.PY2
-    res = {}
-    for k, v in d.items():  #
-        if type(k) is str:
-            k = k.decode(coding)
-        if type(v) is dict:
-            v = decode_dict_keys(v, coding)
-        res[k] = v
-    return res
+# def decode_dict_keys(d, coding="utf-8"):
+#     """Convert all keys to unicde (recursively)."""
+#     assert compat.PY2
+#     res = {}
+#     for k, v in d.items():  #
+#         if type(k) is str:
+#             k = k.decode(coding)
+#         if type(v) is dict:
+#             v = decode_dict_keys(v, coding)
+#         res[k] = v
+#     return res
 
 
 def make_native_dict_keys(d):
     """Convert all keys to native `str` type (recursively)."""
     res = {}
     for k, v in d.items():  #
-        k = compat.to_native(k)
+        k = to_native(k)
         if type(v) is dict:
             v = make_native_dict_keys(v)
         res[k] = v

@@ -4,6 +4,7 @@
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 # flake8: noqa
+# pylint: skip-file
 
 import sys
 
