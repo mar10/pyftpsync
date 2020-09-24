@@ -28,7 +28,7 @@ def do_sync():
 def do_scan():
     from ftpsync.scan_command import scan_handler
 
-    class args(object):
+    class args:
         """"""
 
     args.target = "ftp://wwwendt.de/test_pyftpsync"
@@ -37,7 +37,7 @@ def do_scan():
     args.recursive = False
     args.remove_meta = False
     args.remove_locks = False
-    scan_handler(args)
+    scan_handler(None, args)
 
 
 if __name__ == "__main__":

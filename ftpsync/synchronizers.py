@@ -89,7 +89,7 @@ def match_path(entry, opts):
 # ===============================================================================
 # BaseSynchronizer
 # ===============================================================================
-class BaseSynchronizer(object):
+class BaseSynchronizer:
     """Synchronizes two target instances in dry_run mode (also base class for other synchronizers)."""
 
     _resolve_shortcuts = {"l": "local", "r": "remote", "s": "skip"}

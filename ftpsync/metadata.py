@@ -29,7 +29,7 @@ class IncompatibleMetadataVersion(RuntimeError):
 # ===============================================================================
 # DirMetadata
 # ===============================================================================
-class DirMetadata(object):
+class DirMetadata:
     """"""
 
     META_FILE_NAME = ".pyftpsync-meta.json"

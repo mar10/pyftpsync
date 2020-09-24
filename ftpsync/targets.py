@@ -76,7 +76,7 @@ def _get_encoding_opt(synchronizer, extra_opts, default):
 # ===============================================================================
 # _Target
 # ===============================================================================
-class _Target(object):
+class _Target:
     """Base class for :class:`FsTarget`, :class:`FtpTarget`, etc."""
 
     DEFAULT_BLOCKSIZE = 16 * 1024  # shutil.copyobj() uses 16k blocks by default

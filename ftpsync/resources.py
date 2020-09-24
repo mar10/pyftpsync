@@ -68,7 +68,7 @@ operation_map = {
 # ===============================================================================
 # EntryPair
 # ===============================================================================
-class EntryPair(object):
+class EntryPair:
     """"""
 
     def __init__(self, local, remote):
@@ -182,7 +182,7 @@ class EntryPair(object):
 # ===============================================================================
 # _Resource
 # ===============================================================================
-class _Resource(object):
+class _Resource:
     """Common base class for files and directories."""
 
     def __init__(self, target, rel_path, name, size, mtime, unique):
