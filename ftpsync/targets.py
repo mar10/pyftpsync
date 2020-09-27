@@ -24,10 +24,9 @@ from ftpsync.util import is_native, to_bytes, to_native, to_unicode, write
 def make_target(url, extra_opts=None):
     """Factory that creates `_Target` objects from URLs.
 
-    FTP targets must begin with the scheme ``ftp://`` or ``ftps://`` for TLS.
+    FTP targets must begin with the scheme ``ftp://``,  ``ftps://`` for TLS,
+    or ``sftp://`` for SFTP.
 
-    Note:
-        TLS is only supported on Python 2.7/3.2+.
     Args:
         url (str):
         extra_opts (dict, optional): Passed to Target constructor. Default: None.
@@ -38,18 +37,28 @@ def make_target(url, extra_opts=None):
     parts = urlparse(url, allow_fragments=False)
     # scheme is case-insensitive according to https://tools.ietf.org/html/rfc3986
     scheme = parts.scheme.lower()
-    if scheme in ["ftp", "ftps"]:
-        creds = parts.username, parts.password
-        tls = scheme == "ftps"
-        from ftpsync import ftp_target
+    if scheme in ("ftp", "ftps"):
+        from ftpsync.ftp_target import FtpTarget
 
-        target = ftp_target.FtpTarget(
+        target = FtpTarget(
             parts.path,
             parts.hostname,
             parts.port,
-            username=creds[0],
-            password=creds[1],
-            tls=tls,
+            username=parts.username,
+            password=parts.password,
+            tls=(scheme == "ftps"),
+            timeout=None,
+            extra_opts=extra_opts,
+        )
+    elif scheme == "sftp":
+        from ftpsync.sftp_target import SFTPTarget
+
+        target = SFTPTarget(
+            parts.path,
+            parts.hostname,
+            parts.port,
+            username=parts.username,
+            password=parts.password,
             timeout=None,
             extra_opts=extra_opts,
         )
@@ -136,38 +145,6 @@ class _Target:
 
     def is_unbound(self):
         return self.synchronizer is None
-
-    # def to_bytes(self, s):
-    #     """Convert `s` to bytes, using this target's encoding (does nothing if `s` is already bytes)."""
-    #     return compat.to_bytes(s, self.encoding)
-
-    # def to_unicode(self, s):
-    #     """Convert `s` to unicode, using this target's encoding (does nothing if `s` is already unic)."""
-    #     return compat.to_unicode(s, self.encoding)
-
-    # def to_native(self, s):
-    #     """Convert `s` to native, using this target's encoding (does nothing if `s` is already native)."""
-    #     return compat.to_native(s, self.encoding)
-
-    # def re_encode_to_native(self, s):
-    #     """Return `s` in `str` format, assuming target.encoding.
-
-    #     On Python 2 return a binary `str`:
-    #         Encode unicode to UTF-8 binary str
-    #         Re-encode binary str from self.encoding to UTF-8
-    #     On Python 3 return unicode `str`:
-    #         Leave unicode unmodified
-    #         Decode binary str using self.encoding
-    #     """
-    #     if compat.PY2:
-    #         if isinstance(s, unicode):  # noqa
-    #             s = s.encode("utf-8")
-    #         elif self.encoding != "utf-8":
-    #             s = s.decode(self.encoding)
-    #             s = s.encode("utf-8")
-    #     elif not isinstance(s, str):
-    #         s = s.decode(self.encoding)
-    #     return s
 
     def get_options_dict(self):
         """Return options from synchronizer (possibly overridden by own extra_opts)."""

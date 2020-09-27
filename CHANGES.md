@@ -2,6 +2,7 @@
 ------------------
 - Drop Python 2.x
 - TODO: Add SFTP support
+- TODO: Rename FTPTarget => FTPTarget
 
 3.1.1 (unreleased)
 ------------------

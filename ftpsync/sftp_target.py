@@ -12,6 +12,8 @@ import time
 from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
 from tempfile import SpooledTemporaryFile
 
+import pysftp
+
 from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersion
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftpsync.targets import _Target, _get_encoding_opt
@@ -26,14 +28,14 @@ from ftpsync.util import (
 
 
 # ===============================================================================
-# FtpTarget
+# SFTPTarget
 # ===============================================================================
-class FtpTarget(_Target):
+class SFTPTarget(_Target):
     """Represents a synchronization target on an FTP server.
 
     Attributes:
         path (str): Current working directory on FTP server.
-        ftp (FTP): Instance of ftplib.FTP.
+        sftp (pysftp.Connection): Instance of pysftp.Connection.
         host (str): hostname of FTP server
         port (int): FTP port (defaults to 21)
         username (str):
@@ -52,7 +54,6 @@ class FtpTarget(_Target):
         port=0,
         username=None,
         password=None,
-        tls=False,
         timeout=None,
         extra_opts=None,
     ):
@@ -72,21 +73,13 @@ class FtpTarget(_Target):
         # path = self.to_unicode(path)
         path = path or "/"
         assert is_native(path)
-        super(FtpTarget, self).__init__(path, extra_opts)
-        if tls:
-            try:
-                self.ftp = ftplib.FTP_TLS()
-            except AttributeError:
-                write("Python 2.7/3.2+ required for FTPS (TLS).")
-                raise
-        else:
-            self.ftp = ftplib.FTP()
-        self.ftp.set_debuglevel(self.get_option("ftp_debug", 0))
+        super(SFTPTarget, self).__init__(path, extra_opts)
+
+        self.sftp = None
         self.host = host
         self.port = port or 0
         self.username = username
         self.password = password
-        self.tls = tls
         self.timeout = timeout
         #: dict: written to ftp target root folder before synchronization starts.
         #: set to False, if write failed. Default: None
@@ -114,31 +107,32 @@ class FtpTarget(_Target):
         )
 
     def get_base_name(self):
-        scheme = "ftps" if self.tls else "ftp"
+        scheme = "sftp"
         return "{}://{}{}".format(scheme, self.host, self.root_dir)
 
     def open(self):
         assert not self.ftp_socket_connected
 
-        super(FtpTarget, self).open()
+        super(SFTPTarget, self).open()
 
         options = self.get_options_dict()
         no_prompt = self.get_option("no_prompt", True)
         store_password = self.get_option("store_password", False)
         verbose = self.get_option("verbose", 3)
 
-        self.ftp.set_debuglevel(self.get_option("ftp_debug", 0))
+        self.sftp = pysftp.Connection(
+            self.host,
+            username=self.username,
+            password=self.password,
+            log=self.get_option("ftp_debug", False),
+        )
+        if self.sftp.logfile():
+            write("Logging to {}".format(self.sftp.logfile()))
 
-        # Optionally use FTP active mode (default: PASV) (issue #21)
-        force_active = self.get_option("ftp_active", False)
-        self.ftp.set_pasv(not force_active)
+        if self.get_option("ftp_active", False):
+            raise RuntimeError("SFTP does not have active/passive mode.")
 
-        self.ftp.connect(self.host, self.port, self.timeout)
-        # if self.timeout:
-        #     self.ftp.connect(self.host, self.port, self.timeout)
-        # else:
-        #     # Py2.7 uses -999 as default for `timeout`, Py3 uses None
-        #     self.ftp.connect(self.host, self.port)
+        self.sftp.timeout(self.timeout)
 
         self.ftp_socket_connected = True
 
@@ -277,7 +271,7 @@ class FtpTarget(_Target):
                 write_error("ftp.quit() failed: {}".format(e))
             self.ftp_socket_connected = False
 
-        super(FtpTarget, self).close()
+        super(SFTPTarget, self).close()
 
     def _lock(self, break_existing=False):
         """Write a special file to the target root folder."""
@@ -596,7 +590,7 @@ class FtpTarget(_Target):
         assert is_native(name)
         out = SpooledTemporaryFile(max_size=self.MAX_SPOOL_MEM, mode="w+b")
         self.ftp.retrbinary(
-            "RETR {}".format(name), out.write, FtpTarget.DEFAULT_BLOCKSIZE
+            "RETR {}".format(name), out.write, SFTPTarget.DEFAULT_BLOCKSIZE
         )
         out.seek(0)
         return out
@@ -635,7 +629,7 @@ class FtpTarget(_Target):
                 callback(data)
 
         self.ftp.retrbinary(
-            "RETR {}".format(name), _write_to_file, FtpTarget.DEFAULT_BLOCKSIZE
+            "RETR {}".format(name), _write_to_file, SFTPTarget.DEFAULT_BLOCKSIZE
         )
 
     def remove_file(self, name):
@@ -694,7 +688,7 @@ class FtpTarget(_Target):
         by decoding the incoming command response using `ftp.encoding`.
         This would fail for the whole request if a single line of the MLSD listing
         cannot be decoded.
-        FtpTarget wants to fall back to Cp1252 if UTF-8 fails for a single line,
+        SFTPTarget wants to fall back to Cp1252 if UTF-8 fails for a single line,
         so we need to process the raw original binary input lines.
 
         On Python 2, the response is already bytes, but we try to decode in
