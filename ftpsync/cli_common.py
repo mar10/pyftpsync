@@ -59,6 +59,12 @@ common_parser.add_argument(
     "with current format. Existing data will be discarded.",
 )
 
+common_parser.add_argument(
+    "--no-verify-host-keys",
+    action="store_true",
+    help="do not check SFTP connection against `~/.ssh/known_hosts`",
+)
+
 
 # --- matcher_parser ---------------------------------------------------------
 

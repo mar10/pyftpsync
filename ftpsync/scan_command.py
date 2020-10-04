@@ -36,7 +36,11 @@ def add_scan_parser(subparsers):
         help="path to target folder (default: %(default)s)",
     )
 
-    parser.add_argument("--list", action="store_true", help="print target files")
+    eg = parser.add_mutually_exclusive_group(required=False)
+    eg.add_argument("--list", action="store_true", help="print target files")
+    eg.add_argument(
+        "--tree", action="store_true", help="print target directory structure"
+    )
     parser.add_argument(
         "-r", "--recursive", action="store_true", help="visit sub folders"
     )
@@ -73,6 +77,8 @@ def scan_handler(parser, args):
 
     def _pred(entry):
         """Walker predicate that check match/exclude options."""
+        if args.tree and not entry.is_dir():
+            return False
         if not match_path(entry, opts):
             return False
 
@@ -87,7 +93,7 @@ def scan_handler(parser, args):
             else:
                 file_count += 1
 
-            if args.list:
+            if args.list or args.tree:
                 if is_dir:
                     print(indent, "[{e.name}]".format(e=e))
                 else:

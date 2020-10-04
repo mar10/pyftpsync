@@ -128,7 +128,8 @@ class _Target:
 
     def __del__(self):
         # TODO: http://pydev.blogspot.de/2015/01/creating-safe-cyclic-reference.html
-        self.close()
+        if self.connected:
+            self.close()
 
     # def __enter__(self):
     #     self.open()

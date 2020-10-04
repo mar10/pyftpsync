@@ -3,6 +3,7 @@
 - Drop Python 2.x
 - TODO: Add SFTP support
 - TODO: Rename FTPTarget => FTPTarget
+- `--tree` option for `scan` command
 
 3.1.1 (unreleased)
 ------------------

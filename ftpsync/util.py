@@ -129,7 +129,23 @@ except ImportError:
     )
     colorama = None
 
+
+def check_cli_verbose(default=3):
+    """Check for presence of `--verbose`/`--quiet` or `-v`/`-q` without using argparse."""
+    args = sys.argv[1:]
+    verbose = default + args.count("--verbose") - args.count("--quiet")
+
+    for arg in args:
+        if arg.startswith("-") and not arg.startswith("--"):
+            verbose += arg[1:].count("v")
+            verbose -= arg[1:].count("q")
+    return verbose
+
+
 try:
+    # prevent loading messages
+    if check_cli_verbose() <= 3:
+        logging.getLogger("keyring.backend").setLevel(logging.WARNING)
     import keyring
 except ImportError:
     write_error(
@@ -189,18 +205,6 @@ def get_option(env_name, section, opt_name, default=None):
     return val
 
 
-def check_cli_verbose(default=3):
-    """Check for presence of `--verbose`/`--quiet` or `-v`/`-q` without using argparse."""
-    args = sys.argv[1:]
-    verbose = default + args.count("--verbose") - args.count("--quiet")
-
-    for arg in args:
-        if arg.startswith("-") and not arg.startswith("--"):
-            verbose += arg[1:].count("v")
-            verbose -= arg[1:].count("q")
-    return verbose
-
-
 # ===============================================================================
 #
 # ===============================================================================
@@ -242,9 +246,14 @@ def get_credentials_for_url(url, opts, force_user=None):
 
     Optionally prompts for credentials if not found.
 
+    Args:
+        url (str): target URL (without username or password parts)
+        opts (dict):
+        force_user (str, optional) username to be used instead of prompting
     Returns:
         2-tuple (username, password) or None
     """
+    assert "@" not in url
     creds = None
     verbose = int(opts.get("verbose", 3))
     force_prompt = opts.get("prompt", False)
@@ -252,7 +261,7 @@ def get_credentials_for_url(url, opts, force_user=None):
     allow_keyring = not opts.get("no_keyring", False) and not force_user
     allow_netrc = not opts.get("no_netrc", False) and not force_user
 
-    # print("get_credentials_for_url", force_user, allow_prompt)
+    # print("get_credentials_for_url", url, force_user, allow_prompt)
     if force_user and not allow_prompt:
         raise RuntimeError(
             "Cannot get credentials for a distinct user ({}) from keyring or .netrc and "
@@ -269,8 +278,8 @@ def get_credentials_for_url(url, opts, force_user=None):
             )
         )
 
-    # Query keyring database
-    if creds is None and keyring and allow_keyring:
+    # 1. Try keyring database
+    if creds is None and keyring and allow_keyring and not force_prompt:
         try:
             # Note: we pass the url as `username` and username:password as `password`
             c = keyring.get_password("pyftpsync", url)
@@ -288,14 +297,13 @@ def get_credentials_for_url(url, opts, force_user=None):
                             url
                         )
                     )
-        #        except keyring.errors.TransientKeyringError:
+        # except keyring.errors.TransientKeyringError:
         except Exception as e:
             # e.g. user clicked 'no'
             write_error("Could not get password from keyring {}".format(e))
 
-    # Query .netrc file
-    #     print(opts)
-    if creds is None and allow_netrc:
+    # 2. Try .netrc file
+    if creds is None and allow_netrc and not force_prompt:
         try:
             authenticators = None
             authenticators = netrc.netrc().authenticators(url)
@@ -312,13 +320,14 @@ def get_credentials_for_url(url, opts, force_user=None):
             if verbose >= 4:
                 write("Could not find entry for '{}' in .netrc file.".format(url))
 
-    # Prompt for password if we don't have credentials yet, or --prompt was set.
-    if allow_prompt:
-        if creds is None:
-            creds = prompt_for_password(url)
-        elif force_prompt:
-            # --prompt was set but we can provide a default for the user name
-            creds = prompt_for_password(url, default_user=creds[0])
+    # 3. Prompt for password if we don't have credentials yet, or --prompt was set.
+    if creds is None and allow_prompt and not force_prompt:
+        creds = prompt_for_password(url, user=force_user)
+    if force_prompt:
+        # --prompt was set but we can provide a default for the user name
+        assert not creds
+        creds = prompt_for_password(url, default_user=force_user)
+        # creds = prompt_for_password(url, default_user=creds[0])
 
     return creds
 

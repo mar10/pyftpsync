@@ -3,14 +3,6 @@
 Tests for pyftpsync
 """
 import unittest
-from test.fixture_tools import (
-    PYFTPSYNC_TEST_FOLDER,
-    _SyncTestBase,
-    get_metadata,
-    get_test_folder,
-    is_test_file,
-    read_test_file,
-)
 
 from ftpsync.sftp_target import SFTPTarget
 from ftpsync.targets import make_target
