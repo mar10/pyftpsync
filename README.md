@@ -5,14 +5,14 @@
 [![Documentation Status](https://readthedocs.org/projects/pyftpsync/badge/?version=latest)](https://pyftpsync.readthedocs.io/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
-> Synchronize directories using FTP(S) or file system access.
+> Synchronize directories using FTP(S), SFTP, or file system access.
 
 [ ![sample](teaser.png?raw=true) ](https://github.com/mar10/pyftpsync "Live demo")
 
 
 ## Summary
 
-Synchronize directories using FTP(S) or file system access.
+Synchronize directories using FTP(S), SFTP, or file system access.
 
   * This is a command line tool...
   * ... and a library for use in your Python projects.

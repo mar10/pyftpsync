@@ -2,7 +2,7 @@ Copyright (c) 2012-2020 Martin Wendt
 
 Summary
 -------
-Synchronize directories using FTP(S) or file system access.
+Synchronize directories using FTP(S), SFTP, or file system access.
 
   * This is a command line tool...
   * ... and a library for use in your Python projects.
