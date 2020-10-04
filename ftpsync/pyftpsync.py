@@ -9,8 +9,6 @@ Usage examples:
   > pyftpsync.py --help
   > pyftpsync.py upload . ftps://example.com/myfolder
 """
-from __future__ import print_function
-
 import argparse
 import platform
 import sys

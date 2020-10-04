@@ -8,14 +8,12 @@ import json
 import time
 
 from ftpsync import __version__
-from ftpsync import compat
 from ftpsync.util import (
     get_option,
     pretty_stamp,
     str_to_bool,
     write,
     write_error,
-    decode_dict_keys,
     make_native_dict_keys,
 )
 
@@ -31,10 +29,8 @@ class IncompatibleMetadataVersion(RuntimeError):
 # ===============================================================================
 # DirMetadata
 # ===============================================================================
-class DirMetadata(object):
-    """
-
-    """
+class DirMetadata:
+    """"""
 
     META_FILE_NAME = ".pyftpsync-meta.json"
     LOCK_FILE_NAME = ".pyftpsync-lock.json"
@@ -208,11 +204,11 @@ class DirMetadata(object):
             data = self.dir
             opts = {"indent": 4, "sort_keys": True, "ensure_ascii": False}
 
-            if compat.PY2:
-                # The `encoding` arg defaults to utf-8 on Py2 and was removed in Py3
-                # opts["encoding"] = "utf-8"
-                # Python 2 has problems with mixed keys (str/unicode)
-                data = decode_dict_keys(data, "utf-8")
+            # if compat.PY2:
+            #     # The `encoding` arg defaults to utf-8 on Py2 and was removed in Py3
+            #     # opts["encoding"] = "utf-8"
+            #     # Python 2 has problems with mixed keys (str/unicode)
+            #     data = decode_dict_keys(data, "utf-8")
 
             if not self.PRETTY:
                 opts["indent"] = None

@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
-
 import os
 import sys
 
@@ -158,7 +156,7 @@ setup(
     maintainer="Martin Wendt",
     maintainer_email="pyftpsync@wwwendt.de",
     url="https://github.com/mar10/pyftpsync",
-    description="Synchronize directories using FTP(S) or file system access.",
+    description="Synchronize directories using FTP(S), SFTP, or file system access.",
     long_description=readme,
     long_description_content_type="text/markdown",
     # Development Status :: 2 - Pre-Alpha
@@ -172,17 +170,16 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Topic :: Internet :: File Transfer Protocol (FTP)",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Utilities",
     ],
-    keywords="python ftp ftps synchronize tls tool",
+    keywords="python ftp ftps sftp synchronize tls tool",
     license="The MIT License",
     install_requires=install_requires,
     setup_requires=setup_requires,

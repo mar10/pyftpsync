@@ -2,8 +2,6 @@
 """
 Tests for pyftpsync
 """
-from __future__ import print_function
-
 import datetime
 import os
 import unittest
@@ -28,9 +26,7 @@ from ftpsync.targets import FsTarget
 # prepare_fixtures_1
 # ===============================================================================
 def prepare_fixtures_1():
-    """Create two test folders and some files.
-
-    """
+    """Create two test folders and some files."""
     print("Prepare_fixtures", PYFTPSYNC_TEST_FOLDER)
     # print("PYFTPSYNC_TEST_FOLDER", os.environ.get("PYFTPSYNC_TEST_FOLDER"))
     # print("PYFTPSYNC_TEST_FTP_URL", os.environ.get("PYFTPSYNC_TEST_FTP_URL"))

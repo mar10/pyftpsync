@@ -3,12 +3,10 @@
 (c) 2012-2020 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
-
 import fnmatch
 import sys
 import time
 
-from ftpsync import compat
 from ftpsync.ftp_target import FtpTarget
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import DirectoryEntry, EntryPair, FileEntry, operation_map
@@ -91,10 +89,8 @@ def match_path(entry, opts):
 # ===============================================================================
 # BaseSynchronizer
 # ===============================================================================
-class BaseSynchronizer(object):
-    """Synchronizes two target instances in dry_run mode (also base class for other synchronizers).
-
-    """
+class BaseSynchronizer:
+    """Synchronizes two target instances in dry_run mode (also base class for other synchronizers)."""
 
     _resolve_shortcuts = {"l": "local", "r": "remote", "s": "skip"}
 
@@ -610,9 +606,9 @@ class BaseSynchronizer(object):
         # any_entry = pair.any_entry
         write((RED + "ERROR: {}\n    {}" + R).format(e, pair))
         # Return True to ignore this error (instead of raising and terminating the app)
-        if "[Errno 92] Illegal byte sequence" in "{}".format(e) and compat.PY2:
-            write(RED + "This _may_ be solved by using Python 3." + R)
-            # return True
+        # if "[Errno 92] Illegal byte sequence" in "{}".format(e) and compat.PY2:
+        #     write(RED + "This _may_ be solved by using Python 3." + R)
+        #     # return True
         return False
 
     def on_mismatch(self, pair):
@@ -781,7 +777,7 @@ class BiDirSynchronizer(BaseSynchronizer):
                 + "elp ? "
             )
 
-            r = compat.console_input(prompt).strip()
+            r = input(prompt).strip()
 
             if r in ("h", "H", "?"):
                 print("The following keys are supported:")
@@ -1074,7 +1070,7 @@ class UploadSynchronizer(BiDirSynchronizer):
                 + "elp ? "
             )
 
-            r = compat.console_input(prompt).strip()
+            r = input(prompt).strip()
 
             if r in ("h", "H", "?"):
                 print("The following keys are supported:")
@@ -1154,8 +1150,7 @@ class UploadSynchronizer(BiDirSynchronizer):
 
 
 class DownloadSynchronizer(BiDirSynchronizer):
-    """
-    """
+    """"""
 
     def __init__(self, local, remote, options):
         super(DownloadSynchronizer, self).__init__(local, remote, options)
@@ -1237,7 +1232,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
                 + "elp? "
             )
 
-            r = compat.console_input(prompt).strip()
+            r = input(prompt).strip()
             if r in ("h", "H", "?"):
                 print("The following keys are supported:")
                 print("  'b': Binary compare")

@@ -11,11 +11,11 @@ import shutil
 import sys
 import threading
 from posixpath import join as join_url, normpath as normpath_url
+from urllib.parse import urlparse
 
-from ftpsync import compat
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import DirectoryEntry, FileEntry
-from ftpsync.util import write
+from ftpsync.util import is_native, to_bytes, to_native, to_unicode, write
 
 
 # ===============================================================================
@@ -24,10 +24,9 @@ from ftpsync.util import write
 def make_target(url, extra_opts=None):
     """Factory that creates `_Target` objects from URLs.
 
-    FTP targets must begin with the scheme ``ftp://`` or ``ftps://`` for TLS.
+    FTP targets must begin with the scheme ``ftp://``,  ``ftps://`` for TLS,
+    or ``sftp://`` for SFTP.
 
-    Note:
-        TLS is only supported on Python 2.7/3.2+.
     Args:
         url (str):
         extra_opts (dict, optional): Passed to Target constructor. Default: None.
@@ -35,21 +34,31 @@ def make_target(url, extra_opts=None):
         :class:`_Target`
     """
     # debug = extra_opts.get("debug", 1)
-    parts = compat.urlparse(url, allow_fragments=False)
+    parts = urlparse(url, allow_fragments=False)
     # scheme is case-insensitive according to https://tools.ietf.org/html/rfc3986
     scheme = parts.scheme.lower()
-    if scheme in ["ftp", "ftps"]:
-        creds = parts.username, parts.password
-        tls = scheme == "ftps"
-        from ftpsync import ftp_target
+    if scheme in ("ftp", "ftps"):
+        from ftpsync.ftp_target import FtpTarget
 
-        target = ftp_target.FtpTarget(
+        target = FtpTarget(
             parts.path,
             parts.hostname,
             parts.port,
-            username=creds[0],
-            password=creds[1],
-            tls=tls,
+            username=parts.username,
+            password=parts.password,
+            tls=(scheme == "ftps"),
+            timeout=None,
+            extra_opts=extra_opts,
+        )
+    elif scheme == "sftp":
+        from ftpsync.sftp_target import SFTPTarget
+
+        target = SFTPTarget(
+            parts.path,
+            parts.hostname,
+            parts.port,
+            username=parts.username,
+            password=parts.password,
             timeout=None,
             extra_opts=extra_opts,
         )
@@ -76,7 +85,7 @@ def _get_encoding_opt(synchronizer, extra_opts, default):
 # ===============================================================================
 # _Target
 # ===============================================================================
-class _Target(object):
+class _Target:
     """Base class for :class:`FsTarget`, :class:`FtpTarget`, etc."""
 
     DEFAULT_BLOCKSIZE = 16 * 1024  # shutil.copyobj() uses 16k blocks by default
@@ -84,7 +93,7 @@ class _Target(object):
     def __init__(self, root_dir, extra_opts):
         # All internal paths should use unicode.
         # (We cannot convert here, since we don't know the target encoding.)
-        assert compat.is_native(root_dir)
+        assert is_native(root_dir)
         if root_dir != "/":
             root_dir = root_dir.rstrip("/")
         # This target is not thread safe
@@ -119,7 +128,8 @@ class _Target(object):
 
     def __del__(self):
         # TODO: http://pydev.blogspot.de/2015/01/creating-safe-cyclic-reference.html
-        self.close()
+        if self.connected:
+            self.close()
 
     # def __enter__(self):
     #     self.open()
@@ -136,38 +146,6 @@ class _Target(object):
 
     def is_unbound(self):
         return self.synchronizer is None
-
-    # def to_bytes(self, s):
-    #     """Convert `s` to bytes, using this target's encoding (does nothing if `s` is already bytes)."""
-    #     return compat.to_bytes(s, self.encoding)
-
-    # def to_unicode(self, s):
-    #     """Convert `s` to unicode, using this target's encoding (does nothing if `s` is already unic)."""
-    #     return compat.to_unicode(s, self.encoding)
-
-    # def to_native(self, s):
-    #     """Convert `s` to native, using this target's encoding (does nothing if `s` is already native)."""
-    #     return compat.to_native(s, self.encoding)
-
-    # def re_encode_to_native(self, s):
-    #     """Return `s` in `str` format, assuming target.encoding.
-
-    #     On Python 2 return a binary `str`:
-    #         Encode unicode to UTF-8 binary str
-    #         Re-encode binary str from self.encoding to UTF-8
-    #     On Python 3 return unicode `str`:
-    #         Leave unicode unmodified
-    #         Decode binary str using self.encoding
-    #     """
-    #     if compat.PY2:
-    #         if isinstance(s, unicode):  # noqa
-    #             s = s.encode("utf-8")
-    #         elif self.encoding != "utf-8":
-    #             s = s.decode(self.encoding)
-    #             s = s.encode("utf-8")
-    #     elif not isinstance(s, str):
-    #         s = s.decode(self.encoding)
-    #     return s
 
     def get_options_dict(self):
         """Return options from synchronizer (possibly overridden by own extra_opts)."""
@@ -200,7 +178,7 @@ class _Target(object):
 
     def check_write(self, name):
         """Raise exception if writing cur_dir/name is not allowed."""
-        assert compat.is_native(name)
+        assert is_native(name)
         if self.readonly and name not in (
             DirMetadata.META_FILE_NAME,
             DirMetadata.LOCK_FILE_NAME,
@@ -314,7 +292,7 @@ class _Target(object):
 
     def write_text(self, name, s):
         """Write string data to cur_dir/name using write_file()."""
-        buf = io.BytesIO(compat.to_bytes(s))
+        buf = io.BytesIO(to_bytes(s))
         self.write_file(name, buf)
 
     def remove_file(self, name):
@@ -408,9 +386,9 @@ class FsTarget(_Target):
         # self.cur_dir_meta = None
         self.cur_dir_meta = DirMetadata(self)
         # List directory. Pass in unicode on Py2, so we get unicode in return
-        unicode_cur_dir = compat.to_unicode(self.cur_dir)
+        unicode_cur_dir = to_unicode(self.cur_dir)
         for name in os.listdir(unicode_cur_dir):
-            name = compat.to_native(name)
+            name = to_native(name)
             path = os.path.join(self.cur_dir, name)
             stat = os.lstat(path)
             # write(name)

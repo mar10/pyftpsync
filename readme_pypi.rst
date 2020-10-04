@@ -2,7 +2,7 @@ Copyright (c) 2012-2020 Martin Wendt
 
 Summary
 -------
-Synchronize directories using FTP(S) or file system access.
+Synchronize directories using FTP(S), SFTP, or file system access.
 
   * This is a command line tool...
   * ... and a library for use in your Python projects.
@@ -11,10 +11,9 @@ Synchronize directories using FTP(S) or file system access.
   * Architecture is open to add other target types.
 
 .. note::
-    Version 2.0 introduces *breaking changes* to 1.x.
-    Make sure to adjust your scripts accordingly after update.
+    Version 4.0 introduces drops support for Python 2.
 
-Requires `Python <https://www.python.org/download/>`_ 2.7+ or 3.4+.
+Requires `Python <https://www.python.org/download/>`_ 3.5+.
 
 A Windows `MSI installer is also available on GitHub <https://github.com/mar10/pyftpsync/releases>`_.
 

@@ -3,8 +3,6 @@
 (c) 2012-2020 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
-from __future__ import print_function
-
 import argparse
 
 from ftpsync.synchronizers import DEFAULT_OMIT
@@ -59,6 +57,12 @@ common_parser.add_argument(
     default=False,
     help="replace meta data files from different pyftpsync versions "
     "with current format. Existing data will be discarded.",
+)
+
+common_parser.add_argument(
+    "--no-verify-host-keys",
+    action="store_true",
+    help="do not check SFTP connection against `~/.ssh/known_hosts`",
 )
 
 
