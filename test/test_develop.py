@@ -105,7 +105,7 @@ class TempDevelopTest(_SyncTestBase):
 
 
 class FtpTempDevelopTest(TempDevelopTest):
-    """Run the DownloadResolveTest test suite against a local FTP server (ftp_target.FtpTarget)."""
+    """Run the DownloadResolveTest test suite against a local FTP server (ftp_target.FTPTarget)."""
 
     use_ftp_target = True
 

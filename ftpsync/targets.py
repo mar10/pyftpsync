@@ -38,9 +38,9 @@ def make_target(url, extra_opts=None):
     # scheme is case-insensitive according to https://tools.ietf.org/html/rfc3986
     scheme = parts.scheme.lower()
     if scheme in ("ftp", "ftps"):
-        from ftpsync.ftp_target import FtpTarget
+        from ftpsync.ftp_target import FTPTarget
 
-        target = FtpTarget(
+        target = FTPTarget(
             parts.path,
             parts.hostname,
             parts.port,
@@ -86,7 +86,7 @@ def _get_encoding_opt(synchronizer, extra_opts, default):
 # _Target
 # ===============================================================================
 class _Target:
-    """Base class for :class:`FsTarget`, :class:`FtpTarget`, etc."""
+    """Base class for :class:`FsTarget`, :class:`FTPTarget`, etc."""
 
     DEFAULT_BLOCKSIZE = 16 * 1024  # shutil.copyobj() uses 16k blocks by default
 
@@ -269,7 +269,7 @@ class _Target:
         with self.open_readable(name) as fp:
             res = fp.read()  # StringIO or file object
             # try:
-            #     res = fp.getvalue()  # StringIO returned by FtpTarget
+            #     res = fp.getvalue()  # StringIO returned by FTPTarget
             # except AttributeError:
             #     res = fp.read()  # file object returned by FsTarget
             res = res.decode("utf-8")

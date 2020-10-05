@@ -96,7 +96,7 @@ class FtpTest(unittest.TestCase):
 # FtpTargetTest
 # ===============================================================================
 class FtpTargetTest(unittest.TestCase):
-    """Test ftp_target.FtpTarget functionality."""
+    """Test ftp_target.FTPTarget functionality."""
 
     def setUp(self):
         # Remote URL, e.g. "ftps://user:password@example.com/my/test/folder"

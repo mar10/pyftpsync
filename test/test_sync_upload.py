@@ -243,7 +243,7 @@ class UploadResolveTest(_SyncTestBase):
 
 
 class FtpUploadResolveTest(UploadResolveTest):
-    """Run the UploadResolveTest test suite against a local FTP server (ftp_target.FtpTarget)."""
+    """Run the UploadResolveTest test suite against a local FTP server (ftp_target.FTPTarget)."""
 
     use_ftp_target = True
 

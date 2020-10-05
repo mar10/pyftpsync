@@ -13,7 +13,7 @@ from test.fixture_tools import (
     read_test_file,
 )
 
-from ftpsync.ftp_target import FtpTarget
+from ftpsync.ftp_target import FTPTarget
 from ftpsync.targets import DirMetadata, make_target
 from ftpsync.util import set_pyftpsync_logger, write, write_error
 
@@ -97,7 +97,7 @@ class PlainTest(unittest.TestCase):
             tls = True if scheme == "ftps" else False
 
             t = make_target(scheme + "://ftp.example.com/target/folder")
-            self.assertTrue(isinstance(t, FtpTarget))
+            self.assertTrue(isinstance(t, FTPTarget))
             self.assertEqual(t.host, "ftp.example.com")
             self.assertEqual(t.root_dir, "/target/folder")
             self.assertEqual(t.username, None)
@@ -105,7 +105,7 @@ class PlainTest(unittest.TestCase):
 
             # scheme is case-insensitive
             t = make_target(scheme.upper() + "://ftp.example.com/target/folder")
-            self.assertTrue(isinstance(t, FtpTarget))
+            self.assertTrue(isinstance(t, FTPTarget))
             self.assertEqual(t.host, "ftp.example.com")
             self.assertEqual(t.root_dir, "/target/folder")
             self.assertEqual(t.username, None)
@@ -114,7 +114,7 @@ class PlainTest(unittest.TestCase):
             # pass credentials with URL
             url = "user:secret@ftp.example.com/target/folder"
             t = make_target(scheme + "://" + url)
-            self.assertTrue(isinstance(t, FtpTarget))
+            self.assertTrue(isinstance(t, FTPTarget))
             self.assertEqual(t.host, "ftp.example.com")
             self.assertEqual(t.username, "user")
             self.assertEqual(t.password, "secret")
@@ -123,7 +123,7 @@ class PlainTest(unittest.TestCase):
 
             url = "user@example.com:secret@ftp.example.com/target/folder"
             t = make_target(scheme + "://" + url)
-            self.assertTrue(isinstance(t, FtpTarget))
+            self.assertTrue(isinstance(t, FTPTarget))
             self.assertEqual(t.host, "ftp.example.com")
             self.assertEqual(t.username, "user@example.com")
             self.assertEqual(t.password, "secret")

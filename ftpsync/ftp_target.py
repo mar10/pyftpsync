@@ -26,9 +26,9 @@ from ftpsync.util import (
 
 
 # ===============================================================================
-# FtpTarget
+# FTPTarget
 # ===============================================================================
-class FtpTarget(_Target):
+class FTPTarget(_Target):
     """Represents a synchronization target on an FTP server.
 
     Attributes:
@@ -72,7 +72,7 @@ class FtpTarget(_Target):
         # path = self.to_unicode(path)
         path = path or "/"
         assert is_native(path)
-        super(FtpTarget, self).__init__(path, extra_opts)
+        super(FTPTarget, self).__init__(path, extra_opts)
         if tls:
             try:
                 self.ftp = ftplib.FTP_TLS()
@@ -120,7 +120,7 @@ class FtpTarget(_Target):
     def open(self):
         assert not self.ftp_socket_connected
 
-        super(FtpTarget, self).open()
+        super(FTPTarget, self).open()
 
         options = self.get_options_dict()
         no_prompt = self.get_option("no_prompt", True)
@@ -277,7 +277,7 @@ class FtpTarget(_Target):
                 write_error("ftp.quit() failed: {}".format(e))
             self.ftp_socket_connected = False
 
-        super(FtpTarget, self).close()
+        super(FTPTarget, self).close()
 
     def _lock(self, break_existing=False):
         """Write a special file to the target root folder."""
@@ -596,7 +596,7 @@ class FtpTarget(_Target):
         assert is_native(name)
         out = SpooledTemporaryFile(max_size=self.MAX_SPOOL_MEM, mode="w+b")
         self.ftp.retrbinary(
-            "RETR {}".format(name), out.write, FtpTarget.DEFAULT_BLOCKSIZE
+            "RETR {}".format(name), out.write, FTPTarget.DEFAULT_BLOCKSIZE
         )
         out.seek(0)
         return out
@@ -635,7 +635,7 @@ class FtpTarget(_Target):
                 callback(data)
 
         self.ftp.retrbinary(
-            "RETR {}".format(name), _write_to_file, FtpTarget.DEFAULT_BLOCKSIZE
+            "RETR {}".format(name), _write_to_file, FTPTarget.DEFAULT_BLOCKSIZE
         )
 
     def remove_file(self, name):
@@ -694,7 +694,7 @@ class FtpTarget(_Target):
         by decoding the incoming command response using `ftp.encoding`.
         This would fail for the whole request if a single line of the MLSD listing
         cannot be decoded.
-        FtpTarget wants to fall back to Cp1252 if UTF-8 fails for a single line,
+        FTPTarget wants to fall back to Cp1252 if UTF-8 fails for a single line,
         so we need to process the raw original binary input lines.
 
         On Python 2, the response is already bytes, but we try to decode in

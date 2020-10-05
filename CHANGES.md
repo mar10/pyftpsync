@@ -2,8 +2,9 @@
 ------------------
 - Drop Python 2.x
 - Add SFTP support
-- TODO: Rename FTPTarget => FTPTarget
+- Rename FtpTarget => FTPTarget
 - `--tree` option for `scan` command
+- Fix #26: Crash when not setting verbose option
 
 3.1.1 (unreleased)
 ------------------

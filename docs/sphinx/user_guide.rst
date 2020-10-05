@@ -315,13 +315,13 @@ the synchronizers. For example ``--delete-unmatched`` becomes
 Upload modified files from local folder to FTP server::
 
   from ftpsync.targets import FsTarget
-  from ftpsync.ftp_target import FtpTarget
+  from ftpsync.ftp_target import FTPTarget
   from ftpsync.synchronizers import UploadSynchronizer
 
   local = FsTarget("~/temp")
   user ="joe"
   passwd = "secret"
-  remote = FtpTarget("/temp", "example.com", username=user, password=passwd)
+  remote = FTPTarget("/temp", "example.com", username=user, password=passwd)
   opts = {"force": False, "delete_unmatched": True, "verbose": 3}
   s = UploadSynchronizer(local, remote, opts)
   s.run()
@@ -329,13 +329,13 @@ Upload modified files from local folder to FTP server::
 Synchronize a local folder with an FTP server using TLS::
 
   from ftpsync.targets import FsTarget
-  from ftpsync.ftp_target import FtpTarget
+  from ftpsync.ftp_target import FTPTarget
   from ftpsync.synchronizers import BiDirSynchronizer
 
   local = FsTarget("~/temp")
   user ="joe"
   passwd = "secret"
-  remote = FtpTarget("/temp", "example.com", username=user, password=passwd, tls=True)
+  remote = FTPTarget("/temp", "example.com", username=user, password=passwd, tls=True)
   opts = {"resolve": "skip", "verbose": 1}
   s = BiDirSynchronizer(local, remote, opts)
   s.run()

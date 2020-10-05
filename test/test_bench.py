@@ -31,7 +31,7 @@ DO_BENCHMARKS = False  # True
 # BenchmarkTest
 # ===============================================================================
 class BenchmarkTest(unittest.TestCase):
-    """Test ftp_target.FtpTarget functionality."""
+    """Test ftp_target.FTPTarget functionality."""
 
     def setUp(self):
         if not DO_BENCHMARKS:

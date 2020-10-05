@@ -48,7 +48,7 @@ class RegressionTest(unittest.TestCase):
     #     if not on_windows:
     #         raise SkipTest("Windows only.")
     #     local = targets.FsTarget("c:/temp")
-    #     remote = FtpTarget("/", "www.example.com", None, self.username, self.password)
+    #     remote = FTPTarget("/", "www.example.com", None, self.username, self.password)
     #     opts = {
     #         "resolve": "remote",
     #         "verbose": 3,

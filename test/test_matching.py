@@ -143,7 +143,7 @@ class MatchTest(_SyncTestBase):
 
 
 class FtpMatchTest(MatchTest):
-    """Run the BidirSyncTest test suite against a local FTP server (ftp_target.FtpTarget)."""
+    """Run the BidirSyncTest test suite against a local FTP server (ftp_target.FTPTarget)."""
 
     use_ftp_target = True
 

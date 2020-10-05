@@ -7,7 +7,7 @@ import fnmatch
 import sys
 import time
 
-from ftpsync.ftp_target import FtpTarget
+from ftpsync.ftp_target import FTPTarget
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import DirectoryEntry, EntryPair, FileEntry, operation_map
 from ftpsync.util import (
@@ -283,11 +283,11 @@ class BaseSynchronizer:
             else:
                 self._inc_stat("download_bytes_written", len(data))
 
-        if isinstance(src, FtpTarget) and not isinstance(dest, FtpTarget):
+        if isinstance(src, FTPTarget) and not isinstance(dest, FTPTarget):
             # Copy FTP to File:
-            # FtpTarget.open_readable() would read everything into a temporary buffer
+            # FTPTarget.open_readable() would read everything into a temporary buffer
             # before we can start writing.
-            # It is more efficient to let FtpTarget write in the retrbinary() callbacks.
+            # It is more efficient to let FTPTarget write in the retrbinary() callbacks.
             # (Note that copying FTP to FTP would require a temp buffer anyway,
             # so we handle this in the default branch below.)
             with dest.open_writable(file_entry.name) as fp_dest:
