@@ -5,6 +5,7 @@ Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.
 """
 
 import codecs
+import contextlib
 import io
 import os
 import shutil
@@ -204,6 +205,18 @@ class _Target:
     def cwd(self, dir_name):
         raise NotImplementedError
 
+    @contextlib.contextmanager
+    def enter_subdir(self, name):
+        """Temporarily changes the working directory to `name`.
+
+        Examples:
+            with target.enter_subdir(folder):
+                ...
+        """
+        self.cwd(name)
+        yield
+        self.cwd("..")
+
     def push_meta(self):
         self.meta_stack.append(self.cur_dir_meta)
         self.cur_dir_meta = None
@@ -254,6 +267,67 @@ class _Target:
                     for e in self.walk(pred):
                         yield e
                     self.cwd("..")
+        return
+
+    def walk_tree(self, pred=None, _prefixes=None):
+        """Iterate over target hierarchy, depth-first, adding a connector prefix.
+
+        This iterator walks the tree nodes, but slightly delays the output, in
+        order to add information if a node is the *last* sibling.
+        This information is then used to create pretty tree connector prefixes.
+
+        Args:
+            pred (function, optional):
+                Callback(:class:`ftpsync.resources._Resource`) should return `False` to
+                ignore entry. Default: `None`.
+        Yields:
+            3-tuple (
+                :class:`ftpsync.resources._Resource`,
+                is_last_sibling,
+                prefix,
+            )
+
+    A
+     +- a
+     |   +- 1
+     |   |   `- 1.1
+     |   `- 2
+     |       `- 2.1
+     `- b
+         +- 1
+         |   `-  1.1
+          ` 2
+        """
+        # List of parent's `is_last` flags:
+        if _prefixes is None:
+            _prefixes = []
+
+        def _yield_entry(entry, is_last):
+            path = "".join(["    " if last else " |  " for last in _prefixes])
+            path += " `- " if is_last else " +- "
+            yield path, entry
+            if entry.is_dir():
+                with self.enter_subdir(entry.name):
+                    _prefixes.append(is_last)
+                    yield from self.walk_tree(pred, _prefixes)
+                    _prefixes.pop()
+            return
+
+        prev_entry = None
+        for next_entry in self.get_dir():
+            if pred and pred(next_entry) is False:
+                continue
+            # Skip first entry
+            if prev_entry is None:
+                prev_entry = next_entry
+                continue
+            # Yield entry (this is never the last sibling)
+            yield from _yield_entry(prev_entry, False)
+            prev_entry = next_entry
+
+        # Finally yield the last sibling
+        if prev_entry:
+            yield from _yield_entry(prev_entry, True)
         return
 
     def open_readable(self, name):

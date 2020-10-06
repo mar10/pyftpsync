@@ -77,13 +77,19 @@ def scan_handler(parser, args):
 
     def _pred(entry):
         """Walker predicate that check match/exclude options."""
-        if args.tree and not entry.is_dir():
-            return False
         if not match_path(entry, opts):
             return False
 
     try:
         target.open()
+        if args.tree:
+            for path, entry in target.walk_tree():
+                name = entry.name
+                if entry.is_dir():
+                    name = "[{}]".format(name)
+                print("{} {:<20} {}".format(path, name, entry.as_string()))
+            return
+
         for e in target.walk(recursive=args.recursive, pred=_pred):
             is_dir = isinstance(e, DirectoryEntry)
             indent = "    " * (target.cur_dir.count("/") - root_depth)
@@ -93,7 +99,7 @@ def scan_handler(parser, args):
             else:
                 file_count += 1
 
-            if args.list or args.tree:
+            if args.list:
                 if is_dir:
                     print(indent, "[{e.name}]".format(e=e))
                 else:
