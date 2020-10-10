@@ -9,14 +9,14 @@ import sys
 import unittest
 from ftplib import FTP
 from pprint import pprint
-from test.fixture_tools import (
+from tests.fixture_tools import (
     PYFTPSYNC_TEST_FOLDER,
     PYFTPSYNC_TEST_FTP_URL,
     STAMP_20140101_120000,
     get_test_file_date,
     touch_test_file,
 )
-from test.test_1x import prepare_fixtures_1
+from tests.test_1x import prepare_fixtures_1
 from urllib.parse import urlparse
 
 from ftpsync.metadata import DirMetadata

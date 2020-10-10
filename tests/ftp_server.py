@@ -1,6 +1,6 @@
 """
 Run like
-    $ python -m test.ftp_server
+    $ python -m tests.ftp_server
 """
 import os
 

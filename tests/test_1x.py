@@ -5,7 +5,7 @@ Tests for pyftpsync
 import datetime
 import os
 import unittest
-from test.fixture_tools import (
+from tests.fixture_tools import (
     PYFTPSYNC_TEST_FOLDER,
     STAMP_20140101_120000,
     empty_folder,

@@ -6,7 +6,7 @@ Tests for pyftpsync
 # flake8: noqa: E501
 
 import unittest
-from test.fixture_tools import (
+from tests.fixture_tools import (
     _SyncTestBase,
     get_test_folder,
     remove_test_folder,

@@ -7,7 +7,7 @@ import unittest
 from unittest.case import SkipTest
 from urllib.parse import urlparse
 
-from test.fixture_tools import PYFTPSYNC_TEST_FTP_URL
+from tests.fixture_tools import PYFTPSYNC_TEST_FTP_URL
 
 # from ftpsync.synchronizers import UploadSynchronizer
 # from ftpsync.targets import FsTarget

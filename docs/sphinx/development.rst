@@ -161,9 +161,9 @@ Run Manual Tests
 ----------------
 
 In order to run the command line script against a defined test scenario, we can use the
-``test.fixture_tools`` helper function to set up the default fixture::
+``tests.fixture_tools`` helper function to set up the default fixture::
 
-    $ python -m test.fixture_tools
+    $ python -m tests.fixture_tools
     Created fixtures at /Users/USER/test_pyftpsync
 
     $ ls -al /Users/USER/test_pyftpsync
@@ -216,7 +216,7 @@ If an FTP server was configured, we can also run the script against it::
 
     $ pyftpsync -v sync /Users/USER/test_pyftpsync/local ftp://localhost/Users/USER/test_pyftpsync/remote
 
-Run  ``python -m test.fixture_tools`` again to reset the test folders.
+Run  ``python -m tests.fixture_tools`` again to reset the tests folders.
 
 
 Run FTP Server
@@ -232,7 +232,7 @@ We allow anonymous access and use a custom port > 1024, so we don't need to sudo
 
 or::
 
-  $ python -m test.ftp_server
+  $ python -m tests.ftp_server
 
 Also set the test options accordingly in ``.pyftpsyncrc``::
 

@@ -809,7 +809,7 @@ def prepare_fixture():
     """Helper for command line testing.
 
     Example:
-        >>>python -m test.fixture_tools
+        >>>python -m tests.fixture_tools
         Created fixtures at /Users/martin/prj/test/pyftpsync_test_folder
         >>>ls /Users/martin/prj/test/pyftpsync_test_folder
         local  remote
