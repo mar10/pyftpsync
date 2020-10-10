@@ -272,31 +272,31 @@ class _Target:
     def walk_tree(self, pred=None, _prefixes=None):
         """Iterate over target hierarchy, depth-first, adding a connector prefix.
 
-        This iterator walks the tree nodes, but slightly delays the output, in
-        order to add information if a node is the *last* sibling.
-        This information is then used to create pretty tree connector prefixes.
+            This iterator walks the tree nodes, but slightly delays the output, in
+            order to add information if a node is the *last* sibling.
+            This information is then used to create pretty tree connector prefixes.
 
-        Args:
-            pred (function, optional):
-                Callback(:class:`ftpsync.resources._Resource`) should return `False` to
-                ignore entry. Default: `None`.
-        Yields:
-            3-tuple (
-                :class:`ftpsync.resources._Resource`,
-                is_last_sibling,
-                prefix,
-            )
+            Args:
+                pred (function, optional):
+                    Callback(:class:`ftpsync.resources._Resource`) should return `False` to
+                    ignore entry. Default: `None`.
+            Yields:
+                3-tuple (
+                    :class:`ftpsync.resources._Resource`,
+                    is_last_sibling,
+                    prefix,
+                )
 
-    A
-     +- a
-     |   +- 1
-     |   |   `- 1.1
-     |   `- 2
-     |       `- 2.1
-     `- b
-         +- 1
-         |   `-  1.1
-          ` 2
+        A
+         +- a
+         |   +- 1
+         |   |   `- 1.1
+         |   `- 2
+         |       `- 2.1
+         `- b
+             +- 1
+             |   `-  1.1
+              ` 2
         """
         # List of parent's `is_last` flags:
         if _prefixes is None:

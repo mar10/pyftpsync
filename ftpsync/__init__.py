@@ -11,6 +11,6 @@ Examples
     Final release:
         '3.0.0'
     Developmental release (to mark 3.0.0 as 'used'. Don't publish this):
-        '3.0.0.dev1'
+        '3.0.0-dev1'
 """
-__version__ = "4.0.0.dev1"
+__version__ = "4.0.0-dev1"

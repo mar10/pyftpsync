@@ -1,10 +1,11 @@
 4.0.0 (unreleased)
 ------------------
-- Drop Python 2.x
+- Drop support for Python 2.x (end-of-life: 2020-01-01)
 - Add SFTP support
 - Rename FtpTarget => FTPTarget
 - `--tree` option for `scan` command
 - Fix #26: Crash when not setting verbose option
+- Use yabs for release
 
 3.1.1 (unreleased)
 ------------------

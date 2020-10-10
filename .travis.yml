@@ -1,11 +1,8 @@
 sudo: false
 language: python
-matrix:
+os: linux
+jobs:
   include:
-#       - python: "2.7"  # dropped with v4.0
-#         env: TOXENV=py27
-#      - python: "3.4"  # EOL 2019-03-18
-#        env: TOXENV=py34
       - python: "3.5"
         env: TOXENV=py35
       - python: "3.6"
@@ -15,6 +12,15 @@ matrix:
         dist: xenial
       - python: "3.8"
         env: TOXENV=py38
+      - python: "3.9"
+        env: TOXENV=py39
+      - python: "3.10-dev"
+        env: TOXENV=py310
+  allow_failures:
+    - python: "3.9"
+    env: TOXENV=py39
+- python: "3.10-dev"
+      env: TOXENV=py310
 install:
   - pip install tox-travis
   - pip install flake8

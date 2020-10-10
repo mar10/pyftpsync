@@ -87,7 +87,7 @@ def scan_handler(parser, args):
                 name = entry.name
                 if entry.is_dir():
                     name = "[{}]".format(name)
-                print("{} {:<20} {}".format(path, name, entry.as_string()))
+                print("{}{:<20} {}".format(path, name, entry.as_string()))
             return
 
         for e in target.walk(recursive=args.recursive, pred=_pred):

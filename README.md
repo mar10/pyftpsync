@@ -4,6 +4,8 @@
 [![License](https://img.shields.io/pypi/l/pyftpsync.svg)](https://github.com/mar10/pyftpsync/blob/master/LICENSE.txt)
 [![Documentation Status](https://readthedocs.org/projects/pyftpsync/badge/?version=latest)](https://pyftpsync.readthedocs.io/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+[![Released with: Yabs](https://img.shields.io/badge/released%20with-yabs-yellowgreen)](https://github.com/mar10/yabs)
+[![StackOverflow: pyftpsync](https://img.shields.io/badge/StackOverflow-pyftpsync-blue.svg)](https://stackoverflow.com/questions/tagged/pyftpsync)
 
 > Synchronize directories using FTP(S), SFTP, or file system access.
 
