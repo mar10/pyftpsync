@@ -269,23 +269,25 @@ class _Target:
                     self.cwd("..")
         return
 
-    def walk_tree(self, pred=None, _prefixes=None):
+    def walk_tree(self, sort=True, files=False, pred=None, _prefixes=None):
         """Iterate over target hierarchy, depth-first, adding a connector prefix.
 
-            This iterator walks the tree nodes, but slightly delays the output, in
-            order to add information if a node is the *last* sibling.
-            This information is then used to create pretty tree connector prefixes.
+        This iterator walks the tree nodes, but slightly delays the output, in
+        order to add information if a node is the *last* sibling.
+        This information is then used to create pretty tree connector prefixes.
 
-            Args:
-                pred (function, optional):
-                    Callback(:class:`ftpsync.resources._Resource`) should return `False` to
-                    ignore entry. Default: `None`.
-            Yields:
-                3-tuple (
-                    :class:`ftpsync.resources._Resource`,
-                    is_last_sibling,
-                    prefix,
-                )
+        Args:
+            sort (bool):
+            files (bool):
+            pred (function, optional):
+                Callback(:class:`ftpsync.resources._Resource`) should return `False` to
+                ignore entry. Default: `None`.
+        Yields:
+            3-tuple (
+                :class:`ftpsync.resources._Resource`,
+                is_last_sibling,
+                prefix,
+            )
 
         A
          +- a
@@ -309,12 +311,20 @@ class _Target:
             if entry.is_dir():
                 with self.enter_subdir(entry.name):
                     _prefixes.append(is_last)
-                    yield from self.walk_tree(pred, _prefixes)
+                    yield from self.walk_tree(sort, files, pred, _prefixes)
                     _prefixes.pop()
             return
 
+        dir_list = self.get_dir()
+        if not files:
+            dir_list = [entry for entry in dir_list if entry.is_dir()]
+
+        if sort:
+            # Sort by name, files first
+            dir_list.sort(key=lambda entry: (entry.is_dir(), entry.name.lower()))
+
         prev_entry = None
-        for next_entry in self.get_dir():
+        for next_entry in dir_list:
             if pred and pred(next_entry) is False:
                 continue
             # Skip first entry

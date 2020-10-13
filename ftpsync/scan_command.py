@@ -36,11 +36,7 @@ def add_scan_parser(subparsers):
         help="path to target folder (default: %(default)s)",
     )
 
-    eg = parser.add_mutually_exclusive_group(required=False)
-    eg.add_argument("--list", action="store_true", help="print target files")
-    eg.add_argument(
-        "--tree", action="store_true", help="print target directory structure"
-    )
+    parser.add_argument("--list", action="store_true", help="print target files")
     parser.add_argument(
         "-r", "--recursive", action="store_true", help="visit sub folders"
     )
@@ -82,13 +78,6 @@ def scan_handler(parser, args):
 
     try:
         target.open()
-        if args.tree:
-            for path, entry in target.walk_tree():
-                name = entry.name
-                if entry.is_dir():
-                    name = "[{}]".format(name)
-                print("{}{:<20} {}".format(path, name, entry.as_string()))
-            return
 
         for e in target.walk(recursive=args.recursive, pred=_pred):
             is_dir = isinstance(e, DirectoryEntry)

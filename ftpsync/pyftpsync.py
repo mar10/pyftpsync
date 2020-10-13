@@ -23,6 +23,7 @@ from ftpsync.cli_common import (
 )
 from ftpsync.run_command import add_run_parser, handle_run_command
 from ftpsync.scan_command import add_scan_parser
+from ftpsync.tree_command import add_tree_parser
 from ftpsync.synchronizers import (
     BiDirSynchronizer,
     DownloadSynchronizer,
@@ -178,6 +179,10 @@ def run():
     # --- Create the parser for the "scan" command -----------------------------
 
     add_scan_parser(subparsers)
+
+    # --- Create the parser for the "tree" command -----------------------------
+
+    add_tree_parser(subparsers)
 
     # --- Parse command line ---------------------------------------------------
 

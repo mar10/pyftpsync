@@ -2,10 +2,10 @@
 ------------------
 - Drop support for Python 2.x (end-of-life: 2020-01-01)
 - Add SFTP support
-- Rename FtpTarget => FTPTarget
-- `--tree` option for `scan` command
+- Add `tree` command
 - Fix #26: Crash when not setting verbose option
-- Use yabs for release
+- Use Yabs as release tool
+- Rename FtpTarget => FTPTarget
 
 3.1.1 (unreleased)
 ------------------
