@@ -24,6 +24,7 @@ KNOWN_TASK_ARGS = set(
         "force",
         "ftp_active",
         "here",
+        "local",
         "match",
         "no_color",
         "no_keyring",
@@ -120,8 +121,6 @@ def handle_run_command(parser, args):
             config = yaml.safe_load(f)
     except Exception as e:
         parser.error("Error parsing {}: {}".format(config_path, e))
-        # write_error("Error parsing {}: {}".format(config_path, e))
-        # raise
 
     # print(config)
     if "tasks" not in config:
@@ -194,6 +193,8 @@ def handle_run_command(parser, args):
 
     cur_folder = os.getcwd()
     root_folder = os.path.dirname(config_path)
+    if task.get("local"):
+        root_folder = os.path.join(root_folder, task["local"])
     path_ofs = os.path.relpath(os.getcwd(), root_folder)
 
     if cur_level == 0 or args.root:

@@ -9,6 +9,10 @@ default_task: deploy
 common_config:
     # verbose: 4
     progress: true
+    #: Optional relative path to the local root (default: .)
+    # local: sync_root
+    #: Remote target protocol and address
+    remote: ftp://example.com/my_project
     # Make --root default (can be overridden by --here):
     root: true
 
@@ -16,17 +20,14 @@ common_config:
 tasks:
     sync_all:
         command: sync
-        remote: ftp://example.com/my_project
 
     deploy:
         command: upload
-        remote: ftp://example.com/my_project
         delete_unmatched: true
         exclude: build,node_modules,.*,_*
 
     deploy_force:
         command: upload
-        remote: ftp://example.com/my_project
         delete: true
         delete_unmatched: true
         exclude: build,node_modules,.*,_*
