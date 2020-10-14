@@ -67,24 +67,28 @@ See the :doc:`sample_pyftpsync_yaml` example for details.
 `scan` command
 --------------
 
-The scan command can be used for differnt tasks.
+TODO: The scan command can be used for different tasks.
+
+
+`tree` command
+--------------
 
 Example: display a hierarchical directory listing::
 
-    $ pyftpsync scan --tree sftp://demo:password@test.rebex.net
+    $ pyftpsync tree sftp://demo:password@test.rebex.net
     Connecting demo:*** to sftp://test.rebex.net
     Could not write lock file: [Errno 13] Access denied.
-    +-  [aspnet_client]      2015-12-03 20:14:11,        0 bytes
-    |   `-  [system_web]         2015-12-03 20:14:11,        0 bytes
-    |       `-  [4_0_30319]          2015-12-03 20:14:11,        0 bytes
-    +-  [pub]                2015-10-27 15:46:19,        0 bytes
-    |   `-  [example]            2019-11-14 12:32:43,        0 bytes
-    |       +-  KeyGenerator.png     2007-03-19 20:52:58,   36,672 bytes
-    |       +-  KeyGeneratorSmall.png 2007-03-19 20:52:58,   24,029 bytes
-    |       +-  ResumableTransfer.png 2007-03-19 20:53:00,   11,546 bytes
-    |       +-  WinFormClient.png    2007-03-19 20:52:59,   80,000 bytes
-    |       `-  winceclientSmall.png 2007-03-19 20:53:01,    6,146 bytes
-    `-  readme.txt           2014-04-08 16:09:39,      403 bytes
+    [/]
+    +- [aspnet_client]
+    |   `- [system_web]
+    |       `- [4_0_30319]
+    `- [pub]
+        +- [192.168.1.114]
+        |   +- [2020-10-07]
+        |   +- [2020-10-08]
+        |   `- [2020-10-09]
+        `- [example]
+    Scanning 0 files in 10 directories took 2.93 seconds.
 
 
 Target URLs
