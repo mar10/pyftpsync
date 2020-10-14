@@ -8,6 +8,7 @@ import stat
 import time
 from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
 from tempfile import SpooledTemporaryFile
+from unittest.mock import patch
 
 import paramiko
 import pysftp
@@ -404,7 +405,27 @@ class SFTPTarget(_Target):
         self.check_write(dir_name)
         return self.sftp.rmdir(dir_name)
 
+    _paramiko_py3compat_u = paramiko.py3compat.u
+
+    @staticmethod
+    def _paramiko_py3compat_u_wrapper(s, encoding="utf8"):
+        try:
+            # print("_paramico_u_wrapper", s)
+            return SFTPTarget._paramiko_py3compat_u(s, encoding)
+        except UnicodeDecodeError:
+            write_error(
+                "Failed to decode {} using {}. Trying cp1252...".format(s, encoding)
+            )
+            s = s.decode("cp1252")
+        return s
+
     def get_dir(self):
+        # Fallback to cp1252 if utf8 fails
+        with patch("paramiko.message.u", SFTPTarget._paramiko_py3compat_u_wrapper):
+            res = self._get_dir_impl()
+        return res
+
+    def _get_dir_impl(self):
         entry_list = []
         entry_map = {}
         has_meta = False
