@@ -161,12 +161,14 @@ class DirMetadata:
                 )
             #
             write(
-                "Migrating meta data version from {} to {} (discarding old): {}".format(
+                "Migrating meta data version from {} to {} (i.e. discarding it): {}".format(
                     self.dir.get("_file_version"), self.VERSION, self.filename
                 )
             )
             self.list = {}
             self.peer_sync = {}
+            # This will remove .pyftpsync-meta.json:
+            self.flush()
 
         return
 
