@@ -3,6 +3,7 @@
 - Drop support for Python 2.x (end-of-life: 2020-01-01)
 - Add SFTP support
 - Add `tree` command
+- `--migrate` now always removes outdated metadata files
 - Fix #26: Crash when not setting verbose option
 - Use Yabs as release tool
 - Rename FtpTarget => FTPTarget
