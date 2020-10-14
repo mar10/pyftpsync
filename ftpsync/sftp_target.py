@@ -4,6 +4,7 @@
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 import json
+import logging
 import stat
 import time
 from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
@@ -50,7 +51,7 @@ class SFTPTarget(_Target):
         self,
         path,
         host,
-        port=0,
+        port=22,
         username=None,
         password=None,
         timeout=None,
@@ -121,6 +122,9 @@ class SFTPTarget(_Target):
         verify_host_keys = not self.get_option("no_verify_host_keys", False)
         if self.get_option("ftp_active", False):
             raise RuntimeError("SFTP does not have active/passive mode.")
+
+        if verbose <= 3:
+            logging.getLogger("paramiko.transport").setLevel(logging.WARNING)
 
         write("Connecting {}:*** to sftp://{}".format(self.username, self.host))
 
