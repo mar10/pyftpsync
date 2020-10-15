@@ -84,22 +84,17 @@ class SFTPTarget(_Target):
         #: set to False, if write failed. Default: None
         self.lock_data = None
         self.lock_write_time = None
-        self.feat_response = None
-        self.syst_response = None
-        self.is_unix = None
-        #: True if server reports FEAT UTF8
-        self.support_utf8 = None
         #: Time difference between <local upload time> and the mtime that the
         #: server reports afterwards.
         #: The value is added to the 'u' time stored in meta data.
         #: (This is only a rough estimation, derived from the lock-file.)
         self.server_time_ofs = None
         self.ftp_socket_connected = False
-        self.support_set_time = False
+        # self.support_set_time = False
         # #: Optionally define an encoding for this server
         # encoding = self.get_option("encoding", "utf-8")
         # self.encoding = codecs.lookup(encoding).name
-        # return
+        return
 
     def __str__(self):
         return "<{} + {}>".format(
@@ -439,9 +434,6 @@ class SFTPTarget(_Target):
         # TODO: use sftp.open() instead?
         out = SpooledTemporaryFile(max_size=self.MAX_SPOOL_MEM, mode="w+b")
         self.sftp.getfo(name, out)
-        # self.ftp.retrbinary(
-        #     "RETR {}".format(name), out.write, SFTPTarget.DEFAULT_BLOCKSIZE
-        # )
         out.seek(0)
         return out
 
@@ -459,7 +451,6 @@ class SFTPTarget(_Target):
         assert is_native(name)
         self.check_write(name)
         self.sftp.putfo(fp_src, name)  # , callback)
-        # self.ftp.storbinary("STOR {}".format(name), fp_src, blocksize, callback)
         # TODO: check result
 
     def copy_to_file(self, name, fp_dest, callback=None):
@@ -472,16 +463,6 @@ class SFTPTarget(_Target):
                 Called like `func(buf)` for every written chunk
         """
         assert is_native(name)
-
-        # def _write_to_file(data):
-        #     # print("_write_to_file() {} bytes.".format(len(data)))
-        #     fp_dest.write(data)
-        #     if callback:
-        #         callback(data)
-
-        # self.ftp.retrbinary(
-        #     "RETR {}".format(name), _write_to_file, SFTPTarget.DEFAULT_BLOCKSIZE
-        # )
         self.sftp.getfo(name, fp_dest)
 
     def remove_file(self, name):
@@ -500,121 +481,3 @@ class SFTPTarget(_Target):
         # meta data in the same directory
         # TODO: try "SITE UTIME", "MDTM (set version)", or "SRFT" command
         self.cur_dir_meta.set_mtime(name, mtime, size)
-
-    # def _ftp_pwd(self):
-    #     """Variant of `self.ftp.pwd()` that supports encoding-fallback.
-
-    #     Returns:
-    #         Current working directory as native string.
-    #     """
-    #     try:
-    #         return self.ftp.pwd()
-    #     except UnicodeEncodeError:
-    #         if self.ftp.encoding != "utf-8":
-    #             raise  # should not happen, since Py2 does not try to encode
-    #         # TODO: this is NOT THREAD-SAFE!
-    #         prev_encoding = self.ftp.encoding
-    #         try:
-    #             write("ftp.pwd() failed with utf-8: trying Cp1252...", warning=True)
-    #             return self.ftp.pwd()
-    #         finally:
-    #             self.ftp.encoding = prev_encoding
-
-    # def _ftp_nlst(self, dir_name):
-    #     """Variant of `self.ftp.nlst()` that supports encoding-fallback."""
-    #     assert is_native(dir_name)
-    #     lines = []
-
-    #     def _add_line(status, line):
-    #         lines.append(line)
-
-    #     cmd = "NLST " + dir_name
-    #     self._ftp_retrlines_native(cmd, _add_line, self.encoding)
-    #     # print(cmd, lines)
-    #     return lines
-
-    # def _ftp_retrlines_native(self, command, callback, encoding):
-    #     """A re-implementation of ftp.retrlines that returns lines as native `str`.
-
-    #     This is needed on Python 3, where `ftp.retrlines()` returns unicode `str`
-    #     by decoding the incoming command response using `ftp.encoding`.
-    #     This would fail for the whole request if a single line of the MLSD listing
-    #     cannot be decoded.
-    #     SFTPTarget wants to fall back to Cp1252 if UTF-8 fails for a single line,
-    #     so we need to process the raw original binary input lines.
-
-    #     On Python 2, the response is already bytes, but we try to decode in
-    #     order to check validity and optionally re-encode from Cp1252.
-
-    #     Args:
-    #         command (str):
-    #             A valid FTP command like 'NLST', 'MLSD', ...
-    #         callback (function):
-    #             Called for every line with these args:
-    #                 status (int): 0:ok 1:fallback used, 2:decode failed
-    #                 line (str): result line decoded using `encoding`.
-    #                     If `encoding` is 'utf-8', a fallback to cp1252
-    #                     is accepted.
-    #         encoding (str):
-    #             Coding that is used to convert the FTP response to `str`.
-    #     Returns:
-    #         None
-    #     """
-    #     LF = b"\n"
-    #     buffer = b""
-
-    #     # needed to access buffer accross function scope
-    #     local_var = {"buffer": buffer}
-
-    #     fallback_enc = "cp1252" if encoding == "utf-8" else None
-
-    #     def _on_read_line(line):
-    #         # Line is a byte string
-    #         # print("  line ", line)
-    #         status = 2  # fault
-    #         line_decoded = None
-    #         try:
-    #             line_decoded = line.decode(encoding)
-    #             status = 0  # successfully decoded
-    #         except UnicodeDecodeError:
-    #             if fallback_enc:
-    #                 try:
-    #                     line_decoded = line.decode(fallback_enc)
-    #                     status = 1  # used fallback encoding
-    #                 except UnicodeDecodeError:
-    #                     raise
-
-    #         # if compat.PY2:
-    #         #     # line is a native binary `str`.
-    #         #     if status == 1:
-    #         #         # We used a fallback: re-encode
-    #         #         callback(status, line_decoded.encode(encoding))
-    #         #     else:
-    #         #         callback(status, line)
-    #         # else:
-    #         # line_decoded is a native text `str`.
-    #         callback(status, line_decoded)
-
-    #     # on_read_line = _on_read_line_py2 if compat.PY2 else _on_read_line_py3
-
-    #     def _on_read_chunk(chunk):
-    #         buffer = local_var["buffer"]
-    #         # Normalize line endings
-    #         chunk = chunk.replace(b"\r\n", LF)
-    #         chunk = chunk.replace(b"\r", LF)
-    #         chunk = buffer + chunk
-    #         try:
-    #             # print("Add chunk ", chunk, "to buffer", buffer)
-    #             while True:
-    #                 item, chunk = chunk.split(LF, 1)
-    #                 _on_read_line(item)  # + LF)
-    #         except ValueError:
-    #             pass
-    #         # print("Rest chunk", chunk)
-    #         local_var["buffer"] = chunk
-
-    #     self.ftp.retrbinary(command, _on_read_chunk)
-
-    #     if buffer:
-    #         _on_read_line(buffer)
-    #     return
