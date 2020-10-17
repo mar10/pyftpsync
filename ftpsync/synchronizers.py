@@ -1007,8 +1007,13 @@ class UploadSynchronizer(BiDirSynchronizer):
 
         classification = (pair.local_classification, pair.remote_classification)
 
-        # print("re_classify_pair", pair)
+        # Upload never modifies `local`, so we suggest to delete missing files
+        # on `remote` instead. However `delete_remote` will also check for a
+        # `--delete` flag
         if classification == ("missing", "new"):
+            assert pair.operation == "copy_remote"
+            pair.override_operation("delete_remote", "restore")
+        elif classification == ("missing", "existing"):
             assert pair.operation == "copy_remote"
             pair.override_operation("delete_remote", "restore")
 
@@ -1167,8 +1172,13 @@ class DownloadSynchronizer(BiDirSynchronizer):
 
         classification = (pair.local_classification, pair.remote_classification)
 
-        # write("re_classify_pair: {}".format(pair))
+        # Download never modifies `remote`, so we suggest to delete missing files
+        # on `local` instead. However `delete_local` will also check for a
+        # `--delete` flag
         if classification == ("new", "missing"):
+            assert pair.operation == "copy_local"
+            pair.override_operation("delete_local", "restore")
+        elif classification == ("existing", "missing"):
             assert pair.operation == "copy_local"
             pair.override_operation("delete_local", "restore")
 
