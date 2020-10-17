@@ -21,26 +21,29 @@ Command Line Interface
 Use the ``--help`` or ``-h`` argument to get help::
 
     $ pyftpsync --help
-    usage: pyftpsync [-h] [-v | -q] [-V] {upload,download,sync,run,scan} ...
+    usage: pyftpsync [-h] [-v | -q] [--debug {classify}] [--case {strict,local,remote}] [-V]
+                    {upload,download,sync,run,scan,tree} ...
 
     Synchronize folders over FTP.
 
     positional arguments:
-    {upload,download,sync,run,scan}
+    {upload,download,sync,run,scan,tree}
                             sub-command help
         upload              copy new and modified files to remote folder
-        download            copy new and modified files from remote folder to
-                            local target
-        sync                synchronize new and modified files between remote
-                            folder and local target
-        run                 run pyftpsync with configuration from
-                            `.pyftpsync.yaml` in current or parent folder
+        download            copy new and modified files from remote folder to local target
+        sync                synchronize new and modified files between remote folder and local target
+        run                 run pyftpsync with configuration from `.pyftpsync.yaml` in current or parent folder
         scan                repair, purge, or check targets
+        tree                list target folder structure
 
     optional arguments:
     -h, --help            show this help message and exit
     -v, --verbose         increment verbosity by one (default: 3, range: 0..5)
     -q, --quiet           decrement verbosity by one
+    --debug {classify}    enable additional specific logging (requires -v)
+    --case {strict,local,remote}
+                            how to handle file names that only differ in casing (default: stop if ambigous files are
+                            encountered)
     -V, --version         show program's version number and exit
 
     See also https://github.com/mar10/pyftpsync
@@ -168,49 +171,49 @@ Upload Files Syntax
 Command specific help is available like so::
 
     $ pyftpsync upload -h
-    usage: pyftpsync upload [-h] [--force] [--resolve {local,skip,ask}] [--delete]
-                            [--delete-unmatched] [-n] [-v | -q] [--progress]
-                            [--no-color] [--ftp-active] [--migrate] [-m MATCH]
-                            [-x EXCLUDE] [--prompt | --no-prompt] [--no-keyring]
-                            [--no-netrc] [--store-password]
+    usage: pyftpsync upload [-h] [-v | -q] [--debug {classify}] [--case {strict,local,remote}] [-n] [--progress] [--no-color]
+                            [--ftp-active] [--migrate] [--no-verify-host-keys] [-m MATCH] [-x EXCLUDE] [--prompt | --no-prompt]
+                            [--no-keyring] [--no-netrc] [--store-password] [--force] [--resolve {local,skip,ask}] [--delete]
+                            [--delete-unmatched]
                             LOCAL REMOTE
 
     positional arguments:
-      LOCAL                 path to local folder (default: .)
-      REMOTE                path to remote folder
+    LOCAL                 path to local folder (default: .)
+    REMOTE                path to remote folder
 
     optional arguments:
-      -h, --help            show this help message and exit
-      --force               overwrite remote files, even if the target is newer
-                            (but no conflict was detected)
-      --resolve {local,skip,ask}
+    -h, --help            show this help message and exit
+    -v, --verbose         increment verbosity by one (default: 3, range: 0..5)
+    -q, --quiet           decrement verbosity by one
+    --debug {classify}    enable additional specific logging (requires -v)
+    --case {strict,local,remote}
+                            how to handle file names that only differ in casing (default: stop if ambigous files are
+                            encountered)
+    -n, --dry-run         just simulate and log results, but don't change anything
+    --progress            show progress info, even if redirected or verbose < 3
+    --no-color            prevent use of ansi terminal color codes
+    --ftp-active          use Active FTP mode instead of passive
+    --migrate             replace meta data files from different pyftpsync versions with current format. Existing data will
+                            be discarded.
+    --no-verify-host-keys
+                            do not check SFTP connection against `~/.ssh/known_hosts`
+    -m MATCH, --match MATCH
+                            wildcard for file names using fnmatch syntax (default: match all, separate multiple values with
+                            ',')
+    -x EXCLUDE, --exclude EXCLUDE
+                            wildcard of files and directories to exclude (applied after --match, default:
+                            '.DS_Store,.git,.hg,.svn')
+    --prompt              always prompt for password
+    --no-prompt           prevent prompting for invalid credentials
+    --no-keyring          prevent use of the system keyring service for credential lookup
+    --no-netrc            prevent use of .netrc file for credential lookup
+    --store-password      save password to keyring if login succeeds
+    --force               overwrite remote files, even if the target is newer (but no conflict was detected)
+    --resolve {local,skip,ask}
                             conflict resolving strategy (default: 'ask')
-      --delete              remove remote files if they don't exist locally
-      --delete-unmatched    remove remote files if they don't exist locally or
-                            don't match the current filter (implies '--delete'
-                            option)
-      -n, --dry-run         just simulate and log results, but don't change
-                            anything
-      -v, --verbose         increment verbosity by one (default: 3, range: 0..5)
-      -q, --quiet           decrement verbosity by one
-      --progress            show progress info, even if redirected or verbose < 3
-      --no-color            prevent use of ansi terminal color codes
-      --ftp-active          use Active FTP mode instead of passive
-      --migrate             replace meta data files from different pyftpsync
-                            versions with current format. Existing data will be
-                            discarded.
-      -m MATCH, --match MATCH
-                            wildcard for file names using fnmatch syntax (default:
-                            match all, separate multiple values with ',')
-      -x EXCLUDE, --exclude EXCLUDE
-                            wildcard of files and directories to exclude (applied
-                            after --match, default: '.DS_Store,.git,.hg,.svn')
-      --prompt              always prompt for password
-      --no-prompt           prevent prompting for invalid credentials
-      --no-keyring          prevent use of the system keyring service for
-                            credential lookup
-      --no-netrc            prevent use of .netrc file for credential lookup
-      --store-password      save password to keyring if login succeeds
+    --delete              remove remote files if they don't exist locally
+    --delete-unmatched    remove remote files if they don't exist locally or don't match the current filter (implies '--
+                            delete' option)
     $
 
 
@@ -246,48 +249,55 @@ Mirror current directory to remote folder::
     Replace ``ftp://`` with ``ftps://`` to enable TLS encryption.
 
 
+Download Files Syntax
+---------------------
+
+This is generally the same as `upload` with swapped targets.
+
+
 Synchronize Files Syntax
 ------------------------
 ::
 
     $ pyftpsync sync -h
-    usage: pyftpsync sync [-h] [--resolve {old,new,local,remote,skip,ask}] [-n]
-                          [-v | -q] [--progress] [--no-color] [--ftp-active]
-                          [--migrate] [-m MATCH] [-x EXCLUDE]
-                          [--prompt | --no-prompt] [--no-keyring] [--no-netrc]
-                          [--store-password]
-                          LOCAL REMOTE
+    usage: pyftpsync sync [-h] [-v | -q] [--debug {classify}] [--case {strict,local,remote}] [-n] [--progress] [--no-color]
+                        [--ftp-active] [--migrate] [--no-verify-host-keys] [-m MATCH] [-x EXCLUDE] [--prompt | --no-prompt]
+                        [--no-keyring] [--no-netrc] [--store-password] [--resolve {old,new,local,remote,skip,ask}]
+                        LOCAL REMOTE
 
     positional arguments:
-      LOCAL                 path to local folder (default: .)
-      REMOTE                path to remote folder
+    LOCAL                 path to local folder (default: .)
+    REMOTE                path to remote folder
 
     optional arguments:
-      -h, --help            show this help message and exit
-      --resolve {old,new,local,remote,skip,ask}
+    -h, --help            show this help message and exit
+    -v, --verbose         increment verbosity by one (default: 3, range: 0..5)
+    -q, --quiet           decrement verbosity by one
+    --debug {classify}    enable additional specific logging (requires -v)
+    --case {strict,local,remote}
+                            how to handle file names that only differ in casing (default: stop if ambigous files are
+                            encountered)
+    -n, --dry-run         just simulate and log results, but don't change anything
+    --progress            show progress info, even if redirected or verbose < 3
+    --no-color            prevent use of ansi terminal color codes
+    --ftp-active          use Active FTP mode instead of passive
+    --migrate             replace meta data files from different pyftpsync versions with current format. Existing data will
+                            be discarded.
+    --no-verify-host-keys
+                            do not check SFTP connection against `~/.ssh/known_hosts`
+    -m MATCH, --match MATCH
+                            wildcard for file names using fnmatch syntax (default: match all, separate multiple values with
+                            ',')
+    -x EXCLUDE, --exclude EXCLUDE
+                            wildcard of files and directories to exclude (applied after --match, default:
+                            '.DS_Store,.git,.hg,.svn')
+    --prompt              always prompt for password
+    --no-prompt           prevent prompting for invalid credentials
+    --no-keyring          prevent use of the system keyring service for credential lookup
+    --no-netrc            prevent use of .netrc file for credential lookup
+    --store-password      save password to keyring if login succeeds
+    --resolve {old,new,local,remote,skip,ask}
                             conflict resolving strategy (default: 'ask')
-      -n, --dry-run         just simulate and log results, but don't change
-                            anything
-      -v, --verbose         increment verbosity by one (default: 3, range: 0..5)
-      -q, --quiet           decrement verbosity by one
-      --progress            show progress info, even if redirected or verbose < 3
-      --no-color            prevent use of ansi terminal color codes
-      --ftp-active          use Active FTP mode instead of passive
-      --migrate             replace meta data files from different pyftpsync
-                            versions with current format. Existing data will be
-                            discarded.
-      -m MATCH, --match MATCH
-                            wildcard for file names using fnmatch syntax (default:
-                            match all, separate multiple values with ',')
-      -x EXCLUDE, --exclude EXCLUDE
-                            wildcard of files and directories to exclude (applied
-                            after --match, default: '.DS_Store,.git,.hg,.svn')
-      --prompt              always prompt for password
-      --no-prompt           prevent prompting for invalid credentials
-      --no-keyring          prevent use of the system keyring service for
-                            credential lookup
-      --no-netrc            prevent use of .netrc file for credential lookup
-      --store-password      save password to keyring if login succeeds
     $
 
 
