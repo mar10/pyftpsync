@@ -3,8 +3,11 @@
 - Drop support for Python 2.x (end-of-life: 2020-01-01)
 - Add SFTP support
 - Add `tree` command
-- `--migrate` now always removes outdated metadata files
-- `--debug classify` helps with analysis
+- Add `--case` argument for better handling of ambigous files that only differ
+  in the name's casing
+- `--migrate` now always removes outdated metadata files (before this was only
+  done when a file inside this directory was touched)
+- `--debug classify` helps with analysis of synchronization problems
 - Fix #26: Crash when not setting verbose option
 - Use Yabs as release tool
 - Rename FtpTarget => FTPTarget

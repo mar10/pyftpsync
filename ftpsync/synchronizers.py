@@ -9,7 +9,12 @@ import time
 
 from ftpsync.ftp_target import FTPTarget
 from ftpsync.metadata import DirMetadata
-from ftpsync.resources import DirectoryEntry, EntryPair, FileEntry, operation_map
+from ftpsync.resources import (
+    DirectoryEntry,
+    EntryPair,
+    FileEntry,
+    operation_map,
+)
 from ftpsync.util import (
     DRY_RUN_PREFIX,
     IS_REDIRECTED,
@@ -474,13 +479,34 @@ class BaseSynchronizer:
         handler methods.
         _sync_dir() is called by self.run().
         """
-        local_entries = self.local.get_dir()
-        # Convert into a dict {name: FileEntry, ...}
-        local_entry_map = dict(map(lambda e: (e.name, e), local_entries))
+        # --case may be 'local', 'remote', 'strict', or None
+        case_mode = self.options.get("case")
 
-        remote_entries = self.remote.get_dir()
         # Convert into a dict {name: FileEntry, ...}
-        remote_entry_map = dict(map(lambda e: (e.name, e), remote_entries))
+        local_entries = self.local.get_dir()
+        if case_mode == "strict":
+            local_entry_map = dict(map(lambda e: (e.name, e), local_entries))
+        else:
+            local_entry_map = dict(map(lambda e: (e.name.lower(), e), local_entries))
+            if len(local_entry_map) != len(local_entries):
+                raise RuntimeError(
+                    "Local target contains file names that only differ in case: "
+                    "pass `--case strict`"
+                )
+
+        # Convert into a dict {name: FileEntry, ...}
+        remote_entries = self.remote.get_dir()
+        if case_mode == "strict":
+            remote_entry_map = dict(map(lambda e: (e.name, e), remote_entries))
+        else:
+            remote_entry_map = dict(map(lambda e: (e.name.lower(), e), remote_entries))
+            if len(remote_entry_map) != len(remote_entries):
+                raise RuntimeError(
+                    "Remote target contains file names that only differ in case: "
+                    "pass `--case strict`"
+                )
+        # print(sorted([(k, v.name) for k, v in local_entry_map.items()]))
+        # print(sorted([(k, v.name) for k, v in remote_entry_map.items()]))
 
         entry_pair_list = []
 
@@ -496,10 +522,26 @@ class BaseSynchronizer:
                 # TODO: currently, if a file is skipped, it will not be
                 # considered for deletion on the peer target
                 continue
-            # TODO: case insensitive?
-            # We should use os.path.normcase() to convert to lowercase on windows
-            # (i.e. if the FTP server is based on Windows)
-            remote_entry = remote_entry_map.get(local_entry.name)
+
+            # Unless `--case strict` was set, we lookup by lowercase name.
+            # If file names differ, we adjust one side:
+            if case_mode == "strict":
+                remote_entry = remote_entry_map.get(local_entry.name)
+            else:
+                remote_entry = remote_entry_map.get(local_entry.name.lower())
+
+                if remote_entry and remote_entry.name != local_entry.name:
+                    if case_mode == "local":
+                        remote_entry.name = local_entry.name
+                    elif case_mode == "remote":
+                        local_entry.name = remote_entry.name
+                    else:
+                        raise RuntimeError(
+                            "Found ambigiuos name ({} != {}): "
+                            "`--case` argument is required.".format(
+                                local_entry, remote_entry
+                            )
+                        )
 
             entry_pair = EntryPair(local_entry, remote_entry)
             entry_pair_list.append(entry_pair)
@@ -517,14 +559,14 @@ class BaseSynchronizer:
             if not self._before_sync(remote_entry):
                 continue
 
-            if remote_entry.name not in local_entry_map:
-                entry_pair = EntryPair(None, remote_entry)
-                entry_pair_list.append(entry_pair)
-                # print("NOT IN LOCAL")
-                # print(remote_entry.name)
-                # print(self.remote.get_id())
-                # print(local_entry_map.keys())
-                # print(self.local.cur_dir_meta.peer_sync.get(self.remote.get_id()))
+            if case_mode == "strict":
+                if remote_entry.name not in local_entry_map:
+                    entry_pair = EntryPair(None, remote_entry)
+                    entry_pair_list.append(entry_pair)
+            else:
+                if remote_entry.name.lower() not in local_entry_map:
+                    entry_pair = EntryPair(None, remote_entry)
+                    entry_pair_list.append(entry_pair)
 
         # 3. Classify all entries and pairs.
         #    We pass the additional meta data here
@@ -661,11 +703,11 @@ class BiDirSynchronizer(BaseSynchronizer):
     - When both files are newer than last sync -> conflict!
       Conflicts may be resolved by these options::
 
-        --resolve=old:         use the older version
-        --resolve=new:         use the newer version
+        --resolve=old:         use the older file
+        --resolve=new:         use the newer file
         --resolve=local:       use the local file
         --resolve=remote:      use the remote file
-        --resolve=ask:         prompt mode
+        --resolve=ask:         prompt user for decision
 
     - When a file is missing: check if it existed in the past.
       If so, delete it. Otherwise copy it.
@@ -926,7 +968,7 @@ class BiDirSynchronizer(BaseSynchronizer):
 
         handler = getattr(self, "on_" + pair.operation, None)
         res = handler(pair)
-        #         self._log_action("", "different", "?", pair.local, min_level=2)
+        # self._log_action("", "different", "?", pair.local, min_level=2)
         return res
 
     def on_conflict(self, pair):
@@ -994,8 +1036,7 @@ class BiDirSynchronizer(BaseSynchronizer):
 class UploadSynchronizer(BiDirSynchronizer):
     def __init__(self, local, remote, options):
         super(UploadSynchronizer, self).__init__(local, remote, options)
-
-    #         local.readonly = True
+        # local.readonly = True
 
     def get_info_strings(self):
         return ("upload", "to")

@@ -28,6 +28,12 @@ verbose_parser.add_argument(
     choices=["classify"],
     help="enable additional specific logging (requires -v)",
 )
+verbose_parser.add_argument(
+    "--case",
+    choices=["strict", "local", "remote"],
+    help="how to handle file names that only differ in casing "
+    "(default: stop if ambigous files are encountered)",
+)
 
 
 # --- common_parser ----------------------------------------------------------
