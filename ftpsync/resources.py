@@ -7,9 +7,8 @@ import os
 from datetime import datetime
 from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
 
-from ftpsync.util import eps_compare, write
+from ftpsync.util import eps_compare, write, DEBUG_FLAGS
 
-PRINT_CLASSIFICATIONS = False
 
 ENTRY_CLASSIFICATIONS = frozenset(
     ["existing", "unmodified", "modified", "new", "deleted"]
@@ -125,14 +124,14 @@ class EntryPair:
 
     def override_operation(self, operation, reason):
         """Re-Classify entry pair."""
-        prev_class = (self.local_classification, self.remote_classification)
+        # prev_class = (self.local_classification, self.remote_classification)
         prev_op = self.operation
         assert operation != prev_op
         assert operation in PAIR_OPERATIONS
-        if self.any_entry.target.synchronizer.verbose > 3:
+        if "classify" in DEBUG_FLAGS:
             write(
-                "override_operation({}, {}) -> {} ({})".format(
-                    prev_class, prev_op, operation, reason
+                "override_operation {} -> {} (reason: '{}')".format(
+                    self, operation, reason
                 ),
                 debug=True,
             )
@@ -142,11 +141,10 @@ class EntryPair:
     def classify(self, peer_dir_meta):
         """Classify entry pair."""
         assert self.operation is None
-        # write("CLASSIFIY", self, peer_dir_meta)
         # Note: We pass False if the entry is not listed in the metadata.
         #       We pass None if we don't have metadata all.
         peer_entry_meta = peer_dir_meta.get(self.name, False) if peer_dir_meta else None
-        # write("=>", self, peer_entry_meta)
+
         if self.local:
             self.local.classify(peer_dir_meta)
             self.local_classification = self.local.classification
@@ -170,9 +168,11 @@ class EntryPair:
             raise RuntimeError(
                 "Undefined operation for pair classification {}".format(c_pair)
             )
-
-        if PRINT_CLASSIFICATIONS:
-            write("classify {}".format(self))
+        if "classify" in DEBUG_FLAGS:
+            write(
+                "Classified pair {}, meta={}".format(self, peer_entry_meta),
+                debug=True,
+            )
         # if not entry.meta:
         # assert self.classification in PAIR_CLASSIFICATIONS
         assert self.operation in PAIR_OPERATIONS
@@ -287,15 +287,15 @@ class _Resource:
 
     def classify(self, peer_dir_meta):
         """Classify this entry as 'new', 'unmodified', or 'modified'."""
-        assert self.classification is None
+        assert self.classification is None, "{}, {}".format(self, peer_dir_meta)
         peer_entry_meta = None
         if peer_dir_meta:
             # Metadata is generally available, so we can detect 'new' or 'modified'
             peer_entry_meta = peer_dir_meta.get(self.name, False)
 
             if self.is_dir():
-                # Directories are considered 'unmodified' (would require deep traversal
-                # to check otherwise)
+                # Directories are considered 'unmodified' (would require deep
+                # traversal to check otherwise)
                 if peer_entry_meta:
                     self.classification = "unmodified"
                 else:
@@ -318,15 +318,15 @@ class _Resource:
         else:
             # No metadata available:
             if self.is_dir():
-                # Directories are considered 'unmodified' (would require deep traversal
-                # to check otherwise)
+                # Directories are considered 'unmodified' (would require deep
+                # traversal to check otherwise)
                 self.classification = "unmodified"
             else:
                 # That's all we know, but EntryPair.classify() may adjust this
                 self.classification = "existing"
 
-        if PRINT_CLASSIFICATIONS:
-            write("classify {}".format(self))
+        if "classify" in DEBUG_FLAGS:
+            write("Classified {}, meta={}".format(self, peer_entry_meta), debug=True)
         assert self.classification in ENTRY_CLASSIFICATIONS
         return self.classification
 

@@ -4,6 +4,7 @@
 - Add SFTP support
 - Add `tree` command
 - `--migrate` now always removes outdated metadata files
+- `--debug classify` helps with analysis
 - Fix #26: Crash when not setting verbose option
 - Use Yabs as release tool
 - Rename FtpTarget => FTPTarget

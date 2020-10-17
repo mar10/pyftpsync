@@ -160,6 +160,7 @@ DRY_RUN_PREFIX = "(DRY-RUN) "
 IS_REDIRECTED = os.fstat(0) != os.fstat(1)
 # DEFAULT_BLOCKSIZE = 8 * 1024
 VT_ERASE_LINE = "\x1b[2K"
+DEBUG_FLAGS = set()
 
 
 def namespace_to_dict(o):
@@ -169,6 +170,21 @@ def namespace_to_dict(o):
         if not callable(v):
             d[k] = v
     return d
+
+
+# def dict_get_ci(d, key, default=None):
+#     """Lookup dict value case insensitive.
+
+#     Returns:
+#         tuple (matched_key, value, is_exact_natch)
+#     """
+#     if key in d:
+#         return key, d[key], True
+#     lk = key.lower()
+#     for k, v in d.items():
+#         if k.lower() == lk:
+#             return k, v, False
+#     return key, default, False
 
 
 def eps_compare(f1, f2, eps):

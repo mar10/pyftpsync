@@ -31,6 +31,7 @@ from ftpsync.synchronizers import (
 )
 from ftpsync.targets import FsTarget, make_target
 from ftpsync.util import (
+    DEBUG_FLAGS,
     PYTHON_VERSION,
     check_cli_verbose,
     namespace_to_dict,
@@ -196,6 +197,11 @@ def run():
     ftp_debug = 0
     if args.verbose >= 6:
         ftp_debug = 1
+
+    if args.debug:
+        if args.verbose < 4:
+            parser.error("'--debug' requires verbose level >= 4")
+        DEBUG_FLAGS.update(args.debug)
 
     # Modify the `args` from the `pyftpsync.yaml` config:
     if getattr(args, "command", None) == "run":

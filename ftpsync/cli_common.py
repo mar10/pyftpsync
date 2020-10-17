@@ -22,6 +22,12 @@ qv_group.add_argument(
 qv_group.add_argument(
     "-q", "--quiet", default=0, action="count", help="decrement verbosity by one"
 )
+verbose_parser.add_argument(
+    "--debug",
+    action="append",
+    choices=["classify"],
+    help="enable additional specific logging (requires -v)",
+)
 
 
 # --- common_parser ----------------------------------------------------------
