@@ -60,14 +60,14 @@ def add_run_parser(subparsers):
         "run",
         # parents=[verbose_parser, common_parser, matcher_parser, creds_parser],
         parents=[verbose_parser, common_parser, creds_parser],
-        help="run pyftpsync with configuration from `.pyftpsync.yaml` in current or parent folder",
+        help="run pyftpsync with configuration from `pyftpsync.yaml` in current or parent folder",
     )
 
     parser.add_argument(
         "task",
         # metavar="TASK",
         nargs="?",
-        help="task to run (default: use `default_task` from `.pyftpsync.yaml`)",
+        help="task to run (default: use `default_task` from `pyftpsync.yaml`)",
     )
 
     p_group = parser.add_mutually_exclusive_group()
@@ -77,7 +77,7 @@ def add_run_parser(subparsers):
     p_group.add_argument(
         "--root",
         action="store_true",
-        help="use folder of nearest `.pyftpsync.yaml` as root",
+        help="use folder of nearest `pyftpsync.yaml` as root",
     )
 
     # parser.set_defaults(command=run_handler)
@@ -109,7 +109,7 @@ def handle_run_command(parser, args):
 
     if not config_path:
         parser.error(
-            "Could not locate `.pyftpsync.yaml` in {} or {} parent folders.".format(
+            "Could not locate `pyftpsync.yaml` in {} or {} parent folders.".format(
                 os.getcwd(), cur_level
             )
         )
@@ -206,7 +206,7 @@ def handle_run_command(parser, args):
         args.remote = os.path.join(args.remote, path_ofs)
     else:
         parser.error(
-            "`.pyftpsync.yaml` configuration was found in a parent directory. "
+            "`pyftpsync.yaml` configuration was found in a parent directory. "
             "Please pass an additional argument to clarify:\n"
             "  --root: synchronize whole project ({root})\n"
             "  --here: synchronize sub branch ({root}/{sub})".format(

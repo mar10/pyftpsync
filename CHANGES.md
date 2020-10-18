@@ -1,15 +1,16 @@
 4.0.0 (unreleased)
 ------------------
 - Drop support for Python 2.x (end-of-life: 2020-01-01)
+- Rename `.pyftpsync.yaml` to `pyftpsync.yaml`
 - Add SFTP support
 - Add `tree` command
 - Add `--case` argument for better handling of ambigous files that only differ
   in the name's casing
-- `--migrate` now always removes outdated metadata files (before this was only
-  done when a file inside this directory was touched)
+- `--migrate` now always removes outdated metadata files (before, this was only
+  done when a file inside that directory was touched)
 - `--debug classify` helps with analysis of synchronization problems
 - Fix #26: Crash when not setting verbose option
-- Use Yabs as release tool
+- Use [Yabs](https://github.com/mar10/yabs) as release tool
 - Rename FtpTarget => FTPTarget
 
 3.1.1 (unreleased)

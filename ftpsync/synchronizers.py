@@ -27,7 +27,7 @@ from ftpsync.util import (
     write,
 )
 
-CONFIG_FILE_NAME = ".pyftpsync.yaml"
+CONFIG_FILE_NAME = "pyftpsync.yaml"
 
 #: Default for --exclude CLI option
 #: Note: DirMetadata.META_FILE_NAME and LOCK_FILE_NAME are always ignored

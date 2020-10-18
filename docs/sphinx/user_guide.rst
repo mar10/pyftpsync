@@ -32,7 +32,7 @@ Use the ``--help`` or ``-h`` argument to get help::
         upload              copy new and modified files to remote folder
         download            copy new and modified files from remote folder to local target
         sync                synchronize new and modified files between remote folder and local target
-        run                 run pyftpsync with configuration from `.pyftpsync.yaml` in current or parent folder
+        run                 run pyftpsync with configuration from `pyftpsync.yaml` in current or parent folder
         scan                repair, purge, or check targets
         tree                list target folder structure
 
@@ -98,7 +98,7 @@ Target URLs
 -----------
 
 The ``local`` and ``remote`` target arguments can be file paths or URLs
-(currently the ``ftp:`` and ``ftps:`` protocols are supported)::
+(currently the ``ftp:``, ``ftps``, and ``sftp:`` protocols are supported)::
 
     $ pyftpsync upload ~/temp ftp://example.com/target/folder
 
@@ -148,6 +148,14 @@ successful login.
     If not, try this: |br|
     ``> set HOME=%USERPROFILE%`` |br|
     (`see here <https://superuser.com/a/620146>`_).
+
+.. note::
+
+    The SFTP protocol checks if the public key of the remote server is
+    known, by looking for an entry in the ``~/.ssh/known_hosts`` file. |br|
+    This can be disabled by passing ``--no-verify-host-keys``, but a safer
+    and recommended solution is to add the real key using a tool like
+    ``ssh-keyscan HOST``.
 
 
 Matching and Filtering
@@ -246,7 +254,8 @@ Mirror current directory to remote folder::
 
 .. note::
 
-    Replace ``ftp://`` with ``ftps://`` to enable TLS encryption.
+    Replace ``ftp://`` with ``ftps://`` to enable TLS encryption. |br|
+    Replace ``ftp://`` with ``sftp://`` to use the SFTP protocol.
 
 
 Download Files Syntax
@@ -304,11 +313,11 @@ Synchronize Files Syntax
 Example: Synchronize Folders
 ----------------------------
 
-Two-way synchronization of a local folder with an FTP server::
+Two-way synchronization of a local folder with an SFTP server::
 
-  $ pyftpsync sync --store-password --resolve=ask --execute ~/temp ftps://example.com/target/folder
+  $ pyftpsync sync --store-password --resolve=ask --execute ~/temp sftp://example.com/target/folder
 
-Note that ``ftps:`` protocol was specified to enable TLS.
+Note that ``sftp:`` protocol was specified to enable SFTP.
 
 
 Verbosity Level

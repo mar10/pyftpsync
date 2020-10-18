@@ -1,5 +1,5 @@
 # Configuration for `pyftpsync run ...` command line tool.
-# Edit this file, rename to `.pyftpsync.yaml`, and store in the project's root folder.
+# Edit this file, rename to `pyftpsync.yaml`, and store in the project's root folder.
 # See https://pyftpsync.readthedocs.io/ for details.
 
 # This task is used by `pyftpsync run` if no task name is passed as argument:
