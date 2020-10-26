@@ -17,6 +17,8 @@ MANDATORY_TASK_ARGS = set(("command", "remote"))
 
 KNOWN_TASK_ARGS = set(
     (
+        "case",
+        "debug",
         "delete",
         "delete_unmatched",
         "dry_run",
@@ -30,6 +32,7 @@ KNOWN_TASK_ARGS = set(
         "no_keyring",
         "no_netrc",
         "no_prompt",
+        "no_verify_host_keys",
         "progress",
         "prompt",
         "resolve",
@@ -47,6 +50,7 @@ OVERRIDABLE_BOOL_ARGS = set(
         "no_keyring",
         "no_netrc",
         "no_prompt",
+        "no_verify_host_keys",
         "progress",
         # "resolve",
     )

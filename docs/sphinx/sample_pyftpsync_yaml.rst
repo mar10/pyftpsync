@@ -33,6 +33,13 @@ Task settings can be overidden by command line args, e.g.::
     $ pyftpsync run deploy_force --dry-run -v
     $ pyftpsync run --here
 
+.. note::
+    If the credentials are already stored in the keyring or `.netrc` file, a
+    simple ``pyftpsync run`` should synchronize the current project without
+    further prompting. |br|
+    When `SFTP` is used, also make sure that the remote host's public key is
+    stored in `~/.ssh/known_hosts`.
+
 Example:
 
 .. literalinclude:: ../sample_pyftpsync.yaml

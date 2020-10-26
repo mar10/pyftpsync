@@ -54,7 +54,7 @@ Features
     or addition.
   * Unlike more complex implementations, pyftpsync does not require a database
     or a service running on the targets.
-  * Optional FTPS (TLS) support.
+  * Optional SFTP and FTPS (TLS) support.
   * Architecture is open to add other target types.
 
 **The command line tool adds:**
