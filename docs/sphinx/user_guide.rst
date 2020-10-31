@@ -386,6 +386,9 @@ Synchronize a local folder with an FTP server using TLS::
   s = BiDirSynchronizer(local, remote, opts)
   s.run()
 
+.. note::
+    The class ``FTPTarget`` was renamed with release 4.0 (named ``FtpTarget`` before).
+
 
 Logging
 -------
