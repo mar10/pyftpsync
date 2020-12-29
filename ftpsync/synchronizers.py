@@ -214,11 +214,11 @@ class BaseSynchronizer:
 
         stats = self._stats
         stats["elap_secs"] = time.time() - start
-        stats["elap_str"] = "%0.2f sec" % stats["elap_secs"]
+        stats["elap_str"] = "{:0.2f} sec".format(stats["elap_secs"])
 
         def _add(rate, size, time):
             if stats.get(time) and stats.get(size):
-                stats[rate] = "%0.2f kB/sec" % (0.001 * stats[size] / stats[time])
+                stats[rate] = "{:0.2f} kB/sec".format(0.001 * stats[size] / stats[time])
 
         _add("upload_rate_str", "upload_bytes_written", "upload_write_time")
         _add("download_rate_str", "download_bytes_written", "download_write_time")
@@ -636,12 +636,16 @@ class BaseSynchronizer:
         """
         return True
 
-    def on_error(self, e, pair):
+    def on_error(self, exc, pair):
         """Called for pairs that don't match `match` and `exclude` filters."""
-        RED = ansi_code("Fore.LIGHTRED_EX")
-        R = ansi_code("Style.RESET_ALL")
         # any_entry = pair.any_entry
-        write((RED + "ERROR: {}\n    {}" + R).format(e, pair))
+        msg = "{red}ERROR: {exc}\n    {pair}{reset}".format(
+            exc=exc,
+            pair=pair,
+            red=ansi_code("Fore.LIGHTRED_EX"),
+            reset=ansi_code("Style.RESET_ALL"),
+        )
+        write(msg)
         # Return True to ignore this error (instead of raising and terminating the app)
         # if "[Errno 92] Illegal byte sequence" in "{}".format(e) and compat.PY2:
         #     write(RED + "This _may_ be solved by using Python 3." + R)
@@ -718,10 +722,6 @@ class BiDirSynchronizer(BaseSynchronizer):
         return ("synchronize", "with")
 
     def _print_pair_diff(self, pair):
-        RED = ansi_code("Fore.LIGHTRED_EX")
-        # M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
-        R = ansi_code("Style.RESET_ALL")
-
         any_entry = pair.any_entry
 
         has_meta = any_entry.get_sync_info("m") is not None
@@ -733,9 +733,9 @@ class BiDirSynchronizer(BaseSynchronizer):
         write(
             (
                 VT_ERASE_LINE
-                + RED
+                + ansi_code("Fore.LIGHTRED_EX")
                 + "CONFLICT: {!r} was modified on both targets since last sync ({})."
-                + R
+                + ansi_code("Style.RESET_ALL")
             ).format(any_entry.get_rel_path(), _ts(any_entry.get_sync_info("u")))
         )
         if has_meta:
@@ -775,45 +775,16 @@ class BiDirSynchronizer(BaseSynchronizer):
             # self.resolve_all = resolve
             return resolve
 
-        # RED = ansi_code("Fore.LIGHTRED_EX")
-        M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
-        R = ansi_code("Style.RESET_ALL")
-
         self._inc_stat("interactive_ask")
 
+        prompt = (
+            "Use {m}L{r}ocal, {m}R{r}emote, {m}O{r}lder, {m}N{r}ewer, "
+            + "{m}S{r}kip, {m}B{r}inary compare, {m}H{r}elp ? "
+        ).format(
+            m=ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE"),
+            r=ansi_code("Style.RESET_ALL"),
+        )
         while True:
-            prompt = (
-                "Use "
-                + M
-                + "L"
-                + R
-                + "ocal, "
-                + M
-                + "R"
-                + R
-                + "emote, "
-                + M
-                + "O"
-                + R
-                + "lder, "
-                + M
-                + "N"
-                + R
-                + "ewer, "
-                + M
-                + "S"
-                + R
-                + "kip, "
-                + M
-                + "B"
-                + R
-                + "inary compare, "
-                + M
-                + "H"
-                + R
-                + "elp ? "
-            )
-
             r = input(prompt).strip()
 
             if r in ("h", "H", "?"):
@@ -1069,9 +1040,6 @@ class UploadSynchronizer(BiDirSynchronizer):
 
     def _interactive_resolve(self, pair):
         """Return 'local', 'remote', or 'skip' to use local, remote resource or skip."""
-        # RED = ansi_code("Fore.LIGHTRED_EX")
-        M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
-        R = ansi_code("Style.RESET_ALL")
 
         resolve = self.options.get("resolve", "skip")
         assert resolve in ("local", "ask", "skip")
@@ -1090,27 +1058,14 @@ class UploadSynchronizer(BiDirSynchronizer):
 
         self._inc_stat("interactive_ask")
 
-        while True:
-            prompt = (
-                "Use "
-                + M
-                + "L"
-                + R
-                + "ocal, "
-                + M
-                + "S"
-                + R
-                + "kip, "
-                + M
-                + "B"
-                + R
-                + "inary compare, "
-                + M
-                + "H"
-                + R
-                + "elp ? "
-            )
+        prompt = (
+            "Use {m}L{r}ocal, {m}S{r}kip, {m}B{r}inary compare, {m}H{r}elp ? "
+        ).format(
+            m=ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE"),
+            r=ansi_code("Style.RESET_ALL"),
+        )
 
+        while True:
             r = input(prompt).strip()
 
             if r in ("h", "H", "?"):
@@ -1249,35 +1204,18 @@ class DownloadSynchronizer(BiDirSynchronizer):
             # self.resolve_all = resolve
             return resolve
 
-        # RED = ansi_code("Fore.LIGHTRED_EX")
-        M = ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE")
-        R = ansi_code("Style.RESET_ALL")
-
         # self._print_pair_diff(pair)
 
         self._inc_stat("interactive_ask")
 
-        while True:
-            prompt = (
-                "Use "
-                + M
-                + "R"
-                + R
-                + "emote, "
-                + M
-                + "S"
-                + R
-                + "kip, "
-                + M
-                + "B"
-                + R
-                + "inary compare, "
-                + M
-                + "H"
-                + R
-                + "elp? "
-            )
+        prompt = (
+            "Use {m}R{r}emote, {m}S{r}kip, {m}B{r}inary compare, {m}H{r}elp ? "
+        ).format(
+            m=ansi_code("Style.BRIGHT") + ansi_code("Style.UNDERLINE"),
+            r=ansi_code("Style.RESET_ALL"),
+        )
 
+        while True:
             r = input(prompt).strip()
             if r in ("h", "H", "?"):
                 print("The following keys are supported:")

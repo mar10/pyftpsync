@@ -285,7 +285,7 @@ class SFTPTarget(_Target):
         if not path.startswith(self.root_dir):
             # paranoic check to prevent that our sync tool goes berserk
             raise RuntimeError(
-                "Tried to navigate outside root %r: %r" % (self.root_dir, path)
+                "Tried to navigate outside root {!r}: {!r}".format(self.root_dir, path)
             )
         self.sftp.cwd(dir_name)
         self.cur_dir = path

@@ -191,7 +191,7 @@ class FtpTargetTest(unittest.TestCase):
                 s = buf.readline()
                 if not s:
                     break
-                print("%r" % s)
+                print("{!r}".format(s))
             buf.seek(0)
             print(buf.getvalue())
             b = io.BytesIO(bytes(buf.getvalue(), "utf-8"))

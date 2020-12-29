@@ -440,7 +440,7 @@ class FsTarget(_Target):
         path = normpath_url(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
             raise RuntimeError(
-                "Tried to navigate outside root %r: %r" % (self.root_dir, path)
+                "Tried to navigate outside root {!r}: {!r}".format(self.root_dir, path)
             )
         self.cur_dir_meta = None
         self.cur_dir = path

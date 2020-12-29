@@ -12,48 +12,44 @@ from ftpsync.cli_common import common_parser, creds_parser, verbose_parser
 from ftpsync.synchronizers import CONFIG_FILE_NAME
 from ftpsync.util import write
 
-MANDATORY_TASK_ARGS = set(("command", "remote"))
+MANDATORY_TASK_ARGS = {"command", "remote"}
 
-KNOWN_TASK_ARGS = set(
-    (
-        "case",
-        "debug",
-        "delete",
-        "delete_unmatched",
-        "dry_run",
-        "exclude",
-        "force",
-        "ftp_active",
-        "here",
-        "local",
-        "match",
-        "no_color",
-        "no_keyring",
-        "no_netrc",
-        "no_prompt",
-        "no_verify_host_keys",
-        "progress",
-        "prompt",
-        "resolve",
-        "root",
-        "verbose",
-    )
-)
+KNOWN_TASK_ARGS = {
+    "case",
+    "debug",
+    "delete",
+    "delete_unmatched",
+    "dry_run",
+    "exclude",
+    "force",
+    "ftp_active",
+    "here",
+    "local",
+    "match",
+    "no_color",
+    "no_keyring",
+    "no_netrc",
+    "no_prompt",
+    "no_verify_host_keys",
+    "progress",
+    "prompt",
+    "resolve",
+    "root",
+    "verbose",
+}
 
 # Flag-style arguments that default to False
-OVERRIDABLE_BOOL_ARGS = set(
-    (
-        "dry_run",
-        "force",
-        "no_color",
-        "no_keyring",
-        "no_netrc",
-        "no_prompt",
-        "no_verify_host_keys",
-        "progress",
-        # "resolve",
-    )
-)
+OVERRIDABLE_BOOL_ARGS = {
+    "dry_run",
+    "force",
+    "no_color",
+    "no_keyring",
+    "no_netrc",
+    "no_prompt",
+    "no_verify_host_keys",
+    "progress",
+    # "resolve",
+}
 
 
 def add_run_parser(subparsers):
