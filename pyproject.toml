@@ -17,3 +17,8 @@ exclude = '''
 
 )/
 '''
+
+[tool.isort]
+# See https://black.readthedocs.io/en/stable/compatible_configs.html
+profile = "black"
+src_paths = ["ftpsync", "tests"]
