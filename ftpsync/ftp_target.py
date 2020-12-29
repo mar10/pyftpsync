@@ -9,12 +9,14 @@ import ftplib
 import json
 import os
 import time
-from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
+from posixpath import join as join_url
+from posixpath import normpath as normpath_url
+from posixpath import relpath as relpath_url
 from tempfile import SpooledTemporaryFile
 
 from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersion
 from ftpsync.resources import DirectoryEntry, FileEntry
-from ftpsync.targets import _Target, _get_encoding_opt
+from ftpsync.targets import _get_encoding_opt, _Target
 from ftpsync.util import (
     get_credentials_for_url,
     is_native,

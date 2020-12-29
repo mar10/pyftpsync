@@ -6,15 +6,15 @@ Tests for pyftpsync
 # flake8: noqa: E501
 
 import unittest
+from unittest.case import SkipTest
+
+from ftpsync.synchronizers import BiDirSynchronizer
 from tests.fixture_tools import (
     _SyncTestBase,
     get_test_folder,
     remove_test_folder,
     write_test_file,
 )
-from unittest.case import SkipTest
-
-from ftpsync.synchronizers import BiDirSynchronizer
 
 
 # ===============================================================================

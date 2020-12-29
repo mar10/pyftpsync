@@ -4,6 +4,10 @@ Tests for pyftpsync
 """
 import os
 import unittest
+
+from ftpsync.ftp_target import FTPTarget
+from ftpsync.targets import DirMetadata, make_target
+from ftpsync.util import set_pyftpsync_logger, write, write_error
 from tests.fixture_tools import (
     PYFTPSYNC_TEST_FOLDER,
     _SyncTestBase,
@@ -12,10 +16,6 @@ from tests.fixture_tools import (
     is_test_file,
     read_test_file,
 )
-
-from ftpsync.ftp_target import FTPTarget
-from ftpsync.targets import DirMetadata, make_target
-from ftpsync.util import set_pyftpsync_logger, write, write_error
 
 # ===============================================================================
 # FixtureTest

@@ -9,12 +9,7 @@ import time
 
 from ftpsync.ftp_target import FTPTarget
 from ftpsync.metadata import DirMetadata
-from ftpsync.resources import (
-    DirectoryEntry,
-    EntryPair,
-    FileEntry,
-    operation_map,
-)
+from ftpsync.resources import DirectoryEntry, EntryPair, FileEntry, operation_map
 from ftpsync.util import (
     DRY_RUN_PREFIX,
     IS_REDIRECTED,

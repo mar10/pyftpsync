@@ -11,7 +11,8 @@ import os
 import shutil
 import sys
 import threading
-from posixpath import join as join_url, normpath as normpath_url
+from posixpath import join as join_url
+from posixpath import normpath as normpath_url
 from urllib.parse import urlparse
 
 from ftpsync.metadata import DirMetadata

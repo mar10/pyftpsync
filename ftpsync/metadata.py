@@ -10,11 +10,11 @@ import time
 from ftpsync import __version__
 from ftpsync.util import (
     get_option,
+    make_native_dict_keys,
     pretty_stamp,
     str_to_bool,
     write,
     write_error,
-    make_native_dict_keys,
 )
 
 PYFTPSYNC_VERBOSE_META = str_to_bool(

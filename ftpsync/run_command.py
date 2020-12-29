@@ -12,7 +12,6 @@ from ftpsync.cli_common import common_parser, creds_parser, verbose_parser
 from ftpsync.synchronizers import CONFIG_FILE_NAME
 from ftpsync.util import write
 
-
 MANDATORY_TASK_ARGS = set(("command", "remote"))
 
 KNOWN_TASK_ARGS = set(

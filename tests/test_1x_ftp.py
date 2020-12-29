@@ -9,14 +9,6 @@ import sys
 import unittest
 from ftplib import FTP
 from pprint import pprint
-from tests.fixture_tools import (
-    PYFTPSYNC_TEST_FOLDER,
-    PYFTPSYNC_TEST_FTP_URL,
-    STAMP_20140101_120000,
-    get_test_file_date,
-    touch_test_file,
-)
-from tests.test_1x import prepare_fixtures_1
 from urllib.parse import urlparse
 
 from ftpsync.metadata import DirMetadata
@@ -26,6 +18,14 @@ from ftpsync.synchronizers import (
     UploadSynchronizer,
 )
 from ftpsync.targets import FsTarget, make_target
+from tests.fixture_tools import (
+    PYFTPSYNC_TEST_FOLDER,
+    PYFTPSYNC_TEST_FTP_URL,
+    STAMP_20140101_120000,
+    get_test_file_date,
+    touch_test_file,
+)
+from tests.test_1x import prepare_fixtures_1
 
 
 # ===============================================================================

@@ -4,14 +4,14 @@ Tests for pyftpsync
 """
 import re
 import unittest
+
+from ftpsync import __version__
 from tests.fixture_tools import (
     _SyncTestBase,
     get_local_test_url,
     get_remote_test_url,
     run_script,
 )
-
-from ftpsync import __version__
 
 # ===============================================================================
 # CliTest

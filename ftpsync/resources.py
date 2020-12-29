@@ -5,10 +5,11 @@ Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.
 """
 import os
 from datetime import datetime
-from posixpath import join as join_url, normpath as normpath_url, relpath as relpath_url
+from posixpath import join as join_url
+from posixpath import normpath as normpath_url
+from posixpath import relpath as relpath_url
 
-from ftpsync.util import eps_compare, write, DEBUG_FLAGS
-
+from ftpsync.util import DEBUG_FLAGS, eps_compare, write
 
 ENTRY_CLASSIFICATIONS = frozenset(
     ["existing", "unmodified", "modified", "new", "deleted"]
