@@ -13,9 +13,9 @@
 - Use [Yabs](https://github.com/mar10/yabs) as release tool
 - Rename FtpTarget => FTPTarget
 
-3.1.1 (unreleased)
-------------------
-- Fix #26: Crash when not setting verbose option
+3.1.1+
+------
+See branch `maintain_3.x`.
 
 3.1.0 (2019-12-26)
 ------------------
