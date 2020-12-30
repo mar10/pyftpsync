@@ -96,13 +96,13 @@ matcher_parser.add_argument(
 #     help="wildcard for file names using fnmatch syntax "
 #     "(default: match all, separate multiple values with ',')",
 # )
-# matcher_parser.add_argument(
-#     "-x",
-#     "--exclude",
-#     default=",".join(DEFAULT_OMIT),
-#     help="wildcard of files and directories to exclude "
-#     "(applied after --match, default: '%(default)s')",
-# )
+matcher_parser.add_argument(
+    "-x",
+    "--exclude",
+    default=",".join(DEFAULT_OMIT),
+    help="wildcard of files and directories to exclude "
+    "(applied after --match, default: '%(default)s')",
+)
 # matcher_parser.add_argument("--no-default-excludes",
 #                     action="store_true",
 #                     help="If set, ignore patterns will replace the default "
