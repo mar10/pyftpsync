@@ -25,7 +25,7 @@ qv_group.add_argument(
 verbose_parser.add_argument(
     "--debug",
     action="append",
-    choices=["classify"],
+    choices=["classify", "match"],
     help="enable additional specific logging (requires -v)",
 )
 verbose_parser.add_argument(
@@ -86,16 +86,23 @@ matcher_parser = argparse.ArgumentParser(add_help=False)
 matcher_parser.add_argument(
     "-m",
     "--match",
-    help="wildcard for file names using fnmatch syntax "
+    help="wildcard for file names using glob syntax "
+    "See also https://pyftpsync.readthedocs.io/en/latest/user_guide.html#matching-and-filtering "
     "(default: match all, separate multiple values with ',')",
 )
-matcher_parser.add_argument(
-    "-x",
-    "--exclude",
-    default=",".join(DEFAULT_OMIT),
-    help="wildcard of files and directories to exclude "
-    "(applied after --match, default: '%(default)s')",
-)
+# matcher_parser.add_argument(
+#     "-m",
+#     "--match",
+#     help="wildcard for file names using fnmatch syntax "
+#     "(default: match all, separate multiple values with ',')",
+# )
+# matcher_parser.add_argument(
+#     "-x",
+#     "--exclude",
+#     default=",".join(DEFAULT_OMIT),
+#     help="wildcard of files and directories to exclude "
+#     "(applied after --match, default: '%(default)s')",
+# )
 # matcher_parser.add_argument("--no-default-excludes",
 #                     action="store_true",
 #                     help="If set, ignore patterns will replace the default "

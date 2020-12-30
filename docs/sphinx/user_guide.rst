@@ -161,16 +161,34 @@ successful login.
 Matching and Filtering
 ----------------------
 
-The ``--match`` option filters processed files using on or more patterns
-(using the `fnmatch syntax <https://docs.python.org/3/library/fnmatch.html#module-fnmatch>`_). |br|
-**Note:**  These patterns are only applied to files, not directories.
+**Note:**  Starting with v4.0.0 the ``--match`` option uses the
+`glob syntax <https://facelessuser.github.io/wcmatch/glob/#syntax>`_.
 
-The ``--exclude`` option is applied after `--match` and removes entries from
-processing. Unlike `--match`, these patterns are also applied to directories.
+The ``--match`` option filters processed files using on or more patterns
+(using the `glob syntax <https://facelessuser.github.io/wcmatch/glob/#syntax>`_).
+
+.. note::
+    On linux and macOS the shell will expand wildcard patterns *before* calling
+    the program.
+    Thus we have to include the glob patterns inside double quotes.
+
+
+..
+    **Note:**  These patterns are only applied to files, not directories.
+
+    The ``--exclude`` option is applied after `--match` and removes entries from
+    processing. Unlike `--match`, these patterns are also applied to directories.
+
+- A *leading* dot (``.``) is not matched by ``*``, ``?``, or ``**``. |br|
+  You must explictly prepend a ``.``: ``--glob .*.txt``
+- Even on Windows, use ``/`` instead of ``\`` (however if you want to use it,
+  make sure you escape it properly: ``\\``)
 
 Example::
 
     $ pyftpsync scan /my/folder --list --match=*.js,*.css --exclude=.git,build,node_modules
+
+**TODO:** --no-default-excludes
 
 
 Upload Files Syntax
@@ -385,6 +403,9 @@ Synchronize a local folder with an FTP server using TLS::
   opts = {"resolve": "skip", "verbose": 1}
   s = BiDirSynchronizer(local, remote, opts)
   s.run()
+
+.. note::
+    The class ``FTPTarget`` was renamed with release 4.0 (named ``FtpTarget`` before).
 
 
 Logging

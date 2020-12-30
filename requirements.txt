@@ -2,3 +2,4 @@ colorama==0.4.3
 keyring==18.0
 pysftp==0.2.9
 PyYAML==5.2
+wcmatch~=7.1

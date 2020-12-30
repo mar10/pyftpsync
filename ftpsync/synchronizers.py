@@ -3,19 +3,16 @@
 (c) 2012-2020 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
-import fnmatch
 import sys
 import time
 
+from wcmatch.glob import globmatch
+
 from ftpsync.ftp_target import FTPTarget
 from ftpsync.metadata import DirMetadata
-from ftpsync.resources import (
-    DirectoryEntry,
-    EntryPair,
-    FileEntry,
-    operation_map,
-)
+from ftpsync.resources import DirectoryEntry, EntryPair, FileEntry, operation_map
 from ftpsync.util import (
+    DEBUG_FLAGS,
     DRY_RUN_PREFIX,
     IS_REDIRECTED,
     VT_ERASE_LINE,
@@ -65,30 +62,53 @@ def process_options(opts):
 
 def match_path(entry, opts):
     """Return True if `path` matches `match` and `exclude` options."""
+
+    def _log(msg, name=""):
+        if "match" in DEBUG_FLAGS:
+            if name:
+                name = "{}: ".format(name)
+            write("MATCH {}{}".format(name, msg), debug=True)
+
+    path = entry.get_rel_path()
     if entry.name in ALWAYS_OMIT:
+        _log("Skipping system name", path)
         return False
-    # TODO: currently we use fnmatch syntax and match against names.
-    # We also might allow glob syntax and match against the whole relative path instead
-    # path = entry.get_rel_path()
-    path = entry.name
-    ok = True
-    match = opts.get("match")
-    exclude = opts.get("exclude")
-    if entry.is_file() and match:
-        assert type(match) is list
-        ok = False
-        for pat in match:
-            if fnmatch.fnmatch(path, pat):
-                ok = True
-                break
-    if ok and exclude:
-        assert type(exclude) is list
-        for pat in exclude:
-            if fnmatch.fnmatch(path, pat):
-                ok = False
-                break
-    # write("match", ok, entry)
-    return ok
+    patterns = opts.get("match")
+    if not patterns:
+        return True
+    if not globmatch(path, patterns=patterns, flags=0, root_dir=None, limit=1000):
+        _log("Skipping ", path)
+        return False
+    _log("Ok", path)
+    return True
+
+
+# def match_path(entry, opts):
+#     """Return True if `path` matches `match` and `exclude` options."""
+#     if entry.name in ALWAYS_OMIT:
+#         return False
+#     # TODO: currently we use fnmatch syntax and match against names.
+#     # We also might allow glob syntax and match against the whole relative path instead
+#     # path = entry.get_rel_path()
+#     path = entry.name
+#     ok = True
+#     match = opts.get("match")
+#     exclude = opts.get("exclude")
+#     if entry.is_file() and match:
+#         assert type(match) is list
+#         ok = False
+#         for pat in match:
+#             if fnmatch.fnmatch(path, pat):
+#                 ok = True
+#                 break
+#     if ok and exclude:
+#         assert type(exclude) is list
+#         for pat in exclude:
+#             if fnmatch.fnmatch(path, pat):
+#                 ok = False
+#                 break
+#     # write("match", ok, entry)
+#     return ok
 
 
 # ===============================================================================
