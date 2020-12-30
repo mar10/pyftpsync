@@ -63,7 +63,9 @@ def tree_handler(parser, args):
         target.open()
 
         print("[{}]".format(target.root_dir))
-        for path, entry in target.walk_tree(sort=args.sort, files=args.files, pred=_pred):
+        for path, entry in target.walk_tree(
+            sort=args.sort, files=args.files, pred=_pred
+        ):
             name = entry.name
             if entry.is_dir():
                 dir_count += 1
