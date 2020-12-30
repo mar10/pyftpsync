@@ -6,9 +6,9 @@ Tests for pyftpsync
 # flake8: noqa: E501
 
 import unittest
-from tests.fixture_tools import _SyncTestBase, get_test_folder
 
 from ftpsync.synchronizers import UploadSynchronizer
+from tests.fixture_tools import _SyncTestBase, get_test_folder
 
 # ===============================================================================
 # UploadResolveTest

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Make version accessible as 'ftpsync.__version__'
 # from ftpsync._version import __version__
 """
@@ -13,4 +14,4 @@ Examples
     Developmental release (to mark 3.0.0 as 'used'. Don't publish this):
         '3.0.0-dev1'
 """
-__version__ = "4.0.0-a2"
+__version__ = "4.0.0-a3"

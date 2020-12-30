@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Run like
     $ python -m tests.ftp_server

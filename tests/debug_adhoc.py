@@ -28,7 +28,7 @@ def do_sync():
 def do_scan():
     from ftpsync.scan_command import scan_handler
 
-    class args:
+    class args:  # noqa: N801
         """"""
 
     args.target = "ftp://wwwendt.de/test_pyftpsync"

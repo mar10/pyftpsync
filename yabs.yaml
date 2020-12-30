@@ -22,7 +22,7 @@ tasks:
     github: true            # GitHub repo name valid and online accessible
     clean: true             # Repo must/must not contain modifications
     os: null                # (str, list)
-    python: ">=3.5"         # SemVer specifier
+    python: ">=3.8"         # SemVer specifier
     twine: true             # `twine` is available
     up_to_date: true        # everything pulled from remote
     venv: true              # running inside a virtual environment
@@ -30,16 +30,16 @@ tasks:
 
   # 'run': Run arbitrary shell command
   - task: exec
-    args: ["tox", "-e", "check"]     # shell command and optional arguments
+    args: ["tox", "-e", "check,flake8"]
     always: true            # `true`: run even in dry-run mode
-    silent: true            # `true`: suppress output
+    silent: true            # `true`: suppress output (unless error)
     ignore_errors: false    # `true`: show warning, but proceed on errors (exit code != 0)
 
   - task: exec
-    args: ["tox"]           # shell command and optional arguments
-    always: true            # `true`: run even in dry-run mode
-    silent: true            # `true`: suppress output
-    ignore_errors: false    # `true`: show warning, but proceed on errors (exit code != 0)
+    args: ["tox"]
+    always: true
+    silent: true
+    ignore_errors: false
 
   # 'bump': version by `--inc` argument
   - task: bump
@@ -63,6 +63,15 @@ tasks:
     targets:
       - sdist
       - bdist_wheel
+
+  # Build MSI Installer.
+  #
+  - task: exec
+    args: ["python", "setup_bdist_msi.py", "bdist_msi"]
+    always: true
+    silent: true            # `true`: suppress output
+    # stream: true
+    ignore_errors: true  # Try it (will fail on non-Windows)
 
   # 'push': Push changes and tags
   - task: push

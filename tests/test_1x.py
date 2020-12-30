@@ -5,6 +5,13 @@ Tests for pyftpsync
 import datetime
 import os
 import unittest
+
+from ftpsync.synchronizers import (
+    BiDirSynchronizer,
+    DownloadSynchronizer,
+    UploadSynchronizer,
+)
+from ftpsync.targets import FsTarget
 from tests.fixture_tools import (
     PYFTPSYNC_TEST_FOLDER,
     STAMP_20140101_120000,
@@ -13,13 +20,6 @@ from tests.fixture_tools import (
     touch_test_file,
     write_test_file,
 )
-
-from ftpsync.synchronizers import (
-    BiDirSynchronizer,
-    DownloadSynchronizer,
-    UploadSynchronizer,
-)
-from ftpsync.targets import FsTarget
 
 
 # ===============================================================================

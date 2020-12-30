@@ -8,6 +8,7 @@ Tests for pyftpsync
 
 import re
 import unittest
+
 from tests.fixture_tools import (
     _SyncTestBase,
     get_local_test_url,

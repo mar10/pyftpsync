@@ -23,13 +23,13 @@ from ftpsync.cli_common import (
 )
 from ftpsync.run_command import add_run_parser, handle_run_command
 from ftpsync.scan_command import add_scan_parser
-from ftpsync.tree_command import add_tree_parser
 from ftpsync.synchronizers import (
     BiDirSynchronizer,
     DownloadSynchronizer,
     UploadSynchronizer,
 )
 from ftpsync.targets import FsTarget, make_target
+from ftpsync.tree_command import add_tree_parser
 from ftpsync.util import (
     DEBUG_FLAGS,
     PYTHON_VERSION,

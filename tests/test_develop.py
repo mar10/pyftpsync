@@ -4,6 +4,10 @@ Tests for pyftpsync
 """
 import os
 import unittest
+from unittest.case import SkipTest
+
+from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer
+from ftpsync.targets import make_target
 from tests.fixture_tools import (
     PYFTPSYNC_TEST_FOLDER,
     _SyncTestBase,
@@ -15,10 +19,6 @@ from tests.fixture_tools import (
     run_script,
     write_test_file,
 )
-from unittest.case import SkipTest
-
-from ftpsync.synchronizers import DownloadSynchronizer, UploadSynchronizer
-from ftpsync.targets import make_target
 
 
 # ===============================================================================

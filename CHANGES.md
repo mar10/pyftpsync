@@ -15,9 +15,9 @@
 - Rename `.pyftpsync.yaml` to `pyftpsync.yaml`
 - Add `--glob` argument and drop `--match`, `--exclude`
 
-3.1.1 (unreleased)
-------------------
-- Fix #26: Crash when not setting verbose option
+3.1.1+
+------
+See branch `maintain_3.x`.
 
 3.1.0 (2019-12-26)
 ------------------
