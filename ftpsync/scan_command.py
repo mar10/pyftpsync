@@ -69,7 +69,15 @@ def scan_handler(parser, args):
     processed_files = set()
 
     opts = namespace_to_dict(args)
+
+    # Fix opts["match"] and opts["exclude"]:
     process_options(opts)
+
+    if any(("**" in m or "/" in m for m in opts["match"])):
+        if not args.recursive:
+            raise RuntimeError(
+                "A directory glob pattern contains '**' or '/' without --recursive argument"
+            )
 
     def _pred(entry):
         """Walker predicate that check match/exclude options."""

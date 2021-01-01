@@ -6,7 +6,7 @@ Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.
 import sys
 import time
 
-from wcmatch.glob import globmatch
+from wcmatch import glob
 
 from ftpsync.ftp_target import FTPTarget
 from ftpsync.metadata import DirMetadata
@@ -64,6 +64,7 @@ def match_path(entry, opts):
     """Return True if `path` matches `match` and `exclude` options."""
 
     def _log(msg, name=""):
+        # print("match", name, msg)
         if "match" in DEBUG_FLAGS:
             if name:
                 name = "{}: ".format(name)
@@ -76,7 +77,8 @@ def match_path(entry, opts):
     patterns = opts.get("match")
     if not patterns:
         return True
-    if not globmatch(path, patterns=patterns, flags=0, root_dir=None, limit=1000):
+    flags = glob.GLOBSTAR
+    if not glob.globmatch(path, patterns, flags=flags, root_dir=None, limit=1000):
         _log("Skipping ", path)
         return False
     _log("Ok", path)
@@ -604,7 +606,7 @@ class BaseSynchronizer:
             hook_result = self.re_classify_pair(pair)
 
             # Let synchronizer implement special handling of unmatched entries
-            # (e.g. `--delete_unmatched`)
+            # (e.g. `--delete-unmatched`)
             if not self._match(pair.any_entry):
                 self.on_mismatch(pair)
                 # ... do not call operation handler...
@@ -613,7 +615,7 @@ class BaseSynchronizer:
                 # print(handler)
                 if handler:
                     try:
-                        res = handler(pair)
+                        handler(pair)
                     except Exception as e:
                         if self.on_error(e, pair) is not True:
                             raise
@@ -642,9 +644,11 @@ class BaseSynchronizer:
             if remote_dir:
                 # write("sync_equal_dir(%s, %s)" % (local_dir, remote_dir))
                 # self._log_call("sync_equal_dir(%s, %s)" % (local_dir, remote_dir))
-                # res = self.sync_equal_dir(local_dir, remote_dir)
-                # res = self.on_equal(local_dir, remote_dir)
-                if res is not False:
+                # handler_res = self.sync_equal_dir(local_dir, remote_dir)
+                # handler_res = self.on_equal(local_dir, remote_dir)
+                if local_dir.was_deleted or remote_dir.was_deleted:
+                    pass
+                else:
                     self.local.cwd(local_dir.name)
                     self.remote.cwd(local_dir.name)
                     self._sync_dir()
@@ -678,7 +682,11 @@ class BaseSynchronizer:
         return False
 
     def on_mismatch(self, pair):
-        """Called for pairs that don't match `match` and `exclude` filters."""
+        """Called for pairs that don't match `match` and `exclude` filters.
+
+        A synchronizer may decide to implement `--delete-unmatched` and set
+        `pair.entry.was_deleted` accordingly.
+        """
         self._log_action("skip", "mismatch", "?", pair.any_entry, min_level=4)
 
     def on_equal(self, pair):
@@ -1135,8 +1143,10 @@ class UploadSynchronizer(BiDirSynchronizer):
                 self._remove_dir(remote_entry)
             else:
                 self._remove_file(remote_entry)
+            remote_entry.was_deleted = True  # add a hint for the synchronizer
         else:
             self._log_action("skip", "unmatched", "-", pair.any_entry, min_level=4)
+        return
 
     # def on_equal(self, pair):
     #     self._log_action("", "equal", "=", pair.local, min_level=4)
@@ -1275,7 +1285,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
     def on_mismatch(self, pair):
         """Called for pairs that don't match `match` and `exclude` filters.
 
-        If --delete-unmatched is on, remove the remote resource.
+        If --delete-unmatched is on, remove the local resource.
         """
         local_entry = pair.local
         if self.options.get("delete_unmatched") and local_entry:
@@ -1284,8 +1294,10 @@ class DownloadSynchronizer(BiDirSynchronizer):
                 self._remove_dir(local_entry)
             else:
                 self._remove_file(local_entry)
+            local_entry.was_deleted = True  # add a hint for the synchronizer
         else:
             self._log_action("skip", "unmatched", "-", pair.any_entry, min_level=4)
+        return
 
     # def on_equal(self, pair):
     #     self._log_action("", "equal", "=", pair.local, min_level=4)

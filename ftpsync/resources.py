@@ -226,6 +226,8 @@ class _Resource:
         self.ps_utime = None
         #: str: (set by synchronizer._classify_entry()).
         self.classification = None
+        #: bool: May be set to true by synchronizer
+        self.was_deleted = None
 
     def __str__(self):
         dt_modified = datetime.fromtimestamp(self.mtime)

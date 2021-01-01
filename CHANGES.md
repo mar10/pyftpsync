@@ -13,7 +13,9 @@
 **Breaking Changes:**
 - Drop support for Python 2.x (end-of-life: 2020-01-01)
 - Rename `.pyftpsync.yaml` to `pyftpsync.yaml`
-- Add `--glob` argument and drop `--match`, `--exclude`
+- Add `--match` argument now uses [glob](https://facelessuser.github.io/wcmatch/glob/)
+  syntax.
+  `--exclude` is still available, but may be ...
 
 3.1.1+
 ------

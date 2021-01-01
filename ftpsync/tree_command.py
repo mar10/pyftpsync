@@ -54,10 +54,21 @@ def tree_handler(parser, args):
     opts = namespace_to_dict(args)
     process_options(opts)
 
+    has_deep_match = any(("**" in m or "/" in m for m in opts["match"]))
+    # if any(["**" in m or "/" in m for m in opts["match"]]):
+    #     if not args.recursive:
+    #         raise RuntimeError(
+    #             "A directory glob pattern contains '**' or '/' without --recursive argument"
+    #         )
+
     def _pred(entry):
         """Walker predicate that check match/exclude options."""
-        if not match_path(entry, opts):
-            return False
+        # If we have a --match argument that selects files in sub-folders,
+        # we must always visit directories
+        if has_deep_match and entry.is_dir():
+            return True
+        # now filter entries
+        return bool(match_path(entry, opts))
 
     try:
         target.open()
