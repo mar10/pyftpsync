@@ -48,7 +48,7 @@ class TreeTest(_SyncTestBase):
         self.assertListEqual(a, expect)
 
     def test_all_files(self):
-        out = run_script("tree", self.local, "--files")
+        out = run_script("tree", self.local, "--files", "--sort")
         self.assert_tree_equal(
             out,
             [
