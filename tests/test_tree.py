@@ -38,8 +38,10 @@ class TreeTest(_SyncTestBase):
         # Strip away trailing file date and size and ignore summary line
         a = []
         for s in out.split("\n"):
+            if s.startswith("[") and s.endswith("]"):
+                continue  # skip leading line (location info)
             if s.startswith("Scanning "):
-                break
+                break  # stop at last status line
             s = s.split(" 2014-", 1)[0]
             a.append(s.rstrip())
         pprint(a)
@@ -52,7 +54,6 @@ class TreeTest(_SyncTestBase):
         self.assert_tree_equal(
             out,
             [
-                "[C:\\Prj\\test\\test_pyftpsync\\local]",
                 " +- file1.txt",
                 " +- file2.txt",
                 " +- file3.txt",
@@ -84,7 +85,6 @@ class TreeTest(_SyncTestBase):
         self.assert_tree_equal(
             out,
             [
-                "[C:\\Prj\\test\\test_pyftpsync\\local]",
                 " +- [folder1]",
                 " |   `- file1_1.txt",
                 " +- [folder2]",
