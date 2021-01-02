@@ -11,7 +11,7 @@ from ftpsync import __version__
 
 
 # Check for Windows MSI Setup
-if "bdist_msi" not in sys.argv or len(sys.argv) != 2:
+if "bdist_msi" not in sys.argv:  # or len(sys.argv) != 2:
     raise RuntimeError(
         "This setup.py variant is only for creating 'bdist_msi' targets: {}\n"
         "Example `{} bdist_msi`".format(sys.argv, sys.argv[0])
@@ -26,14 +26,36 @@ if "HOME" not in os.environ and "HOMEPATH" in os.environ:
 
 # Since we included pywin32 extensions, cx_Freeze tries to create a
 # version resource. This only supports the 'a.b.c[.d]' format.
-# Our version has either the for '1.2.3' or '1.2.3-a4'
+# Our version has either the for '1.2.3' or '1.2.3-a1'
 major, minor, patch = org_version.split(".", 3)
+major = int(major)
+minor = int(minor)
 if "-" in patch:
+    # We have a pre-release version, e.g. '1.2.3-a1'.
+    # This is presumably a post-release increment after '1.2.2' release.
+    # It must NOT be converted to '1.2.3.1', since that would be *greater*
+    # than '1.2.3', which is not even released yet.
+    # Approach 1:
+    #     We cannot guarantee that '1.2.2.1' is correct either, so for
+    #     pre-releases we assume '0.0.0.0':
+    # major = minor = patch = alpha = 0
+    # Approach 2:
+    #     '1.2.3-a1' was presumably a post-release increment after '1.2.2',
+    #     so assume '1.2.2.1':
     patch, alpha = patch.split("-", 1)
+    patch = int(patch)
     # Remove leading letters
     alpha = re.sub("^[a-zA-Z]+", "", alpha)
+    alpha = int(alpha)
+    if patch >= 1:
+        patch -= 1  # 1.2.3-a1 => 1.2.2.1
+    else:
+        # may be 1.2.0-a1 or 2.0.0-a1: we don't know what the previous release was
+        major = minor = patch = alpha = 0
 else:
+    patch = int(patch)
     alpha = 0
+
 version = "{}.{}.{}.{}".format(major, minor, patch, alpha)
 print("Version {}, using {}".format(org_version, version))
 
@@ -60,7 +82,7 @@ executables = [
         targetName="pyftpsync.exe",
         # icon="docs/logo.ico",
         shortcutName="pyftpsync",
-        # copyright="(c) 2012-2020 Martin Wendt",  # requires cx_Freeze PR#94
+        # copyright="(c) 2012-2021 Martin Wendt",  # requires cx_Freeze PR#94
         # trademarks="...",
     )
 ]
@@ -69,7 +91,7 @@ build_exe_options = {
     # "init_script": "Console",
     "includes": install_requires,
     "packages": ["keyring.backends"],  # loaded dynamically
-    "constants": "BUILD_COPYRIGHT='(c) 2012-2020 Martin Wendt'",
+    "constants": "BUILD_COPYRIGHT='(c) 2012-2021 Martin Wendt'",
 }
 
 bdist_msi_options = {
@@ -87,7 +109,7 @@ setup(
     version=version,
     author="Martin Wendt",
     author_email="pyftpsync@wwwendt.de",
-    # copyright="(c) 2012-2020 Martin Wendt",
+    # copyright="(c) 2012-2021 Martin Wendt",
     maintainer="Martin Wendt",
     maintainer_email="pyftpsync@wwwendt.de",
     url="https://github.com/mar10/pyftpsync",
@@ -111,6 +133,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Internet :: File Transfer Protocol (FTP)",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Utilities",

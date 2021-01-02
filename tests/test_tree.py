@@ -79,6 +79,23 @@ class TreeTest(_SyncTestBase):
             ],
         )
 
+    def test_match(self):
+        out = run_script("tree", self.local, "--files", "--sort", "--match", "*1_*.txt")
+        self.assert_tree_equal(
+            out,
+            [
+                "[C:\\Prj\\test\\test_pyftpsync\\local]",
+                " +- [folder1]",
+                " |   `- file1_1.txt",
+                " +- [folder2]",
+                " +- [folder3]",
+                " +- [folder4]",
+                " +- [folder5]",
+                " +- [folder6]",
+                " `- [folder7]",
+            ],
+        )
+
 
 # ===============================================================================
 # FtpTreeTest

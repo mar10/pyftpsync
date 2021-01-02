@@ -1,7 +1,9 @@
 4.0.0 (unreleased)
 ------------------
-- Drop support for Python 2.x (end-of-life: 2020-01-01)
-- Rename `.pyftpsync.yaml` to `pyftpsync.yaml`
+- **Breaking Changes:**
+  - Drop support for Python 2.x (end-of-life: 2020-01-01)
+  - Rename `.pyftpsync.yaml` to `pyftpsync.yaml`
+  - Rename FtpTarget => FTPTarget
 - Add SFTP support
 - Add `tree` command
 - Add `--case` argument for better handling of ambigous files that only differ
@@ -11,7 +13,6 @@
 - `--debug classify` helps with analysis of synchronization problems
 - Fix #26: Crash when not setting verbose option
 - Use [Yabs](https://github.com/mar10/yabs) as release tool
-- Rename FtpTarget => FTPTarget
 
 3.1.1+
 ------
