@@ -64,15 +64,20 @@ try:
 except IOError:
     readme = "(readme not found. Running from tox/setup.py test?)"
 
-install_requires = ["colorama", "keyring", "pysftp", "PyYAML"]
-tests_require = ["pytest", "pytest-cov", "tox", "virtualenv"]
+install_requires = [
+    "colorama",
+    "keyring",
+    "pysftp",
+    "yaml",  # NOTE: must import 'yaml' (but dependency is names 'PyYAML')
+]
 setup_requires = install_requires
+tests_require = []  # "pytest", "pytest-cov", "tox", "virtualenv"]
 
-# cx_Freeze seems to be confused by module name 'PyYAML' which
-# must be imported as 'yaml', so we rename here. However it must
-# be listed as 'PyYAML' in the requirements.txt and be installed!
-install_requires.remove("PyYAML")
-install_requires.append("yaml")
+# # cx_Freeze seems to be confused by module name 'PyYAML' which
+# # must be imported as 'yaml', so we rename here. However it must
+# # be listed as 'PyYAML' in the requirements.txt and be installed!
+# install_requires.remove("PyYAML")
+# install_requires.append("yaml")
 
 executables = [
     Executable(
@@ -82,11 +87,12 @@ executables = [
         targetName="pyftpsync.exe",
         # icon="docs/logo.ico",
         shortcutName="pyftpsync",
-        # copyright="(c) 2012-2021 Martin Wendt",  # requires cx_Freeze PR#94
+        copyright="(c) 2012-2021 Martin Wendt",
         # trademarks="...",
     )
 ]
 
+# See https://cx-freeze.readthedocs.io/en/latest/distutils.html#build-exe
 build_exe_options = {
     # "init_script": "Console",
     "includes": install_requires,
@@ -94,13 +100,11 @@ build_exe_options = {
     "constants": "BUILD_COPYRIGHT='(c) 2012-2021 Martin Wendt'",
 }
 
+# See https://cx-freeze.readthedocs.io/en/latest/distutils.html#bdist-msi
 bdist_msi_options = {
     "upgrade_code": "{8F4CA3EF-06AD-418E-A64D-B975E3CFA3F6}",
     "add_to_path": True,
-    # TODO: configure target dir
-    # "initial_target_dir": r"[ProgramFilesFolder]\%s\%s" % (company_name, product_name),
-    # TODO: configure shortcuts:
-    # https://stackoverflow.com/a/15736406/19166
+    # "install_icon": "docs/logo.ico",
 }
 
 
@@ -116,28 +120,8 @@ setup(
     description="Synchronize directories using FTP(S), SFTP, or file system access.",
     long_description=readme,
     long_description_content_type="text/markdown",
-    # Development Status :: 2 - Pre-Alpha
-    # Development Status :: 3 - Alpha
-    # Development Status :: 4 - Beta
-    # Development Status :: 5 - Production/Stable
-    classifiers=[
-        "Development Status :: 3 - Alpha",
-        # "Development Status :: 4 - Beta",
-        "Environment :: Console",
-        "Intended Audience :: Information Technology",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Topic :: Internet :: File Transfer Protocol (FTP)",
-        "Topic :: Software Development :: Libraries :: Python Modules",
-        "Topic :: Utilities",
-    ],
+    # Not required for this build-only setup config:
+    classifiers=[],
     keywords="python ftp ftps sftp synchronize tls tool",
     license="The MIT License",
     install_requires=install_requires,

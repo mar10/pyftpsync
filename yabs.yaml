@@ -65,7 +65,6 @@ tasks:
       - bdist_wheel
 
   # Build MSI Installer.
-  #
   - task: exec
     args: ["python", "setup_bdist_msi.py", "bdist_msi"]
     always: true
