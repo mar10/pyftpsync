@@ -12,8 +12,8 @@ jobs:
       dist: xenial
     - python: "3.6"
       env: TOXENV=py36
-    - python: "3.5"
-      env: TOXENV=py35
+    # - python: "3.5"  # EOL 2020-09-13
+    #   env: TOXENV=py35
     - python: "3.10-dev"
       env: TOXENV=py310
   allow_failures:

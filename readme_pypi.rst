@@ -13,7 +13,7 @@ Synchronize directories using FTP(S), SFTP, or file system access.
 .. note::
     Version 4.0 introduces drops support for Python 2.
 
-Requires `Python <https://www.python.org/download/>`_ 3.5+.
+Requires `Python <https://www.python.org/download/>`_ 3.6+.
 
 A Windows `MSI installer is also available on GitHub <https://github.com/mar10/pyftpsync/releases>`_.
 

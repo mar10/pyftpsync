@@ -27,7 +27,7 @@ Synchronize directories using FTP(S), SFTP, or file system access.
 
 ## Quickstart
 
-[Python](https://www.python.org/download/Python) 3.5+ is required,
+[Python](https://www.python.org/download/Python) 3.6+ is required,
 [pip](http://www.pip-installer.org/) recommended:
 
 ```bash
