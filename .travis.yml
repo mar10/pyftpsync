@@ -19,6 +19,9 @@ jobs:
   allow_failures:
     - python: "3.10-dev"
       env: TOXENV=py310
+before_install:
+  # Fix for cryptography on Py36
+  - pip install --upgrade virtualenv
 install:
   - pip install tox-travis
   - pip install flake8
