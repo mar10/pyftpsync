@@ -157,7 +157,10 @@ except ImportError:
 
 DEFAULT_CREDENTIAL_STORE = "pyftpsync.pw"
 DRY_RUN_PREFIX = "(DRY-RUN) "
-IS_REDIRECTED = os.fstat(0) != os.fstat(1)
+try:
+    IS_REDIRECTED = os.fstat(0) != os.fstat(1)
+except OSError:
+    IS_REDIRECTED = False
 # DEFAULT_BLOCKSIZE = 8 * 1024
 VT_ERASE_LINE = "\x1b[2K"
 #: Enable additional logging. Supported values: 'classify', 'match'
