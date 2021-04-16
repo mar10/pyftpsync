@@ -759,6 +759,8 @@ class FTPTarget(_Target):
             chunk = chunk.replace(b"\r\n", LF)
             chunk = chunk.replace(b"\r", LF)
             chunk = buffer + chunk
+            if chunk.startswith(LF):
+                chunk = chunk.lstrip()
             try:
                 # print("Add chunk ", chunk, "to buffer", buffer)
                 while True:
