@@ -157,6 +157,7 @@ except ImportError:
 
 DEFAULT_CREDENTIAL_STORE = "pyftpsync.pw"
 DRY_RUN_PREFIX = "(DRY-RUN) "
+# Compatible with pyinstaller --windowed mode
 try:
     IS_REDIRECTED = os.fstat(0) != os.fstat(1)
 except OSError:
