@@ -315,7 +315,7 @@ Example: Synchronize Folders
 
 Two-way synchronization of a local folder with an SFTP server::
 
-  $ pyftpsync sync --store-password --resolve=ask --execute ~/temp sftp://example.com/target/folder
+  $ pyftpsync sync --store-password --resolve=ask ~/temp sftp://example.com/target/folder
 
 Note that ``sftp:`` protocol was specified to enable SFTP.
 

@@ -205,7 +205,7 @@ def delete_metadata(folder_path, recursive=True):
 
 
 def get_test_folder(folder_name):
-    """"Convert test folder content to dict for comparisons."""
+    """Convert test folder content to dict for comparisons."""
     #     root_path = os.path.join(PYFTPSYNC_TEST_FOLDER, folder_name.replace("/", os.sep))
     file_map = {}
     root_folder = os.path.join(PYFTPSYNC_TEST_FOLDER, folder_name)

@@ -447,7 +447,7 @@ class BaseSynchronizer:
         return
 
     def _dry_run_action(self, action):
-        """"Called in dry-run mode after call to _log_action() and before exiting function."""
+        """Called in dry-run mode after call to _log_action() and before exiting function."""
         # write("dry-run", action)
         return
 
