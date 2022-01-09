@@ -1,5 +1,5 @@
 # pyftpsync
-[![Build Status](https://travis-ci.com/mar10/pyftpsync.svg?branch=master)](https://travis-ci.com/mar10/pyftpsync)
+[![Build Status](https://travis-ci.com/mar10/pyftpsync.svg?branch=master)](https://app.travis-ci.com/github/mar10/pyftpsync)
 [![Latest Version](https://img.shields.io/pypi/v/pyftpsync.svg)](https://pypi.python.org/pypi/pyftpsync/)
 [![License](https://img.shields.io/pypi/l/pyftpsync.svg)](https://github.com/mar10/pyftpsync/blob/master/LICENSE.txt)
 [![Documentation Status](https://readthedocs.org/projects/pyftpsync/badge/?version=latest)](https://pyftpsync.readthedocs.io/)

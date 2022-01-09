@@ -101,7 +101,7 @@ be installed using `pip <http://www.pip-installer.org/>`_::
 
 .. |travis_badge| image:: https://travis-ci.org/mar10/pyftpsync.svg?branch=master
    :alt: Build Status
-   :target: https://travis-ci.org/mar10/pyftpsync
+   :target: https://app.travis-ci.com/github/mar10/pyftpsync
 
 .. |pypi_badge| image:: https://img.shields.io/pypi/v/pyftpsync.svg
    :alt: PyPI Version
