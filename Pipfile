@@ -3,7 +3,7 @@ url = "https://pypi.python.org/simple"
 verify_ssl = true
 
 [dev-packages]
-black = "==21.9b0"
+black = "~=22.0"
 check-manifest = "*"
 cx_Freeze = {version = "*", os_name = "== 'nt'"}
 flake8 = "*"
@@ -31,7 +31,7 @@ pysftp = "*"
 PyYAML = "*"
 
 [requires]
-python_version = "3.9"
+python_version = "3.10"
 
 [pipenv]
 # allow_prereleases = true
