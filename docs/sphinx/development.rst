@@ -27,11 +27,11 @@ Work in a Virtual Environment
 
 Install Python
 ^^^^^^^^^^^^^^
-`Python 3.6+ <https://www.python.org/downloads/>`_,
+`Python 3.7+ <https://www.python.org/downloads/>`_,
 and `pip <https://pip.pypa.io/en/stable/installing/#do-i-need-to-install-pip>`_ on our system.
 
 If you want to run tests on *all* supported platforms, install
-Python 3.6, 3.7, 3.8, 3.9, and 3.10.
+Python 3.7, 3.8, 3.9, and 3.10.
 
 Create and Activate the Virtual Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -52,9 +52,9 @@ For example using Python's builtin ``venv`` (instead of ``virtualenvwrapper``)
 in a Windows PowerShell::
 
     > cd /path/pyftpsync
-    > py -3.6 -m venv c:\env\pyftpsync_py36
+    > py -3.10 -m venv c:\env\pyftpsync_py310
     > c:\env\pyftpsync_py36\Scripts\Activate.ps1
-    (pyftpsync_py36) $
+    (pyftpsync_py310) $
 
 Install Requirements
 ^^^^^^^^^^^^^^^^^^^^

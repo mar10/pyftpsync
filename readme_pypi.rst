@@ -11,9 +11,9 @@ Synchronize directories using FTP(S), SFTP, or file system access.
   * Architecture is open to add other target types.
 
 .. note::
-    Version 4.0 introduces drops support for Python 2.
+    Version 4.0 drops support for Python 2.
 
-Requires `Python <https://www.python.org/download/>`_ 3.6+.
+Requires `Python <https://www.python.org/download/>`_ 3.7+.
 
 A Windows `MSI installer is also available on GitHub <https://github.com/mar10/pyftpsync/releases>`_.
 

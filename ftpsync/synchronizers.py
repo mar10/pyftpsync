@@ -480,9 +480,11 @@ class BaseSynchronizer:
         # Convert into a dict {name: FileEntry, ...}
         local_entries = self.local.get_dir()
         if case_mode == "strict":
-            local_entry_map = dict(map(lambda e: (e.name, e), local_entries))
+            local_entry_map = {e.name: e for e in local_entries}
+            # local_entry_map = dict(map(lambda e: (e.name, e), local_entries))
         else:
-            local_entry_map = dict(map(lambda e: (e.name.lower(), e), local_entries))
+            local_entry_map = {e.name.lower(): e for e in local_entries}
+            # local_entry_map = dict(map(lambda e: (e.name.lower(), e), local_entries))
             if len(local_entry_map) != len(local_entries):
                 raise RuntimeError(
                     "Local target contains file names that only differ in case: "
@@ -492,9 +494,11 @@ class BaseSynchronizer:
         # Convert into a dict {name: FileEntry, ...}
         remote_entries = self.remote.get_dir()
         if case_mode == "strict":
-            remote_entry_map = dict(map(lambda e: (e.name, e), remote_entries))
+            remote_entry_map = {e.name: e for e in remote_entries}
+            # remote_entry_map = dict(map(lambda e: (e.name, e), remote_entries))
         else:
-            remote_entry_map = dict(map(lambda e: (e.name.lower(), e), remote_entries))
+            remote_entry_map = {e.name.lower(): e for e in remote_entries}
+            # remote_entry_map = dict(map(lambda e: (e.name.lower(), e), remote_entries))
             if len(remote_entry_map) != len(remote_entries):
                 raise RuntimeError(
                     "Remote target contains file names that only differ in case: "
