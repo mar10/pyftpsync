@@ -5,6 +5,7 @@ Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.
 """
 import json
 import logging
+import os
 import stat
 import time
 from posixpath import join as join_url
@@ -29,6 +30,19 @@ from ftpsync.util import (
 )
 
 
+class PatchedPysftpConnection(pysftp.Connection):
+    """
+    Patched version that fixes exception on connect errors:
+    `AttributeError: 'Connection' object has no attribute '_sftp_live'`
+    https://stackoverflow.com/a/65060184
+    """
+
+    def __init__(self, *args, **kwargs):
+        self._sftp_live = False
+        self._transport = None
+        super().__init__(*args, **kwargs)
+
+
 # ===============================================================================
 # SFTPTarget
 # ===============================================================================
@@ -45,9 +59,8 @@ class SFTPTarget(_Target):
     """
 
     DEFAULT_BLOCKSIZE = 8 * 1024  # ftplib uses 8k chunks by default
-    MAX_SPOOL_MEM = (
-        100 * 1024
-    )  # keep open_readable() buffer in memory if smaller than 100kB
+    # keep open_readable() buffer in memory if smaller than 100kB
+    MAX_SPOOL_MEM = 100 * 1024
 
     def __init__(
         self,
@@ -140,7 +153,7 @@ class SFTPTarget(_Target):
         assert self.sftp is None
         while True:
             try:
-                self.sftp = pysftp.Connection(
+                self.sftp = PatchedPysftpConnection(
                     self.host,
                     username=self.username,
                     password=self.password,
@@ -159,12 +172,10 @@ class SFTPTarget(_Target):
                 # Continue while-loop
             except paramiko.ssh_exception.SSHException as e:
                 write_error(
-                    "{exc}: Try `ssh-keyscan HOST` to add it "
-                    "(or pass `--no-verify-host-keys` if you don't care about security).".format(
-                        exc=e
-                    )
+                    f"{e}: Try `ssh-keyscan HOST` to add it to `USER/.ssh/known_hosts` "
+                    "(or pass `--no-verify-host-keys` if you don't care about security)."
                 )
-                raise
+                raise SystemExit
 
         if verbose >= 4:
             write(
@@ -304,9 +315,49 @@ class SFTPTarget(_Target):
         self.check_write(dir_name)
         self.sftp.mkdir(dir_name)
 
-    def rmdir(self, dir_name):
+    def _rmdir_impl(self, dir_name, keep_root_folder=False, predicate=None):
+        # FTP does not support deletion of non-empty directories.
+        assert is_native(dir_name)
         self.check_write(dir_name)
-        return self.sftp.rmdir(dir_name)
+        names = []
+
+        attr_list = self.sftp.listdir_attr(dir_name)
+
+        # write(f"rmdir({dir_name}): {attr_list}")
+        for dir_attr in attr_list:
+            name = dir_attr.filename
+            # name = self.re_encode_to_native(name)
+            if "/" in name:
+                name = os.path.basename(name)
+            if name in (".", ".."):
+                continue
+            if predicate and not predicate(name):
+                continue
+            names.append(name)
+
+        if len(names) > 0:
+            self.sftp.cwd(dir_name)
+            try:
+                for name in names:
+                    try:
+                        # try to delete this as a file
+                        self.sftp.remove(name)
+                    except IOError:  # ftplib.all_errors as _e:
+                        write(f"    sftp.delete({name}) failed, trying rmdir()...")
+                        # assume <name> is a folder
+                        self.rmdir(name)
+            finally:
+                if dir_name != ".":
+                    self.sftp.cwd("..")
+        #        write("sftp.rmd(%s)..." % (dir_name, ))
+        if not keep_root_folder:
+            self.sftp.rmdir(dir_name)
+        return
+
+    def rmdir(self, dir_name):
+        # self.check_write(dir_name)
+        # return self.sftp.rmdir(dir_name)
+        return self._rmdir_impl(dir_name)
 
     _paramiko_py3compat_u = paramiko.py3compat.u
 
