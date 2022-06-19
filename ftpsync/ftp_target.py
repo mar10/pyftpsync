@@ -74,7 +74,7 @@ class FTPTarget(_Target):
         # path = self.to_unicode(path)
         path = path or "/"
         assert is_native(path)
-        super(FTPTarget, self).__init__(path, extra_opts)
+        super().__init__(path, extra_opts)
         if tls:
             try:
                 self.ftp = ftplib.FTP_TLS()
@@ -122,7 +122,7 @@ class FTPTarget(_Target):
     def open(self):
         assert not self.ftp_socket_connected
 
-        super(FTPTarget, self).open()
+        super().open()
 
         options = self.get_options_dict()
         no_prompt = self.get_option("no_prompt", True)
@@ -279,7 +279,7 @@ class FTPTarget(_Target):
                 write_error("ftp.quit() failed: {}".format(e))
             self.ftp_socket_connected = False
 
-        super(FTPTarget, self).close()
+        super().close()
 
     def _lock(self, break_existing=False):
         """Write a special file to the target root folder."""

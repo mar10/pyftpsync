@@ -23,12 +23,12 @@ class CliTest(_SyncTestBase):
 
     def setUp(self):
         # Call self._prepare_initial_synced_fixture():
-        super(CliTest, self).setUp()
+        super().setUp()
         self.local = get_local_test_url()
         self.remote = get_remote_test_url()
 
     def tearDown(self):
-        super(CliTest, self).tearDown()
+        super().tearDown()
 
     def test_basic(self):
         out = run_script("--version")

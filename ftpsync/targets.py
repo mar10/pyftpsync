@@ -419,7 +419,7 @@ class FsTarget(_Target):
         # root_dir = self.to_unicode(root_dir)
         root_dir = os.path.expanduser(root_dir)
         root_dir = os.path.abspath(root_dir)
-        super(FsTarget, self).__init__(root_dir, extra_opts)
+        super().__init__(root_dir, extra_opts)
         if not os.path.isdir(root_dir):
             raise ValueError("{} is not a directory.".format(root_dir))
         self.support_set_time = True
@@ -430,11 +430,11 @@ class FsTarget(_Target):
         )
 
     def open(self):
-        super(FsTarget, self).open()
+        super().open()
         self.cur_dir = self.root_dir
 
     def close(self):
-        super(FsTarget, self).close()
+        super().close()
 
     def cwd(self, dir_name):
         path = normpath_url(join_url(self.cur_dir, dir_name))

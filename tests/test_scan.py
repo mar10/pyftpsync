@@ -24,12 +24,12 @@ class ScanTest(_SyncTestBase):
     """Test --match and --exclude."""
 
     def setUp(self):
-        super(ScanTest, self).setUp()
+        super().setUp()
         self.local = get_local_test_url()
         self.remote = get_remote_test_url()
 
     def tearDown(self):
-        super(ScanTest, self).tearDown()
+        super().tearDown()
 
     re_whitespace = re.compile(r"\s+")
 

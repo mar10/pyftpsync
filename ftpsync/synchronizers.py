@@ -722,7 +722,7 @@ class BiDirSynchronizer(BaseSynchronizer):
     """
 
     def __init__(self, local, remote, options):
-        super(BiDirSynchronizer, self).__init__(local, remote, options)
+        super().__init__(local, remote, options)
 
     def get_info_strings(self):
         return ("synchronize", "with")
@@ -834,7 +834,7 @@ class BiDirSynchronizer(BaseSynchronizer):
 
     def run(self):
         # Don't override setting by derived up/downloader
-        res = super(BiDirSynchronizer, self).run()
+        res = super().run()
         return res
 
     def on_mismatch(self, pair):
@@ -1007,7 +1007,7 @@ class BiDirSynchronizer(BaseSynchronizer):
 
 class UploadSynchronizer(BiDirSynchronizer):
     def __init__(self, local, remote, options):
-        super(UploadSynchronizer, self).__init__(local, remote, options)
+        super().__init__(local, remote, options)
         # local.readonly = True
 
     def get_info_strings(self):
@@ -1101,7 +1101,7 @@ class UploadSynchronizer(BiDirSynchronizer):
     def run(self):
         self.local.readonly = True
         self.remote.readonly = False
-        res = super(UploadSynchronizer, self).run()
+        res = super().run()
         return res
 
     def on_mismatch(self, pair):
@@ -1138,7 +1138,7 @@ class UploadSynchronizer(BiDirSynchronizer):
         if not self.options.get("delete"):
             self._log_action("skip", "remote del.", " >X", pair.remote)
             return
-        return super(UploadSynchronizer, self).on_delete_remote(pair)
+        return super().on_delete_remote(pair)
 
     # def on_need_compare(self, pair):
     #     self._log_action("", "different", "?", pair.local, min_level=2)
@@ -1157,7 +1157,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
     """"""
 
     def __init__(self, local, remote, options):
-        super(DownloadSynchronizer, self).__init__(local, remote, options)
+        super().__init__(local, remote, options)
 
     #         remote.readonly = True
 
@@ -1252,7 +1252,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
     def run(self):
         self.local.readonly = False
         self.remote.readonly = True
-        res = super(DownloadSynchronizer, self).run()
+        res = super().run()
         return res
 
     def on_mismatch(self, pair):
@@ -1286,7 +1286,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
         if not self.options.get("delete"):
             self._log_action("skip", "local del.", "X< ", pair.local)
             return
-        return super(DownloadSynchronizer, self).on_delete_local(pair)
+        return super().on_delete_local(pair)
 
     def on_delete_remote(self, pair):
         # Download does not modify remote target

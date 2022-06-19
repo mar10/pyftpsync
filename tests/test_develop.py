@@ -29,12 +29,12 @@ class TempDevelopTest(_SyncTestBase):
 
     def setUp(self):
         # Call self._prepare_initial_synced_fixture():
-        super(TempDevelopTest, self).setUp()
+        super().setUp()
         self.local_url = get_local_test_url()
         self.remote_url = get_remote_test_url()
 
     def tearDown(self):
-        super(TempDevelopTest, self).tearDown()
+        super().tearDown()
 
     def test_issue_20(self):
 

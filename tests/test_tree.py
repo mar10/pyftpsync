@@ -25,12 +25,12 @@ class TreeTest(_SyncTestBase):
     """Test `tree`command."""
 
     def setUp(self):
-        super(TreeTest, self).setUp()
+        super().setUp()
         self.local = get_local_test_url()
         self.remote = get_remote_test_url()
 
     def tearDown(self):
-        super(TreeTest, self).tearDown()
+        super().tearDown()
 
     re_whitespace = re.compile(r"\s+")
 

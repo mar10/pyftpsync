@@ -24,10 +24,10 @@ class BidirSyncTest(_SyncTestBase):
     """Test BiDirSynchronizer on file system targets with different resolve modes."""
 
     def setUp(self):
-        super(BidirSyncTest, self).setUp()
+        super().setUp()
 
     def tearDown(self):
-        super(BidirSyncTest, self).tearDown()
+        super().tearDown()
 
     def test_default(self):
         opts = {"verbose": self.verbose}  # default options, i.e. 'skip' conflicts
@@ -332,10 +332,10 @@ class BidirSpecialTest(_SyncTestBase):
 
     def setUp(self):
         # Call self._prepare_initial_synced_fixture():
-        super(BidirSpecialTest, self).setUp()
+        super().setUp()
 
     def tearDown(self):
-        super(BidirSpecialTest, self).tearDown()
+        super().tearDown()
 
     def test_folder_conflict(self):
         """Delete a folder on one side, but change content on other side."""

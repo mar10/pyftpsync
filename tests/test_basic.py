@@ -27,10 +27,10 @@ class FixtureTest(_SyncTestBase):
 
     def setUp(self):
         # Call self._prepare_initial_synced_fixture():
-        super(FixtureTest, self).setUp()
+        super().setUp()
 
     def tearDown(self):
-        super(FixtureTest, self).tearDown()
+        super().tearDown()
 
     def test_prepare_initial_synced_fixture(self):
         # """Test that fixture set up code worked."""
