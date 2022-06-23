@@ -13,6 +13,9 @@ jobs:
     - python: "3.7"  # EOL 2023-06-27
       env: TOXENV=py37
       dist: xenial
+      before_install:
+        # Fix "AttributeError: 'str' object has no attribute 'name'" on Py37
+        - pip install -U importlib_metadata
     # - python: "3.6"  # EOL 2021-12-21
     #   env: TOXENV=py36
     # - python: "3.5"  # EOL 2020-09-13
@@ -24,9 +27,9 @@ jobs:
     - python: "3.11-dev"
       env: TOXENV=py311
       dist: bionic
-before_install:
-  # Fix for cryptography on Py36
-  - pip install --upgrade virtualenv
+# before_install:
+#   # Fix for cryptography on Py36
+#   - pip install --upgrade virtualenv
 install:
   - pip install tox-travis
   - pip install flake8
