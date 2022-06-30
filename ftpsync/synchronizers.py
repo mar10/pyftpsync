@@ -26,7 +26,7 @@ CONFIG_FILE_NAME = "pyftpsync.yaml"
 
 #: Default for --exclude CLI option
 #: Note: DirMetadata.META_FILE_NAME and LOCK_FILE_NAME are always ignored
-DEFAULT_OMIT = [".DS_Store", ".git", ".hg", ".svn"]
+DEFAULT_OMIT = [".DS_Store", ".git", ".hg", ".svn", "#recycle"]
 ALWAYS_OMIT = (CONFIG_FILE_NAME, DirMetadata.META_FILE_NAME, DirMetadata.LOCK_FILE_NAME)
 
 # ===============================================================================
