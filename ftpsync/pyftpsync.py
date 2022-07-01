@@ -60,8 +60,9 @@ def run():
         version_info = "pyftpsync/{} Python/{} {}".format(
             __version__, PYTHON_VERSION, platform.platform()
         )
+        version_info += f", Python: {sys.executable}"
     else:
-        version_info = "{}".format(__version__)
+        version_info = f"{__version__}"
 
     parser.add_argument("-V", "--version", action="version", version=version_info)
 
