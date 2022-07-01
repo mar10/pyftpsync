@@ -389,11 +389,12 @@ class SFTPTarget(_Target):
             is_dir = stat.S_ISDIR(de.st_mode)
             name = de.filename
             entry = None
-            if is_dir:
-                if name not in (".", ".."):
-                    entry = DirectoryEntry(
-                        self, self.cur_dir, name, de.st_size, de.st_mtime, unique=None
-                    )
+            if name in (".", ".."):
+                continue  # 74: some servers may send those
+            elif is_dir:
+                entry = DirectoryEntry(
+                    self, self.cur_dir, name, de.st_size, de.st_mtime, unique=None
+                )
             elif name == DirMetadata.META_FILE_NAME:
                 # the meta-data file is silently ignored
                 has_meta = True
