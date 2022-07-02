@@ -35,6 +35,16 @@ $ pip install pyftpsync --upgrade
 $ pyftpsync --help
 ```
 
+In addition to the direct invocation of `upload`, `download`, or `sync`
+commands, version 3.x allows to define a ``pyftpsync_yaml`` file
+in your project's root folder which then can be executed like so::
+
+    $ pyftpsync run
+
+See [Run from pyftpsync.yaml](https://pyftpsync.readthedocs.io/en/latest/ug_run.html) 
+for details.
+
+
 **Note:** Windows users may prefer the 
 [MSI Installer](https://github.com/mar10/pyftpsync/releases/latest).
 

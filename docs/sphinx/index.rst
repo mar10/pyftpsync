@@ -95,16 +95,8 @@ in your project's root folder which then can be executed like so::
 
     $ pyftpsync run
 
-See the :doc:`ug_run` example for details.
+See :doc:`ug_run` for details.
 
-
-..
-  Indices and tables
-  ==================
-
-  * :ref:`genindex`
-  * :ref:`modindex`
-  * :ref:`search`
 
 
 .. |travis_badge| image:: https://travis-ci.org/mar10/pyftpsync.svg?branch=master

@@ -58,7 +58,8 @@ in your project's root folder which then can be executed like so::
 
     $ pyftpsync run
 
-See the :doc:`ug_run` example for details.
+.. seealso::
+   See :doc:`ug_run` for details.
 
 
 `scan` command

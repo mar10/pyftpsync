@@ -12,7 +12,7 @@ common_config:
     #: Optional relative path to the local root (default: .)
     # local: sync_root
     #: Remote target protocol and address
-    remote: ftp://example.com/my_project
+    remote: sftp://example.com/my_project
     # Make --dry-run default (can be overridden by --execute):
     dry_run: true
     # Make --root default (can be overridden by --here):
@@ -20,6 +20,11 @@ common_config:
 
 # List of task definitions:
 tasks:
+    show: 
+        command: tree
+        files: true
+        sort: true
+
     sync_all:
         command: sync
 
