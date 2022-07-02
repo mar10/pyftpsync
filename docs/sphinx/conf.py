@@ -33,9 +33,9 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 package_root = os.path.abspath('../..')
 sys.path.insert(0, package_root)
-print "Add package root to sys.path: %r" % package_root
+print("Add package root to sys.path: %r" % package_root)
 # for fn in os.listdir(package_root):
-#   print "-", fn
+#   print("-", fn)
 
 # -- General configuration ------------------------------------------------
 
@@ -109,10 +109,10 @@ try:
     # print  "release", release
     del pkg_resources
 except pkg_resources.DistributionNotFound:
-    print 'To build the documentation, The distribution information'
-    print 'Has to be available.  Either install the package into your'
-    print 'development environment or run "setup.py develop" to setup the'
-    print 'metadata.  A virtualenv is recommended!'
+    print('To build the documentation, The distribution information')
+    print('Has to be available.  Either install the package into your')
+    print('development environment or run "setup.py develop" to setup the')
+    print('metadata.  A virtualenv is recommended!')
     # sys.exit(1)
     # TODO: 2015-09-05: fails since last month: workaround like this:
     # (Maybe a better solution here: https://github.com/google/oauth2client/commit/a39aa25091946e33b17b52cbe19b5b88d79a28b0)
@@ -120,7 +120,7 @@ except pkg_resources.DistributionNotFound:
     exec(open("../../ftpsync/__init__.py").read(), g_dict)
     release = g_dict["__version__"]
     del g_dict
-    print 'Using workaround (direct read): %s' % release
+    print('Using workaround (direct read): %s' % release)
 
 version = '.'.join(release.split('.')[:2])
 
