@@ -52,6 +52,7 @@ def run():
         description="Synchronize folders over FTP.",
         epilog="See also https://github.com/mar10/pyftpsync",
         parents=[verbose_parser],
+        allow_abbrev=False,
     )
 
     # Note: we want to allow --version to be combined with --verbose. However
@@ -74,6 +75,7 @@ def run():
         "upload",
         parents=[verbose_parser, common_parser, matcher_parser, creds_parser],
         help="copy new and modified files to remote folder",
+        allow_abbrev=False,
     )
 
     sp.add_argument(
@@ -115,6 +117,7 @@ def run():
         "download",
         parents=[verbose_parser, common_parser, matcher_parser, creds_parser],
         help="copy new and modified files from remote folder to local target",
+        allow_abbrev=False,
     )
 
     sp.add_argument(

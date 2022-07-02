@@ -60,6 +60,7 @@ def add_run_parser(subparsers):
         # parents=[verbose_parser, common_parser, matcher_parser, creds_parser],
         parents=[verbose_parser, common_parser, creds_parser],
         help="run pyftpsync with configuration from `pyftpsync.yaml` in current or parent folder",
+        allow_abbrev=False,
     )
 
     parser.add_argument(

@@ -24,6 +24,7 @@ def add_tree_parser(subparsers):
         "tree",
         parents=[verbose_parser, common_parser, matcher_parser, creds_parser],
         help="list target folder structure",
+        allow_abbrev=False,
     )
     parser.add_argument(
         "target",
