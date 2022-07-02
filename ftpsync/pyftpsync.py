@@ -33,6 +33,7 @@ from ftpsync.tree_command import add_tree_parser
 from ftpsync.util import (
     DEBUG_FLAGS,
     PYTHON_VERSION,
+    CliSilentRuntimeError,
     check_cli_verbose,
     namespace_to_dict,
     set_pyftpsync_logger,
@@ -253,6 +254,12 @@ def run():
 
     try:
         s.run()
+    except CliSilentRuntimeError as e:
+        # This exception suppresses stacktrace in non-verbose mode
+        print(f"\nERROR:\n{e}\n", file=sys.stderr)
+        if args.verbose <= e.min_verbosity:
+            sys.exit()
+        raise
     except KeyboardInterrupt:
         print("\nAborted by user.", file=sys.stderr)
         sys.exit(3)

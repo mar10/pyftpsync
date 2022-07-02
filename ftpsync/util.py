@@ -19,6 +19,14 @@ PYTHON_VERSION = "{}.{}.{}".format(
 )
 
 
+class CliSilentRuntimeError(RuntimeError):
+    """A RuntimeError that will suppress a stacktrace in CLI mode if verbosity <= x."""
+
+    def __init__(self, msg, *, min_verbosity) -> None:
+        self.min_verbosity = min_verbosity
+        super().__init__(msg)
+
+
 # def is_basestring(s):
 #     """Return True for any string type, i.e. for str/unicode on Py2 and bytes/str on Py3."""
 #     return isinstance(s, (str, bytes))
