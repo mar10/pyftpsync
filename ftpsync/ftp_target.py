@@ -18,6 +18,7 @@ from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersion
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftpsync.targets import _get_encoding_opt, _Target
 from ftpsync.util import (
+    CliSilentRuntimeError,
     get_credentials_for_url,
     is_native,
     prompt_for_password,
@@ -242,14 +243,33 @@ class FTPTarget(_Target):
         except ftplib.error_perm as e:
             if not e.args[0].startswith("550"):
                 raise  # error other then 550 No such directory'
-            write_error(
-                "Could not change directory to {} ({}): missing permissions?".format(
-                    self.root_dir, e
+
+            # Implement --create-folder option for remote targets:
+            if self.is_local():
+                write_error(
+                    f"Could not change local directory to {self.root_dir} ({e}): missing permissions?"
                 )
-            )
+            else:
+                parent = os.path.dirname(self.root_dir)
+                subfolder = os.path.basename(self.root_dir)
+                if not self.get_option("create_folder", False):
+                    msg = (
+                        f"Could not change remote directory to {self.root_dir!r} ({e!r}). "
+                        "This may be due to missing permissions or because the folder does not exist. "
+                        f"Pass `--create-folder` if you want to create {subfolder!r} within {parent!r}."
+                    )
+                    raise CliSilentRuntimeError(msg, min_verbosity=4)
+
+                write_error(
+                    f"Could not change remote directory to {self.root_dir!r} ({e!r}). "
+                    f"`--create-folder` was passed: creating {subfolder!r} within {parent!r}..."
+                )
+                self.ftp.cwd(parent)
+                self.mkdir(subfolder)
+                # Must work now:
+                self.ftp.cwd(self.root_dir)
 
         pwd = self.pwd()
-        # pwd = self.to_unicode(pwd)
         if pwd != self.root_dir:
             raise RuntimeError(
                 "Unable to navigate to working directory {!r} (now at {!r})".format(
@@ -259,7 +279,6 @@ class FTPTarget(_Target):
 
         self.cur_dir = pwd
 
-        # self.ftp_initialized = True
         # Successfully authenticated: store password
         if store_password:
             save_password(self.host, self.username, self.password)

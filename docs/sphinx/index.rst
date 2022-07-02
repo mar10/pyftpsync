@@ -33,8 +33,8 @@ Pyftpsync
 
 
 .. warning::
-  Major version updates (1.0 => 2.0, 2.0 => 3.0, ...) introduce
-  *breaking changes* to the previous versions.
+  Major version updates (e.g. 3.0 => 4.0, ...) introduce *breaking changes* to 
+  the previous versions.
   Make sure to adjust your scripts accordingly after update.
 
 .. info::

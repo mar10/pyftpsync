@@ -21,6 +21,7 @@ from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersion
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftpsync.targets import _get_encoding_opt, _Target
 from ftpsync.util import (
+    CliSilentRuntimeError,
     get_credentials_for_url,
     is_native,
     prompt_for_password,
@@ -171,11 +172,17 @@ class SFTPTarget(_Target):
                 self.username, self.password = creds
                 # Continue while-loop
             except paramiko.ssh_exception.SSHException as e:
-                write_error(
+                raise CliSilentRuntimeError(
                     f"{e}: Try `ssh-keyscan HOST` to add it to `USER/.ssh/known_hosts` "
-                    "(or pass `--no-verify-host-keys` if you don't care about security)."
+                    "(or pass `--no-verify-host-keys` if you don't care about security).",
+                    min_verbosity=4,
                 )
-                raise SystemExit
+                # Note: we don't want to sys.exit in non-CLI mode
+                # write_error(
+                #     f"{e}: Try `ssh-keyscan HOST` to add it to `USER/.ssh/known_hosts` "
+                #     "(or pass `--no-verify-host-keys` if you don't care about security)."
+                # )
+                # raise SystemExit
 
         if verbose >= 4:
             write(
@@ -189,16 +196,34 @@ class SFTPTarget(_Target):
         try:
             self.sftp.cwd(self.root_dir)
         except IOError as e:
-            # if not e.args[0].startswith("550"):
-            #     raise  # error other then 550 No such directory'
-            write_error(
-                "Could not change directory to {} ({}): missing permissions?".format(
-                    self.root_dir, e
+            # '550 No such directory' is not reliably detectable with SFTP?
+
+            # Implement --create-folder option for remote targets:
+            if self.is_local():
+                write_error(
+                    f"Could not change local directory to {self.root_dir} ({e}): missing permissions?"
                 )
-            )
+            else:
+                parent = os.path.dirname(self.root_dir)
+                subfolder = os.path.basename(self.root_dir)
+                if not self.get_option("create_folder", False):
+                    msg = (
+                        f"Could not change remote directory to {self.root_dir!r} ({e!r}). "
+                        "This may be due to missing permissions or because the folder does not exist. "
+                        f"Pass `--create-folder` if you want to create {subfolder!r} within {parent!r}."
+                    )
+                    raise CliSilentRuntimeError(msg, min_verbosity=4)
+
+                write_error(
+                    f"Could not change remote directory to {self.root_dir!r} ({e!r}). "
+                    f"`--create-folder` was passed: creating {subfolder!r} within {parent!r}..."
+                )
+                self.sftp.cwd(parent)
+                self.mkdir(subfolder)
+                # Must work now:
+                self.sftp.cwd(self.root_dir)
 
         pwd = self.pwd()
-        # pwd = self.to_unicode(pwd)
         if pwd != self.root_dir:
             raise RuntimeError(
                 "Unable to navigate to working directory {!r} (now at {!r})".format(
@@ -208,7 +233,6 @@ class SFTPTarget(_Target):
 
         self.cur_dir = pwd
 
-        # self.ftp_initialized = True
         # Successfully authenticated: store password
         if store_password:
             save_password(self.host, self.username, self.password)
@@ -390,7 +414,7 @@ class SFTPTarget(_Target):
             name = de.filename
             entry = None
             if name in (".", ".."):
-                continue  # 74: some servers may send those
+                continue  # #74: some servers may send those
             elif is_dir:
                 entry = DirectoryEntry(
                     self, self.cur_dir, name, de.st_size, de.st_mtime, unique=None

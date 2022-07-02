@@ -16,6 +16,7 @@ MANDATORY_TASK_ARGS = {"command", "remote"}
 
 KNOWN_TASK_ARGS = {
     "case",
+    "create_folder",
     "debug",
     "delete",
     "delete_unmatched",
@@ -40,6 +41,7 @@ KNOWN_TASK_ARGS = {
 
 # Flag-style arguments that default to False
 OVERRIDABLE_BOOL_ARGS = {
+    "create_folder",
     "dry_run",
     "force",
     "no_color",

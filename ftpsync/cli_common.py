@@ -86,7 +86,7 @@ matcher_parser = argparse.ArgumentParser(add_help=False)
 matcher_parser.add_argument(
     "-m",
     "--match",
-    help="wildcard for file names using fnmatch syntax "
+    help="wildcard for file names (but not directories) using fnmatch syntax "
     "(default: match all, separate multiple values with ',')",
 )
 matcher_parser.add_argument(

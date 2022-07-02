@@ -8,6 +8,7 @@
 - Add `tree` command
 - Add `--case` argument for better handling of ambigous files that only differ
   in the name's casing
+- Add `--create-folder` argument to allow creation of missing remote folders
 - `--migrate` now always removes outdated metadata files (before, this was only
   done when a file inside that directory was touched)
 - `--debug classify` helps with analysis of synchronization problems

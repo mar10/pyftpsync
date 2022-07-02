@@ -109,6 +109,11 @@ def run():
         help="remove remote files if they don't exist locally "
         "or don't match the current filter (implies '--delete' option)",
     )
+    sp.add_argument(
+        "--create-folder",
+        action="store_true",
+        help="Create remote folder if missing",
+    )
 
     sp.set_defaults(command="upload")
 
@@ -160,6 +165,7 @@ def run():
         "sync",
         parents=[verbose_parser, common_parser, matcher_parser, creds_parser],
         help="synchronize new and modified files between remote folder and local target",
+        allow_abbrev=False,
     )
 
     sp.add_argument(
@@ -174,6 +180,11 @@ def run():
         default="ask",
         choices=["old", "new", "local", "remote", "skip", "ask"],
         help="conflict resolving strategy (default: '%(default)s')",
+    )
+    sp.add_argument(
+        "--create-folder",
+        action="store_true",
+        help="Create remote folder if missing",
     )
 
     sp.set_defaults(command="sync")
