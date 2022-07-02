@@ -89,6 +89,14 @@ be installed using `pip <http://www.pip-installer.org/>`_::
   $ pip install pyftpsync --upgrade
   $ pyftpsync --help
 
+In addition to the direct invocation of `upload`, `download`, or `sync`
+commands, version 3.x allows to define a ``pyftpsync_yaml`` file
+in your project's root folder which then can be executed like so::
+
+    $ pyftpsync run
+
+See the :doc:`ug_run` example for details.
+
 
 ..
   Indices and tables

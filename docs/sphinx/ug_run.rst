@@ -1,6 +1,6 @@
-==============
-pyftpsync.yaml
-==============
+=======================
+Run from pyftpsync.yaml
+=======================
 
 Users can define sets of command line options as named *tasks* and store them
 in the project folder. It can then be executed like so::
@@ -30,8 +30,11 @@ is implicitly set to the folder location of `pyftpsync.yaml`.
 
 Task settings can be overidden by command line args, e.g.::
 
+    $ pyftpsync run --execute
+    $ pyftpsync run TASK
     $ pyftpsync run deploy_force --dry-run -v
     $ pyftpsync run --here
+
 
 .. note::
     If the credentials are already stored in the keyring or `.netrc` file, a
@@ -49,5 +52,4 @@ Example:
 
 For a start, copy
 :download:`Annotated Sample Configuration <../sample_pyftpsync.yaml>`,
-rename it to `pyftpsync.yaml` (note the leading dot),
-and edit it to your needs.
+rename it to ``pyftpsync.yaml``, and edit it to your needs.

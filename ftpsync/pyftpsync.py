@@ -224,16 +224,22 @@ def run():
         handle_run_command(parser, args)
 
     if callable(getattr(args, "command", None)):
-        # scan_handler
+        # scan_handler or tree_handler
         try:
             return args.command(parser, args)
+        except CliSilentRuntimeError as e:
+            # This exception suppresses stacktrace in non-verbose mode
+            print(f"\nERROR:\n{e}\n", file=sys.stderr)
+            if args.verbose <= e.min_verbosity:
+                sys.exit()
+            raise
         except KeyboardInterrupt:
             print("\nAborted by user.", file=sys.stderr)
             sys.exit(3)
 
     elif not hasattr(args, "command"):
         parser.error(
-            "missing command (choose from 'upload', 'download', 'run', 'sync', 'scan')"
+            "missing command (choose from 'upload', 'download', 'run', 'sync', 'scan', 'tree')"
         )
 
     # Post-process and check arguments

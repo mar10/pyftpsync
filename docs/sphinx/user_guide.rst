@@ -6,7 +6,7 @@ User Guide
     .. toctree::
     :hidden:
 
-    sample_pyftpsync_yaml
+    ug_run
 
 
 .. warning::
@@ -53,17 +53,12 @@ Use the ``--help`` or ``-h`` argument to get help::
 -------------
 
 In addition to the direct invocation of `upload`, `download`, or `sync`
-commands, version 3.x allows to define a :doc:`sample_pyftpsync_yaml` file
+commands, version 3.x allows to define a ``pyftpsync_yaml`` file
 in your project's root folder which then can be executed like so::
 
     $ pyftpsync run
 
-optionally, default settings can be overidden::
-
-    $ pyftpsync run --dry-run
-    $ pyftpsync run TASK
-
-See the :doc:`sample_pyftpsync_yaml` example for details.
+See the :doc:`ug_run` example for details.
 
 
 `scan` command
@@ -92,6 +87,8 @@ Example: display a hierarchical directory listing::
         `- [example]
     Scanning 0 files in 10 directories took 2.93 seconds.
 
+Options ``--files``, ``--sort``, etc. are also available.
+
 
 Target URLs
 -----------
@@ -106,14 +103,14 @@ FTP URLs may contain credentials (*not* recommended)::
     $ pyftpsync upload ~/temp ftp://joe:secret@example.com/target/folder
 
 Note that `pyftpsync` also supports prompting for passwords and storing
-passwords in the system keyring and `.netrc` files.
+passwords in the system keyring and ``.netrc`` files.
 
 .. note::
 
   The *content* of the local target folder is synchronized with the *content* of
   the remote target folder, so both folders must exist, with one exception: |br|
   If the remote target does *not* exist, but its parent folder does, the 
-  `--create-folder` option may be passed.
+  ``--create-folder`` option may be passed.
 
 
 Authentication
@@ -149,8 +146,8 @@ successful login.
 
 .. note::
 
-    In order to use `.netrc` on Windows, the `%HOME%` environment variable should be set.
-    If not, try this: |br|
+    In order to use ``.netrc`` on Windows, the `%HOME%` environment variable 
+    should be set. If not, try this: |br|
     ``> set HOME=%USERPROFILE%`` |br|
     (`see here <https://superuser.com/a/620146>`_).
 

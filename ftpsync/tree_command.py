@@ -34,7 +34,9 @@ def add_tree_parser(subparsers):
     )
     parser.add_argument("--files", action="store_true", help="list files")
     parser.add_argument(
-        "--sort", action="store_true", help="sort by name (folders before files)"
+        "--sort",
+        action="store_true",
+        help="sort by name (case insensitive, files before folders)",
     )
 
     parser.set_defaults(command=tree_handler)
@@ -43,7 +45,7 @@ def add_tree_parser(subparsers):
 
 
 def tree_handler(parser, args):
-    """Implement `scan` sub-command."""
+    """Implement `tree` sub-command."""
     opts = namespace_to_dict(args)
     opts.update({"ftp_debug": args.verbose >= 6})
     target = make_target(args.target, opts)

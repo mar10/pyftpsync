@@ -199,7 +199,12 @@ class SFTPTarget(_Target):
             # '550 No such directory' is not reliably detectable with SFTP?
 
             # Implement --create-folder option for remote targets:
-            if self.is_local():
+            if self.is_unbound():
+                # E.g. 'tree' command
+                write_error(
+                    f"Could not change directory to {self.root_dir} ({e}): missing permissions?"
+                )
+            elif self.is_local():
                 write_error(
                     f"Could not change local directory to {self.root_dir} ({e}): missing permissions?"
                 )

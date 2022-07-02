@@ -106,7 +106,8 @@ class _Target:
         self.readonly = False
         self.dry_run = False
         self.host = None
-        self.synchronizer = None  # Set by BaseSynchronizer.__init__()
+        #: Set by BaseSynchronizer.__init__(). May be None for tree command, etc.
+        self.synchronizer = None
         self.peer = None
         self.cur_dir = None
         self.connected = False
@@ -144,7 +145,16 @@ class _Target:
         return "{}".format(self.root_dir)
 
     def is_local(self):
+        if not self.synchronizer:
+            raise RuntimeError(
+                "Unbound target: Consider calling target.is_remote(or_unbound=True)"
+            )
         return self.synchronizer.local is self
+
+    def is_remote(self, or_unbound=False):
+        if or_unbound and not self.synchronizer:
+            return True
+        return not self.is_local()
 
     def is_unbound(self):
         return self.synchronizer is None
