@@ -366,7 +366,7 @@ class SFTPTarget(_Target):
                         # try to delete this as a file
                         self.sftp.remove(name)
                     except IOError:  # ftplib.all_errors as _e:
-                        write(f"    sftp.delete({name}) failed, trying rmdir()...")
+                        # write(f"    sftp.remove({name}) failed (not empty?), trying recursive...", debug=True)
                         # assume <name> is a folder
                         self.rmdir(name)
             finally:

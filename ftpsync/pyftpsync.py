@@ -328,12 +328,14 @@ def run():
             end="",
         )
         if stats["interactive_ask"]:
-            # Do not show timings when user prompts were displayed
+            # Do not show timings when user prompts have been displayed
             print()
         else:
             print(" Elap: {}.".format(stats["elap_str"]))
 
-    if args.report_problems and (s.problem_count() > 0 or s.error_count() > 0):
+    if getattr(args, "report_problems", None) and (
+        s.problem_count() + s.error_count() > 0
+    ):
         sys.exit(10)
     return
 

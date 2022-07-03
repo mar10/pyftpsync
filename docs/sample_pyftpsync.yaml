@@ -17,12 +17,14 @@ common_config:
     # local: sync_root
     #: Remote target protocol and address
     remote: sftp://example.com/my_project
-    # Make --dry-run default (can be overridden by --execute or --no-dry-run):
+    #: Make --dry-run default (can be overridden by --execute or --no-dry-run):
     dry_run: true
-    # Make --root default (can be overridden by --here):
+    #: Make --root default (can be overridden by --here):
     root: true
+    #: Return exit code 10 on skipped files:
+    report_problems: true
 
-# List of task definitions (inerits settings from `common_config`):
+# List of task definitions (inherits settings from `common_config`):
 
 tasks:
     show: 

@@ -155,9 +155,15 @@ def handle_run_command(parser, cli_args):
 
     # --- Figure out which task to run ---
 
-    # DEFAULT_TASK = "default"
     if cli_args.task:
         task_name = cli_args.task
+        if task_name not in config["tasks"]:
+            parser.error(
+                f"Invalid TASK argument {task_name!r}: "
+                f"choose from [{', '.join(config['tasks'])}] "
+                f"or define `tasks.{task_name}` in {config_path}"
+            )
+
     elif config.get("default_task"):
         task_name = config.get("default_task")
         if task_name not in config["tasks"]:
@@ -165,19 +171,12 @@ def handle_run_command(parser, cli_args):
                 f"Invalid entry `default_task: {task_name}`: "
                 f"must also define `tasks.{task_name}` in {config_path}"
             )
-        # write(f"Running configured `default_task: {task_name}` from {config_path}.")
-    # elif DEFAULT_TASK in config["tasks"]:
-    #     task_name = DEFAULT_TASK
-    #     # write(f"Running `tasks.{task_name}` from {config_path}.")
+
     else:
         parser.error(
             "No `TASK` argument was passed and no default configured: "
             f"please define `default_task: TASK` in {config_path}"
         )
-        # parser.error(
-        #     "No `task` argument was passed and no default task configured.\n"
-        #     f"Either define `tasks.{DEFAULT_TASK}` or `default_task: TASK` in {config_path}"
-        # )
 
     if task_name not in config["tasks"]:
         parser.error(f"Missing entry `tasks.{task_name}` in {config_path}")
@@ -219,7 +218,7 @@ def handle_run_command(parser, cli_args):
 
     if task.get("dry_run"):
         if cli_args.no_dry_run:
-            write("--no-dry-run (or --execute) was passed: Resetting dry_run mode")
+            write("`--no-dry-run` (or `--execute`) was passed: resetting dry_run mode")
         else:
             write(
                 "dry_run mode is configured: pass --no-dry-run (or --execute) "
@@ -241,22 +240,20 @@ def handle_run_command(parser, cli_args):
             if name in CLI_OVERRIDABLE_BOOL_TASK_ARGS and cli_val is True:
                 override = True
                 if name == "no_dry_run" and task.get("dry_run"):
-                    write(
-                        "--no-dry-run (or --execute )was passed: Resetting dry_run mode"
-                    )
+                    # Already logged above
                     task["dry_run"] = False
             elif name in {"here", "root"} and (cli_args.here or cli_args.root):
-                # assert cli_val is True, cli_val
                 override = True
             elif name == "verbose" and cli_val != 3:
                 assert type(cli_val) is int
                 override = True
 
             if override:
-                write(
-                    f"Yaml entry `tasks.{task_name}.{name}: {task_val}` "
-                    f"overriden by CLI arg `--{name}={cli_val!r}`"
-                )
+                if cli_args.verbose >= 4:  # and name != "no_dry_run":
+                    write(
+                        f"Override yaml entry `tasks.{task_name}.{name}: {task_val}` "
+                        f"with CLI arg `--{name}={cli_val!r}`"
+                    )
                 task[name] = cli_val
 
     # --- Add all configured and overridden task options to args namespace ---
