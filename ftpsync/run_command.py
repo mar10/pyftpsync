@@ -72,7 +72,7 @@ assert not _diff, f"Must be in KNOWN_TASK_ARGS: {_diff}"
 def _set_default_task_arg(cli_args, task, name, default):
     """Add a task option to the CLI arguments namespace if not present."""
     if hasattr(cli_args, name):
-        write(f"SKIP: Yaml entry sets args.{name}: already {getattr(cli_args, name)}")
+        # write(f"SKIP: Yaml entry sets args.{name}: already {getattr(cli_args, name)}")
         return
     value = task.get(name, default)
     write(f"Yaml entry sets args.{name} => {value}")
@@ -107,7 +107,7 @@ def add_run_parser(subparsers):
 
     parser.add_argument(
         "--no-dry-run",
-        "--execute",
+        "--execute",  # alias
         action="store_true",
         help="force execution if dry-run mode is configured as default in `pyftpsync.yaml`",
     )
@@ -153,11 +153,9 @@ def handle_run_command(parser, cli_args):
     if "tasks" not in config:
         parser.error(f"Missing entry `tasks` in {config_path}")
 
-    common_config = config.get("common_config", {})
-
     # --- Figure out which task to run ---
 
-    DEFAULT_TASK = "default"
+    # DEFAULT_TASK = "default"
     if cli_args.task:
         task_name = cli_args.task
     elif config.get("default_task"):
@@ -168,24 +166,29 @@ def handle_run_command(parser, cli_args):
                 f"must also define `tasks.{task_name}` in {config_path}"
             )
         # write(f"Running configured `default_task: {task_name}` from {config_path}.")
-    elif DEFAULT_TASK in config["tasks"]:
-        task_name = DEFAULT_TASK
-        # write(f"Running `tasks.{task_name}` from {config_path}.")
+    # elif DEFAULT_TASK in config["tasks"]:
+    #     task_name = DEFAULT_TASK
+    #     # write(f"Running `tasks.{task_name}` from {config_path}.")
     else:
         parser.error(
-            "No `task` argument was passed and no default task configured.\n"
-            f"Either define `tasks.{DEFAULT_TASK}` or `default_task: TASK` in {config_path}"
+            "No `TASK` argument was passed and no default configured: "
+            f"please define `default_task: TASK` in {config_path}"
         )
+        # parser.error(
+        #     "No `task` argument was passed and no default task configured.\n"
+        #     f"Either define `tasks.{DEFAULT_TASK}` or `default_task: TASK` in {config_path}"
+        # )
 
     if task_name not in config["tasks"]:
         parser.error(f"Missing entry `tasks.{task_name}` in {config_path}")
 
-    task = config["tasks"][task_name]
-
     write(f"Running task '{task_name}' from {config_path}")
 
-    common_config.update(task)
-    task = common_config
+    # --- Task options inherit from common_config ---
+
+    common_config = config.get("common_config", {})
+    task = common_config.copy()
+    task.update(config["tasks"][task_name])
 
     # --- Validate task configuration ---
 
@@ -208,6 +211,11 @@ def handle_run_command(parser, cli_args):
     invalid_args = task_args.difference(allowed_args)
     if invalid_args:
         parser.error(f"Invalid entries: tasks.{task_name}.{', '.join(invalid_args)}")
+
+    if "no_dry_run" in task:
+        parser.error(
+            "no_dry_run should not be used as yaml option: use dry_run: false instead"
+        )
 
     if task.get("dry_run"):
         if cli_args.no_dry_run:
@@ -232,7 +240,7 @@ def handle_run_command(parser, cli_args):
             override = False
             if name in CLI_OVERRIDABLE_BOOL_TASK_ARGS and cli_val is True:
                 override = True
-                if name == "execute" and task.get("dry_run"):
+                if name == "no_dry_run" and task.get("dry_run"):
                     write(
                         "--no-dry-run (or --execute )was passed: Resetting dry_run mode"
                     )

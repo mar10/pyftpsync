@@ -3,25 +3,31 @@
 # See https://pyftpsync.readthedocs.io/ for details.
 
 # This task is used by `pyftpsync run` if no task name is passed as argument:
+
 default_task: deploy
 
-# Default settings shared by all tasks:
+# Default settings inherited by all tasks:
+
 common_config:
+    #: Verbosity (default: 3, use -v/-q to modify from CLI)
     # verbose: 4
+    #: Show progress
     progress: true
-    #: Optional relative path to the local root (default: .)
+    #: Optional relative path to the yaml root (default: .)
     # local: sync_root
     #: Remote target protocol and address
     remote: sftp://example.com/my_project
-    #: Make --dry-run default (can be overridden by --execute):
+    # Make --dry-run default (can be overridden by --execute or --no-dry-run):
     dry_run: true
-    #: Make --root default (can be overridden by --here):
+    # Make --root default (can be overridden by --here):
     root: true
 
-# List of task definitions:
+# List of task definitions (inerits settings from `common_config`):
+
 tasks:
     show: 
         command: tree
+        dry_run: false
         files: true
         sort: true
 
