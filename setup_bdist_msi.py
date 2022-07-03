@@ -68,7 +68,7 @@ install_requires = [
     "colorama",
     "keyring",
     "pysftp",
-    "yaml",  # NOTE: must import 'yaml' (but dependency is names 'PyYAML')
+    "yaml",  # NOTE: must import 'yaml' (but dependency is named 'PyYAML')
 ]
 setup_requires = install_requires
 tests_require = []  # "pytest", "pytest-cov", "tox", "virtualenv"]
@@ -84,9 +84,9 @@ executables = [
         script="ftpsync/pyftpsync.py",
         base=None,
         # base="Win32GUI",
-        targetName="pyftpsync.exe",
+        target_name="pyftpsync.exe",
         # icon="docs/logo.ico",
-        shortcutName="pyftpsync",
+        shortcut_name="pyftpsync",
         copyright="(c) 2012-2021 Martin Wendt",
         # trademarks="...",
     )
