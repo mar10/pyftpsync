@@ -24,16 +24,15 @@ Options are named like the command line arguments, using
 :bash:`--force` becomes :code:`force: true`
 and :bash:`--delete-unmatched` becomes :code:`delete_unmatched: true`.
 
-The :code:`command` and :code:`remote` options are mandarory. |br|
+The :code:`command` and :code:`remote` options are mandatory. |br|
 A :code:`local` option must *not* be specified, since the local target path
 is implicitly set to the folder location of `pyftpsync.yaml`.
 
 Task settings can be overidden by command line args, e.g.::
 
     $ pyftpsync run --execute
-    $ pyftpsync run TASK
-    $ pyftpsync run deploy_force --dry-run -v
     $ pyftpsync run --here
+    $ pyftpsync run deploy_force --dry-run -v
 
 
 .. note::

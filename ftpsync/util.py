@@ -22,8 +22,9 @@ PYTHON_VERSION = "{}.{}.{}".format(
 class CliSilentRuntimeError(RuntimeError):
     """A RuntimeError that will suppress a stacktrace in CLI mode if verbosity <= x."""
 
-    def __init__(self, msg, *, min_verbosity) -> None:
+    def __init__(self, msg, *, min_verbosity, exit_code=1) -> None:
         self.min_verbosity = min_verbosity
+        self.exit_code = exit_code
         super().__init__(msg)
 
 

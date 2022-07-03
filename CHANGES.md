@@ -1,19 +1,24 @@
 4.0.0 (unreleased)
 ------------------
+- Add SFTP support
+- New `tree` command
+- New `--case` argument for better handling of ambigous files that only differ
+  in the name's casing
+- New `--create-folder` argument to allow creation of missing remote folders
+- New `--report-problems` argument to return exit code 10 on skipped files
+  like unresolved conflicts or copy errors
+- New `--no-dry-run` argument to `run` command to override a default dry_run 
+  configuration (alias: `--execute`)
+- New `--debug classify` argument helps with analysis of synchronization problems
+- `--migrate` now always removes outdated metadata files (before, this was only
+  done when a file inside that directory was touched)
+- Copy errors (e.g. due to encoding problems) are skipped (see also `--report-problems`)
+- Fix #26: Crash when not setting verbose option
+- Use [Yabs](https://github.com/mar10/yabs) as release tool
 - **Breaking Changes:**
   - Drop support for Python 2.x (end-of-life: 2020-01-01)
   - Rename `.pyftpsync.yaml` to `pyftpsync.yaml`
   - Rename FtpTarget => FTPTarget
-- Add SFTP support
-- Add `tree` command
-- Add `--case` argument for better handling of ambigous files that only differ
-  in the name's casing
-- Add `--create-folder` argument to allow creation of missing remote folders
-- `--migrate` now always removes outdated metadata files (before, this was only
-  done when a file inside that directory was touched)
-- `--debug classify` helps with analysis of synchronization problems
-- Fix #26: Crash when not setting verbose option
-- Use [Yabs](https://github.com/mar10/yabs) as release tool
 
 3.1.1+
 ------

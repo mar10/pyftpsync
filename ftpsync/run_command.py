@@ -24,7 +24,6 @@ KNOWN_TASK_ARGS = {
     "delete",
     "dry_run",
     "exclude",
-    "execute",
     "files",  # tree command
     "force",
     "ftp_active",
@@ -32,12 +31,14 @@ KNOWN_TASK_ARGS = {
     "local",
     "match",
     "no_color",
+    "no_dry_run",  # alias: execute
     "no_keyring",
     "no_netrc",
     "no_prompt",
     "no_verify_host_keys",
     "progress",
     "prompt",
+    "report_problems",
     "resolve",
     "root",
     "sort",  # tree command
@@ -52,15 +53,16 @@ KNOWN_TASK_ARGS = {
 CLI_OVERRIDABLE_BOOL_TASK_ARGS = {
     "create_folder",
     "dry_run",
-    "execute",
     "files",  # tree command
     "force",
     "no_color",
+    "no_dry_run",
     "no_keyring",
     "no_netrc",
     "no_prompt",
     "no_verify_host_keys",
     "progress",
+    "report_problems",
     "sort",  # tree command
 }
 _diff = CLI_OVERRIDABLE_BOOL_TASK_ARGS.difference(KNOWN_TASK_ARGS)
@@ -104,6 +106,7 @@ def add_run_parser(subparsers):
     )
 
     parser.add_argument(
+        "--no-dry-run",
         "--execute",
         action="store_true",
         help="force execution if dry-run mode is configured as default in `pyftpsync.yaml`",
@@ -113,7 +116,7 @@ def add_run_parser(subparsers):
     return parser
 
 
-def handle_run_command(parser, args):
+def handle_run_command(parser, cli_args):
     """Implement `run` sub-command."""
     MAX_LEVELS = 15
 
@@ -155,8 +158,8 @@ def handle_run_command(parser, args):
     # --- Figure out which task to run ---
 
     DEFAULT_TASK = "default"
-    if args.task:
-        task_name = args.task
+    if cli_args.task:
+        task_name = cli_args.task
     elif config.get("default_task"):
         task_name = config.get("default_task")
         if task_name not in config["tasks"]:
@@ -206,11 +209,20 @@ def handle_run_command(parser, args):
     if invalid_args:
         parser.error(f"Invalid entries: tasks.{task_name}.{', '.join(invalid_args)}")
 
+    if task.get("dry_run"):
+        if cli_args.no_dry_run:
+            write("--no-dry-run (or --execute) was passed: Resetting dry_run mode")
+        else:
+            write(
+                "dry_run mode is configured: pass --no-dry-run (or --execute) "
+                "to enable write operations"
+            )
+
     # --- Override yaml entries by command line args ---
 
     for name in allowed_args:
         task_val = task.get(name, None)
-        cli_val = getattr(args, name, None)
+        cli_val = getattr(cli_args, name, None)
 
         # write(
         #     f"check if entry `tasks.{task_name}.{name}: {task_val}` "
@@ -221,9 +233,11 @@ def handle_run_command(parser, args):
             if name in CLI_OVERRIDABLE_BOOL_TASK_ARGS and cli_val is True:
                 override = True
                 if name == "execute" and task.get("dry_run"):
-                    write("--execute was passed: Resetting dry_run mode")
+                    write(
+                        "--no-dry-run (or --execute )was passed: Resetting dry_run mode"
+                    )
                     task["dry_run"] = False
-            elif name in {"here", "root"} and (args.here or args.root):
+            elif name in {"here", "root"} and (cli_args.here or cli_args.root):
                 # assert cli_val is True, cli_val
                 override = True
             elif name == "verbose" and cli_val != 3:
@@ -242,14 +256,14 @@ def handle_run_command(parser, args):
     # Needed, because the subsequent command that is executed by this `run`
     # command may expect it:
 
-    args.command = task.get("command")
+    cli_args.command = task.get("command")
 
     for name in KNOWN_TASK_ARGS:
         task_val = task.get(name, None)
-        cli_val = getattr(args, name, None)
+        cli_val = getattr(cli_args, name, None)
         if task_val is not None and task_val != cli_val:
             # write(f"Set args.{name} = {cli_val!r} => {task_val!r}")
-            setattr(args, name, task_val)
+            setattr(cli_args, name, task_val)
 
     # --- Figure out local target path ---
 
@@ -261,12 +275,12 @@ def handle_run_command(parser, args):
 
     if cur_level == 0 or task.get("root"):
         path_ofs = ""
-        args.local = root_folder
-        args.remote = task.get("remote")
+        cli_args.local = root_folder
+        cli_args.remote = task.get("remote")
     elif task.get("here"):
         write(f"Using sub-branch {path_ofs} of {root_folder}")
-        args.local = cur_folder
-        args.remote = os.path.join(task.get("remote"), path_ofs)
+        cli_args.local = cur_folder
+        cli_args.remote = os.path.join(task.get("remote"), path_ofs)
     else:
         parser.error(
             "`pyftpsync.yaml` configuration was found in a parent directory. "
@@ -289,9 +303,9 @@ def handle_run_command(parser, args):
     #     _set_default_task_arg(args, task, "sort", False)
     elif command == "tree":
         # Fix command line args as expected by command handler
-        args.command = tree_handler
-        args.target = args.remote
-        _set_default_task_arg(args, task, "files", False)
-        _set_default_task_arg(args, task, "sort", False)
+        cli_args.command = tree_handler
+        cli_args.target = cli_args.remote
+        _set_default_task_arg(cli_args, task, "files", False)
+        _set_default_task_arg(cli_args, task, "sort", False)
     else:
         raise NotImplementedError(f"Run task command {command}")

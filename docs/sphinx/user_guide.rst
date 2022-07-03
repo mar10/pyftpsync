@@ -185,7 +185,7 @@ Command specific help is available like so::
     usage: pyftpsync upload [-h] [-v | -q] [--debug {classify}] [--case {strict,local,remote}] [-n] [--progress] [--no-color]
                             [--ftp-active] [--migrate] [--no-verify-host-keys] [-m MATCH] [-x EXCLUDE] [--prompt | --no-prompt]
                             [--no-keyring] [--no-netrc] [--store-password] [--force] [--resolve {local,skip,ask}] [--delete]
-                            [--delete-unmatched] [--create-folder]
+                            [--delete-unmatched] [--create-folder] [--report-problems]
                             LOCAL REMOTE
 
     positional arguments:
@@ -225,6 +225,7 @@ Command specific help is available like so::
       --delete-unmatched    remove remote files if they don't exist locally or don't match the current filter (implies '--delete'
                             option)
       --create-folder       Create remote folder if missing
+      --report-problems     return exit code 10 if any conflict was skipped, a copy error occurred, etc.
     $
 
 
@@ -275,7 +276,7 @@ Synchronize Files Syntax
     usage: pyftpsync sync [-h] [-v | -q] [--debug {classify}] [--case {strict,local,remote}] [-n] [--progress] [--no-color]
                           [--ftp-active] [--migrate] [--no-verify-host-keys] [-m MATCH] [-x EXCLUDE] [--prompt | --no-prompt]
                           [--no-keyring] [--no-netrc] [--store-password] [--resolve {old,new,local,remote,skip,ask}]
-                          [--create-folder]
+                          [--create-folder] [--report-problems]
                           LOCAL REMOTE
 
     positional arguments:
@@ -311,6 +312,7 @@ Synchronize Files Syntax
       --resolve {old,new,local,remote,skip,ask}
                             conflict resolving strategy (default: 'ask')
       --create-folder       Create remote folder if missing
+      --report-problems     return exit code 10 if any conflict was skipped, a copy error occurred, etc.
     $
 
 
@@ -347,12 +349,11 @@ Exit Codes
 
 The CLI returns those exit codes::
 
-    0: OK
-    1: Error (network, internal, ...)
-    2: CLI syntax error
-    3: Aborted by user
-
-..    10: Unresolved conflicts remaining (with option --conflicts-as-error)
+     0: OK
+     1: Error (network, internal, ...)
+     2: CLI syntax error
+     3: Aborted by user
+    10: Unresolved conflicts remaining (with option --report-problems)
 
 
 Script Examples

@@ -20,6 +20,7 @@ from ftpsync.util import (
     eps_compare,
     pretty_stamp,
     write,
+    write_error,
 )
 
 CONFIG_FILE_NAME = "pyftpsync.yaml"
@@ -104,15 +105,7 @@ class BaseSynchronizer:
 
         self.verbose = self.options.get("verbose", 3)
         self.dry_run = self.options.get("dry_run", False)
-        #         self.local.synchronizer = self
-        #         self.local.peer = remote
-        #         self.remote.synchronizer = self
-        #         self.remote.peer = local
-        #         if self.dry_run:
-        #             self.local.readonly = True
-        #             self.local.dry_run = True
-        #             self.remote.readonly = True
-        #             self.remote.dry_run = True
+        self.ignore_copy_errors = True
         #: bool: True if this synchronizer is used by a command line script (e.g. pyftpsync.exe)
         self.is_script = None
         #: str: Conflict resolution strategy
@@ -122,8 +115,10 @@ class BaseSynchronizer:
             "bytes_written": 0,
             "conflict_files": 0,
             "conflict_files_skipped": 0,
+            "copy_errors": 0,
             "dirs_created": 0,
             "dirs_deleted": 0,
+            "errors": 0,
             "download_bytes_written": 0,
             "download_files_written": 0,
             "elap_secs": None,
@@ -145,11 +140,6 @@ class BaseSynchronizer:
             "upload_files_written": 0,
         }
 
-    #         if not local.connected:
-    #             local.open()
-    #         if not remote.connected:
-    #             remote.open()
-
     def __del__(self):
         self.close()
 
@@ -164,6 +154,13 @@ class BaseSynchronizer:
 
     def get_stats(self):
         return self._stats
+
+    def error_count(self) -> int:
+        return self._stats["errors"]
+
+    def problem_count(self) -> int:
+        n = self._stats["conflict_files_skipped"] + self._stats["copy_errors"]
+        return n
 
     def _inc_stat(self, name, ofs=1):
         self._stats[name] = self._stats.get(name, 0) + ofs
@@ -275,6 +272,11 @@ class BaseSynchronizer:
 
         start = time.time()
 
+        def _show_error(msg, exc):
+            write_error(
+                f"{ansi_code('Fore.LIGHTRED_EX')}{msg}: {exc} {ansi_code('Style.RESET_ALL')}"
+            )
+
         def __block_written(data):
             # write("__block_written() {} bytes".format(len(data)))
             self._inc_stat("bytes_written", len(data))
@@ -290,10 +292,31 @@ class BaseSynchronizer:
             # It is more efficient to let FTPTarget write in the retrbinary() callbacks.
             # (Note that copying FTP to FTP would require a temp buffer anyway,
             # so we handle this in the default branch below.)
-            with dest.open_writable(file_entry.name) as fp_dest:
+            try:
+                writer = dest.open_writable(file_entry.name)
+            except Exception as e:
+                self._inc_stat("errors")
+                self._inc_stat("copy_errors")
+                if self.ignore_copy_errors:
+                    _show_error(f"Could not copy {file_entry.name}", e)
+                    return
+                raise
+
+            with writer as fp_dest:
                 src.copy_to_file(file_entry.name, fp_dest, callback=__block_written)
+
         else:
-            with src.open_readable(file_entry.name) as fp_src:
+            try:
+                reader = src.open_readable(file_entry.name)
+            except Exception as e:
+                self._inc_stat("errors")
+                self._inc_stat("copy_errors")
+                if self.ignore_copy_errors:
+                    _show_error(f"Could not copy {file_entry.name}", e)
+                    return
+                raise
+
+            with reader as fp_src:
                 dest.write_file(file_entry.name, fp_src, callback=__block_written)
 
         dest.set_mtime(file_entry.name, file_entry.mtime, file_entry.size)

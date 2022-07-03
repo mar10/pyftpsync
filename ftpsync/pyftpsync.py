@@ -112,7 +112,12 @@ def run():
     sp.add_argument(
         "--create-folder",
         action="store_true",
-        help="Create remote folder if missing",
+        help="create remote folder if missing",
+    )
+    sp.add_argument(
+        "--report-problems",
+        action="store_true",
+        help="return exit code 10 if any conflict was skipped, a copy error occurred, etc.",
     )
 
     sp.set_defaults(command="upload")
@@ -156,6 +161,11 @@ def run():
         help="remove local files if they don't exist on remote target "
         "or don't match the current filter (implies '--delete' option)",
     )
+    sp.add_argument(
+        "--report-problems",
+        action="store_true",
+        help="return exit code 10 if any conflict was skipped, a copy error occurred, etc.",
+    )
 
     sp.set_defaults(command="download")
 
@@ -184,7 +194,12 @@ def run():
     sp.add_argument(
         "--create-folder",
         action="store_true",
-        help="Create remote folder if missing",
+        help="create remote folder if missing",
+    )
+    sp.add_argument(
+        "--report-problems",
+        action="store_true",
+        help="return exit code 10 if any conflict was skipped, a copy error occurred, etc.",
     )
 
     sp.set_defaults(command="sync")
@@ -219,19 +234,21 @@ def run():
             parser.error("'--debug' requires verbose level >= 4")
         DEBUG_FLAGS.update(args.debug)
 
-    # Modify the `args` from the `pyftpsync.yaml` config:
+    # --- Modify the `args` from the `pyftpsync.yaml` config -------------------
+
     if getattr(args, "command", None) == "run":
         handle_run_command(parser, args)
 
+    # --- Handle `scan` and `tree` commands ------------------------------------
+
     if callable(getattr(args, "command", None)):
-        # scan_handler or tree_handler
         try:
             return args.command(parser, args)
         except CliSilentRuntimeError as e:
             # This exception suppresses stacktrace in non-verbose mode
             print(f"\nERROR:\n{e}\n", file=sys.stderr)
             if args.verbose <= e.min_verbosity:
-                sys.exit()
+                sys.exit(e.exit_code)
             raise
         except KeyboardInterrupt:
             print("\nAborted by user.", file=sys.stderr)
@@ -242,7 +259,8 @@ def run():
             "missing command (choose from 'upload', 'download', 'run', 'sync', 'scan', 'tree')"
         )
 
-    # Post-process and check arguments
+    # --- Post-process and check arguments -------------------------------------
+
     if hasattr(args, "delete_unmatched") and args.delete_unmatched:
         args.delete = True
 
@@ -250,14 +268,17 @@ def run():
 
     if args.remote == ".":
         parser.error("'.' is expected to be the local target (not remote)")
+
     args.remote_target = make_target(args.remote, {"ftp_debug": ftp_debug})
     if not isinstance(args.local_target, FsTarget) and isinstance(
         args.remote_target, FsTarget
     ):
         parser.error("a file system target is expected to be local")
 
-    # Let the command handler do its thing
+    # --- Handle `upload`, `download`, and `sync` ------------------------------
+
     opts = namespace_to_dict(args)
+
     if args.command == "upload":
         s = UploadSynchronizer(args.local_target, args.remote_target, opts)
     elif args.command == "download":
@@ -267,6 +288,7 @@ def run():
     else:
         parser.error("unknown command '{}'".format(args.command))
 
+    # Allow prompting
     s.is_script = True
 
     try:
@@ -275,7 +297,7 @@ def run():
         # This exception suppresses stacktrace in non-verbose mode
         print(f"\nERROR:\n{e}\n", file=sys.stderr)
         if args.verbose <= e.min_verbosity:
-            sys.exit()
+            sys.exit(e.exit_code)
         raise
     except KeyboardInterrupt:
         print("\nAborted by user.", file=sys.stderr)
@@ -285,26 +307,34 @@ def run():
         s.local.close()
         s.remote.close()
 
+    # --- Report results -------------------------------------------------------
+
     stats = s.get_stats()
+
     if args.verbose >= 5:
         pprint(stats)
     elif args.verbose >= 1:
         if args.dry_run:
             print("(DRY-RUN) ", end="")
+
         print(
-            "Wrote {}/{} files in {} directories, skipped: {}.".format(
+            "Wrote {}/{} files in {} directories, skipped: {}, errors: {}.".format(
                 stats["files_written"],
                 stats["local_files"],
                 stats["local_dirs"],
-                stats["conflict_files_skipped"],
+                stats["conflict_files_skipped"],  # + stats["copy_errors"],
+                stats["errors"],
             ),
             end="",
         )
         if stats["interactive_ask"]:
+            # Do not show timings when user prompts were displayed
             print()
         else:
             print(" Elap: {}.".format(stats["elap_str"]))
 
+    if args.report_problems and (s.problem_count() > 0 or s.error_count() > 0):
+        sys.exit(10)
     return
 
 

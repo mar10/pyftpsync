@@ -137,8 +137,6 @@ class SFTPTarget(_Target):
         if verbose <= 3:
             logging.getLogger("paramiko.transport").setLevel(logging.WARNING)
 
-        write("Connecting {}:*** to sftp://{}".format(self.username, self.host))
-
         cnopts = pysftp.CnOpts()
         cnopts.log = self.get_option("ftp_debug", False)
         if not verify_host_keys:
@@ -150,6 +148,8 @@ class SFTPTarget(_Target):
             )
             if creds:
                 self.username, self.password = creds
+
+        write("Connecting {}:*** to sftp://{}".format(self.username, self.host))
 
         assert self.sftp is None
         while True:
@@ -177,12 +177,6 @@ class SFTPTarget(_Target):
                     "(or pass `--no-verify-host-keys` if you don't care about security).",
                     min_verbosity=4,
                 )
-                # Note: we don't want to sys.exit in non-CLI mode
-                # write_error(
-                #     f"{e}: Try `ssh-keyscan HOST` to add it to `USER/.ssh/known_hosts` "
-                #     "(or pass `--no-verify-host-keys` if you don't care about security)."
-                # )
-                # raise SystemExit
 
         if verbose >= 4:
             write(
