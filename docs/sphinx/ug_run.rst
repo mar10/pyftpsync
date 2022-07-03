@@ -1,8 +1,7 @@
-=======================
 Run from pyftpsync.yaml
 =======================
 
-Users can define sets of command line options as named *tasks* and store them
+Users can define sets of command line options as named `tasks` and store them
 in the project folder. It can then be executed like so::
 
     $ pyftpsync run TASK
@@ -52,8 +51,8 @@ Main sections are
     Typical values include:
 
     :code:`command: COMMAND_NAME` (str, mandatory)
-        Command that should be run with the defined options, 
-        must be one of 'upload', 'dowlnload', 'sync', 'tree'.
+        Command that should be run with the defined options.
+        Must be one of 'upload', 'dowlnload', 'sync', 'tree'.
 
     :code:`remote: URL` (str, mandatory)
         Remote target URL and protocol, e.g. :code:`sftp://example.com/my_project`.
