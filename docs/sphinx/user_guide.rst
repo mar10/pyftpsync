@@ -8,8 +8,10 @@ User Guide
   the previous versions.
   Make sure to adjust your scripts accordingly after update.
 
-.. toctree::
+..
     :hidden:
+    
+.. toctree::
 
     ug_cli
     ug_run

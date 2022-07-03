@@ -37,7 +37,7 @@ Create and Activate the Virtual Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Linux / macOS
 """""""""""""
-On Linux/OS X, we recommend to use `pipenv <https://github.com/kennethreitz/pipenv>`_
+On Linux and macOS we recommend to use `pipenv <https://github.com/kennethreitz/pipenv>`_
 to make this easy::
 
     $ cd /path/to/pyftpsync

@@ -35,6 +35,9 @@ $ pip install pyftpsync --upgrade
 $ pyftpsync --help
 ```
 
+See [Command Line Interface](https://pyftpsync.readthedocs.io/en/latest/ug_cli.html) 
+for details.
+
 In addition to the direct invocation of `upload`, `download`, or `sync`
 commands, version 3.x allows to define a ``pyftpsync_yaml`` file
 in your project's root folder which then can be executed like so::

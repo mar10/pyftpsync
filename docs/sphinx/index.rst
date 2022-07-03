@@ -59,7 +59,7 @@ Features
 
 **The command line tool adds:**
 
-  * Runs on Linux, OS X, and Windows.
+  * Runs on Linux, macOS, and Windows.
   * Remember passwords in system keyring.
   * Interactive conflict resolution mode.
   * Dry-run mode.
@@ -88,6 +88,8 @@ be installed using `pip <http://www.pip-installer.org/>`_::
 
   $ pip install pyftpsync --upgrade
   $ pyftpsync --help
+
+See :doc:`ug_cli` for details.
 
 In addition to the direct invocation of `upload`, `download`, or `sync`
 commands, version 3.x allows to define a ``pyftpsync_yaml`` file
