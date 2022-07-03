@@ -23,6 +23,7 @@ tox = "*"
 twine = "*"
 wheel = "*"
 yabs = "*"
+importlib-metadata = "*"
 
 [packages]
 colorama = "*"
