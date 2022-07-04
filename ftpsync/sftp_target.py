@@ -17,7 +17,7 @@ from unittest.mock import patch
 import paramiko
 import pysftp
 
-from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersion
+from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersionError
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftpsync.targets import _get_encoding_opt, _Target
 from ftpsync.util import (
@@ -440,7 +440,7 @@ class SFTPTarget(_Target):
         if has_meta:
             try:
                 self.cur_dir_meta.read()
-            except IncompatibleMetadataVersion:
+            except IncompatibleMetadataVersionError:
                 raise  # this should end the script (user should pass --migrate)
             except Exception as e:
                 write_error(
