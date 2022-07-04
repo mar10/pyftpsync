@@ -4,7 +4,7 @@ Reference Guide
 Class Inheritance Diagram
 -------------------------
 
-.. inheritance-diagram:: ftpsync.targets ftpsync.ftp_target ftpsync.resources ftpsync.synchronizers
+.. inheritance-diagram:: ftpsync.targets ftpsync.ftp_target ftpsync.sftp_target ftpsync.resources ftpsync.synchronizers ftpsync.metadata ftpsync.util
    :parts: 2
    :private-bases:
    :caption: pyftpsync classes
