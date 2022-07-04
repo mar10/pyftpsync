@@ -2,7 +2,7 @@
 
 black~=22.0
 check-manifest
-cx_Freeze
+cx_Freeze~=6.11
 flake8~=3.4
 flake8-bugbear~=18.2
 flake8-quotes~=1.0

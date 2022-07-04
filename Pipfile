@@ -5,7 +5,7 @@ verify_ssl = true
 [dev-packages]
 black = "~=22.0"
 check-manifest = "*"
-cx_Freeze = {version = "*", os_name = "== 'nt'"}
+cx_Freeze = {version = "~=6.11", os_name = "== 'nt'"}
 flake8 = "*"
 flake8-bugbear = "*"
 flake8-quotes = "*"

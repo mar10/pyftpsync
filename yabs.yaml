@@ -85,7 +85,7 @@ tasks:
     message: |
       Released {version}
     
-      [Change log](https://github.com/{repo}/blob/master/CHANGES.md),
+      [Changelog](https://github.com/{repo}/blob/master/CHANGES.md),
       [Commit details](https://github.com/{repo}/compare/{org_tag_name}...{tag_name}).
     # draft: true
     prerelease: null  # null: guess from version number format
