@@ -80,7 +80,7 @@ executables = [
         target_name="pyftpsync.exe",
         # icon="docs/logo.ico",
         shortcut_name="pyftpsync",
-        copyright="(c) 2012-2021 Martin Wendt",
+        copyright="(c) 2012-2022 Martin Wendt",
         # trademarks="...",
     )
 ]
@@ -90,7 +90,7 @@ build_exe_options = {
     # "init_script": "Console",
     "includes": install_requires,
     "packages": ["keyring.backends"],  # loaded dynamically
-    "constants": "BUILD_COPYRIGHT='(c) 2012-2021 Martin Wendt'",
+    "constants": "BUILD_COPYRIGHT='(c) 2012-2022 Martin Wendt'",
 }
 
 # See https://cx-freeze.readthedocs.io/en/latest/distutils.html#bdist-msi
@@ -108,7 +108,7 @@ setup(
     version=version,
     author="Martin Wendt",
     author_email="pyftpsync@wwwendt.de",
-    # copyright="(c) 2012-2021 Martin Wendt",
+    # copyright="(c) 2012-2022 Martin Wendt",
     maintainer="Martin Wendt",
     maintainer_email="pyftpsync@wwwendt.de",
     url="https://github.com/mar10/pyftpsync",
