@@ -169,13 +169,14 @@ def handle_run_command(parser, cli_args):
         if task_name not in config["tasks"]:
             parser.error(
                 f"Invalid entry `default_task: {task_name}`: "
-                f"must also define `tasks.{task_name}` in {config_path}"
+                f"`tasks.{task_name}` is not defined in {config_path}"
             )
 
     else:
         parser.error(
             "No `TASK` argument was passed and no default configured: "
-            f"please define `default_task: TASK` in {config_path}"
+            f"choose from [{', '.join(config['tasks'])}] "
+            f"or define `default_task: TASK` in {config_path}"
         )
 
     if task_name not in config["tasks"]:
@@ -221,7 +222,7 @@ def handle_run_command(parser, cli_args):
             write("`--no-dry-run` (or `--execute`) was passed: resetting dry_run mode")
         else:
             write(
-                "dry_run mode is configured: pass --no-dry-run (or --execute) "
+                "Dry-run mode is configured: pass --no-dry-run (or --execute) "
                 "to enable write operations"
             )
 

@@ -68,7 +68,7 @@ common_parser.add_argument(
     action="store_true",
     default=False,
     help="replace meta data files from different pyftpsync versions "
-    "with current format. Existing data will be discarded.",
+    "with current format. Existing data will be discarded",
 )
 
 common_parser.add_argument(

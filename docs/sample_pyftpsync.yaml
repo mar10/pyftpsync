@@ -17,9 +17,9 @@ common_config:
     # local: sync_root
     #: Remote target protocol and address
     remote: sftp://example.com/my_project
-    #: Make --dry-run default (can be overridden by --execute or --no-dry-run):
+    #: Make --dry-run default (pass  `--execute` or `--no-dry-run` to override):
     dry_run: true
-    #: Make --root default (can be overridden by --here):
+    #: Make --root default (pass `--here` to override):
     root: true
     #: Return exit code 10 on skipped files:
     report_problems: true
@@ -30,15 +30,16 @@ tasks:
     show: 
         command: tree
         dry_run: false
-        files: true
         sort: true
+        files: false  # Pass `--files` to override
 
     sync_all:
         command: sync
 
     deploy:
         command: upload
-        delete_unmatched: true
+        delete: false
+        delete_unmatched: false
         exclude: build,node_modules,.*,_*
 
     deploy_force:

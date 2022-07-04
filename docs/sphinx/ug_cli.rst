@@ -87,8 +87,10 @@ FTP URLs may contain credentials (*not* recommended)::
 
     $ pyftpsync upload ~/temp ftp://joe:secret@example.com/target/folder
 
-Note that `pyftpsync` also supports prompting for passwords and storing
-passwords in the system keyring and ``.netrc`` files.
+.. note::
+
+    Replace ``ftp://`` with ``ftps://`` to enable TLS encryption. |br|
+    Replace ``ftp://`` with ``sftp://`` to use the SFTP protocol.
 
 .. note::
 
@@ -97,10 +99,8 @@ passwords in the system keyring and ``.netrc`` files.
   If the remote target does *not* exist, but its parent folder does, the 
   ``--create-folder`` option may be passed.
 
-.. note::
-
-    Replace ``ftp://`` with ``ftps://`` to enable TLS encryption. |br|
-    Replace ``ftp://`` with ``sftp://`` to use the SFTP protocol.
+Note that `pyftpsync` also supports prompting for passwords and storing
+passwords in the system keyring and ``.netrc`` files (see below).
 
 
 Authentication
@@ -157,8 +157,8 @@ The ``--match`` option filters processed files using on or more patterns
 (using the `fnmatch syntax <https://docs.python.org/3/library/fnmatch.html#module-fnmatch>`_). |br|
 **Note:**  These patterns are only applied to files, not directories.
 
-The ``--exclude`` option is applied after `--match` and removes entries from
-processing. Unlike `--match`, these patterns are also applied to directories.
+The ``--exclude`` option is applied after ``--match`` and removes entries from
+processing. Unlike ``--match``, these patterns are also applied to directories.
 
 Example::
 
@@ -224,25 +224,25 @@ Example: Upload Files
 Upload all new and modified files from user's temp folder to an FTP server.
 No files are changed on the local directory::
 
-  $ pyftpsync upload ~/temp ftp://example.com/target/folder
+  $ pyftpsync upload ~/temp sftp://example.com/target/folder
 
 Add the ``--delete`` option to remove all files from the remote target that
 don't exist locally::
 
-  $ pyftpsync upload ~/temp ftp://example.com/target/folder --delete
+  $ pyftpsync upload ~/temp sftp://example.com/target/folder --delete
 
 Add the ``--dry-run`` option to switch to DRY-RUN mode, i.e. run in test mode
 without modifying files::
 
-  $ pyftpsync upload ~/temp ftp://example.com/target/folder --delete --dry-run
+  $ pyftpsync upload ~/temp sftp://example.com/target/folder --delete --dry-run
 
 Add one or more  ``-v`` options to increase output verbosity::
 
-  $ pyftpsync upload ~/temp ftp://example.com/target/folder --delete -vv
+  $ pyftpsync upload ~/temp sftp://example.com/target/folder --delete -vv
 
 Mirror current directory to remote folder::
 
-  $ pyftpsync upload . ftp://example.com/target/folder --force --delete --resolve=local
+  $ pyftpsync upload . sftp://example.com/target/folder --force --delete --resolve=local
 
 
 Download Files Syntax
