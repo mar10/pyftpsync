@@ -116,3 +116,8 @@ See :doc:`ug_run` for details.
 .. |rtd_badge| image:: https://readthedocs.org/projects/pyftpsync/badge/?version=latest
    :target: https://pyftpsync.readthedocs.io/
    :alt: Documentation Status
+
+.. |logo| image:: logo_48x48.png
+   :height: 48px
+   :width: 48px
+   :alt: pyftpsync logo
