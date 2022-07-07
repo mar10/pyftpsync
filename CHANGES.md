@@ -1,6 +1,7 @@
 4.0.0 (unreleased)
 ------------------
 - Add SFTP support
+- Improve `run` command
 - New `tree` command
 - New `--case` argument for better handling of ambigous files that only differ
   in the name's casing

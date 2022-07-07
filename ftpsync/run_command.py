@@ -30,6 +30,7 @@ KNOWN_TASK_ARGS = {
     "here",
     "local",
     "match",
+    "migrate",
     "no_color",
     "no_dry_run",  # alias: execute
     "no_keyring",
@@ -109,8 +110,40 @@ def add_run_parser(subparsers):
         "--no-dry-run",
         "--execute",  # alias
         action="store_true",
-        help="force execution if dry-run mode is configured as default in `pyftpsync.yaml`",
+        help="override `dry_run: true` setting in `pyftpsync.yaml`",
     )
+    parser.add_argument(
+        "--create-folder",
+        action="store_true",
+        help="override `create_folder: false` or missing setting in `pyftpsync.yaml`",
+    )
+    parser.add_argument(
+        "--files",
+        action="store_true",
+        help="override `files: false` or missing setting in `pyftpsync.yaml`",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="override `force: false` or missing setting in `pyftpsync.yaml`",
+    )
+    parser.add_argument(
+        "--sort",
+        action="store_true",
+        help="override `sort: false` or missing setting in `pyftpsync.yaml`",
+    )
+    parser.add_argument(
+        "--report-problems",
+        action="store_true",
+        help="override `report_problems: false` or missing setting in `pyftpsync.yaml`",
+    )
+    # TODO: --delete ?
+    # TODO: --delete-unmatched ?
+    # TODO: --no_keyring ?
+    # TODO: --no_netrc ?
+    # TODO: --no_prompt ?
+    # TODO: --resolve ?
+
     parser.set_defaults(command="run")
 
     return parser
