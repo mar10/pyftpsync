@@ -35,6 +35,14 @@ $ pip install pyftpsync --upgrade
 $ pyftpsync --help
 ```
 
+> **Note:** <br>
+MS Windows users that only need the command line interface may prefer the
+[MSI Installer](https://github.com/mar10/pyftpsync/releases/latest) or install
+using the Windows Package Manager: 
+```ps1
+> winget install pyftpsync
+```
+
 See [Command Line Interface](https://pyftpsync.readthedocs.io/en/latest/ug_cli.html) 
 for details.
 
@@ -46,10 +54,6 @@ in your project's root folder which then can be executed like so::
 
 See [Run from pyftpsync.yaml](https://pyftpsync.readthedocs.io/en/latest/ug_run.html) 
 for details.
-
-
-**Note:** Windows users may prefer the 
-[MSI Installer](https://github.com/mar10/pyftpsync/releases/latest).
 
 
 ## Documentation

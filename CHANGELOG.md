@@ -1,4 +1,7 @@
-4.0.0 (unreleased)
+4.0.1 (unreleased)
+------------------
+
+4.0.0 (2022-07-31)
 ------------------
 - Add SFTP support
 - Improve `run` command
@@ -16,6 +19,7 @@
 - Copy errors (e.g. due to encoding problems) are skipped (see also `--report-problems`)
 - Fix #26: Crash when not setting verbose option
 - Use [Yabs](https://github.com/mar10/yabs) as release tool
+- Available on Windows Package Manager
 - **Breaking Changes:**
   - Drop support for Python 2.x (end-of-life: 2020-01-01)
   - Rename `.pyftpsync.yaml` to `pyftpsync.yaml`

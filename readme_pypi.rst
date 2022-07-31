@@ -15,7 +15,13 @@ Synchronize directories using FTP(S), SFTP, or file system access.
 
 Requires `Python <https://www.python.org/download/>`_ 3.7+.
 
-A Windows `MSI installer is also available on GitHub <https://github.com/mar10/pyftpsync/releases>`_.
+.. note::
+   MS Windows users that only need the command line interface may prefer the
+   `MSI installer <https://github.com/mar10/pyftpsync/releases>`_ or install
+   using the Windows Package Manager: 
+   ```ps1
+   > winget install pyftpsync
+   ```
 
 See also https://github.com/mar10/pyftpsync for details
 and `Read the Docs <https://pyftpsync.readthedocs.io/>`_.

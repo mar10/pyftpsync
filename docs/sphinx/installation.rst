@@ -13,7 +13,11 @@ be installed using `pip <http://www.pip-installer.org/>`_::
 
 .. note::
    MS Windows users that only need the command line interface may prefer the
-   `MSI installer <https://github.com/mar10/pyftpsync/releases>`_.
+   `MSI installer <https://github.com/mar10/pyftpsync/releases>`_ or install
+   using the Windows Package Manager: 
+   ```ps1
+   > winget install pyftpsync
+   ```
 
 Now the ``pyftpsync`` command is available::
 
