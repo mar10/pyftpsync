@@ -22,4 +22,4 @@ and `Read the Docs <https://pyftpsync.readthedocs.io/>`_.
 
 Change Log
 ----------
-See `CHANGES.md <https://github.com/mar10/pyftpsync/blob/master/CHANGES.md>`_.
+See `CHANGELOG.md <https://github.com/mar10/pyftpsync/blob/master/CHANGELOG.md>`_.
