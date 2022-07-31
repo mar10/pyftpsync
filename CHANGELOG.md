@@ -34,6 +34,7 @@ See branch `maintain_3.x`.
 3.0.0 (2019-04-20)
 ------------------
 - This release addresses some known **encoding-related issues**:
+
   - The internal path format are now native strings (i.e. unicode on Python 3 
     or UTF-8 bytes on Python 2)
   - FTP targets are now assumed to support UTF-8.
@@ -79,7 +80,8 @@ See branch `maintain_3.x`.
 - Release as Wheel.
 
 **Breaking Changes:**
-- Write mode is now on by default.<br>
+
+- Write mode is now on by default.
   The `-x`, `--execute` option was removed, use `--dry-run` instead.
 - `-f`, `--include-files` option was renamed to `-m`, `--match`.<br>
   `-o`, `--omit` option was renamed to `-x`, `--exclude`.

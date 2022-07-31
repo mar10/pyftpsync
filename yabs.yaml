@@ -18,21 +18,20 @@ tasks:
   # 'check': Assert preconditons and fail otherwise
   - task: check
     branches: master        # Current branch must be in this list
-    can_push: true          # Test if 'git push' would/would not succeed
-    github: true            # GitHub repo name valid and online accessible
-    clean: true             # Repo must/must not contain modifications
+    # can_push: true          # Test if 'git push' would/would not succeed
+    # github: true            # GitHub repo name valid and online accessible
+    # clean: true             # Repo must/must not contain modifications
     os: null                # (str, list)
+    # pypi: true              # `twine` is available, PyPI package accessible
     python: ">=3.9"         # SemVer specifier
-    twine: true             # `twine` is available
-    up_to_date: true        # everything pulled from remote
-    venv: true              # running inside a virtual environment
-    version: true           # `setup.py --version` returns the configured version
-    winget: true            # `wingetcreate` is available
-    yabs: ">=0.5"           # SemVer specifier
+    # up_to_date: true        # everything pulled from remote
+    # venv: true              # running inside a virtual environment
+    # version: true           # `setup.py --version` returns the configured version
+    # winget: null            # `wingetcreate` is available
 
   # 'run': Run arbitrary shell command
   - task: exec
-    args: ["tox", "-e", "check,flake8"]
+    args: ["tox", "-e", "check"]
     always: true            # `true`: run even in dry-run mode
     silent: true            # `true`: suppress output (unless error)
     ignore_errors: false    # `true`: show warning, but proceed on errors (exit code != 0)

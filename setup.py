@@ -3,5 +3,6 @@
 from setuptools import setup
 
 setup(
+    name="pyftpsync",  # GitHub dependants needs it in setup.py?
     # See setup.cfg
 )
