@@ -1,18 +1,29 @@
-4.0.0 (unreleased)
+4.0.1 (unreleased)
 ------------------
+
+4.0.0 (2022-07-31)
+------------------
+- Add SFTP support
+- Improve `run` command
+- New `tree` command
+- New `--case` argument for better handling of ambigous files that only differ
+  in the name's casing
+- New `--create-folder` argument to allow creation of missing remote folders
+- New `--report-problems` argument to return exit code 10 on skipped files
+  like unresolved conflicts or copy errors
+- New `--no-dry-run` argument to `run` command to override a default dry_run 
+  configuration (alias: `--execute`)
+- New `--debug classify` argument helps with analysis of synchronization problems
+- `--migrate` now always removes outdated metadata files (before, this was only
+  done when a file inside that directory was touched)
+- Copy errors (e.g. due to encoding problems) are skipped (see also `--report-problems`)
+- Fix #26: Crash when not setting verbose option
+- Use [Yabs](https://github.com/mar10/yabs) as release tool
+- Available on Windows Package Manager
 - **Breaking Changes:**
   - Drop support for Python 2.x (end-of-life: 2020-01-01)
   - Rename `.pyftpsync.yaml` to `pyftpsync.yaml`
   - Rename FtpTarget => FTPTarget
-- Add SFTP support
-- Add `tree` command
-- Add `--case` argument for better handling of ambigous files that only differ
-  in the name's casing
-- `--migrate` now always removes outdated metadata files (before, this was only
-  done when a file inside that directory was touched)
-- `--debug classify` helps with analysis of synchronization problems
-- Fix #26: Crash when not setting verbose option
-- Use [Yabs](https://github.com/mar10/yabs) as release tool
 
 3.1.1+
 ------
@@ -27,6 +38,7 @@ See branch `maintain_3.x`.
 3.0.0 (2019-04-20)
 ------------------
 - This release addresses some known **encoding-related issues**:
+
   - The internal path format are now native strings (i.e. unicode on Python 3 
     or UTF-8 bytes on Python 2)
   - FTP targets are now assumed to support UTF-8.
@@ -72,7 +84,8 @@ See branch `maintain_3.x`.
 - Release as Wheel.
 
 **Breaking Changes:**
-- Write mode is now on by default.<br>
+
+- Write mode is now on by default.
   The `-x`, `--execute` option was removed, use `--dry-run` instead.
 - `-f`, `--include-files` option was renamed to `-m`, `--match`.<br>
   `-o`, `--omit` option was renamed to `-x`, `--exclude`.

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-(c) 2012-2021 Martin Wendt; see https://github.com/mar10/pyftpsync
+(c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 
@@ -27,6 +27,7 @@ def add_scan_parser(subparsers):
         "scan",
         parents=[verbose_parser, common_parser, matcher_parser, creds_parser],
         help="repair, purge, or check targets",
+        allow_abbrev=False,
     )
 
     parser.add_argument(

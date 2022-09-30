@@ -20,9 +20,6 @@
 
 import sys
 import os
-# import shlex
-
-from recommonmark.parser import CommonMarkParser
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
@@ -33,9 +30,9 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 package_root = os.path.abspath('../..')
 sys.path.insert(0, package_root)
-print "Add package root to sys.path: %r" % package_root
+print("Add package root to sys.path: %r" % package_root)
 # for fn in os.listdir(package_root):
-#   print "-", fn
+#   print("-", fn)
 
 # -- General configuration ------------------------------------------------
 
@@ -46,6 +43,7 @@ print "Add package root to sys.path: %r" % package_root
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'myst_parser',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
@@ -56,6 +54,7 @@ extensions = [
     'sphinx.ext.inheritance_diagram',
     'sphinx.ext.napoleon',
 #    'sphinxcontrib.fulltoc',
+    'sphinxcontrib.mermaid',
 ]
 
 # A string of reStructuredText that will be included at the end of every source file that is read.
@@ -76,23 +75,43 @@ rst_epilog = """
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
-source_parsers = {
-    '.md': CommonMarkParser,
-}
+# source_parsers = {
+#     '.md': CommonMarkParser,
+# }
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 source_suffix = ['.rst', '.md']
-# source_suffix = '.rst'
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
+
+# MyST Markdown Support
+myst_enable_extensions = [
+    "dollarmath",
+    "amsmath",
+    "deflist",
+    "fieldlist",
+    "html_admonition",
+    "html_image",
+    "colon_fence",
+    "smartquotes",
+    "replacements",
+    "linkify",
+    "strikethrough",
+    "substitution",
+    "tasklist",
+]
+myst_number_code_blocks = ["typescript"]
+myst_heading_anchors = 2
+myst_footnote_transition = True
+myst_dmath_double_inline = True
 
 # The master toctree document.
 master_doc = 'index'
 
 # General information about the project.
 project = u'pyftpsync'
-copyright = u'2012-2021, Martin Wendt'
+copyright = u'2012-2022, Martin Wendt'
 author = u'Martin Wendt'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -109,10 +128,10 @@ try:
     # print  "release", release
     del pkg_resources
 except pkg_resources.DistributionNotFound:
-    print 'To build the documentation, The distribution information'
-    print 'Has to be available.  Either install the package into your'
-    print 'development environment or run "setup.py develop" to setup the'
-    print 'metadata.  A virtualenv is recommended!'
+    print('To build the documentation, The distribution information')
+    print('Has to be available.  Either install the package into your')
+    print('development environment or run "setup.py develop" to setup the')
+    print('metadata.  A virtualenv is recommended!')
     # sys.exit(1)
     # TODO: 2015-09-05: fails since last month: workaround like this:
     # (Maybe a better solution here: https://github.com/google/oauth2client/commit/a39aa25091946e33b17b52cbe19b5b88d79a28b0)
@@ -120,7 +139,7 @@ except pkg_resources.DistributionNotFound:
     exec(open("../../ftpsync/__init__.py").read(), g_dict)
     release = g_dict["__version__"]
     del g_dict
-    print 'Using workaround (direct read): %s' % release
+    print('Using workaround (direct read): %s' % release)
 
 version = '.'.join(release.split('.')[:2])
 
@@ -129,7 +148,8 @@ version = '.'.join(release.split('.')[:2])
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
+# language = None
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -201,12 +221,12 @@ if not on_rtd:
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = None
+html_logo = 'logo_48x48_white.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-#html_favicon = None
+html_favicon = 'favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

@@ -27,17 +27,17 @@ Work in a Virtual Environment
 
 Install Python
 ^^^^^^^^^^^^^^
-`Python 3.6+ <https://www.python.org/downloads/>`_,
+`Python 3.7+ <https://www.python.org/downloads/>`_,
 and `pip <https://pip.pypa.io/en/stable/installing/#do-i-need-to-install-pip>`_ on our system.
 
 If you want to run tests on *all* supported platforms, install
-Python 3.6, 3.7, 3.8, 3.9, and 3.10.
+Python 3.7, 3.8, 3.9, and 3.10.
 
 Create and Activate the Virtual Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Linux / macOS
 """""""""""""
-On Linux/OS X, we recommend to use `pipenv <https://github.com/kennethreitz/pipenv>`_
+On Linux and macOS we recommend to use `pipenv <https://github.com/kennethreitz/pipenv>`_
 to make this easy::
 
     $ cd /path/to/pyftpsync
@@ -52,9 +52,9 @@ For example using Python's builtin ``venv`` (instead of ``virtualenvwrapper``)
 in a Windows PowerShell::
 
     > cd /path/pyftpsync
-    > py -3.6 -m venv c:\env\pyftpsync_py36
+    > py -3.10 -m venv c:\env\pyftpsync_py310
     > c:\env\pyftpsync_py36\Scripts\Activate.ps1
-    (pyftpsync_py36) $
+    (pyftpsync_py310) $
 
 Install Requirements
 ^^^^^^^^^^^^^^^^^^^^
@@ -281,7 +281,7 @@ Code
         `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_.
 
         Failing tests or not follwing PEP 8 will break builds on
-        `travis <https://travis-ci.org/mar10/pyftpsync>`_,
+        `travis <https://app.travis-ci.com/github/mar10/pyftpsync>`_,
         so run ``$ pytest``, ``$ flake8``, and ``$ tox`` frequently and before you commit!
 
 

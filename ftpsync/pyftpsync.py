@@ -2,7 +2,7 @@
 """
 Simple folder synchronization using FTP.
 
-(c) 2012-2021 Martin Wendt; see https://github.com/mar10/pyftpsync
+(c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 
 Usage examples:
@@ -33,6 +33,7 @@ from ftpsync.tree_command import add_tree_parser
 from ftpsync.util import (
     DEBUG_FLAGS,
     PYTHON_VERSION,
+    CliSilentRuntimeError,
     check_cli_verbose,
     namespace_to_dict,
     set_pyftpsync_logger,
@@ -52,6 +53,7 @@ def run():
         description="Synchronize folders over FTP.",
         epilog="See also https://github.com/mar10/pyftpsync",
         parents=[verbose_parser],
+        allow_abbrev=False,
     )
 
     # Note: we want to allow --version to be combined with --verbose. However
@@ -60,8 +62,9 @@ def run():
         version_info = "pyftpsync/{} Python/{} {}".format(
             __version__, PYTHON_VERSION, platform.platform()
         )
+        version_info += f", Python: {sys.executable}"
     else:
-        version_info = "{}".format(__version__)
+        version_info = f"{__version__}"
 
     parser.add_argument("-V", "--version", action="version", version=version_info)
 
@@ -73,6 +76,7 @@ def run():
         "upload",
         parents=[verbose_parser, common_parser, matcher_parser, creds_parser],
         help="copy new and modified files to remote folder",
+        allow_abbrev=False,
     )
 
     sp.add_argument(
@@ -105,6 +109,16 @@ def run():
         help="remove remote files if they don't exist locally "
         "or don't match the current filter (implies '--delete' option)",
     )
+    sp.add_argument(
+        "--create-folder",
+        action="store_true",
+        help="create remote folder if missing",
+    )
+    sp.add_argument(
+        "--report-problems",
+        action="store_true",
+        help="return exit code 10 if any conflict was skipped, a copy error occurred, etc.",
+    )
 
     sp.set_defaults(command="upload")
 
@@ -114,6 +128,7 @@ def run():
         "download",
         parents=[verbose_parser, common_parser, matcher_parser, creds_parser],
         help="copy new and modified files from remote folder to local target",
+        allow_abbrev=False,
     )
 
     sp.add_argument(
@@ -146,6 +161,11 @@ def run():
         help="remove local files if they don't exist on remote target "
         "or don't match the current filter (implies '--delete' option)",
     )
+    sp.add_argument(
+        "--report-problems",
+        action="store_true",
+        help="return exit code 10 if any conflict was skipped, a copy error occurred, etc.",
+    )
 
     sp.set_defaults(command="download")
 
@@ -155,6 +175,7 @@ def run():
         "sync",
         parents=[verbose_parser, common_parser, matcher_parser, creds_parser],
         help="synchronize new and modified files between remote folder and local target",
+        allow_abbrev=False,
     )
 
     sp.add_argument(
@@ -169,6 +190,16 @@ def run():
         default="ask",
         choices=["old", "new", "local", "remote", "skip", "ask"],
         help="conflict resolving strategy (default: '%(default)s')",
+    )
+    sp.add_argument(
+        "--create-folder",
+        action="store_true",
+        help="create remote folder if missing",
+    )
+    sp.add_argument(
+        "--report-problems",
+        action="store_true",
+        help="return exit code 10 if any conflict was skipped, a copy error occurred, etc.",
     )
 
     sp.set_defaults(command="sync")
@@ -203,24 +234,33 @@ def run():
             parser.error("'--debug' requires verbose level >= 4")
         DEBUG_FLAGS.update(args.debug)
 
-    # Modify the `args` from the `pyftpsync.yaml` config:
+    # --- Modify the `args` from the `pyftpsync.yaml` config -------------------
+
     if getattr(args, "command", None) == "run":
         handle_run_command(parser, args)
 
+    # --- Handle `scan` and `tree` commands ------------------------------------
+
     if callable(getattr(args, "command", None)):
-        # scan_handler
         try:
             return args.command(parser, args)
+        except CliSilentRuntimeError as e:
+            # This exception suppresses stacktrace in non-verbose mode
+            print(f"\nERROR:\n{e}\n", file=sys.stderr)
+            if args.verbose <= e.min_verbosity:
+                sys.exit(e.exit_code)
+            raise
         except KeyboardInterrupt:
             print("\nAborted by user.", file=sys.stderr)
             sys.exit(3)
 
     elif not hasattr(args, "command"):
         parser.error(
-            "missing command (choose from 'upload', 'download', 'run', 'sync', 'scan')"
+            "missing command (choose from 'upload', 'download', 'run', 'sync', 'scan', 'tree')"
         )
 
-    # Post-process and check arguments
+    # --- Post-process and check arguments -------------------------------------
+
     if hasattr(args, "delete_unmatched") and args.delete_unmatched:
         args.delete = True
 
@@ -228,14 +268,17 @@ def run():
 
     if args.remote == ".":
         parser.error("'.' is expected to be the local target (not remote)")
+
     args.remote_target = make_target(args.remote, {"ftp_debug": ftp_debug})
     if not isinstance(args.local_target, FsTarget) and isinstance(
         args.remote_target, FsTarget
     ):
         parser.error("a file system target is expected to be local")
 
-    # Let the command handler do its thing
+    # --- Handle `upload`, `download`, and `sync` ------------------------------
+
     opts = namespace_to_dict(args)
+
     if args.command == "upload":
         s = UploadSynchronizer(args.local_target, args.remote_target, opts)
     elif args.command == "download":
@@ -245,10 +288,17 @@ def run():
     else:
         parser.error("unknown command '{}'".format(args.command))
 
+    # Allow prompting
     s.is_script = True
 
     try:
         s.run()
+    except CliSilentRuntimeError as e:
+        # This exception suppresses stacktrace in non-verbose mode
+        print(f"\nERROR:\n{e}\n", file=sys.stderr)
+        if args.verbose <= e.min_verbosity:
+            sys.exit(e.exit_code)
+        raise
     except KeyboardInterrupt:
         print("\nAborted by user.", file=sys.stderr)
         sys.exit(3)
@@ -257,26 +307,36 @@ def run():
         s.local.close()
         s.remote.close()
 
+    # --- Report results -------------------------------------------------------
+
     stats = s.get_stats()
+
     if args.verbose >= 5:
         pprint(stats)
     elif args.verbose >= 1:
         if args.dry_run:
             print("(DRY-RUN) ", end="")
+
         print(
-            "Wrote {}/{} files in {} directories, skipped: {}.".format(
+            "Wrote {}/{} files in {} directories, skipped: {}, errors: {}.".format(
                 stats["files_written"],
                 stats["local_files"],
                 stats["local_dirs"],
-                stats["conflict_files_skipped"],
+                stats["conflict_files_skipped"],  # + stats["copy_errors"],
+                stats["errors"],
             ),
             end="",
         )
         if stats["interactive_ask"]:
+            # Do not show timings when user prompts have been displayed
             print()
         else:
             print(" Elap: {}.".format(stats["elap_str"]))
 
+    if getattr(args, "report_problems", None) and (
+        s.problem_count() + s.error_count() > 0
+    ):
+        sys.exit(10)
     return
 
 

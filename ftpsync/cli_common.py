@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-(c) 2012-2021 Martin Wendt; see https://github.com/mar10/pyftpsync
+(c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 import argparse
@@ -68,7 +68,7 @@ common_parser.add_argument(
     action="store_true",
     default=False,
     help="replace meta data files from different pyftpsync versions "
-    "with current format. Existing data will be discarded.",
+    "with current format. Existing data will be discarded",
 )
 
 common_parser.add_argument(
@@ -86,7 +86,7 @@ matcher_parser = argparse.ArgumentParser(add_help=False)
 matcher_parser.add_argument(
     "-m",
     "--match",
-    help="wildcard for file names using fnmatch syntax "
+    help="wildcard for file names (but not directories) using fnmatch syntax "
     "(default: match all, separate multiple values with ',')",
 )
 matcher_parser.add_argument(

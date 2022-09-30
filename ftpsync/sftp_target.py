@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-(c) 2012-2021 Martin Wendt; see https://github.com/mar10/pyftpsync
+(c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 import json
 import logging
+import os
 import stat
 import time
 from posixpath import join as join_url
@@ -16,10 +17,11 @@ from unittest.mock import patch
 import paramiko
 import pysftp
 
-from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersion
+from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersionError
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftpsync.targets import _get_encoding_opt, _Target
 from ftpsync.util import (
+    CliSilentRuntimeError,
     get_credentials_for_url,
     is_native,
     prompt_for_password,
@@ -27,6 +29,19 @@ from ftpsync.util import (
     write,
     write_error,
 )
+
+
+class PatchedPysftpConnection(pysftp.Connection):
+    """
+    Patched version that fixes exception on connect errors:
+    `AttributeError: 'Connection' object has no attribute '_sftp_live'`
+    https://stackoverflow.com/a/65060184
+    """
+
+    def __init__(self, *args, **kwargs):
+        self._sftp_live = False
+        self._transport = None
+        super().__init__(*args, **kwargs)
 
 
 # ===============================================================================
@@ -45,9 +60,8 @@ class SFTPTarget(_Target):
     """
 
     DEFAULT_BLOCKSIZE = 8 * 1024  # ftplib uses 8k chunks by default
-    MAX_SPOOL_MEM = (
-        100 * 1024
-    )  # keep open_readable() buffer in memory if smaller than 100kB
+    # keep open_readable() buffer in memory if smaller than 100kB
+    MAX_SPOOL_MEM = 100 * 1024
 
     def __init__(
         self,
@@ -74,7 +88,7 @@ class SFTPTarget(_Target):
         # path = self.to_unicode(path)
         path = path or "/"
         assert is_native(path)
-        super(SFTPTarget, self).__init__(path, extra_opts)
+        super().__init__(path, extra_opts)
 
         self.sftp = None
         self.host = host
@@ -110,7 +124,7 @@ class SFTPTarget(_Target):
     def open(self):
         assert not self.ftp_socket_connected
 
-        super(SFTPTarget, self).open()
+        super().open()
 
         options = self.get_options_dict()
         no_prompt = self.get_option("no_prompt", True)
@@ -122,8 +136,6 @@ class SFTPTarget(_Target):
 
         if verbose <= 3:
             logging.getLogger("paramiko.transport").setLevel(logging.WARNING)
-
-        write("Connecting {}:*** to sftp://{}".format(self.username, self.host))
 
         cnopts = pysftp.CnOpts()
         cnopts.log = self.get_option("ftp_debug", False)
@@ -137,10 +149,12 @@ class SFTPTarget(_Target):
             if creds:
                 self.username, self.password = creds
 
+        write("Connecting {}:*** to sftp://{}".format(self.username, self.host))
+
         assert self.sftp is None
         while True:
             try:
-                self.sftp = pysftp.Connection(
+                self.sftp = PatchedPysftpConnection(
                     self.host,
                     username=self.username,
                     password=self.password,
@@ -158,13 +172,11 @@ class SFTPTarget(_Target):
                 self.username, self.password = creds
                 # Continue while-loop
             except paramiko.ssh_exception.SSHException as e:
-                write_error(
-                    "{exc}: Try `ssh-keyscan HOST` to add it "
-                    "(or pass `--no-verify-host-keys` if you don't care about security).".format(
-                        exc=e
-                    )
+                raise CliSilentRuntimeError(
+                    f"{e}: Try `ssh-keyscan HOST` to add it to `USER/.ssh/known_hosts` "
+                    "(or pass `--no-verify-host-keys` if you don't care about security).",
+                    min_verbosity=4,
                 )
-                raise
 
         if verbose >= 4:
             write(
@@ -178,16 +190,39 @@ class SFTPTarget(_Target):
         try:
             self.sftp.cwd(self.root_dir)
         except IOError as e:
-            # if not e.args[0].startswith("550"):
-            #     raise  # error other then 550 No such directory'
-            write_error(
-                "Could not change directory to {} ({}): missing permissions?".format(
-                    self.root_dir, e
+            # '550 No such directory' is not reliably detectable with SFTP?
+
+            # Implement --create-folder option for remote targets:
+            if self.is_unbound():
+                # E.g. 'tree' command
+                write_error(
+                    f"Could not change directory to {self.root_dir} ({e}): missing permissions?"
                 )
-            )
+            elif self.is_local():
+                write_error(
+                    f"Could not change local directory to {self.root_dir} ({e}): missing permissions?"
+                )
+            else:
+                parent = os.path.dirname(self.root_dir)
+                subfolder = os.path.basename(self.root_dir)
+                if not self.get_option("create_folder", False):
+                    msg = (
+                        f"Could not change remote directory to {self.root_dir!r} ({e!r}). "
+                        "This may be due to missing permissions or because the folder does not exist. "
+                        f"Pass `--create-folder` if you want to create {subfolder!r} within {parent!r}."
+                    )
+                    raise CliSilentRuntimeError(msg, min_verbosity=4)
+
+                write_error(
+                    f"Could not change remote directory to {self.root_dir!r} ({e!r}). "
+                    f"`--create-folder` was passed: creating {subfolder!r} within {parent!r}..."
+                )
+                self.sftp.cwd(parent)
+                self.mkdir(subfolder)
+                # Must work now:
+                self.sftp.cwd(self.root_dir)
 
         pwd = self.pwd()
-        # pwd = self.to_unicode(pwd)
         if pwd != self.root_dir:
             raise RuntimeError(
                 "Unable to navigate to working directory {!r} (now at {!r})".format(
@@ -197,7 +232,6 @@ class SFTPTarget(_Target):
 
         self.cur_dir = pwd
 
-        # self.ftp_initialized = True
         # Successfully authenticated: store password
         if store_password:
             save_password(self.host, self.username, self.password)
@@ -217,7 +251,7 @@ class SFTPTarget(_Target):
                 write_error("sftp.close() failed: {}".format(e))
             self.ftp_socket_connected = False
 
-        super(SFTPTarget, self).close()
+        super().close()
 
     def _lock(self, break_existing=False):
         """Write a special file to the target root folder."""
@@ -304,9 +338,49 @@ class SFTPTarget(_Target):
         self.check_write(dir_name)
         self.sftp.mkdir(dir_name)
 
-    def rmdir(self, dir_name):
+    def _rmdir_impl(self, dir_name, keep_root_folder=False, predicate=None):
+        # FTP does not support deletion of non-empty directories.
+        assert is_native(dir_name)
         self.check_write(dir_name)
-        return self.sftp.rmdir(dir_name)
+        names = []
+
+        attr_list = self.sftp.listdir_attr(dir_name)
+
+        # write(f"rmdir({dir_name}): {attr_list}")
+        for dir_attr in attr_list:
+            name = dir_attr.filename
+            # name = self.re_encode_to_native(name)
+            if "/" in name:
+                name = os.path.basename(name)
+            if name in (".", ".."):
+                continue
+            if predicate and not predicate(name):
+                continue
+            names.append(name)
+
+        if len(names) > 0:
+            self.sftp.cwd(dir_name)
+            try:
+                for name in names:
+                    try:
+                        # try to delete this as a file
+                        self.sftp.remove(name)
+                    except IOError:  # ftplib.all_errors as _e:
+                        # write(f"    sftp.remove({name}) failed (not empty?), trying recursive...", debug=True)
+                        # assume <name> is a folder
+                        self.rmdir(name)
+            finally:
+                if dir_name != ".":
+                    self.sftp.cwd("..")
+        #        write("sftp.rmd(%s)..." % (dir_name, ))
+        if not keep_root_folder:
+            self.sftp.rmdir(dir_name)
+        return
+
+    def rmdir(self, dir_name):
+        # self.check_write(dir_name)
+        # return self.sftp.rmdir(dir_name)
+        return self._rmdir_impl(dir_name)
 
     _paramiko_py3compat_u = paramiko.py3compat.u
 
@@ -338,11 +412,12 @@ class SFTPTarget(_Target):
             is_dir = stat.S_ISDIR(de.st_mode)
             name = de.filename
             entry = None
-            if is_dir:
-                if name not in (".", ".."):
-                    entry = DirectoryEntry(
-                        self, self.cur_dir, name, de.st_size, de.st_mtime, unique=None
-                    )
+            if name in (".", ".."):
+                continue  # #74: some servers may send those
+            elif is_dir:
+                entry = DirectoryEntry(
+                    self, self.cur_dir, name, de.st_size, de.st_mtime, unique=None
+                )
             elif name == DirMetadata.META_FILE_NAME:
                 # the meta-data file is silently ignored
                 has_meta = True
@@ -365,7 +440,7 @@ class SFTPTarget(_Target):
         if has_meta:
             try:
                 self.cur_dir_meta.read()
-            except IncompatibleMetadataVersion:
+            except IncompatibleMetadataVersionError:
                 raise  # this should end the script (user should pass --migrate)
             except Exception as e:
                 write_error(

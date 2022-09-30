@@ -1,5 +1,5 @@
-# pyftpsync
-[![Build Status](https://travis-ci.com/mar10/pyftpsync.svg?branch=master)](https://travis-ci.com/mar10/pyftpsync)
+# ![logo](https://raw.githubusercontent.com/mar10/pyftpsync/master/docs/logo_48x48.png) pyftpsync
+[![Build Status](https://travis-ci.com/mar10/pyftpsync.svg?branch=master)](https://app.travis-ci.com/github/mar10/pyftpsync)
 [![Latest Version](https://img.shields.io/pypi/v/pyftpsync.svg)](https://pypi.python.org/pypi/pyftpsync/)
 [![License](https://img.shields.io/pypi/l/pyftpsync.svg)](https://github.com/mar10/pyftpsync/blob/master/LICENSE.txt)
 [![Documentation Status](https://readthedocs.org/projects/pyftpsync/badge/?version=latest)](https://pyftpsync.readthedocs.io/)
@@ -27,7 +27,7 @@ Synchronize directories using FTP(S), SFTP, or file system access.
 
 ## Quickstart
 
-[Python](https://www.python.org/download/Python) 3.6+ is required,
+[Python](https://www.python.org/download/Python) 3.7+ is required,
 [pip](http://www.pip-installer.org/) recommended:
 
 ```bash
@@ -35,8 +35,26 @@ $ pip install pyftpsync --upgrade
 $ pyftpsync --help
 ```
 
-**Note:** Windows users may prefer the 
-[MSI Installer](https://github.com/mar10/pyftpsync/releases/latest).
+> **Note:** <br>
+MS Windows users that only need the command line interface may prefer the
+[MSI Installer](https://github.com/mar10/pyftpsync/releases/latest) or install
+using the Windows Package Manager:
+
+```ps1
+> winget install pyftpsync
+```
+
+See [Command Line Interface](https://pyftpsync.readthedocs.io/en/latest/ug_cli.html) 
+for details.
+
+In addition to the direct invocation of `upload`, `download`, or `sync`
+commands, version 3.x allows to define a ``pyftpsync_yaml`` file
+in your project's root folder which then can be executed like so::
+
+    $ pyftpsync run
+
+See [Run from pyftpsync.yaml](https://pyftpsync.readthedocs.io/en/latest/ug_run.html) 
+for details.
 
 
 ## Documentation

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-(c) 2012-2021 Martin Wendt; see https://github.com/mar10/pyftpsync
+(c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 import configparser
@@ -17,6 +17,15 @@ _logger = None
 PYTHON_VERSION = "{}.{}.{}".format(
     sys.version_info[0], sys.version_info[1], sys.version_info[2]
 )
+
+
+class CliSilentRuntimeError(RuntimeError):
+    """A RuntimeError that will suppress a stacktrace in CLI mode if verbosity <= x."""
+
+    def __init__(self, msg, *, min_verbosity, exit_code=1) -> None:
+        self.min_verbosity = min_verbosity
+        self.exit_code = exit_code
+        super().__init__(msg)
 
 
 # def is_basestring(s):

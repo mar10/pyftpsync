@@ -1,19 +1,23 @@
 Installation
 ============
 
-Requirements: `Python <https://www.python.org/downloads/>`_ 2.7+ or 3.4+ is required.
+Requirements: `Python <https://www.python.org/downloads/>`_ 3.7 or later is 
+required.
 
 Releases are hosted on `PyPI <https://pypi.python.org/pypi/pyftpsync>`_ and can
 be installed using `pip <http://www.pip-installer.org/>`_::
 
   $ pip install pyftpsync
   $ pyftpsync --version -v
-  pyftpsync/2.0.1 Python/3.6.1 Darwin-17.6.0-x86_64-i386-64bit
+  pyftpsync/4.0.0-a4 Python/3.9.12 macOS-12.4-arm64-arm-64bit, Python: /path/virtualenvs/pyftpsync-Bl7Oc59w/bin/python
 
 .. note::
    MS Windows users that only need the command line interface may prefer the
-   `MSI installer <https://github.com/mar10/pyftpsync/releases>`_.
+   `MSI installer <https://github.com/mar10/pyftpsync/releases>`_ or install
+   using the Windows Package Manager::
 
+     > winget install pyftpsync
+  
 Now the ``pyftpsync`` command is available::
 
   $ pyftpsync --help

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-(c) 2012-2021 Martin Wendt; see https://github.com/mar10/pyftpsync
+(c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 import fnmatch
@@ -20,13 +20,14 @@ from ftpsync.util import (
     eps_compare,
     pretty_stamp,
     write,
+    write_error,
 )
 
 CONFIG_FILE_NAME = "pyftpsync.yaml"
 
 #: Default for --exclude CLI option
 #: Note: DirMetadata.META_FILE_NAME and LOCK_FILE_NAME are always ignored
-DEFAULT_OMIT = [".DS_Store", ".git", ".hg", ".svn"]
+DEFAULT_OMIT = [".DS_Store", ".git", ".hg", ".svn", "#recycle"]
 ALWAYS_OMIT = (CONFIG_FILE_NAME, DirMetadata.META_FILE_NAME, DirMetadata.LOCK_FILE_NAME)
 
 # ===============================================================================
@@ -104,15 +105,7 @@ class BaseSynchronizer:
 
         self.verbose = self.options.get("verbose", 3)
         self.dry_run = self.options.get("dry_run", False)
-        #         self.local.synchronizer = self
-        #         self.local.peer = remote
-        #         self.remote.synchronizer = self
-        #         self.remote.peer = local
-        #         if self.dry_run:
-        #             self.local.readonly = True
-        #             self.local.dry_run = True
-        #             self.remote.readonly = True
-        #             self.remote.dry_run = True
+        self.ignore_copy_errors = True
         #: bool: True if this synchronizer is used by a command line script (e.g. pyftpsync.exe)
         self.is_script = None
         #: str: Conflict resolution strategy
@@ -122,8 +115,10 @@ class BaseSynchronizer:
             "bytes_written": 0,
             "conflict_files": 0,
             "conflict_files_skipped": 0,
+            "copy_errors": 0,
             "dirs_created": 0,
             "dirs_deleted": 0,
+            "errors": 0,
             "download_bytes_written": 0,
             "download_files_written": 0,
             "elap_secs": None,
@@ -145,11 +140,6 @@ class BaseSynchronizer:
             "upload_files_written": 0,
         }
 
-    #         if not local.connected:
-    #             local.open()
-    #         if not remote.connected:
-    #             remote.open()
-
     def __del__(self):
         self.close()
 
@@ -164,6 +154,13 @@ class BaseSynchronizer:
 
     def get_stats(self):
         return self._stats
+
+    def error_count(self) -> int:
+        return self._stats["errors"]
+
+    def problem_count(self) -> int:
+        n = self._stats["conflict_files_skipped"] + self._stats["copy_errors"]
+        return n
 
     def _inc_stat(self, name, ofs=1):
         self._stats[name] = self._stats.get(name, 0) + ofs
@@ -275,6 +272,11 @@ class BaseSynchronizer:
 
         start = time.time()
 
+        def _show_error(msg, exc):
+            write_error(
+                f"{ansi_code('Fore.LIGHTRED_EX')}{msg}: {exc} {ansi_code('Style.RESET_ALL')}"
+            )
+
         def __block_written(data):
             # write("__block_written() {} bytes".format(len(data)))
             self._inc_stat("bytes_written", len(data))
@@ -290,10 +292,31 @@ class BaseSynchronizer:
             # It is more efficient to let FTPTarget write in the retrbinary() callbacks.
             # (Note that copying FTP to FTP would require a temp buffer anyway,
             # so we handle this in the default branch below.)
-            with dest.open_writable(file_entry.name) as fp_dest:
+            try:
+                writer = dest.open_writable(file_entry.name)
+            except Exception as e:
+                self._inc_stat("errors")
+                self._inc_stat("copy_errors")
+                if self.ignore_copy_errors:
+                    _show_error(f"Could not copy {file_entry.name}", e)
+                    return
+                raise
+
+            with writer as fp_dest:
                 src.copy_to_file(file_entry.name, fp_dest, callback=__block_written)
+
         else:
-            with src.open_readable(file_entry.name) as fp_src:
+            try:
+                reader = src.open_readable(file_entry.name)
+            except Exception as e:
+                self._inc_stat("errors")
+                self._inc_stat("copy_errors")
+                if self.ignore_copy_errors:
+                    _show_error(f"Could not copy {file_entry.name}", e)
+                    return
+                raise
+
+            with reader as fp_src:
                 dest.write_file(file_entry.name, fp_src, callback=__block_written)
 
         dest.set_mtime(file_entry.name, file_entry.mtime, file_entry.size)
@@ -480,9 +503,11 @@ class BaseSynchronizer:
         # Convert into a dict {name: FileEntry, ...}
         local_entries = self.local.get_dir()
         if case_mode == "strict":
-            local_entry_map = dict(map(lambda e: (e.name, e), local_entries))
+            local_entry_map = {e.name: e for e in local_entries}
+            # local_entry_map = dict(map(lambda e: (e.name, e), local_entries))
         else:
-            local_entry_map = dict(map(lambda e: (e.name.lower(), e), local_entries))
+            local_entry_map = {e.name.lower(): e for e in local_entries}
+            # local_entry_map = dict(map(lambda e: (e.name.lower(), e), local_entries))
             if len(local_entry_map) != len(local_entries):
                 raise RuntimeError(
                     "Local target contains file names that only differ in case: "
@@ -492,9 +517,11 @@ class BaseSynchronizer:
         # Convert into a dict {name: FileEntry, ...}
         remote_entries = self.remote.get_dir()
         if case_mode == "strict":
-            remote_entry_map = dict(map(lambda e: (e.name, e), remote_entries))
+            remote_entry_map = {e.name: e for e in remote_entries}
+            # remote_entry_map = dict(map(lambda e: (e.name, e), remote_entries))
         else:
-            remote_entry_map = dict(map(lambda e: (e.name.lower(), e), remote_entries))
+            remote_entry_map = {e.name.lower(): e for e in remote_entries}
+            # remote_entry_map = dict(map(lambda e: (e.name.lower(), e), remote_entries))
             if len(remote_entry_map) != len(remote_entries):
                 raise RuntimeError(
                     "Remote target contains file names that only differ in case: "
@@ -718,7 +745,7 @@ class BiDirSynchronizer(BaseSynchronizer):
     """
 
     def __init__(self, local, remote, options):
-        super(BiDirSynchronizer, self).__init__(local, remote, options)
+        super().__init__(local, remote, options)
 
     def get_info_strings(self):
         return ("synchronize", "with")
@@ -830,7 +857,7 @@ class BiDirSynchronizer(BaseSynchronizer):
 
     def run(self):
         # Don't override setting by derived up/downloader
-        res = super(BiDirSynchronizer, self).run()
+        res = super().run()
         return res
 
     def on_mismatch(self, pair):
@@ -1003,7 +1030,7 @@ class BiDirSynchronizer(BaseSynchronizer):
 
 class UploadSynchronizer(BiDirSynchronizer):
     def __init__(self, local, remote, options):
-        super(UploadSynchronizer, self).__init__(local, remote, options)
+        super().__init__(local, remote, options)
         # local.readonly = True
 
     def get_info_strings(self):
@@ -1097,7 +1124,7 @@ class UploadSynchronizer(BiDirSynchronizer):
     def run(self):
         self.local.readonly = True
         self.remote.readonly = False
-        res = super(UploadSynchronizer, self).run()
+        res = super().run()
         return res
 
     def on_mismatch(self, pair):
@@ -1134,7 +1161,7 @@ class UploadSynchronizer(BiDirSynchronizer):
         if not self.options.get("delete"):
             self._log_action("skip", "remote del.", " >X", pair.remote)
             return
-        return super(UploadSynchronizer, self).on_delete_remote(pair)
+        return super().on_delete_remote(pair)
 
     # def on_need_compare(self, pair):
     #     self._log_action("", "different", "?", pair.local, min_level=2)
@@ -1153,7 +1180,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
     """"""
 
     def __init__(self, local, remote, options):
-        super(DownloadSynchronizer, self).__init__(local, remote, options)
+        super().__init__(local, remote, options)
 
     #         remote.readonly = True
 
@@ -1248,7 +1275,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
     def run(self):
         self.local.readonly = False
         self.remote.readonly = True
-        res = super(DownloadSynchronizer, self).run()
+        res = super().run()
         return res
 
     def on_mismatch(self, pair):
@@ -1282,7 +1309,7 @@ class DownloadSynchronizer(BiDirSynchronizer):
         if not self.options.get("delete"):
             self._log_action("skip", "local del.", "X< ", pair.local)
             return
-        return super(DownloadSynchronizer, self).on_delete_local(pair)
+        return super().on_delete_local(pair)
 
     def on_delete_remote(self, pair):
         # Download does not modify remote target

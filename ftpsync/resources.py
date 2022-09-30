@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-(c) 2012-2021 Martin Wendt; see https://github.com/mar10/pyftpsync
+(c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 import os
@@ -345,7 +345,7 @@ class FileEntry(_Resource):
     #     EPS_TIME = 0.1
 
     def __init__(self, target, rel_path, name, size, mtime, unique):
-        super(FileEntry, self).__init__(target, rel_path, name, size, mtime, unique)
+        super().__init__(target, rel_path, name, size, mtime, unique)
 
     @staticmethod
     def _eps_compare(date_1, date_2):
@@ -397,9 +397,7 @@ class FileEntry(_Resource):
 # ===============================================================================
 class DirectoryEntry(_Resource):
     def __init__(self, target, rel_path, name, size, mtime, unique):
-        super(DirectoryEntry, self).__init__(
-            target, rel_path, name, size, mtime, unique
-        )
+        super().__init__(target, rel_path, name, size, mtime, unique)
         # Directories don't have a size (that we could reasonably use for classification)
         self.size = 0
 

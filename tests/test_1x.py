@@ -31,7 +31,7 @@ def prepare_fixtures_1():
     # print("PYFTPSYNC_TEST_FOLDER", os.environ.get("PYFTPSYNC_TEST_FOLDER"))
     # print("PYFTPSYNC_TEST_FTP_URL", os.environ.get("PYFTPSYNC_TEST_FTP_URL"))
 
-    assert os.path.isdir(PYFTPSYNC_TEST_FOLDER)
+    assert os.path.isdir(PYFTPSYNC_TEST_FOLDER), PYFTPSYNC_TEST_FOLDER
     # Reset all
     empty_folder(PYFTPSYNC_TEST_FOLDER)
     # Add some files to ../local/

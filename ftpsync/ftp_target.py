@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-(c) 2012-2021 Martin Wendt; see https://github.com/mar10/pyftpsync
+(c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 import calendar
@@ -14,10 +14,11 @@ from posixpath import normpath as normpath_url
 from posixpath import relpath as relpath_url
 from tempfile import SpooledTemporaryFile
 
-from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersion
+from ftpsync.metadata import DirMetadata, IncompatibleMetadataVersionError
 from ftpsync.resources import DirectoryEntry, FileEntry
 from ftpsync.targets import _get_encoding_opt, _Target
 from ftpsync.util import (
+    CliSilentRuntimeError,
     get_credentials_for_url,
     is_native,
     prompt_for_password,
@@ -74,7 +75,7 @@ class FTPTarget(_Target):
         # path = self.to_unicode(path)
         path = path or "/"
         assert is_native(path)
-        super(FTPTarget, self).__init__(path, extra_opts)
+        super().__init__(path, extra_opts)
         if tls:
             try:
                 self.ftp = ftplib.FTP_TLS()
@@ -122,7 +123,7 @@ class FTPTarget(_Target):
     def open(self):
         assert not self.ftp_socket_connected
 
-        super(FTPTarget, self).open()
+        super().open()
 
         options = self.get_options_dict()
         no_prompt = self.get_option("no_prompt", True)
@@ -242,14 +243,38 @@ class FTPTarget(_Target):
         except ftplib.error_perm as e:
             if not e.args[0].startswith("550"):
                 raise  # error other then 550 No such directory'
-            write_error(
-                "Could not change directory to {} ({}): missing permissions?".format(
-                    self.root_dir, e
+
+            # Implement --create-folder option for remote targets:
+            if self.is_unbound():
+                # E.g. 'tree' command
+                write_error(
+                    f"Could not change directory to {self.root_dir} ({e}): missing permissions?"
                 )
-            )
+            elif self.is_local():
+                write_error(
+                    f"Could not change local directory to {self.root_dir} ({e}): missing permissions?"
+                )
+            else:
+                parent = os.path.dirname(self.root_dir)
+                subfolder = os.path.basename(self.root_dir)
+                if not self.get_option("create_folder", False):
+                    msg = (
+                        f"Could not change remote directory to {self.root_dir!r} ({e!r}). "
+                        "This may be due to missing permissions or because the folder does not exist. "
+                        f"Pass `--create-folder` if you want to create {subfolder!r} within {parent!r}."
+                    )
+                    raise CliSilentRuntimeError(msg, min_verbosity=4)
+
+                write_error(
+                    f"Could not change remote directory to {self.root_dir!r} ({e!r}). "
+                    f"`--create-folder` was passed: creating {subfolder!r} within {parent!r}..."
+                )
+                self.ftp.cwd(parent)
+                self.mkdir(subfolder)
+                # Must work now:
+                self.ftp.cwd(self.root_dir)
 
         pwd = self.pwd()
-        # pwd = self.to_unicode(pwd)
         if pwd != self.root_dir:
             raise RuntimeError(
                 "Unable to navigate to working directory {!r} (now at {!r})".format(
@@ -259,7 +284,6 @@ class FTPTarget(_Target):
 
         self.cur_dir = pwd
 
-        # self.ftp_initialized = True
         # Successfully authenticated: store password
         if store_password:
             save_password(self.host, self.username, self.password)
@@ -279,7 +303,7 @@ class FTPTarget(_Target):
                 write_error("ftp.quit() failed: {}".format(e))
             self.ftp_socket_connected = False
 
-        super(FTPTarget, self).close()
+        super().close()
 
     def _lock(self, break_existing=False):
         """Write a special file to the target root folder."""
@@ -528,7 +552,7 @@ class FTPTarget(_Target):
         if local_var["has_meta"]:
             try:
                 self.cur_dir_meta.read()
-            except IncompatibleMetadataVersion:
+            except IncompatibleMetadataVersionError:
                 raise  # this should end the script (user should pass --migrate)
             except Exception as e:
                 write_error(

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-(c) 2012-2021 Martin Wendt; see https://github.com/mar10/pyftpsync
+(c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
 
@@ -22,7 +22,7 @@ PYFTPSYNC_VERBOSE_META = str_to_bool(
 )
 
 
-class IncompatibleMetadataVersion(RuntimeError):
+class IncompatibleMetadataVersionError(RuntimeError):
     """Raised when existing meta data file has an obsolete version number."""
 
 
@@ -143,7 +143,7 @@ class DirMetadata:
             self.peer_sync = self.dir["peer_sync"]
             is_valid_file = True
             # write"DirMetadata: read(%s)" % (self.filename, ), self.dir)
-        # except IncompatibleMetadataVersion:
+        # except IncompatibleMetadataVersionError:
         #     raise  # We want version errors to terminate the app
         except Exception as e:
             write_error("Could not read meta info {}: {!r}".format(self, e))
@@ -153,7 +153,7 @@ class DirMetadata:
         # with a current version)
         if is_valid_file and self.dir.get("_file_version", 0) != self.VERSION:
             if not self.target or not self.target.get_option("migrate"):
-                raise IncompatibleMetadataVersion(
+                raise IncompatibleMetadataVersionError(
                     "Invalid meta data version: {} (expected {}).\n"
                     "Consider passing --migrate to discard old data.".format(
                         self.dir.get("_file_version"), self.VERSION

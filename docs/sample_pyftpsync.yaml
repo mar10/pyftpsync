@@ -2,32 +2,46 @@
 # Edit this file, rename to `pyftpsync.yaml`, and store in the project's root folder.
 # See https://pyftpsync.readthedocs.io/ for details.
 
-# This task is used by `pyftpsync run` if no task name is passed as argument:
+#: This task is used by `pyftpsync run` if no task name is passed as argument
 default_task: deploy
 
-# Default settings shared by all tasks:
+#: Default settings inherited by all tasks
 common_config:
+    #: Verbosity (default: 3, use -v/-q to modify from CLI)
     # verbose: 4
+    #: Show progress
     progress: true
-    #: Optional relative path to the local root (default: .)
+    #: Optional relative path to the yaml root (default: .)
     # local: sync_root
     #: Remote target protocol and address
-    remote: ftp://example.com/my_project
-    # Make --root default (can be overridden by --here):
+    remote: sftp://example.com/my_project
+    #: Make --dry-run default (pass  `--execute` or `--no-dry-run` to override)
+    dry_run: true
+    #: Make --root default (pass `--here` to override)
     root: true
+    #: Return exit code 10 on skipped files
+    report_problems: true
 
-# List of task definitions:
+#: List of task definitions (inherits settings from `common_config`)
 tasks:
+    show: 
+        command: tree
+        dry_run: false
+        sort: true
+        files: false  # Pass `--files` to override
+
     sync_all:
         command: sync
 
     deploy:
         command: upload
-        delete_unmatched: true
+        delete: false
+        delete_unmatched: false
         exclude: build,node_modules,.*,_*
 
     deploy_force:
         command: upload
+        # create_folder: true
         delete: true
         delete_unmatched: true
         exclude: build,node_modules,.*,_*

@@ -1,16 +1,15 @@
 -r requirements.txt
 
-# Black is beta and therefor requires --pre flag for installation unless we give the exact number
-black~=21.9b0"
+black~=22.6
 check-manifest
-cx_Freeze
+cx_Freeze~=6.11
 flake8~=3.4
 flake8-bugbear~=18.2
 flake8-quotes~=1.0
 pyftpdlib~=1.5
 pytest-cov~=2.5
 pytest~=3.1
-recommonmark
+# recommonmark
 sphinx_rtd_theme
 sphinx~=1.5
 tox~=2.7

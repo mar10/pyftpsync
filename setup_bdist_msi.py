@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+# NOTE: isort must not chage this import order:
+# isort: skip_file
+
 import os
 import re
 import sys
@@ -64,30 +67,23 @@ try:
 except IOError:
     readme = "(readme not found. Running from tox/setup.py test?)"
 
-install_requires = [
-    "colorama",
-    "keyring",
-    "pysftp",
-    "yaml",  # NOTE: must import 'yaml' (but dependency is names 'PyYAML')
-]
+# NOTE: Only need to list requirements that are not discoverable by scanning
+#       the main package. For example due to dynamic or optional imports.
+# Also, cx_Freeze may have difficulties with packages listed here, e.g. PyYAML:
+#    https://github.com/marcelotduarte/cx_Freeze/issues/1541
+install_requires = []
 setup_requires = install_requires
-tests_require = []  # "pytest", "pytest-cov", "tox", "virtualenv"]
-
-# # cx_Freeze seems to be confused by module name 'PyYAML' which
-# # must be imported as 'yaml', so we rename here. However it must
-# # be listed as 'PyYAML' in the requirements.txt and be installed!
-# install_requires.remove("PyYAML")
-# install_requires.append("yaml")
+tests_require = []  
 
 executables = [
     Executable(
         script="ftpsync/pyftpsync.py",
         base=None,
         # base="Win32GUI",
-        targetName="pyftpsync.exe",
-        # icon="docs/logo.ico",
-        shortcutName="pyftpsync",
-        copyright="(c) 2012-2021 Martin Wendt",
+        target_name="pyftpsync.exe",
+        icon="docs/logo.ico",
+        shortcut_name="pyftpsync",
+        copyright="(c) 2012-2022 Martin Wendt",
         # trademarks="...",
     )
 ]
@@ -97,7 +93,7 @@ build_exe_options = {
     # "init_script": "Console",
     "includes": install_requires,
     "packages": ["keyring.backends"],  # loaded dynamically
-    "constants": "BUILD_COPYRIGHT='(c) 2012-2021 Martin Wendt'",
+    "constants": "BUILD_COPYRIGHT='(c) 2012-2022 Martin Wendt'",
 }
 
 # See https://cx-freeze.readthedocs.io/en/latest/distutils.html#bdist-msi
@@ -105,6 +101,8 @@ bdist_msi_options = {
     "upgrade_code": "{8F4CA3EF-06AD-418E-A64D-B975E3CFA3F6}",
     "add_to_path": True,
     # "install_icon": "docs/logo.ico",
+    # "all_users": True,
+    # "summary_data": {"author": "Martin Wendt"},
 }
 
 
@@ -113,7 +111,7 @@ setup(
     version=version,
     author="Martin Wendt",
     author_email="pyftpsync@wwwendt.de",
-    # copyright="(c) 2012-2021 Martin Wendt",
+    # copyright="(c) 2012-2022 Martin Wendt",
     maintainer="Martin Wendt",
     maintainer_email="pyftpsync@wwwendt.de",
     url="https://github.com/mar10/pyftpsync",

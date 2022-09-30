@@ -20,10 +20,10 @@ class UploadResolveTest(_SyncTestBase):
 
     def setUp(self):
         # Call self._prepare_initial_synced_fixture():
-        super(UploadResolveTest, self).setUp()
+        super().setUp()
 
     def tearDown(self):
-        super(UploadResolveTest, self).tearDown()
+        super().tearDown()
 
     def test_default(self):
         opts = {"verbose": self.verbose}  # default options, i.e. 'skip' conflicts

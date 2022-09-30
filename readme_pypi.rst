@@ -1,4 +1,4 @@
-Copyright (c) 2012-2021 Martin Wendt
+Copyright (c) 2012-2022 Martin Wendt
 
 Summary
 -------
@@ -11,15 +11,20 @@ Synchronize directories using FTP(S), SFTP, or file system access.
   * Architecture is open to add other target types.
 
 .. note::
-    Version 4.0 introduces drops support for Python 2.
+    Version 4.0 drops support for Python 2.
 
-Requires `Python <https://www.python.org/download/>`_ 3.6+.
+Requires `Python <https://www.python.org/download/>`_ 3.7+.
 
-A Windows `MSI installer is also available on GitHub <https://github.com/mar10/pyftpsync/releases>`_.
+.. note::
+   MS Windows users that only need the command line interface may prefer the
+   `MSI installer <https://github.com/mar10/pyftpsync/releases>`_ or install
+   using the Windows Package Manager::
+
+     > winget install pyftpsync
 
 See also https://github.com/mar10/pyftpsync for details
 and `Read the Docs <https://pyftpsync.readthedocs.io/>`_.
 
 Change Log
 ----------
-See `CHANGES.md <https://github.com/mar10/pyftpsync/blob/master/CHANGES.md>`_.
+See `CHANGELOG.md <https://github.com/mar10/pyftpsync/blob/master/CHANGELOG.md>`_.

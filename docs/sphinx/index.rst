@@ -33,11 +33,11 @@ Pyftpsync
 
 
 .. warning::
-  Major version updates (1.0 => 2.0, 2.0 => 3.0, ...) introduce
-  *breaking changes* to the previous versions.
+  Major version updates (e.g. 3.0 => 4.0, ...) introduce *breaking changes* to 
+  the previous versions.
   Make sure to adjust your scripts accordingly after update.
 
-.. info::
+.. warning::
   Version 4.0 drops support for Python 2.
 
 
@@ -59,7 +59,7 @@ Features
 
 **The command line tool adds:**
 
-  * Runs on Linux, OS X, and Windows.
+  * Runs on Linux, macOS, and Windows.
   * Remember passwords in system keyring.
   * Interactive conflict resolution mode.
   * Dry-run mode.
@@ -89,19 +89,21 @@ be installed using `pip <http://www.pip-installer.org/>`_::
   $ pip install pyftpsync --upgrade
   $ pyftpsync --help
 
+See :doc:`ug_cli` for details.
 
-..
-  Indices and tables
-  ==================
+In addition to the direct invocation of `upload`, `download`, or `sync`
+commands, version 3.x allows to define a ``pyftpsync_yaml`` file
+in your project's root folder which then can be executed like so::
 
-  * :ref:`genindex`
-  * :ref:`modindex`
-  * :ref:`search`
+    $ pyftpsync run
+
+See :doc:`ug_run` for details.
+
 
 
 .. |travis_badge| image:: https://travis-ci.org/mar10/pyftpsync.svg?branch=master
    :alt: Build Status
-   :target: https://travis-ci.org/mar10/pyftpsync
+   :target: https://app.travis-ci.com/github/mar10/pyftpsync
 
 .. |pypi_badge| image:: https://img.shields.io/pypi/v/pyftpsync.svg
    :alt: PyPI Version
@@ -114,3 +116,8 @@ be installed using `pip <http://www.pip-installer.org/>`_::
 .. |rtd_badge| image:: https://readthedocs.org/projects/pyftpsync/badge/?version=latest
    :target: https://pyftpsync.readthedocs.io/
    :alt: Documentation Status
+
+.. |logo| image:: logo_48x48.png
+   :height: 48px
+   :width: 48px
+   :alt: pyftpsync logo
