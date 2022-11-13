@@ -35,7 +35,7 @@ $ pip install pyftpsync --upgrade
 $ pyftpsync --help
 ```
 
-> **Note:** <br>
+**Note:** <br>
 MS Windows users that only need the command line interface may prefer the
 [MSI Installer](https://github.com/mar10/pyftpsync/releases/latest) or install
 using the Windows Package Manager:

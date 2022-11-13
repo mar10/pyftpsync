@@ -17,7 +17,6 @@ config:
 tasks:
   # 'check': Assert preconditons and fail otherwise
   - task: check
-    branches: master        # Current branch must be in this list
     # can_push: true          # Test if 'git push' would/would not succeed
     # github: true            # GitHub repo name valid and online accessible
     # clean: true             # Repo must/must not contain modifications
@@ -108,8 +107,8 @@ tasks:
     message: |
       Bump prerelease ({version}) [ci skip]
 
-  - task: winget_release
-    upload: "bdist_msi"
-    package_id: foobar
-
   - task: push
+
+  - task: winget_release
+    upload: bdist_msi
+    package_id: 'mar10.pyftpsync'
