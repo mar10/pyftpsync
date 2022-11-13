@@ -14,6 +14,8 @@ jobs:
       env: TOXENV=py37
       dist: xenial
       before_install:
+        # Fix 'ERROR: Could not build wheels for bcrypt, cryptography which use PEP 517 and cannot be installed directly'
+        - pip install -U pip
         # Fix "AttributeError: 'str' object has no attribute 'name'" on Py37
         - pip install -U importlib_metadata
     # - python: "3.6"  # EOL 2021-12-21
