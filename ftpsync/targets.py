@@ -316,8 +316,8 @@ class _Target:
             _prefixes = []
 
         def _yield_entry(entry, is_last):
-            path = "".join(["    " if last else " |  " for last in _prefixes])
-            path += " `- " if is_last else " +- "
+            path = "".join(["    " if last else "│   " for last in _prefixes])
+            path += "╰── " if is_last else "├── "
             yield path, entry
             if entry.is_dir():
                 with self.enter_subdir(entry.name):
