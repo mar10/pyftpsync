@@ -382,7 +382,10 @@ class SFTPTarget(_Target):
         # return self.sftp.rmdir(dir_name)
         return self._rmdir_impl(dir_name)
 
-    _paramiko_py3compat_u = paramiko.py3compat.u
+    try:
+        _paramiko_py3compat_u = paramiko.util.u
+    except AttributeError:
+        _paramiko_py3compat_u = paramiko.py3compat.u
 
     @staticmethod
     def _paramiko_py3compat_u_wrapper(s, encoding="utf8"):

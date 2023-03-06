@@ -338,7 +338,6 @@ class _Resource:
 # FileEntry
 # ===============================================================================
 class FileEntry(_Resource):
-
     # 2 seconds difference is considered equal.
     # mtime stamp resolution depends on filesystem: FAT32. 2 seconds, NTFS ms, OSX. 1 sec.
     EPS_TIME = 2.01

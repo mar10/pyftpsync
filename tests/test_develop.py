@@ -37,7 +37,6 @@ class TempDevelopTest(_SyncTestBase):
         super().tearDown()
 
     def test_issue_20(self):
-
         opts = {"verbose": 5}
 
         local_target = make_target(self.local_url)

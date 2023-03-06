@@ -599,7 +599,6 @@ class BaseSynchronizer:
 
         # 4. Perform (or schedule) resulting file operations
         for pair in entry_pair_list:
-
             # print(pair)
 
             # Let synchronizer modify the default operation (e.g. apply `--force` option)

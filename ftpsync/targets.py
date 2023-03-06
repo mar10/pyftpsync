@@ -418,7 +418,6 @@ class _Target:
 
 
 class FsTarget(_Target):
-
     DEFAULT_BLOCKSIZE = 16 * 1024  # shutil.copyobj() uses 16k blocks by default
 
     def __init__(self, root_dir, extra_opts=None):
