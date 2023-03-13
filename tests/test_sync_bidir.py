@@ -156,7 +156,6 @@ class BidirSyncTest(_SyncTestBase):
         self.assert_test_folder_equal(get_test_folder("remote"), expect_local)
 
     def test_resolve_remote(self):
-
         opts = {"resolve": "remote", "verbose": self.verbose}
 
         stats = self.do_run_suite(BiDirSynchronizer, opts)

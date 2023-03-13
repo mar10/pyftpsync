@@ -22,7 +22,7 @@ tasks:
     # clean: true             # Repo must/must not contain modifications
     os: null                # (str, list)
     # pypi: true              # `twine` is available, PyPI package accessible
-    python: ">=3.9"         # SemVer specifier
+    python: ">=3.11"         # SemVer specifier
     # up_to_date: true        # everything pulled from remote
     # venv: true              # running inside a virtual environment
     # version: true           # `setup.py --version` returns the configured version

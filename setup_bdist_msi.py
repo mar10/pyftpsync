@@ -98,6 +98,7 @@ build_exe_options = {
         "tkinter",
     ],
     "constants": "BUILD_COPYRIGHT='(c) 2012-2022 Martin Wendt'",
+    "include_msvcr": True,
 }
 
 # See https://cx-freeze.readthedocs.io/en/latest/distutils.html#bdist-msi

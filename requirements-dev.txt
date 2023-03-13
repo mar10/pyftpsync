@@ -1,6 +1,6 @@
 -r requirements.txt
 
-black~=22.6
+black~=22.12
 check-manifest
 cx_Freeze~=6.11
 flake8~=3.4

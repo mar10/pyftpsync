@@ -3,8 +3,11 @@ language: python
 os: linux
 jobs:
   include:
+    - python: "3.11"  # EOL 2027-10-24
+      env: TOXENV=check,py311
+      dist: bionic
     - python: "3.10"  # EOL 2026-10-04
-      env: TOXENV=check,py310
+      env: TOXENV=py310
       dist: bionic
     - python: "3.9"  # EOL 2025-10-05
       env: TOXENV=py39
@@ -25,12 +28,12 @@ jobs:
     #     - pip install --upgrade virtualenv
     # - python: "3.5"  # EOL 2020-09-13
     #   env: TOXENV=py35
-    - python: "3.11-dev"
-      env: TOXENV=py311
+    - python: "3.12-dev"
+      env: TOXENV=py312
       dist: bionic
   allow_failures:
-    - python: "3.11-dev"
-      env: TOXENV=py311
+    - python: "3.12-dev"
+      env: TOXENV=py312
       dist: bionic
 install:
   - pip install tox-travis
