@@ -1,5 +1,6 @@
 4.0.1 (unreleased)
 ------------------
+- Fix #82 Error importing SFTPTarget with paramiko > 3.0
 
 4.0.0 (2022-07-31)
 ------------------
