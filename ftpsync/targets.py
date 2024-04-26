@@ -13,7 +13,7 @@ import sys
 import threading
 from posixpath import join as join_url
 from posixpath import normpath as normpath_url
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import DirectoryEntry, FileEntry
@@ -37,6 +37,7 @@ def make_target(url, extra_opts=None):
     """
     # debug = extra_opts.get("debug", 1)
     parts = urlparse(url, allow_fragments=False)
+    password = unquote(parts.password) if parts.password else None
     # scheme is case-insensitive according to https://tools.ietf.org/html/rfc3986
     scheme = parts.scheme.lower()
     if scheme in ("ftp", "ftps"):
@@ -47,7 +48,7 @@ def make_target(url, extra_opts=None):
             parts.hostname,
             parts.port,
             username=parts.username,
-            password=parts.password,
+            password=password,
             tls=(scheme == "ftps"),
             timeout=None,
             extra_opts=extra_opts,
@@ -60,7 +61,7 @@ def make_target(url, extra_opts=None):
             parts.hostname,
             parts.port,
             username=parts.username,
-            password=parts.password,
+            password=password,
             timeout=None,
             extra_opts=extra_opts,
         )
