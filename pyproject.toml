@@ -1,7 +1,6 @@
 [tool.black]
 line-length = 88
-#py36 = false  # don't strip 'u' from native strings
-target-version = ['py37', 'py38', 'py39', 'py310']
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -26,6 +25,30 @@ profile = "black"
 src_paths = ["ftpsync", "tests"]
 
 
-# [tool.flake8]
-# Flake8 currently does not support pyproject.toml.
-# See [flake8] section in setup.cfg instead.
+[tool.ruff]
+# Decrease the maximum line length to 79 characters.
+# line-length = 79
+# Support Python 3.10+.
+target-version = "py38"
+src = ["ftpsync", "tests"]
+
+[lint]
+select = [
+  "E",  # pycodestyle
+  "F",  # pyflakes
+  "G",  # flake8-logging-format
+  "UP", # pyupgrade
+  "T",  # print, ...
+  # "D",   # pydocstyle
+]
+ignore = [
+  # "E721", #  Do not compare types, use `isinstance()`
+  # "G001", # Logging statement uses `str.format`
+  # "G004", # Logging statement uses f-string
+  # We need the old syntax for python <= 3.9
+  "UP006", # Use `list` instead of `List` for type annotations (since Py39)
+  "UP007", # Use `X | Y` for type annotations (since Py310)
+]
+
+# [tool.ruff.pydocstyle]
+# convention = "google"

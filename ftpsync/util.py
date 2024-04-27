@@ -28,38 +28,23 @@ class CliSilentRuntimeError(RuntimeError):
         super().__init__(msg)
 
 
-# def is_basestring(s):
-#     """Return True for any string type, i.e. for str/unicode on Py2 and bytes/str on Py3."""
-#     return isinstance(s, (str, bytes))
-
-
-# def is_bytes(s):
-#     """Return True for bytestrings, i.e. for str on Py2 and bytes on Py3."""
-#     return isinstance(s, bytes)
-
-
 def is_native(s):
     """Return True for native strings, i.e. for str on Py2 and Py3."""
     return isinstance(s, str)
 
 
-# def is_unicode(s):
-#     """Return True for unicode strings, i.e. for unicode on Py2 and str on Py3."""
-#     return isinstance(s, str)
-
-
 def to_bytes(s, encoding="utf-8"):
     """Convert a text string (unicode) to bytestring, i.e. str on Py2 and bytes on Py3."""
-    if type(s) is not bytes:
+    if not isinstance(s, bytes):
         s = bytes(s, encoding)
     return s
 
 
 def to_native(s, encoding="utf-8"):
     """Convert data to native str type, i.e. bytestring on Py2 and unicode on Py3."""
-    if type(s) is bytes:
+    if isinstance(s, bytes):
         s = str(s, encoding)
-    elif type(s) is not str:
+    elif not isinstance(s, str):
         s = str(s)
     return s
 
@@ -463,7 +448,7 @@ def make_native_dict_keys(d):
     res = {}
     for k, v in d.items():  #
         k = to_native(k)
-        if type(v) is dict:
+        if isinstance(v, dict):
             v = make_native_dict_keys(v)
         res[k] = v
     return res

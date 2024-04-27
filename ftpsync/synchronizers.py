@@ -41,18 +41,18 @@ def process_options(opts):
     """Check and prepare options dict."""
     # Convert match and exclude args into pattern lists
     match = opts.get("match")
-    if match and type(match) is str:
+    if match and isinstance(match, str):
         opts["match"] = [pat.strip() for pat in match.split(",")]
     elif match:
-        assert type(match) is list
+        assert isinstance(match, list), match
     else:
         opts["match"] = []
 
     exclude = opts.get("exclude")
-    if exclude and type(exclude) is str:
+    if exclude and isinstance(exclude, str):
         opts["exclude"] = [pat.strip() for pat in exclude.split(",")]
     elif exclude:
-        assert type(exclude) is list
+        assert isinstance(exclude, list), exclude
     else:
         # opts["exclude"] = DEFAULT_OMIT
         opts["exclude"] = []
@@ -71,14 +71,14 @@ def match_path(entry, opts):
     match = opts.get("match")
     exclude = opts.get("exclude")
     if entry.is_file() and match:
-        assert type(match) is list
+        assert isinstance(match, list), match
         ok = False
         for pat in match:
             if fnmatch.fnmatch(path, pat):
                 ok = True
                 break
     if ok and exclude:
-        assert type(exclude) is list
+        assert isinstance(exclude, list), exclude
         for pat in exclude:
             if fnmatch.fnmatch(path, pat):
                 ok = False

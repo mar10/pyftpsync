@@ -1,14 +1,12 @@
 -r requirements.txt
 
-black~=22.12
+black~=24.4
 check-manifest
-cx_Freeze~=6.11
-flake8~=3.4
-flake8-bugbear~=18.2
-flake8-quotes~=1.0
+cx_Freeze~=7.0
 pyftpdlib~=1.5
 pytest-cov~=2.5
 pytest~=3.1
+ruff
 # recommonmark
 sphinx_rtd_theme
 sphinx~=1.5

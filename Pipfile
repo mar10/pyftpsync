@@ -3,12 +3,9 @@ url = "https://pypi.python.org/simple"
 verify_ssl = true
 
 [dev-packages]
-black = "~=22.12"
+black = "~=24.4"
 check-manifest = "*"
 cx_Freeze = {version = "~=6.11", os_name = "== 'nt'"}
-flake8 = "*"
-flake8-bugbear = "*"
-flake8-quotes = "*"
 isort = "*"
 pyftpdlib = "*"
 pyftpsync = {editable = true, path = "."}
@@ -17,6 +14,7 @@ pytest = "*"
 pytest-cov = "*"
 pytest-sftpserver = "*"
 # recommonmark = "*"
+ruff = "*"
 sphinx = "*"
 sphinx_rtd_theme = "*"
 tox = "*"
@@ -33,7 +31,7 @@ PyYAML = "*"
 yabs = "*"
 
 [requires]
-python_version = "3.11"
+python_version = "3.12"
 
 [pipenv]
 # allow_prereleases = true

@@ -279,7 +279,7 @@ def handle_run_command(parser, cli_args):
             elif name in {"here", "root"} and (cli_args.here or cli_args.root):
                 override = True
             elif name == "verbose" and cli_val != 3:
-                assert type(cli_val) is int
+                assert isinstance(cli_val, int), cli_val
                 override = True
 
             if override:
