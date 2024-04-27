@@ -29,9 +29,7 @@
     -   Rename `.pyftpsync.yaml` to `pyftpsync.yaml`
     -   Rename FtpTarget => FTPTarget
 
-    3.1.1+
-
----
+## 3.1.1+
 
 See branch `maintain_3.x`.
 
@@ -41,9 +39,7 @@ See branch `maintain_3.x`.
 -   Add support for Python 3.8
 -   Fix #38 Remove trailing '/' before checking PWD response
 
-    3.0.0 (2019-04-20)
-
----
+## 3.0.0 (2019-04-20)
 
 -   This release addresses some known **encoding-related issues**:
 
@@ -78,9 +74,7 @@ See branch `maintain_3.x`.
     conditions.<br>
     **NOTE:** default settings will no longer delete files for up- and downloads.
 
-    2.0.0 (2018-01-01)
-
----
+## 2.0.0 (2018-01-01)
 
 **Note**: the command line options have changed:
 **Be careful with existing shell scripts after updating from v1.x!**
@@ -111,23 +105,17 @@ See branch `maintain_3.x`.
 -   Improved test framework and documentation.
 -   Enforce PEP8, use flake8.
 
-    1.0.4 (unreleased)
-
----
+## 1.0.4 (unreleased)
 
 -   Add FTPS (TLS) support on Python 2.7/3.2+
 
-    1.0.3 (2015-06-28)
-
----
+## 1.0.3 (2015-06-28)
 
 -   Add conflict handling to upload and download commands
 -   Move documentation to Read The Docs
 -   Use tox for tests
 
-    1.0.2 (2015-05-17)
-
----
+## 1.0.2 (2015-05-17)
 
 -   Bi-directional synchronization
 -   Detect conflicts if both targets are modified since last sync
@@ -141,21 +129,15 @@ See branch `maintain_3.x`.
 -   Renamed \_pyftpsync-meta.json to .pyftpsync-meta.json
 -   MSI installer for MS Windows
 
-    0.2.1 (2013-05-07)
-
----
+## 0.2.1 (2013-05-07)
 
 -   Fixes for py3
 
-    0.2.0 (2013-05-06)
-
----
+## 0.2.0 (2013-05-06)
 
 -   Improved progress info
 -   Added `--progress` option
 
-    0.1.0 (2013-05-04)
-
----
+## 0.1.0 (2013-05-04)
 
 First release
