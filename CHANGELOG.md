@@ -2,10 +2,9 @@
 
 -   Fix #82 Error importing SFTPTarget with paramiko > 3.0
 -   Drop support for Python 3.7 (end-of-life: 2023-06-27)
+-   Use GH Actions for CI instead of Travis
 
-    4.0.0 (2022-07-31)
-
----
+## 4.0.0 (2022-07-31)
 
 -   Add SFTP support
 -   Improve `run` command

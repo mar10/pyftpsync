@@ -1,5 +1,6 @@
 # ![logo](https://raw.githubusercontent.com/mar10/pyftpsync/master/docs/logo_48x48.png) pyftpsync
-[![Build Status](https://travis-ci.com/mar10/pyftpsync.svg?branch=master)](https://app.travis-ci.com/github/mar10/pyftpsync)
+
+[![Tests](https://github.com/mar10/pyftpsync/actions/workflows/python-app.yml/badge.svg)](https://github.com/mar10/pyftpsync/actions/workflows/python-app.yml)
 [![Latest Version](https://img.shields.io/pypi/v/pyftpsync.svg)](https://pypi.python.org/pypi/pyftpsync/)
 [![License](https://img.shields.io/pypi/l/pyftpsync.svg)](https://github.com/mar10/pyftpsync/blob/master/LICENSE.txt)
 [![Documentation Status](https://readthedocs.org/projects/pyftpsync/badge/?version=latest)](https://pyftpsync.readthedocs.io/)
@@ -11,19 +12,17 @@
 
 [ ![sample](teaser.png?raw=true) ](https://github.com/mar10/pyftpsync "Live demo")
 
-
 ## Summary
 
 Synchronize directories using FTP(S), SFTP, or file system access.
 
-  * This is a command line tool...
-  * ... and a library for use in your Python projects.
-  * Upload, download, and bi-directional synch mode.
-  * Allows FTP-to-FTP and Filesystem-to-Filesystem synchronization as well.
-  * Architecture is open to add other target types.
+-   This is a command line tool...
+-   ... and a library for use in your Python projects.
+-   Upload, download, and bi-directional synch mode.
+-   Allows FTP-to-FTP and Filesystem-to-Filesystem synchronization as well.
+-   Architecture is open to add other target types.
 
 **Note:** Version 4.0 drops support for Python 2.
-
 
 ## Quickstart
 
@@ -44,18 +43,17 @@ using the Windows Package Manager:
 > winget install pyftpsync
 ```
 
-See [Command Line Interface](https://pyftpsync.readthedocs.io/en/latest/ug_cli.html) 
+See [Command Line Interface](https://pyftpsync.readthedocs.io/en/latest/ug_cli.html)
 for details.
 
 In addition to the direct invocation of `upload`, `download`, or `sync`
-commands, version 3.x allows to define a ``pyftpsync_yaml`` file
+commands, version 3.x allows to define a `pyftpsync_yaml` file
 in your project's root folder which then can be executed like so::
 
     $ pyftpsync run
 
-See [Run from pyftpsync.yaml](https://pyftpsync.readthedocs.io/en/latest/ug_run.html) 
+See [Run from pyftpsync.yaml](https://pyftpsync.readthedocs.io/en/latest/ug_run.html)
 for details.
-
 
 ## Documentation
 
