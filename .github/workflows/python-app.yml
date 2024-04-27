@@ -58,10 +58,10 @@ jobs:
           # pytest -ra -v -x --durations=10 --cov=ftpsync --html=build/pytest/report-${{ matrix.python-version }}.html --self-contained-html
           # pytest -ra -v -x --durations=10 --cov=ftpsync --html=build/pytest/report-{envname}.html --self-contained-html {posargs}
 
-      # - name: Upload coverage reports to Codecov
-      #   uses: codecov/codecov-action@v3
-      - name: Coveralls
-        uses: coverallsapp/github-action@v2
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+      # - name: Coveralls
+      #   uses: coverallsapp/github-action@v2
 
       # - name: Install dependencies
       #   run: |
