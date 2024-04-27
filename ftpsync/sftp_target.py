@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 (c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
@@ -119,7 +118,7 @@ class SFTPTarget(_Target):
 
     def get_base_name(self):
         scheme = "sftp"
-        return "{}://{}{}".format(scheme, self.host, self.root_dir)
+        return f"{scheme}://{self.host}{self.root_dir}"
 
     def open(self):
         assert not self.ftp_socket_connected
@@ -149,7 +148,7 @@ class SFTPTarget(_Target):
             if creds:
                 self.username, self.password = creds
 
-        write("Connecting {}:*** to sftp://{}".format(self.username, self.host))
+        write(f"Connecting {self.username}:*** to sftp://{self.host}")
 
         assert self.sftp is None
         while True:
@@ -164,7 +163,7 @@ class SFTPTarget(_Target):
                 break
             except paramiko.ssh_exception.AuthenticationException as e:
                 write_error(
-                    "Could not login to {}@{}: {}".format(self.username, self.host, e)
+                    f"Could not login to {self.username}@{self.host}: {e}"
                 )
                 if no_prompt or not self.username:
                     raise
@@ -183,13 +182,13 @@ class SFTPTarget(_Target):
                 "Login as '{}'.".format(self.username if self.username else "anonymous")
             )
         if self.sftp.logfile:
-            write("Logging to {}".format(self.sftp.logfile))
+            write(f"Logging to {self.sftp.logfile}")
         self.sftp.timeout = self.timeout
         self.ftp_socket_connected = True
 
         try:
             self.sftp.cwd(self.root_dir)
-        except IOError as e:
+        except OSError as e:
             # '550 No such directory' is not reliably detectable with SFTP?
 
             # Implement --create-folder option for remote targets:
@@ -248,7 +247,7 @@ class SFTPTarget(_Target):
             try:
                 self.sftp.close()
             except (ConnectionError, EOFError) as e:
-                write_error("sftp.close() failed: {}".format(e))
+                write_error(f"sftp.close() failed: {e}")
             self.ftp_socket_connected = False
 
         super().close()
@@ -264,7 +263,7 @@ class SFTPTarget(_Target):
             self.lock_data = data
             self.lock_write_time = time.time()
         except Exception as e:
-            write_error("Could not write lock file: {}".format(e))
+            write_error(f"Could not write lock file: {e}")
             # Set to False, so we don't try to remove later
             self.lock_data = False
 
@@ -298,7 +297,7 @@ class SFTPTarget(_Target):
 
             self.lock_data = None
         except Exception as e:
-            write_error("Could not remove lock file: {}".format(e))
+            write_error(f"Could not remove lock file: {e}")
             raise
 
     def _probe_lock_file(self, reported_mtime):
@@ -307,7 +306,7 @@ class SFTPTarget(_Target):
         # delta2 = reported_mtime - self.lock_write_time
         self.server_time_ofs = delta
         if self.get_option("verbose", 3) >= 4:
-            write("Server time offset: {:.2f} seconds.".format(delta))
+            write(f"Server time offset: {delta:.2f} seconds.")
             # write("Server time offset2: {:.2f} seconds.".format(delta2))
 
     def get_id(self):
@@ -319,7 +318,7 @@ class SFTPTarget(_Target):
         if not path.startswith(self.root_dir):
             # paranoic check to prevent that our sync tool goes berserk
             raise RuntimeError(
-                "Tried to navigate outside root {!r}: {!r}".format(self.root_dir, path)
+                f"Tried to navigate outside root {self.root_dir!r}: {path!r}"
             )
         self.sftp.cwd(dir_name)
         self.cur_dir = path
@@ -365,7 +364,7 @@ class SFTPTarget(_Target):
                     try:
                         # try to delete this as a file
                         self.sftp.remove(name)
-                    except IOError:  # ftplib.all_errors as _e:
+                    except OSError:  # ftplib.all_errors as _e:
                         # write(f"    sftp.remove({name}) failed (not empty?), trying recursive...", debug=True)
                         # assume <name> is a folder
                         self.rmdir(name)
@@ -393,7 +392,7 @@ class SFTPTarget(_Target):
             return SFTPTarget._paramiko_py3compat_u(s, encoding)
         except UnicodeDecodeError:
             write_error(
-                "Failed to decode {} using {}. Trying cp1252...".format(s, encoding)
+                f"Failed to decode {s} using {encoding}. Trying cp1252..."
             )
             s = s.decode("cp1252")
         return s
@@ -447,7 +446,7 @@ class SFTPTarget(_Target):
                 raise  # this should end the script (user should pass --migrate)
             except Exception as e:
                 write_error(
-                    "Could not read meta info {}: {}".format(self.cur_dir_meta, e)
+                    f"Could not read meta info {self.cur_dir_meta}: {e}"
                 )
 
             meta_files = self.cur_dir_meta.list

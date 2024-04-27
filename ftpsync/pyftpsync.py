@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Simple folder synchronization using FTP.
 
@@ -286,7 +285,7 @@ def run():
     elif args.command == "sync":
         s = BiDirSynchronizer(args.local_target, args.remote_target, opts)
     else:
-        parser.error("unknown command '{}'".format(args.command))
+        parser.error(f"unknown command '{args.command}'")
 
     # Allow prompting
     s.is_script = True

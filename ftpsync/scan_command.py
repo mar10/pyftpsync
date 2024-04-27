@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 (c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
@@ -44,12 +43,12 @@ def add_scan_parser(subparsers):
     parser.add_argument(
         "--remove-meta",
         action="store_true",
-        help="delete all {} files".format(DirMetadata.META_FILE_NAME),
+        help=f"delete all {DirMetadata.META_FILE_NAME} files",
     )
     parser.add_argument(
         "--remove-locks",
         action="store_true",
-        help="delete all {} files".format(DirMetadata.LOCK_FILE_NAME),
+        help=f"delete all {DirMetadata.LOCK_FILE_NAME} files",
     )
 
     parser.set_defaults(command=scan_handler)
@@ -91,7 +90,7 @@ def scan_handler(parser, args):
 
             if args.list:
                 if is_dir:
-                    print(indent, "[{e.name}]".format(e=e))
+                    print(indent, f"[{e.name}]")
                 else:
                     delta = e.mtime_org - e.mtime
                     dt_modified = pretty_stamp(e.mtime)
@@ -122,7 +121,7 @@ def scan_handler(parser, args):
                 fspec = target.cur_dir_meta.get_full_path()
                 if fspec not in processed_files:
                     processed_files.add(fspec)
-                    print("DELETE {}".format(fspec))
+                    print(f"DELETE {fspec}")
 
             if (
                 args.remove_locks
@@ -130,7 +129,7 @@ def scan_handler(parser, args):
                 and e.name == DirMetadata.LOCK_FILE_NAME
             ):
                 fspec = e.get_rel_path()
-                print("DELETE {}".format(fspec))
+                print(f"DELETE {fspec}")
     finally:
         target.close()
 

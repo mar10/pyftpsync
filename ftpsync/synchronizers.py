@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 (c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
@@ -215,7 +214,7 @@ class BaseSynchronizer:
 
         def _add(rate, size, time):
             if stats.get(time) and stats.get(size):
-                stats[rate] = "{:0.2f} kB/sec".format(0.001 * stats[size] / stats[time])
+                stats[rate] = f"{0.001 * stats[size] / stats[time]:0.2f} kB/sec"
 
         _add("upload_rate_str", "upload_bytes_written", "upload_write_time")
         _add("download_rate_str", "download_bytes_written", "download_write_time")
@@ -226,7 +225,7 @@ class BaseSynchronizer:
         assert isinstance(local, FileEntry) and isinstance(remote, FileEntry)
 
         if not local or not remote:
-            write("    Files cannot be compared ({} != {}).".format(local, remote))
+            write(f"    Files cannot be compared ({local} != {remote}).")
             return False
         elif local.size != remote.size:
             write(
@@ -242,7 +241,7 @@ class BaseSynchronizer:
             res, ofs = byte_compare(fp_src, fp_dest)
 
         if not res:
-            write("    Files are different at offset {:,d}.".format(ofs))
+            write(f"    Files are different at offset {ofs:,d}.")
         else:
             write("    Files are equal.")
         return res
@@ -265,10 +264,10 @@ class BaseSynchronizer:
         self._tick()
         if self.dry_run:
             return self._dry_run_action(
-                "copy file ({}, {} --> {})".format(file_entry, src, dest)
+                f"copy file ({file_entry}, {src} --> {dest})"
             )
         elif dest.readonly:
-            raise RuntimeError("target is read-only: {}".format(dest))
+            raise RuntimeError(f"target is read-only: {dest}")
 
         start = time.time()
 
@@ -338,10 +337,10 @@ class BaseSynchronizer:
         self._tick()
         if self.dry_run:
             return self._dry_run_action(
-                "copy directory ({}, {} --> {})".format(dir_entry, src, dest)
+                f"copy directory ({dir_entry}, {src} --> {dest})"
             )
         elif dest.readonly:
-            raise RuntimeError("target is read-only: {}".format(dest))
+            raise RuntimeError(f"target is read-only: {dest}")
 
         dest.set_sync_info(dir_entry.name, None, None)
 
@@ -377,9 +376,9 @@ class BaseSynchronizer:
         self._inc_stat("entries_touched")
         self._inc_stat("files_deleted")
         if self.dry_run:
-            return self._dry_run_action("delete file ({})".format(file_entry))
+            return self._dry_run_action(f"delete file ({file_entry})")
         elif file_entry.target.readonly:
-            raise RuntimeError("target is read-only: {}".format(file_entry.target))
+            raise RuntimeError(f"target is read-only: {file_entry.target}")
         file_entry.target.remove_file(file_entry.name)
         file_entry.target.remove_sync_info(file_entry.name)
 
@@ -389,9 +388,9 @@ class BaseSynchronizer:
         self._inc_stat("entries_touched")
         self._inc_stat("dirs_deleted")
         if self.dry_run:
-            return self._dry_run_action("delete directory ({})".format(dir_entry))
+            return self._dry_run_action(f"delete directory ({dir_entry})")
         elif dir_entry.target.readonly:
-            raise RuntimeError("target is read-only: {}".format(dir_entry.target))
+            raise RuntimeError(f"target is read-only: {dir_entry.target}")
         dir_entry.target.rmdir(dir_entry.name)
         dir_entry.target.remove_sync_info(dir_entry.name)
 
@@ -442,16 +441,16 @@ class BaseSynchronizer:
             prefix = DRY_RUN_PREFIX
 
         if action and status:
-            tag = ("{} {}".format(action, status)).upper()
+            tag = (f"{action} {status}").upper()
         else:
             assert status
-            tag = ("{}".format(status)).upper()
+            tag = (f"{status}").upper()
 
         name = entry.get_rel_path()
         if entry.is_dir():
-            name = "[{}]".format(name)
+            name = f"[{name}]"
 
-        write("{}{}{:<16} {:^3} {}{}".format(prefix, color, tag, symbol, name, final))
+        write(f"{prefix}{color}{tag:<16} {symbol:^3} {name}{final}")
 
     def _tick(self):
         """Write progress info and move cursor to beginning of line."""
@@ -620,7 +619,7 @@ class BaseSynchronizer:
                             raise
                 else:
                     # write("NO HANDLER")
-                    raise NotImplementedError("No handler for {}".format(pair))
+                    raise NotImplementedError(f"No handler for {pair}")
 
             if pair.is_conflict():
                 self._inc_stat("conflict_files")
@@ -793,7 +792,7 @@ class BiDirSynchronizer(BaseSynchronizer):
 
         if resolve in ("new", "old") and pair.is_same_time():
             # We cannot apply this resolution: force an alternative
-            print("Cannot resolve using '{}' strategy: {}".format(resolve, pair))
+            print(f"Cannot resolve using '{resolve}' strategy: {pair}")
             resolve = "ask" if self.is_script else "skip"
 
         if resolve == "ask" or self.verbose >= 5:
@@ -955,10 +954,10 @@ class BiDirSynchronizer(BaseSynchronizer):
         # print("on_need_compare {} => {}".format(org_pair, pair))
         if not pair.operation:
             raise RuntimeError(
-                "Undefined operation for pair classification {}".format(c_pair)
+                f"Undefined operation for pair classification {c_pair}"
             )
         elif pair.operation == org_operation:
-            raise RuntimeError("Could not re-classify  {}".format(org_pair))
+            raise RuntimeError(f"Could not re-classify  {org_pair}")
 
         handler = getattr(self, "on_" + pair.operation, None)
         res = handler(pair)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 (c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
@@ -178,7 +177,7 @@ def handle_run_command(parser, cli_args):
     # --- Parse and validate `pyftpsync.yaml` ---
 
     try:
-        with open(config_path, "rt", encoding="utf-8-sig") as f:
+        with open(config_path, encoding="utf-8-sig") as f:
             config = yaml.safe_load(f)
     except Exception as e:
         parser.error(f"Error parsing {config_path}: {e}")

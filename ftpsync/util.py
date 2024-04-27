@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 (c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
@@ -245,12 +244,12 @@ def prompt_for_password(url, user=None, default_user=None):
     if user is None:
         default_user = default_user or getpass.getuser()
         while user is None:
-            user = input("Enter username for {} [{}]: ".format(url, default_user))
+            user = input(f"Enter username for {url} [{default_user}]: ")
             if user.strip() == "" and default_user:
                 user = default_user
     if user:
         pw = getpass.getpass(
-            "Enter password for {}@{} (Ctrl+C to abort): ".format(user, url)
+            f"Enter password for {user}@{url} (Ctrl+C to abort): "
         )
         if pw or pw == "":
             return (user, pw)
@@ -316,7 +315,7 @@ def get_credentials_for_url(url, opts, force_user=None):
         # except keyring.errors.TransientKeyringError:
         except Exception as e:
             # e.g. user clicked 'no'
-            write_error("Could not get password from keyring {}".format(e))
+            write_error(f"Could not get password from keyring {e}")
 
     # 2. Try .netrc file
     if creds is None and allow_netrc and not force_prompt:
@@ -327,14 +326,14 @@ def get_credentials_for_url(url, opts, force_user=None):
             if verbose >= 4:
                 write("Could not get password (no .netrc file).")
         except Exception as e:
-            write_error("Could not read .netrc: {}.".format(e))
+            write_error(f"Could not read .netrc: {e}.")
 
         if authenticators:
             creds = (authenticators[0], authenticators[2])
-            write("Using credentials from .netrc file: {}:***.".format(creds[0]))
+            write(f"Using credentials from .netrc file: {creds[0]}:***.")
         else:
             if verbose >= 4:
-                write("Could not find entry for '{}' in .netrc file.".format(url))
+                write(f"Could not find entry for '{url}' in .netrc file.")
 
     # 3. Prompt for password if we don't have credentials yet, or --prompt was set.
     if creds is None and allow_prompt and not force_prompt:
@@ -362,17 +361,17 @@ def save_password(url, username, password):
             # Note: we pass the url as `username` and username:password as `password`
             if password is None:
                 keyring.delete_password("pyftpsync", url)
-                write("Delete credentials from keyring ({})".format(url))
+                write(f"Delete credentials from keyring ({url})")
             else:
                 keyring.set_password(
-                    "pyftpsync", url, "{}:{}".format(username, password)
+                    "pyftpsync", url, f"{username}:{password}"
                 )
                 write(
-                    "Store credentials in keyring ({}, {}:***).".format(url, username)
+                    f"Store credentials in keyring ({url}, {username}:***)."
                 )
         #        except keyring.errors.TransientKeyringError:
         except Exception as e:
-            write("Could not delete/set password {}.".format(e))
+            write(f"Could not delete/set password {e}.")
             pass  # e.g. user clicked 'no'
     else:
         write("Could not store credentials (missing keyring support).")

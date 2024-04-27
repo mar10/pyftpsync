@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 (c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
@@ -118,7 +117,7 @@ class FTPTarget(_Target):
 
     def get_base_name(self):
         scheme = "ftps" if self.tls else "ftp"
-        return "{}://{}{}".format(scheme, self.host, self.root_dir)
+        return f"{scheme}://{self.host}{self.root_dir}"
 
     def open(self):
         assert not self.ftp_socket_connected
@@ -169,7 +168,7 @@ class FTPTarget(_Target):
                 if not e.args[0].startswith("530"):
                     raise  # error other then '530 Login incorrect'
                 write_error(
-                    "Could not login to {}@{}: {}".format(self.username, self.host, e)
+                    f"Could not login to {self.username}@{self.host}: {e}"
                 )
                 if no_prompt or not self.username:
                     raise
@@ -188,7 +187,7 @@ class FTPTarget(_Target):
             # self.is_unix = "unix" in resp.lower() # not necessarily true, better check with r/w tests
             # TODO: case sensitivity?
         except Exception as e:
-            write("SYST command failed: '{}'".format(e))
+            write(f"SYST command failed: '{e}'")
 
         try:
             self.feat_response = self.ftp.sendcmd("FEAT")
@@ -196,7 +195,7 @@ class FTPTarget(_Target):
             if verbose >= 5:
                 write("FEAT: '{}'.".format(self.feat_response.replace("\n", " ")))
         except Exception as e:
-            write("FEAT command failed: '{}'".format(e))
+            write(f"FEAT command failed: '{e}'")
 
         if self.encoding == "utf-8":
             if not self.support_utf8 and verbose >= 4:
@@ -214,7 +213,7 @@ class FTPTarget(_Target):
                     write("Sent 'OPTS UTF-8'.")
             except Exception as e:
                 if verbose >= 4:
-                    write("Could not send 'OPTS UTF-8': '{}'".format(e), warning=True)
+                    write(f"Could not send 'OPTS UTF-8': '{e}'", warning=True)
 
             try:
                 # Announce our wish to use UTF-8 to the server as proposed here:
@@ -225,7 +224,7 @@ class FTPTarget(_Target):
                 if verbose >= 4:
                     write("Sent 'OPTS UTF8 ON'.")
             except Exception as e:
-                write("Could not send 'OPTS UTF8 ON': '{}'".format(e), warning=True)
+                write(f"Could not send 'OPTS UTF8 ON': '{e}'", warning=True)
 
         if hasattr(self.ftp, "encoding"):
             # Python 3 encodes using latin-1 by default(!)
@@ -300,7 +299,7 @@ class FTPTarget(_Target):
             try:
                 self.ftp.quit()
             except (ConnectionError, EOFError) as e:
-                write_error("ftp.quit() failed: {}".format(e))
+                write_error(f"ftp.quit() failed: {e}")
             self.ftp_socket_connected = False
 
         super().close()
@@ -316,8 +315,8 @@ class FTPTarget(_Target):
             self.lock_data = data
             self.lock_write_time = time.time()
         except Exception as e:
-            errmsg = "{}".format(e)
-            write_error("Could not write lock file: {}".format(errmsg))
+            errmsg = f"{e}"
+            write_error(f"Could not write lock file: {errmsg}")
             if errmsg.startswith("550") and self.ftp.passiveserver:
                 try:
                     self.ftp.makepasv()
@@ -371,7 +370,7 @@ class FTPTarget(_Target):
 
             self.lock_data = None
         except Exception as e:
-            write_error("Could not remove lock file: {}".format(e))
+            write_error(f"Could not remove lock file: {e}")
             raise
 
     def _probe_lock_file(self, reported_mtime):
@@ -380,7 +379,7 @@ class FTPTarget(_Target):
         # delta2 = reported_mtime - self.lock_write_time
         self.server_time_ofs = delta
         if self.get_option("verbose", 3) >= 4:
-            write("Server time offset: {:.2f} seconds.".format(delta))
+            write(f"Server time offset: {delta:.2f} seconds.")
             # write("Server time offset2: {:.2f} seconds.".format(delta2))
 
     def get_id(self):
@@ -392,7 +391,7 @@ class FTPTarget(_Target):
         if not path.startswith(self.root_dir):
             # paranoic check to prevent that our sync tool goes berserk
             raise RuntimeError(
-                "Tried to navigate outside root {!r}: {!r}".format(self.root_dir, path)
+                f"Tried to navigate outside root {self.root_dir!r}: {path!r}"
             )
         self.ftp.cwd(dir_name)
         self.cur_dir = path
@@ -524,9 +523,9 @@ class FTPTarget(_Target):
             elif res_type in ("cdir", "pdir"):
                 pass
             else:
-                write_error("Could not parse '{}'".format(line))
+                write_error(f"Could not parse '{line}'")
                 raise NotImplementedError(
-                    "MLSD returned unsupported type: {!r}".format(res_type)
+                    f"MLSD returned unsupported type: {res_type!r}"
                 )
 
             if entry:
@@ -556,7 +555,7 @@ class FTPTarget(_Target):
                 raise  # this should end the script (user should pass --migrate)
             except Exception as e:
                 write_error(
-                    "Could not read meta info {}: {}".format(self.cur_dir_meta, e)
+                    f"Could not read meta info {self.cur_dir_meta}: {e}"
                 )
 
             meta_files = self.cur_dir_meta.list
@@ -622,7 +621,7 @@ class FTPTarget(_Target):
         assert is_native(name)
         out = SpooledTemporaryFile(max_size=self.MAX_SPOOL_MEM, mode="w+b")
         self.ftp.retrbinary(
-            "RETR {}".format(name), out.write, FTPTarget.DEFAULT_BLOCKSIZE
+            f"RETR {name}", out.write, FTPTarget.DEFAULT_BLOCKSIZE
         )
         out.seek(0)
         return out
@@ -640,7 +639,7 @@ class FTPTarget(_Target):
         # print("FTP write_file({})".format(name), blocksize)
         assert is_native(name)
         self.check_write(name)
-        self.ftp.storbinary("STOR {}".format(name), fp_src, blocksize, callback)
+        self.ftp.storbinary(f"STOR {name}", fp_src, blocksize, callback)
         # TODO: check result
 
     def copy_to_file(self, name, fp_dest, callback=None):
@@ -661,7 +660,7 @@ class FTPTarget(_Target):
                 callback(data)
 
         self.ftp.retrbinary(
-            "RETR {}".format(name), _write_to_file, FTPTarget.DEFAULT_BLOCKSIZE
+            f"RETR {name}", _write_to_file, FTPTarget.DEFAULT_BLOCKSIZE
         )
 
     def remove_file(self, name):

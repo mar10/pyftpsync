@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 (c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
@@ -65,17 +64,17 @@ def tree_handler(parser, args):
     try:
         target.open()
 
-        print("[{}]".format(target.root_dir))
+        print(f"[{target.root_dir}]")
         for path, entry in target.walk_tree(
             sort=args.sort, files=args.files, pred=_pred
         ):
             name = entry.name
             if entry.is_dir():
                 dir_count += 1
-                line = "{}[{}]".format(path, name)
+                line = f"{path}[{name}]"
             else:
                 file_count += 1
-                line = "{}{:<20} {}".format(path, name, entry.as_string())
+                line = f"{path}{name:<20} {entry.as_string()}"
             print(line)
     finally:
         target.close()

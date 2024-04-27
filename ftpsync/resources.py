@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 (c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
@@ -99,7 +98,7 @@ class EntryPair:
 
     def __str__(self):
         s = "<EntryPair({})>: ({}, {}) => {}".format(
-            "[{}]".format(self.rel_path) if self.is_dir else self.rel_path,
+            f"[{self.rel_path}]" if self.is_dir else self.rel_path,
             self.local_classification,
             self.remote_classification,
             self.operation,
@@ -167,11 +166,11 @@ class EntryPair:
         self.operation = operation_map.get(c_pair)
         if not self.operation:
             raise RuntimeError(
-                "Undefined operation for pair classification {}".format(c_pair)
+                f"Undefined operation for pair classification {c_pair}"
             )
         if "classify" in DEBUG_FLAGS:
             write(
-                "Classified pair {}, meta={}".format(self, peer_entry_meta),
+                f"Classified pair {self}, meta={peer_entry_meta}",
                 debug=True,
             )
         # if not entry.meta:
@@ -233,17 +232,17 @@ class _Resource:
         dt_modified = datetime.fromtimestamp(self.mtime)
         path = os.path.join(self.rel_path, self.name)
         if self.is_dir():
-            res = "{}([{}])".format(self.__class__.__name__, path)
+            res = f"{self.__class__.__name__}([{path}])"
         else:
             res = "{}('{}', size:{}, modified:{})".format(
                 self.__class__.__name__,
                 path,
-                "{:,}".format(self.size) if self.size is not None else self.size,
+                f"{self.size:,}" if self.size is not None else self.size,
                 dt_modified,
             )
             # + " ## %s, %s" % (self.mtime, time.asctime(time.gmtime(self.mtime)))
         if self.classification:
-            res += " => {}".format(self.classification)
+            res += f" => {self.classification}"
         return res
 
     def as_string(self, other_resource=None):
@@ -290,7 +289,7 @@ class _Resource:
 
     def classify(self, peer_dir_meta):
         """Classify this entry as 'new', 'unmodified', or 'modified'."""
-        assert self.classification is None, "{}, {}".format(self, peer_dir_meta)
+        assert self.classification is None, f"{self}, {peer_dir_meta}"
         peer_entry_meta = None
         if peer_dir_meta:
             # Metadata is generally available, so we can detect 'new' or 'modified'
@@ -329,7 +328,7 @@ class _Resource:
                 self.classification = "existing"
 
         if "classify" in DEBUG_FLAGS:
-            write("Classified {}, meta={}".format(self, peer_entry_meta), debug=True)
+            write(f"Classified {self}, meta={peer_entry_meta}", debug=True)
         assert self.classification in ENTRY_CLASSIFICATIONS
         return self.classification
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 (c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
@@ -142,7 +141,7 @@ class _Target:
     #     self.close()
 
     def get_base_name(self):
-        return "{}".format(self.root_dir)
+        return f"{self.root_dir}"
 
     def is_local(self):
         if not self.synchronizer:
@@ -173,7 +172,7 @@ class _Target:
 
     def open(self):
         if self.connected:
-            raise RuntimeError("Target already open: {}.  ".format(self))
+            raise RuntimeError(f"Target already open: {self}.  ")
         # Not thread safe (issue #20)
         if not self._rlock.acquire(False):
             raise RuntimeError("Could not acquire _Target lock on open")
@@ -183,7 +182,7 @@ class _Target:
         if not self.connected:
             return
         if self.get_option("verbose", 3) >= 5:
-            write("Closing target {}.".format(self))
+            write(f"Closing target {self}.")
         self.connected = False
         self.readonly = False  # issue #20
         self._rlock.release()
@@ -195,7 +194,7 @@ class _Target:
             DirMetadata.META_FILE_NAME,
             DirMetadata.LOCK_FILE_NAME,
         ):
-            raise RuntimeError("Target is read-only: {} + {} / ".format(self, name))
+            raise RuntimeError(f"Target is read-only: {self} + {name} / ")
 
     def get_id(self):
         return self.root_dir
@@ -275,8 +274,7 @@ class _Target:
             if recursive:
                 if isinstance(entry, DirectoryEntry):
                     self.cwd(entry.name)
-                    for e in self.walk(pred):
-                        yield e
+                    yield from self.walk(pred)
                     self.cwd("..")
         return
 
@@ -430,7 +428,7 @@ class FsTarget(_Target):
         root_dir = os.path.abspath(root_dir)
         super().__init__(root_dir, extra_opts)
         if not os.path.isdir(root_dir):
-            raise ValueError("{} is not a directory.".format(root_dir))
+            raise ValueError(f"{root_dir} is not a directory.")
         self.support_set_time = True
 
     def __str__(self):
@@ -449,7 +447,7 @@ class FsTarget(_Target):
         path = normpath_url(join_url(self.cur_dir, dir_name))
         if not path.startswith(self.root_dir):
             raise RuntimeError(
-                "Tried to navigate outside root {!r}: {!r}".format(self.root_dir, path)
+                f"Tried to navigate outside root {self.root_dir!r}: {path!r}"
             )
         self.cur_dir_meta = None
         self.cur_dir = path

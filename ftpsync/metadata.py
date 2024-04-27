@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 (c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
@@ -58,7 +57,7 @@ class DirMetadata:
         self.was_read = False
 
     def __str__(self):
-        return "DirMetadata<{}>".format(self.get_full_path())
+        return f"DirMetadata<{self.get_full_path()}>"
 
     def get_full_path(self):
         return "/".join((self.path, self.filename))
@@ -146,7 +145,7 @@ class DirMetadata:
         # except IncompatibleMetadataVersionError:
         #     raise  # We want version errors to terminate the app
         except Exception as e:
-            write_error("Could not read meta info {}: {!r}".format(self, e))
+            write_error(f"Could not read meta info {self}: {e!r}")
 
         # If the version is incompatible, we stop, unless:
         # if --migrate is set, we simply ignore this file (and probably replace it
@@ -184,7 +183,7 @@ class DirMetadata:
             pass
 
         elif self.was_read and len(self.list) == 0 and len(self.peer_sync) == 0:
-            write("Remove empty meta data file: {}".format(self.target))
+            write(f"Remove empty meta data file: {self.target}")
             self.target.remove_file(self.filename)
 
         elif not self.modified_list and not self.modified_sync:
