@@ -2,6 +2,7 @@
 (c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
+
 import argparse
 
 from ftpsync.synchronizers import DEFAULT_OMIT

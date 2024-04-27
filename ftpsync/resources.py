@@ -2,6 +2,7 @@
 (c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
+
 import os
 from datetime import datetime
 from posixpath import join as join_url
@@ -165,9 +166,7 @@ class EntryPair:
 
         self.operation = operation_map.get(c_pair)
         if not self.operation:
-            raise RuntimeError(
-                f"Undefined operation for pair classification {c_pair}"
-            )
+            raise RuntimeError(f"Undefined operation for pair classification {c_pair}")
         if "classify" in DEBUG_FLAGS:
             write(
                 f"Classified pair {self}, meta={peer_entry_meta}",

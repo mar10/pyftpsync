@@ -2,6 +2,7 @@
 (c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
+
 import json
 import logging
 import os
@@ -162,9 +163,7 @@ class SFTPTarget(_Target):
                 )
                 break
             except paramiko.ssh_exception.AuthenticationException as e:
-                write_error(
-                    f"Could not login to {self.username}@{self.host}: {e}"
-                )
+                write_error(f"Could not login to {self.username}@{self.host}: {e}")
                 if no_prompt or not self.username:
                     raise
                 creds = prompt_for_password(self.host, self.username)
@@ -391,9 +390,7 @@ class SFTPTarget(_Target):
         try:
             return SFTPTarget._paramiko_py3compat_u(s, encoding)
         except UnicodeDecodeError:
-            write_error(
-                f"Failed to decode {s} using {encoding}. Trying cp1252..."
-            )
+            write_error(f"Failed to decode {s} using {encoding}. Trying cp1252...")
             s = s.decode("cp1252")
         return s
 
@@ -445,9 +442,7 @@ class SFTPTarget(_Target):
             except IncompatibleMetadataVersionError:
                 raise  # this should end the script (user should pass --migrate)
             except Exception as e:
-                write_error(
-                    f"Could not read meta info {self.cur_dir_meta}: {e}"
-                )
+                write_error(f"Could not read meta info {self.cur_dir_meta}: {e}")
 
             meta_files = self.cur_dir_meta.list
 

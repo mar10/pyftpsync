@@ -2,6 +2,7 @@
 (c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
+
 import configparser
 import getpass
 import logging
@@ -248,9 +249,7 @@ def prompt_for_password(url, user=None, default_user=None):
             if user.strip() == "" and default_user:
                 user = default_user
     if user:
-        pw = getpass.getpass(
-            f"Enter password for {user}@{url} (Ctrl+C to abort): "
-        )
+        pw = getpass.getpass(f"Enter password for {user}@{url} (Ctrl+C to abort): ")
         if pw or pw == "":
             return (user, pw)
     return None
@@ -363,12 +362,8 @@ def save_password(url, username, password):
                 keyring.delete_password("pyftpsync", url)
                 write(f"Delete credentials from keyring ({url})")
             else:
-                keyring.set_password(
-                    "pyftpsync", url, f"{username}:{password}"
-                )
-                write(
-                    f"Store credentials in keyring ({url}, {username}:***)."
-                )
+                keyring.set_password("pyftpsync", url, f"{username}:{password}")
+                write(f"Store credentials in keyring ({url}, {username}:***).")
         #        except keyring.errors.TransientKeyringError:
         except Exception as e:
             write(f"Could not delete/set password {e}.")

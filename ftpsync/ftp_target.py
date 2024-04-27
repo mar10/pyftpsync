@@ -2,6 +2,7 @@
 (c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
+
 import calendar
 import codecs
 import ftplib
@@ -167,9 +168,7 @@ class FTPTarget(_Target):
                 # for new password
                 if not e.args[0].startswith("530"):
                     raise  # error other then '530 Login incorrect'
-                write_error(
-                    f"Could not login to {self.username}@{self.host}: {e}"
-                )
+                write_error(f"Could not login to {self.username}@{self.host}: {e}")
                 if no_prompt or not self.username:
                     raise
                 creds = prompt_for_password(self.host, self.username)
@@ -554,9 +553,7 @@ class FTPTarget(_Target):
             except IncompatibleMetadataVersionError:
                 raise  # this should end the script (user should pass --migrate)
             except Exception as e:
-                write_error(
-                    f"Could not read meta info {self.cur_dir_meta}: {e}"
-                )
+                write_error(f"Could not read meta info {self.cur_dir_meta}: {e}")
 
             meta_files = self.cur_dir_meta.list
 
@@ -620,9 +617,7 @@ class FTPTarget(_Target):
         # print("FTP open_readable({})".format(name))
         assert is_native(name)
         out = SpooledTemporaryFile(max_size=self.MAX_SPOOL_MEM, mode="w+b")
-        self.ftp.retrbinary(
-            f"RETR {name}", out.write, FTPTarget.DEFAULT_BLOCKSIZE
-        )
+        self.ftp.retrbinary(f"RETR {name}", out.write, FTPTarget.DEFAULT_BLOCKSIZE)
         out.seek(0)
         return out
 
@@ -659,9 +654,7 @@ class FTPTarget(_Target):
             if callback:
                 callback(data)
 
-        self.ftp.retrbinary(
-            f"RETR {name}", _write_to_file, FTPTarget.DEFAULT_BLOCKSIZE
-        )
+        self.ftp.retrbinary(f"RETR {name}", _write_to_file, FTPTarget.DEFAULT_BLOCKSIZE)
 
     def remove_file(self, name):
         """Remove cur_dir/name."""

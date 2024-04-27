@@ -2,6 +2,7 @@
 (c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 """
+
 import fnmatch
 import sys
 import time
@@ -263,9 +264,7 @@ class BaseSynchronizer:
             self._inc_stat("download_files_written")
         self._tick()
         if self.dry_run:
-            return self._dry_run_action(
-                f"copy file ({file_entry}, {src} --> {dest})"
-            )
+            return self._dry_run_action(f"copy file ({file_entry}, {src} --> {dest})")
         elif dest.readonly:
             raise RuntimeError(f"target is read-only: {dest}")
 
@@ -953,9 +952,7 @@ class BiDirSynchronizer(BaseSynchronizer):
         pair.operation = operation_map.get(c_pair)
         # print("on_need_compare {} => {}".format(org_pair, pair))
         if not pair.operation:
-            raise RuntimeError(
-                f"Undefined operation for pair classification {c_pair}"
-            )
+            raise RuntimeError(f"Undefined operation for pair classification {c_pair}")
         elif pair.operation == org_operation:
             raise RuntimeError(f"Could not re-classify  {org_pair}")
 
