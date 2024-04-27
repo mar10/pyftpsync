@@ -4,7 +4,6 @@
 [![Latest Version](https://img.shields.io/pypi/v/pyftpsync.svg)](https://pypi.python.org/pypi/pyftpsync/)
 [![License](https://img.shields.io/pypi/l/pyftpsync.svg)](https://github.com/mar10/pyftpsync/blob/master/LICENSE.txt)
 [![Documentation Status](https://readthedocs.org/projects/pyftpsync/badge/?version=latest)](https://pyftpsync.readthedocs.io/)
-[![Coverage Status](https://coveralls.io/repos/github/mar10/pyftpsync/badge.svg?branch=master)](https://coveralls.io/github/mar10/pyftpsync?branch=master)
 [![codecov](https://codecov.io/github/mar10/pyftpsync/graph/badge.svg?token=0JM9CN8RYW)](https://codecov.io/github/mar10/pyftpsync)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 [![Released with: Yabs](https://img.shields.io/badge/released%20with-yabs-yellowgreen)](https://github.com/mar10/yabs)
