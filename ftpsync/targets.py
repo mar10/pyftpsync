@@ -12,7 +12,7 @@ import sys
 import threading
 from posixpath import join as join_url
 from posixpath import normpath as normpath_url
-from urllib.parse import urlparse, unquote
+from urllib.parse import unquote, urlparse
 
 from ftpsync.metadata import DirMetadata
 from ftpsync.resources import DirectoryEntry, FileEntry

@@ -4,13 +4,13 @@ black~=24.4
 check-manifest
 cx_Freeze~=7.0
 pyftpdlib~=1.5
-pytest-cov~=2.5
-pytest~=3.1
+pytest-cov~=5.0
+pytest~=8.2
 ruff
 # recommonmark
 sphinx_rtd_theme
 sphinx~=1.5
-tox~=2.7
+tox~=4.15
 twine
 virtualenv
 wheel

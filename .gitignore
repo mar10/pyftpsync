@@ -48,3 +48,4 @@ __pycache__
 /.vscode
 /manifests
 /.venv
+/.ruff_cache
