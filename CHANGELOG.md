@@ -1,6 +1,7 @@
 ## 4.1.0 (unreleased)
 
 -   Fix #82 Error importing SFTPTarget with paramiko > 3.0
+-   Fix #92 Unquote url characters in password
 -   Drop support for Python 3.7 (end-of-life: 2023-06-27)
 -   Use GH Actions for CI instead of Travis
 

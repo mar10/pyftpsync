@@ -281,7 +281,7 @@ Code
         `PEP 8 <https://www.python.org/dev/peps/pep-0008/>`_.
 
         Failing tests or not follwing PEP 8 will break builds on
-        `travis <https://app.travis-ci.com/github/mar10/pyftpsync>`_,
+        `CI/CD <https://github.com/mar10/pyftpsync/actions/workflows/python-app.yml>`_,
         so run ``$ pytest``, ``$ flake8``, and ``$ tox`` frequently and before you commit!
 
 

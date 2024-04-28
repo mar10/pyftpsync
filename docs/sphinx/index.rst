@@ -101,9 +101,9 @@ See :doc:`ug_run` for details.
 
 
 
-.. |travis_badge| image:: https://travis-ci.org/mar10/pyftpsync.svg?branch=master
+.. |travis_badge| image:: https://github.com/mar10/pyftpsync/actions/workflows/python-app.yml/badge.svg
    :alt: Build Status
-   :target: https://app.travis-ci.com/github/mar10/pyftpsync
+   :target: https://github.com/mar10/pyftpsync/actions/workflows/python-app.yml
 
 .. |pypi_badge| image:: https://img.shields.io/pypi/v/pyftpsync.svg
    :alt: PyPI Version

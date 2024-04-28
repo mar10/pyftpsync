@@ -107,7 +107,7 @@ tasks:
 
   - task: commit
     add_known: true
-    # '[ci skip]' tells travis to ignore
+    # '[ci skip]' tells CI/CD to ignore
     message: |
       Bump prerelease ({version}) [ci skip]
 
