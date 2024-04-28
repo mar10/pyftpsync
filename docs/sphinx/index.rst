@@ -14,7 +14,7 @@ Pyftpsync
 :Project:   https://github.com/mar10/pyftpsync/
 :Version:   |version|, Date: |today|
 
-|travis_badge| |nbsp| |pypi_badge| |nbsp| |lic_badge| |nbsp| |rtd_badge|
+|cicd_badge| |nbsp| |pypi_badge| |nbsp| |lic_badge| |nbsp| |rtd_badge|
 
 .. toctree::
    :hidden:
@@ -101,7 +101,7 @@ See :doc:`ug_run` for details.
 
 
 
-.. |travis_badge| image:: https://github.com/mar10/pyftpsync/actions/workflows/python-app.yml/badge.svg
+.. |cicd_badge| image:: https://github.com/mar10/pyftpsync/actions/workflows/python-app.yml/badge.svg
    :alt: Build Status
    :target: https://github.com/mar10/pyftpsync/actions/workflows/python-app.yml
 
