@@ -6,6 +6,7 @@ verify_ssl = true
 black = "~=24.4"
 check-manifest = "*"
 cx_Freeze = {version = "*", markers="sys_platform == 'win32'"}
+importlib-metadata = "*"
 isort = "*"
 pyftpdlib = "*"
 pyftpsync = {editable = true, path = "."}
@@ -13,7 +14,6 @@ pylint = "*"
 pytest = "*"
 pytest-cov = "*"
 pytest-sftpserver = "*"
-# recommonmark = "*"
 ruff = "*"
 sphinx = "*"
 sphinx_rtd_theme = "*"
@@ -21,17 +21,14 @@ tox = "*"
 twine = "*"
 wheel = "*"
 yabs = "*"
-importlib-metadata = "*"
 
 [packages]
 colorama = "*"
 keyring = "*"
 pysftp = "*"
 PyYAML = "*"
-yabs = "*"
 
 [requires]
 python_version = "3.12"
 
 [pipenv]
-# allow_prereleases = true

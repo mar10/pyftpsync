@@ -1,4 +1,4 @@
-Copyright (c) 2012-2022 Martin Wendt
+Copyright (c) 2012-2024 Martin Wendt
 
 Summary
 -------
@@ -13,7 +13,7 @@ Synchronize directories using FTP(S), SFTP, or file system access.
 .. note::
     Version 4.0 drops support for Python 2.
 
-Requires `Python <https://www.python.org/download/>`_ 3.7+.
+Requires `Python <https://www.python.org/download/>`_ 3.8+.
 
 .. note::
    MS Windows users that only need the command line interface may prefer the

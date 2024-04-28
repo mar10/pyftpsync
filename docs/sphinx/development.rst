@@ -27,11 +27,11 @@ Work in a Virtual Environment
 
 Install Python
 ^^^^^^^^^^^^^^
-`Python 3.7+ <https://www.python.org/downloads/>`_,
+`Python 3.8+ <https://www.python.org/downloads/>`_,
 and `pip <https://pip.pypa.io/en/stable/installing/#do-i-need-to-install-pip>`_ on our system.
 
 If you want to run tests on *all* supported platforms, install
-Python 3.7, 3.8, 3.9, and 3.10.
+Python 3.8 through 3.12.
 
 Create and Activate the Virtual Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

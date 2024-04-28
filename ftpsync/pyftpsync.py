@@ -1,7 +1,7 @@
 """
 Simple folder synchronization using FTP.
 
-(c) 2012-2022 Martin Wendt; see https://github.com/mar10/pyftpsync
+(c) 2012-2024 Martin Wendt; see https://github.com/mar10/pyftpsync
 Licensed under the MIT license: https://www.opensource.org/licenses/mit-license.php
 
 Usage examples:

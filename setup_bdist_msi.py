@@ -84,7 +84,7 @@ executables = [
         target_name="pyftpsync.exe",
         icon="docs/logo.ico",
         shortcut_name="pyftpsync",
-        copyright="(c) 2012-2022 Martin Wendt",
+        copyright="(c) 2012-2024 Martin Wendt",
         # trademarks="...",
     )
 ]
@@ -97,7 +97,7 @@ build_exe_options = {
     "excludes": [
         "tkinter",
     ],
-    "constants": "BUILD_COPYRIGHT='(c) 2012-2022 Martin Wendt'",
+    "constants": "BUILD_COPYRIGHT='(c) 2012-2024 Martin Wendt'",
     "include_msvcr": True,
 }
 
@@ -116,7 +116,7 @@ setup(
     version=version,
     author="Martin Wendt",
     author_email="pyftpsync@wwwendt.de",
-    # copyright="(c) 2012-2022 Martin Wendt",
+    # copyright="(c) 2012-2024 Martin Wendt",
     maintainer="Martin Wendt",
     maintainer_email="pyftpsync@wwwendt.de",
     url="https://github.com/mar10/pyftpsync",

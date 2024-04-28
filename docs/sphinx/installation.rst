@@ -1,7 +1,7 @@
 Installation
 ============
 
-Requirements: `Python <https://www.python.org/downloads/>`_ 3.7 or later is 
+Requirements: `Python <https://www.python.org/downloads/>`_ 3.8 or later is 
 required.
 
 Releases are hosted on `PyPI <https://pypi.python.org/pypi/pyftpsync>`_ and can
