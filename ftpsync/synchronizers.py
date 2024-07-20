@@ -641,7 +641,7 @@ class BaseSynchronizer:
                 remote_dir = remote_entry_map.get(local_dir.name)
             else:
                 remote_dir = remote_entry_map.get(local_dir.name.lower())
-            
+
             if remote_dir:
                 if local_dir.was_deleted or remote_dir.was_deleted:
                     pass  # self.on_mismatch() removed an entry
