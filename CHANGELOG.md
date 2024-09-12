@@ -2,6 +2,7 @@
 
 -   Fix #82 Error importing SFTPTarget with paramiko > 3.0
 -   Fix #92 Unquote url characters in password
+-   Fix #99 Recursive folders with capital letters are not synced
 -   Drop support for Python 3.7 (end-of-life: 2023-06-27)
 -   Use GH Actions for CI instead of Travis
 
